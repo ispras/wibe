@@ -1,0 +1,4 @@
+augmentations == 1.4.16
+numpy == 2.1.0
+opencv-python == 4.10.0.84
+scikit-image == 0.24.0
