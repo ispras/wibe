@@ -1,11 +1,11 @@
-from dft_circle import DFTMarker
+from im_test.dft_circle import DFTMarker
 from skimage.metrics import peak_signal_noise_ratio as psnr
 import os
 from pathlib import Path
 import json
 from concurrent.futures import ProcessPoolExecutor
 import albumentations as A
-from augmentations import Rotate90, CropRatio, Identity
+from im_test.augmentations import Rotate90, CropRatio, Identity
 import numpy as np
 import cv2
 import traceback
