@@ -5,6 +5,7 @@ from im_test.datasets import DiffusionDB
 from im_test.algorithm_wrapper import AlgorithmWrapper
 from im_test.metrics import PSNR, Result
 import numpy as np
+from pathlib import Path
 
 
 rnd_mark = np.array([0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1,
@@ -45,10 +46,11 @@ def main():
     marker_class = DFTMarkerWrapper
     marker_params = {'alpha': 600}
     ds_path = '/hdd/diffusiondb/filtered'
-    res_dir = '/hdd/diffusiondb/dft_result'
+    res_dir = Path(__file__).parent.parent / "test_results" / "dft"
+    db_config = Path(__file__).parent / "dft_circle.ini"
     dataset = DiffusionDB(ds_path)
-    pipeline = Pipeline(marker_class, marker_params, watermark_data_gen, dataset, aug_list, [PSNR(), Result()], res_dir, workers=8)
-    pipeline.run()
+    pipeline = Pipeline(marker_class, marker_params, watermark_data_gen, dataset, aug_list, [PSNR(), Result()], res_dir, db_config)
+    pipeline.run(workers=6, min_batch_size=20)
 
 
 if __name__ == '__main__':

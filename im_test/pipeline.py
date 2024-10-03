@@ -11,6 +11,8 @@ import tqdm
 import uuid
 from time import perf_counter
 import datetime
+from json2clickhouse import JSON2Clickhouse
+import json
 
 
 class Pipeline:
@@ -23,16 +25,21 @@ class Pipeline:
         augmentations: list[tuple[str, Callable]],
         metrics: list[Metric],
         result_path: Path | str,
-        workers: int = 8,
+        db_config: Path | str,
     ):
         self.algorithm_wrapper_class = algorithm_wrapper_class
-        self.algorithm_params = algorithm_params
+        if isinstance(algorithm_params,list):
+            self.algorithm_params = algorithm_params
+        else:
+            self.algorithm_params = [algorithm_params]
         self.data_gen = data_gen
         self.dataset = dataset
         self.augmentations = augmentations
         self.post_embed_metrics = [metric for metric in metrics if isinstance(metric, PostEmbedMetric)]
         self.post_extract_metrics = [metric for metric in metrics if isinstance(metric, PostExtractMetric)]
-        self.workers = workers
+        self.result_path = Path(result_path)
+        self.db_config = db_config
+        self.result_path.mkdir(exist_ok=True, parents=True)
 
     def process_image(self, args: tuple[str, AlgorithmWrapper, tuple[str, np.ndarray]]):
         #ToDo: тут может возникнуть проблема, если время у двух процессов совпадет до миллисекунды, в БД это поле используется как primary key 
@@ -47,7 +54,7 @@ class Pipeline:
             "embedded": False,
         }
         try:
-            watermark_data = self.data_gen(self.algorithm_params)
+            watermark_data = self.data_gen(algorithm_wrapper.params)
             s_time = perf_counter()
             marked_img = algorithm_wrapper.embed(img, watermark_data)
             record["embed_time"] = perf_counter() - s_time
@@ -75,20 +82,36 @@ class Pipeline:
             except Exception:
                 traceback.print_exc()
                 continue
-            
-            
         return record
 
-    def run(self):
-        run_id = str(uuid.uuid1())
-        algorithm_wrapper = self.algorithm_wrapper_class(self.algorithm_params)
-        records = []
-        for sublist in chunked(tqdm.tqdm(self.dataset.generator(), total=len(self.dataset)), self.workers):
+    def process_records(self, j2c, records):
+        try:
+            j2c.process(records)
+        except Exception:
+            traceback.print_exc()
+            for record in records:
+                dtm = str(record["dtm"])
+                res_path = self.result_path / f"{dtm}.json"
+                with open(res_path, "w") as f:
+                    json.dump(record, f)
 
-            args = [(run_id, algorithm_wrapper, img_tuple) for img_tuple in sublist]
-            if self.workers > 1:
-                with ProcessPoolExecutor(self.workers) as pool:
-                    result = pool.map(self.process_image, args)
-            else:
-                result = [self.process_image(*args)]
-            records.extend(result)
+    def run(self, workers=1, min_batch_size=100):
+        run_id = str(uuid.uuid1())
+        j2c = JSON2Clickhouse.from_config(self.db_config)
+        records = []
+        for params in self.algorithm_params:
+            algorithm_wrapper = self.algorithm_wrapper_class(params)
+            for sublist in chunked(tqdm.tqdm(self.dataset.generator(), total=len(self.dataset)), workers):
+
+                args = [(run_id, algorithm_wrapper, img_tuple) for img_tuple in sublist]
+                if workers > 1:
+                    with ProcessPoolExecutor(workers) as pool:
+                        result = pool.map(self.process_image, args)
+                else:
+                    result = [self.process_image(*args)]
+                records.extend(result)
+
+                if len(records) >= min_batch_size:
+                    self.process_records(j2c, records)
+                    records = []
+        self.process_records(j2c, records)
