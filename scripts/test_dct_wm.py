@@ -7,6 +7,7 @@ from im_test.metrics import PSNR, BER
 import numpy as np
 from pathlib import Path
 from itertools import product
+from dataclasses import dataclass
 
 
 class DCTMarkerWrapper(AlgorithmWrapper):
@@ -15,18 +16,25 @@ class DCTMarkerWrapper(AlgorithmWrapper):
         self.marker = DCTMarker(params)
 
     def embed(self, image, watermark_data):
-        watermark, key = watermark_data
+        watermark = watermark_data.watermark
+        key = watermark_data.key
         return self.marker.embed_wm(image, watermark, key)
 
     def extract(self, image, watermark_data):
-        _, key = watermark_data
+        key = watermark_data.key
         return self.marker.extract_wm(image, key)
+
+
+@dataclass
+class WatermarkData:
+    watermark: np.ndarray
+    key: np.ndarray
 
 
 def watermark_data_gen(algorithm_params: DCTMarkerConfig):
     wm = np.random.randint(0, 2, algorithm_params.wm_length) * 2 - 1
     key = np.random.randint(0, 2, algorithm_params.block_size) * 2 - 1
-    return wm, key
+    return WatermarkData(wm, key)
 
 
 def main():

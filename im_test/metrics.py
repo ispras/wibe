@@ -75,5 +75,5 @@ class BER(PostExtractMetric):
         watermark_data: Any,
         extraction_result: Any,
     ) -> str | int | float:
-        wm, _ = watermark_data
-        return float((wm != extraction_result).mean())
+        wm = watermark_data.watermark
+        return float((np.array(wm) != np.array(extraction_result)).mean())

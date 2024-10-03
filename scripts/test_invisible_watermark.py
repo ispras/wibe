@@ -1,0 +1,86 @@
+# pip install invisible-watermark
+from imwatermark import WatermarkEncoder, WatermarkDecoder
+from im_test.algorithm_wrapper import AlgorithmWrapper
+from im_test.augmentations import aug_list
+from im_test.pipeline import Pipeline
+from im_test.datasets import DiffusionDB
+from im_test.metrics import PSNR, BER
+import numpy as np
+from pathlib import Path
+from dataclasses import dataclass
+from enum import Enum
+
+
+class Algorithm(str, Enum):
+    RivaGan = "rivaGan"
+    DwtDct = "dwtDct"
+    DwtDctSvd = "dwtDctSvd"
+
+
+@dataclass
+class InvisibleWatermarkConfig:
+    algorithm: Algorithm = Algorithm.DwtDctSvd
+    wm_length: int = 32
+    block_size: int = 4
+    scale: float = 36
+
+
+class InvisibleWatermarkWrapper(AlgorithmWrapper):
+    def __init__(self, params: InvisibleWatermarkConfig) -> None:
+        super().__init__(params)
+        self.encoder = WatermarkEncoder()
+        self.decoder = WatermarkDecoder(wm_type='bits', length=params.wm_length)
+        if params.algorithm == Algorithm.RivaGan:
+            self.encoder.loadModel()
+            self.decoder.loadModel()
+
+    def embed(self, image, watermark_data):
+        watermark = watermark_data.watermark
+        self.encoder.set_watermark('bits', watermark)
+        params: InvisibleWatermarkConfig = self.params
+        return self.encoder.encode(image, params.algorithm, scales=[0, params.scale, 0], block=params.block_size)
+
+    def extract(self, image, watermark_data):
+        params: InvisibleWatermarkConfig = self.params
+        return self.decoder.decode(image, params.algorithm, scales=[0, params.scale, 0], block=params.block_size)
+
+
+@dataclass
+class WatermarkData:
+    watermark: list[int]
+
+
+def watermark_data_gen(algorithm_params: InvisibleWatermarkConfig):
+    wm = np.random.randint(0, 2, algorithm_params.wm_length)
+    wm_list = wm.tolist()
+    return WatermarkData(wm_list)
+
+
+def main():
+    wrapper = InvisibleWatermarkWrapper
+    ds_path = "/hdd/diffusiondb/filtered"
+    res_dir = Path(__file__).parent.parent / "test_results" / "invisible_watermark"
+    db_config = Path(__file__).parent / "invisible_watermark.ini"
+    dataset = DiffusionDB(ds_path)
+
+    marker_params = [
+        InvisibleWatermarkConfig(algorithm="dwtDct", wm_length=100),
+        InvisibleWatermarkConfig(algorithm="dwtDctSvd", block_size=16, wm_length=100, scale=144),
+        InvisibleWatermarkConfig(algorithm="rivaGan"),
+    ]
+
+    pipeline = Pipeline(
+        wrapper,
+        marker_params,
+        watermark_data_gen,
+        dataset,
+        aug_list,
+        [PSNR(), BER()],
+        res_dir,
+        db_config,
+    )
+    pipeline.run(workers=1)
+
+
+if __name__ == "__main__":
+    main()
