@@ -53,7 +53,7 @@ class ImageFolderDataset(Dataset):
 
 
 class DiffusionDB(ImageFolderDataset):
-    def __init__(self, path: Path, preload: bool = False) -> None:
+    def __init__(self, path: Path | str, preload: bool = False) -> None:
         super().__init__("DiffusionDB", path, preload=preload)
 
 
