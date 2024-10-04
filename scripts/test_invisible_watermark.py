@@ -38,10 +38,14 @@ class InvisibleWatermarkWrapper(AlgorithmWrapper):
         watermark = watermark_data.watermark
         self.encoder.set_watermark('bits', watermark)
         params: InvisibleWatermarkConfig = self.params
+        if params.algorithm == Algorithm.RivaGan:
+            return self.encoder.encode(image, params.algorithm)
         return self.encoder.encode(image, params.algorithm, scales=[0, params.scale, 0], block=params.block_size)
 
     def extract(self, image, watermark_data):
         params: InvisibleWatermarkConfig = self.params
+        if params.algorithm == Algorithm.RivaGan:
+            return self.decoder.decode(image, params.algorithm)
         return self.decoder.decode(image, params.algorithm, scales=[0, params.scale, 0], block=params.block_size)
 
 

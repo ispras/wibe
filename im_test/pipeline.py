@@ -93,6 +93,7 @@ class Pipeline:
                 dtm = str(record["dtm"])
                 res_path = self.result_path / f"{dtm}.json"
                 with open(res_path, "w") as f:
+                    record["dtm"] = dtm
                     json.dump(record, f)
 
     def run(self, workers=1, min_batch_size=100):
