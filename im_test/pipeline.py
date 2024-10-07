@@ -6,7 +6,7 @@ from .metrics import Metric, PostEmbedMetric, PostExtractMetric
 from more_itertools import chunked
 from concurrent.futures import ProcessPoolExecutor
 import traceback
-from typing import Type, Any, Callable
+from typing import Type, Any, Callable, List, Tuple, Union
 import tqdm
 import uuid
 from time import perf_counter
@@ -20,19 +20,17 @@ class Pipeline:
         self,
         algorithm_wrapper_class: Type[AlgorithmWrapper],
         algorithm_params: Any,
-        data_gen: Callable,
         dataset: Dataset,
-        augmentations: list[tuple[str, Callable]],
-        metrics: list[Metric],
-        result_path: Path | str,
-        db_config: Path | str,
+        augmentations: List[Tuple[str, Callable]],
+        metrics: List[Metric],
+        result_path: Union[Path, str],
+        db_config: Union[Path, str],
     ):
         self.algorithm_wrapper_class = algorithm_wrapper_class
-        if isinstance(algorithm_params,list):
+        if isinstance(algorithm_params, list):
             self.algorithm_params = algorithm_params
         else:
             self.algorithm_params = [algorithm_params]
-        self.data_gen = data_gen
         self.dataset = dataset
         self.augmentations = augmentations
         self.post_embed_metrics = [metric for metric in metrics if isinstance(metric, PostEmbedMetric)]
@@ -41,7 +39,7 @@ class Pipeline:
         self.db_config = db_config
         self.result_path.mkdir(exist_ok=True, parents=True)
 
-    def process_image(self, args: tuple[str, AlgorithmWrapper, tuple[str, np.ndarray]]):
+    def process_image(self, args: Tuple[str, AlgorithmWrapper, Tuple[str, np.ndarray]]):
         #ToDo: тут может возникнуть проблема, если время у двух процессов совпадет до миллисекунды, в БД это поле используется как primary key 
         dtm = datetime.datetime.now()
         run_id, algorithm_wrapper, (img_id, img) = args
@@ -54,7 +52,7 @@ class Pipeline:
             "embedded": False,
         }
         try:
-            watermark_data = self.data_gen(algorithm_wrapper.params)
+            watermark_data = algorithm_wrapper.watermark_data_gen()
             s_time = perf_counter()
             marked_img = algorithm_wrapper.embed(img, watermark_data)
             record["embed_time"] = perf_counter() - s_time

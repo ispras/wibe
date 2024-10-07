@@ -25,6 +25,11 @@ class InvisibleWatermarkConfig:
     scale: float = 36
 
 
+@dataclass
+class WatermarkData:
+    watermark: list[int]
+
+
 class InvisibleWatermarkWrapper(AlgorithmWrapper):
     def __init__(self, params: InvisibleWatermarkConfig) -> None:
         super().__init__(params)
@@ -48,16 +53,10 @@ class InvisibleWatermarkWrapper(AlgorithmWrapper):
             return self.decoder.decode(image, params.algorithm)
         return self.decoder.decode(image, params.algorithm, scales=[0, params.scale, 0], block=params.block_size)
 
-
-@dataclass
-class WatermarkData:
-    watermark: list[int]
-
-
-def watermark_data_gen(algorithm_params: InvisibleWatermarkConfig):
-    wm = np.random.randint(0, 2, algorithm_params.wm_length)
-    wm_list = wm.tolist()
-    return WatermarkData(wm_list)
+    def watermark_data_gen(self):
+        wm = np.random.randint(0, 2, self.params.wm_length)
+        wm_list = wm.tolist()
+        return WatermarkData(wm_list)
 
 
 def main():
@@ -76,7 +75,6 @@ def main():
     pipeline = Pipeline(
         wrapper,
         marker_params,
-        watermark_data_gen,
         dataset,
         aug_list,
         [PSNR(), BER()],

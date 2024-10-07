@@ -2,7 +2,7 @@ from pathlib import Path
 from itertools import chain
 import cv2
 import numpy as np
-from typing import Generator
+from typing import Generator, Tuple, Union, List
 
 
 class Dataset:
@@ -12,7 +12,7 @@ class Dataset:
     def __len__(self) -> int:
         raise NotImplementedError
 
-    def generator(self) -> Generator[tuple[str, np.ndarray], None, None]:
+    def generator(self) -> Generator[Tuple[str, np.ndarray], None, None]:
         raise NotImplementedError
 
 
@@ -20,9 +20,9 @@ class ImageFolderDataset(Dataset):
     def __init__(
         self,
         name: str,
-        path: Path | str,
+        path: Union[Path, str],
         preload: bool = False,
-        img_ext: list[str] = ["png", "jpg"],
+        img_ext: List[str] = ["png", "jpg"],
         flags: int = cv2.IMREAD_COLOR,
     ) -> None:
         super().__init__(name)
@@ -42,7 +42,7 @@ class ImageFolderDataset(Dataset):
     def __len__(self) -> int:
         return len(self.path_list)
 
-    def generator(self) -> Generator[tuple[str, np.ndarray], None, None]:
+    def generator(self) -> Generator[Tuple[str, np.ndarray], None, None]:
         if len(self.images) > 0:
             for path, img in zip(self.path_list, self.images):
                 yield path.name, img
@@ -53,7 +53,7 @@ class ImageFolderDataset(Dataset):
 
 
 class DiffusionDB(ImageFolderDataset):
-    def __init__(self, path: Path | str, preload: bool = False) -> None:
+    def __init__(self, path: Union[Path, str], preload: bool = False) -> None:
         super().__init__("DiffusionDB", path, preload=preload)
 
 

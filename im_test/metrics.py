@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Union
 import numpy as np
 from skimage.metrics import peak_signal_noise_ratio as psnr
 
@@ -17,7 +17,7 @@ class PostEmbedMetric(Metric):
         img: np.ndarray,
         marked_img: np.ndarray,
         watermark_data: Any,
-    ) -> str | int | float:
+    ) -> Union[str, int, float]:
         raise NotImplementedError
 
 
@@ -31,7 +31,7 @@ class PostExtractMetric(Metric):
         marked_img: np.ndarray,
         watermark_data: Any,
         extraction_result: Any,
-    ) -> str | int | float:
+    ) -> Union[str, int, float]:
         raise NotImplementedError
 
 
@@ -74,6 +74,6 @@ class BER(PostExtractMetric):
         marked_img: np.ndarray,
         watermark_data: Any,
         extraction_result: Any,
-    ) -> str | int | float:
+    ) -> float:
         wm = watermark_data.watermark
         return float((np.array(wm) != np.array(extraction_result)).mean())

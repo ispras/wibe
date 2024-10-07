@@ -23,18 +23,17 @@ class DCTMarkerWrapper(AlgorithmWrapper):
     def extract(self, image, watermark_data):
         key = watermark_data.key
         return self.marker.extract_wm(image, key)
+    
+    def watermark_data_gen(self):
+        wm = np.random.randint(0, 2, self.params.wm_length) * 2 - 1
+        key = np.random.randint(0, 2, self.params.block_size) * 2 - 1
+        return WatermarkData(wm, key)
 
 
 @dataclass
 class WatermarkData:
     watermark: np.ndarray
     key: np.ndarray
-
-
-def watermark_data_gen(algorithm_params: DCTMarkerConfig):
-    wm = np.random.randint(0, 2, algorithm_params.wm_length) * 2 - 1
-    key = np.random.randint(0, 2, algorithm_params.block_size) * 2 - 1
-    return WatermarkData(wm, key)
 
 
 def main():
@@ -57,7 +56,6 @@ def main():
     pipeline = Pipeline(
         wrapper,
         marker_params,
-        watermark_data_gen,
         dataset,
         aug_list,
         [PSNR(), BER()],
