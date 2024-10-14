@@ -43,13 +43,12 @@ class DFTMarkerWrapper(AlgorithmWrapper):
 
 
 def main():
-    marker_class = DFTMarkerWrapper
     marker_params = {'alpha': 600}
     ds_path = '/hdd/diffusiondb/filtered'
     res_dir = Path(__file__).parent.parent / "test_results" / "dft"
     db_config = Path(__file__).parent / "dft_circle.ini"
     dataset = DiffusionDB(ds_path)
-    pipeline = Pipeline(marker_class, marker_params, dataset, aug_list, [PSNR(), Result()], res_dir, db_config)
+    pipeline = Pipeline(DFTMarkerWrapper(marker_params), dataset, aug_list, [PSNR(), Result()], res_dir, db_config)
     pipeline.run(workers=6, min_batch_size=20)
 
 

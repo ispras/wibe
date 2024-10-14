@@ -6,7 +6,7 @@ from .metrics import Metric, PostEmbedMetric, PostExtractMetric
 from more_itertools import chunked
 from concurrent.futures import ProcessPoolExecutor
 import traceback
-from typing import Type, Any, Callable, List, Tuple, Union
+from typing import Callable, List, Tuple, Union, Iterable
 import tqdm
 import uuid
 from time import perf_counter
@@ -18,19 +18,17 @@ import json
 class Pipeline:
     def __init__(
         self,
-        algorithm_wrapper_class: Type[AlgorithmWrapper],
-        algorithm_params: Any,
+        algorithm_wrapper: Union[AlgorithmWrapper, Iterable[AlgorithmWrapper]],
         dataset: Dataset,
         augmentations: List[Tuple[str, Callable]],
         metrics: List[Metric],
         result_path: Union[Path, str],
         db_config: Union[Path, str],
     ):
-        self.algorithm_wrapper_class = algorithm_wrapper_class
-        if isinstance(algorithm_params, list):
-            self.algorithm_params = algorithm_params
+        if isinstance(algorithm_wrapper, AlgorithmWrapper):
+            self.algorithm_wrappers = [algorithm_wrapper]
         else:
-            self.algorithm_params = [algorithm_params]
+            self.algorithm_wrappers = algorithm_wrapper
         self.dataset = dataset
         self.augmentations = augmentations
         self.post_embed_metrics = [metric for metric in metrics if isinstance(metric, PostEmbedMetric)]
@@ -98,8 +96,7 @@ class Pipeline:
         run_id = str(uuid.uuid1())
         j2c = JSON2Clickhouse.from_config(self.db_config)
         records = []
-        for params in self.algorithm_params:
-            algorithm_wrapper = self.algorithm_wrapper_class(params)
+        for algorithm_wrapper in self.algorithm_wrappers:
             for sublist in chunked(tqdm.tqdm(self.dataset.generator(), total=len(self.dataset)), workers):
 
                 args = [(run_id, algorithm_wrapper, img_tuple) for img_tuple in sublist]

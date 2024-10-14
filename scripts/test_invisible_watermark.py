@@ -60,7 +60,6 @@ class InvisibleWatermarkWrapper(AlgorithmWrapper):
 
 
 def main():
-    wrapper = InvisibleWatermarkWrapper
     ds_path = "/hdd/diffusiondb/filtered"
     res_dir = Path(__file__).parent.parent / "test_results" / "invisible_watermark"
     db_config = Path(__file__).parent / "invisible_watermark.ini"
@@ -73,8 +72,7 @@ def main():
     ]
 
     pipeline = Pipeline(
-        wrapper,
-        marker_params,
+        (InvisibleWatermarkWrapper(params) for params in marker_params),
         dataset,
         aug_list,
         [PSNR(), BER()],

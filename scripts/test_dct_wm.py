@@ -37,7 +37,6 @@ class WatermarkData:
 
 
 def main():
-    wrapper = DCTMarkerWrapper
     ds_path = "/hdd/diffusiondb/filtered"
     res_dir = Path(__file__).parent.parent / "test_results" / "dct"
     db_config = Path(__file__).parent / "dct_wm.ini"
@@ -54,15 +53,14 @@ def main():
     marker_params = [DCTMarkerConfig(img_size, img_size, wm_length, block_size, ampl1, ampl_ratio, lambda_h) for img_size, wm_length, block_size, ampl1, ampl_ratio, lambda_h in param_combinations]
 
     pipeline = Pipeline(
-        wrapper,
-        marker_params,
+        (DCTMarkerWrapper(params) for params in marker_params),
         dataset,
         aug_list,
         [PSNR(), BER()],
         res_dir,
         db_config,
     )
-    pipeline.run(workers=1)
+    pipeline.run(workers=1, min_batch_size=10000)
 
 
 if __name__ == "__main__":

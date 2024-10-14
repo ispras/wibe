@@ -14,10 +14,10 @@ class AlgorithmWrapper:
 
     def embed(self, image, watermark_data: WatermarkData):
         raise NotImplementedError
-    
+
     def extract(self, image, watermark_data: WatermarkData):
         raise NotImplementedError
-    
+
     def watermark_data_gen(self) -> WatermarkData:
         return None
 
@@ -28,4 +28,3 @@ class AlgorithmWrapper:
         elif is_dataclass(params):
             return asdict(params)
         raise NotImplementedError(f"Cannot convert {type(params)} to dict")
-    
