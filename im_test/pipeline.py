@@ -3,8 +3,7 @@ import numpy as np
 from .datasets import Dataset
 from .algorithm_wrapper import AlgorithmWrapper
 from .metrics import Metric, PostEmbedMetric, PostExtractMetric
-from more_itertools import chunked
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 import traceback
 from typing import Callable, List, Tuple, Union, Iterable
 import tqdm
@@ -13,6 +12,12 @@ from time import perf_counter
 import datetime
 from json2clickhouse import JSON2Clickhouse
 import json
+from enum import Enum
+
+
+class ExecutorType(str, Enum):
+    thread = "thread"
+    process = "process"
 
 
 class Pipeline:
@@ -36,6 +41,7 @@ class Pipeline:
         self.result_path = Path(result_path)
         self.db_config = db_config
         self.result_path.mkdir(exist_ok=True, parents=True)
+        self.records = []
 
     def process_image(self, args: Tuple[str, AlgorithmWrapper, Tuple[str, np.ndarray]]):
         #ToDo: тут может возникнуть проблема, если время у двух процессов совпадет до миллисекунды, в БД это поле используется как primary key 
@@ -80,34 +86,53 @@ class Pipeline:
                 continue
         return record
 
-    def process_records(self, j2c, records):
+    def process_records(self, j2c):
         try:
-            j2c.process(records)
+            j2c.process(self.records)
         except Exception:
             traceback.print_exc()
-            for record in records:
+            for record in self.records:
                 dtm = str(record["dtm"])
                 res_path = self.result_path / f"{dtm}.json"
                 with open(res_path, "w") as f:
                     record["dtm"] = dtm
                     json.dump(record, f)
 
-    def run(self, workers=1, min_batch_size=100):
+    def add_record(self, record, j2c, progress, min_batch_size):
+        self.records.append(record)
+        progress.update()
+        if len(self.records) >= min_batch_size:
+            self.process_records(j2c)
+            self.records = []
+
+    def run(self, workers:int = 1, min_batch_size: int = 100, executor: ExecutorType = ExecutorType.process) -> None:
         run_id = str(uuid.uuid1())
         j2c = JSON2Clickhouse.from_config(self.db_config)
-        records = []
+        use_pool = workers > 1
+        if use_pool:
+            pool_executer = ThreadPoolExecutor(workers) if executor == ExecutorType.thread else ProcessPoolExecutor(workers)
+            pool_executer.__enter__()        
+        if hasattr(self.algorithm_wrappers, "__len__") and hasattr(self.dataset, "__len__"):
+            total_iters = len(self.algorithm_wrappers) * len(self.dataset)
+        else:
+            total_iters = None
+        progress = tqdm.tqdm(total=total_iters)
+        future_set = set()
         for algorithm_wrapper in self.algorithm_wrappers:
-            for sublist in chunked(tqdm.tqdm(self.dataset.generator(), total=len(self.dataset)), workers):
-
-                args = [(run_id, algorithm_wrapper, img_tuple) for img_tuple in sublist]
-                if workers > 1:
-                    with ProcessPoolExecutor(workers) as pool:
-                        result = pool.map(self.process_image, args)
-                else:
-                    result = [self.process_image(*args)]
-                records.extend(result)
-
-                if len(records) >= min_batch_size:
-                    self.process_records(j2c, records)
-                    records = []
-        self.process_records(j2c, records)
+            for img_tuple in self.dataset.generator():
+                args = (run_id, algorithm_wrapper, img_tuple)
+                if not use_pool:
+                    self.add_record(self.process_image(args), j2c, progress, min_batch_size)
+                    continue
+                future = pool_executer.submit(self.process_image, (run_id, algorithm_wrapper, img_tuple))
+                future_set.add(future)
+                if len(future_set) >= workers:
+                    completed_future = next(as_completed(future_set))
+                    future_set.remove(completed_future)
+                    self.add_record(completed_future.result(), j2c, progress, min_batch_size)
+ 
+        if use_pool:
+            for future in as_completed(future_set):
+                self.add_record(future.result(), j2c, progress, min_batch_size)
+            pool_executer.__exit__()
+        self.process_records(j2c)

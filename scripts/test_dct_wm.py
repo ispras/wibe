@@ -51,16 +51,17 @@ def main():
 
     param_combinations = product(img_sizes, wm_lengths, block_sizes, ampl1_s, ampl_ratio_s, lambda_h_s)
     marker_params = [DCTMarkerConfig(img_size, img_size, wm_length, block_size, ampl1, ampl_ratio, lambda_h) for img_size, wm_length, block_size, ampl1, ampl_ratio, lambda_h in param_combinations]
+    wrapper_list = [DCTMarkerWrapper(params) for params in marker_params]
 
     pipeline = Pipeline(
-        (DCTMarkerWrapper(params) for params in marker_params),
+        [wrapper for wrapper in wrapper_list if wrapper.marker.flattened_indices is not None],
         dataset,
         aug_list,
         [PSNR(), BER()],
         res_dir,
         db_config,
     )
-    pipeline.run(workers=1, min_batch_size=10000)
+    pipeline.run(workers=4, min_batch_size=10000, executor="thread")
 
 
 if __name__ == "__main__":
