@@ -110,8 +110,7 @@ class Pipeline:
         j2c = JSON2Clickhouse.from_config(self.db_config)
         use_pool = workers > 1
         if use_pool:
-            pool_executer = ThreadPoolExecutor(workers) if executor == ExecutorType.thread else ProcessPoolExecutor(workers)
-            pool_executer.__enter__()        
+            pool_executer = ThreadPoolExecutor(workers) if executor == ExecutorType.thread else ProcessPoolExecutor(workers)       
         if hasattr(self.algorithm_wrappers, "__len__") and hasattr(self.dataset, "__len__"):
             total_iters = len(self.algorithm_wrappers) * len(self.dataset)
         else:
@@ -134,5 +133,6 @@ class Pipeline:
         if use_pool:
             for future in as_completed(future_set):
                 self.add_record(future.result(), j2c, progress, min_batch_size)
-            pool_executer.__exit__()
+            pool_executer.shutdown()
         self.process_records(j2c)
+        self.records = []
