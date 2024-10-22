@@ -32,6 +32,8 @@ class DCTMarker:
 
     @staticmethod
     def get_flattened_indices(config: DCTMarkerConfig):
+        if config.width * config.height < config.wm_length * config.block_size:
+            return None
         not_used_coefs = (
             config.width * config.height - config.wm_length * config.block_size
         )
