@@ -158,7 +158,7 @@ class DWTSVMMarker:
         svc = SVC()
         svc.fit(train, key_mark)
         train_pred = svc.predict(train)
-        train_ber = (train_ber != key_mark).mean()
+        train_ber = (train_pred != key_mark).mean()
         self.metrics['train_ber'] = train_ber
         test_pred = svc.predict(test)
         return test_pred
