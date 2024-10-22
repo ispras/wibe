@@ -57,6 +57,11 @@ class DiffusionDB(ImageFolderDataset):
         super().__init__("DiffusionDB", path, preload=preload)
 
 
+class DiffusionDB512(ImageFolderDataset):
+    def __init__(self, path: Union[Path, str], preload: bool = False) -> None:
+        super().__init__("DiffusionDB512", path, preload=preload)
+
+
 if __name__ == "__main__":
     ds_path = "/hdd/diffusiondb/filtered"
     dataset = DiffusionDB(ds_path)
