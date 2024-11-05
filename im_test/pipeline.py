@@ -1,5 +1,6 @@
 from pathlib import Path
 import numpy as np
+import cv2
 from .datasets import Dataset
 from .algorithm_wrapper import AlgorithmWrapper
 from .metrics import Metric, PostEmbedMetric, PostExtractMetric
@@ -43,10 +44,10 @@ class Pipeline:
         self.result_path.mkdir(exist_ok=True, parents=True)
         self.records = []
 
-    def process_image(self, args: Tuple[str, AlgorithmWrapper, Tuple[str, np.ndarray]]):
+    def process_image(self, args: Tuple[str, AlgorithmWrapper, Tuple[str, np.ndarray], bool]):
         #ToDo: тут может возникнуть проблема, если время у двух процессов совпадет до миллисекунды, в БД это поле используется как primary key 
         dtm = datetime.datetime.now()
-        run_id, algorithm_wrapper, (img_id, img) = args
+        run_id, algorithm_wrapper, (img_id, img), img_save = args
         record = {
             "dtm": dtm,
             "run_id": run_id,
@@ -67,6 +68,18 @@ class Pipeline:
         except Exception:
             traceback.print_exc()
             return record
+        
+        if img_save:
+            h, w, c = img.shape
+            canvas = np.zeros((h, w * 3, c), dtype=np.uint8)
+            canvas[:, :w, :] = img
+            canvas[:, w: 2*w, :] = marked_img
+            diff = np.abs(marked_img.astype(int) - img)
+            diff_max = diff.max()
+            coef = 255 // diff_max
+            canvas[:, w * 2:, :] = (diff * coef).astype(np.uint8)
+            path = self.result_path / f"{img_id}_diff_x_{coef}.png"
+            cv2.imwrite(str(path), canvas)
 
         for aug_name, aug in self.augmentations:
             aug_img = aug(image=marked_img)["image"]
@@ -105,7 +118,7 @@ class Pipeline:
             self.process_records(j2c)
             self.records = []
 
-    def run(self, workers:int = 1, min_batch_size: int = 100, executor: ExecutorType = ExecutorType.process) -> None:
+    def run(self, workers:int = 1, min_batch_size: int = 100, executor: ExecutorType = ExecutorType.process, img_save_interval = 500) -> None:
         run_id = str(uuid.uuid1())
         j2c = JSON2Clickhouse.from_config(self.db_config)
         use_pool = workers > 1
@@ -118,12 +131,13 @@ class Pipeline:
         progress = tqdm.tqdm(total=total_iters)
         future_set = set()
         for algorithm_wrapper in self.algorithm_wrappers:
-            for img_tuple in self.dataset.generator():
-                args = (run_id, algorithm_wrapper, img_tuple)
+            for img_num, img_tuple in enumerate(self.dataset.generator()):
+                save_img = img_num % img_save_interval == 0
+                args = (run_id, algorithm_wrapper, img_tuple, save_img)
                 if not use_pool:
                     self.add_record(self.process_image(args), j2c, progress, min_batch_size)
                     continue
-                future = pool_executer.submit(self.process_image, (run_id, algorithm_wrapper, img_tuple))
+                future = pool_executer.submit(self.process_image, args)
                 future_set.add(future)
                 if len(future_set) >= workers:
                     completed_future = next(as_completed(future_set))
