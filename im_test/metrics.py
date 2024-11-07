@@ -64,14 +64,8 @@ class SSIM(PostEmbedMetric):
     ) -> float:
         if len(img.shape) == 2:
             return float(ssim(img, marked_img, data_range=255))
-        channel_ssim = [
-            ssim(img_c, marked_img_c, data_range=255)
-            for img_c, marked_img_c in zip(
-                img.transpose(2, 0, 1), marked_img.transpose(2, 0, 1),
-            )
-        ]
-        channel_ssim_mean = np.mean(channel_ssim)
-        return float(channel_ssim_mean)
+        res = ssim(img, marked_img, data_range=255, channel_axis=2)
+        return float(res)
     
 
 class LPIPS(PostEmbedMetric):
