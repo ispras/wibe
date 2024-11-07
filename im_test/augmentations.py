@@ -41,6 +41,39 @@ class CropRatio:
         x1 = int(cent_x - dist_w)
         x2 = int(cent_x + dist_w)
         return {'image': image[y1:y2, x1:x2, :]}
+    
+
+class RandomCropout:
+    '''
+    Augmentation that crop center part of the image that
+    makes up `keep_ratio` of area.
+    '''
+
+    def __init__(self, keep_ratio: float):
+        self.keep_ratio = keep_ratio
+
+    def __call__(self, image: np.ndarray) -> Dict[str, np.ndarray]:
+        w_ratio = np.random.random() * (1 - self.keep_ratio) + self.keep_ratio
+        h_ratio = self.keep_ratio / w_ratio
+
+        h, w = image.shape[:2]
+        crop_w, crop_h = int(w_ratio * w), int(h_ratio * h)
+        left_pos = np.random.randint(0, w - crop_w)
+        top_pos = np.random.randint(0, h - crop_h)
+        mask = np.zeros_like(image, dtype=np.bool_)
+        mask[top_pos: top_pos + crop_h, left_pos: left_pos + crop_w] = 1
+        result = image.copy()
+        result[~mask] = 0 # zeros pad
+        return {'image': result}
+
+
+def get_random_rst(value: float) -> A.Affine:
+    return A.Affine(
+        scale=(1 / (1 + value), 1 + value),
+        translate_percent=(-value, value),
+        rotate=(-90 * value, 90 * value),
+        always_apply=True,
+    )
 
 
 aug_list = [
@@ -60,4 +93,10 @@ aug_list = [
     ('center_crop_80', CropRatio(0.8)),
     ('center_crop_50', CropRatio(0.5)),
     ('center_crop_30', CropRatio(0.3)),
+    ('random_rst_2', get_random_rst(0.02)),
+    ('random_rst_5', get_random_rst(0.05)),
+    ('random_cropout_80', RandomCropout(0.8)),
+    ('random_cropout_50', RandomCropout(0.5)),
+    ('random_cropout_30', RandomCropout(0.3)),
+    ('random_brightness_contrast_02', A.RandomBrightnessContrast(0.2, 0.2, always_apply=True)),
 ]

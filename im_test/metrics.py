@@ -1,6 +1,9 @@
 from typing import Any, Union
 import numpy as np
+import lpips
+import torch
 from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
 
 
 class Metric:
@@ -47,6 +50,50 @@ class PSNR(PostEmbedMetric):
     ) -> float:
 
         return float(psnr(img, marked_img, data_range=255))
+
+
+class SSIM(PostEmbedMetric):
+    def __init__(self) -> None:
+        super().__init__("SSIM")
+
+    def __call__(
+        self,
+        img: np.ndarray,
+        marked_img: np.ndarray,
+        watermark_data: Any,
+    ) -> float:
+        if len(img.shape) == 2:
+            return float(ssim(img, marked_img, data_range=255))
+        channel_ssim = [
+            ssim(img_c, marked_img_c, data_range=255)
+            for img_c, marked_img_c in zip(
+                img.transpose(2, 0, 1), marked_img.transpose(2, 0, 1),
+            )
+        ]
+        channel_ssim_mean = np.mean(channel_ssim)
+        return float(channel_ssim_mean)
+    
+
+class LPIPS(PostEmbedMetric):
+    def __init__(self, net: str = "alex") -> None:
+        self.loss_fn = lpips.LPIPS(net=net, verbose=False)
+        super().__init__("LPIPS")
+
+    def __call__(
+        self,
+        img: np.ndarray,
+        marked_img: np.ndarray,
+        watermark_data: Any,
+    ) -> float:
+        
+        def to_tensor(image):
+            norm_image = image / 127.5 - 1
+            transposed_image = np.transpose(norm_image, (2, 0, 1))[np.newaxis, ...]
+            return torch.tensor(transposed_image, dtype=torch.float32)
+        
+        img_tensor = to_tensor(img)
+        marked_img_tensor = to_tensor(marked_img)
+        return float(self.loss_fn(img_tensor, marked_img_tensor))
 
 
 class Result(PostExtractMetric):
