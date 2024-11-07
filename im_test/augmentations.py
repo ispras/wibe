@@ -52,12 +52,12 @@ class Scale:
         self.height_p = height_p
         self.interp = interp
 
-    def __call__(self, img: np.ndarray):
-        resized = cv2.resize(img, None,
+    def __call__(self, image: np.ndarray):
+        resized = cv2.resize(image, None,
                              fx=self.width_p,
                              fy=self.height_p,
                              interpolation=self.interp)
-        return resized
+        return {'image': resized}
 
 
 aug_list = [
