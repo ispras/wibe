@@ -76,6 +76,23 @@ def get_random_rst(value: float) -> A.Affine:
     )
 
 
+class Scale:
+    def __init__(self,
+                 width_p: float = 1,
+                 height_p: float = 1,
+                 interp=cv2.INTER_LINEAR):
+        self.width_p = width_p
+        self.height_p = height_p
+        self.interp = interp
+
+    def __call__(self, image: np.ndarray):
+        resized = cv2.resize(image, None,
+                             fx=self.width_p,
+                             fy=self.height_p,
+                             interpolation=self.interp)
+        return {'image': resized}
+
+
 aug_list = [
     ('identity', Identity()),
     ('jpeg75', A.ImageCompression(75, 75, always_apply=True)),
@@ -93,6 +110,9 @@ aug_list = [
     ('center_crop_80', CropRatio(0.8)),
     ('center_crop_50', CropRatio(0.5)),
     ('center_crop_30', CropRatio(0.3)),
+    ('scale_xy2', Scale(2, 2)),
+    ('scale_xy05', Scale(0.5, 0.5)),
+    ('scale_x05', Scale(0.5, 1)),
     ('random_rst_2', get_random_rst(0.02)),
     ('random_rst_5', get_random_rst(0.05)),
     ('random_cropout_80', RandomCropout(0.8)),
