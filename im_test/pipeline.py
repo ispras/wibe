@@ -78,7 +78,7 @@ class Pipeline:
             diff_max = diff.max()
             coef = 255 // diff_max
             canvas[:, w * 2:, :] = (diff * coef).astype(np.uint8)
-            path = self.result_path / f"{img_id}_diff_x_{coef}.png"
+            path = self.result_path / f"{algorithm_wrapper.param_hash}_{img_id}_diff_x_{coef}.png"
             cv2.imwrite(str(path), canvas)
 
         for aug_name, aug in self.augmentations:

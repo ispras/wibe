@@ -3,7 +3,7 @@ from im_test.algorithm_wrapper import AlgorithmWrapper
 from im_test.augmentations import aug_list
 from im_test.pipeline import Pipeline
 from im_test.datasets import DiffusionDB
-from im_test.metrics import PSNR, BER
+from im_test.metrics import PSNR, BER, SSIM, LPIPS
 import numpy as np
 from pathlib import Path
 from itertools import product
@@ -57,7 +57,7 @@ def main():
         [wrapper for wrapper in wrapper_list if wrapper.marker.flattened_indices is not None],
         dataset,
         aug_list,
-        [PSNR(), BER()],
+        [PSNR(), SSIM(), LPIPS(), BER()],
         res_dir,
         db_config,
     )

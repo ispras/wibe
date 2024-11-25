@@ -4,7 +4,7 @@ from im_test.algorithm_wrapper import AlgorithmWrapper
 from im_test.augmentations import aug_list
 from im_test.pipeline import Pipeline
 from im_test.datasets import DiffusionDB
-from im_test.metrics import PSNR, BER
+from im_test.metrics import PSNR, BER, SSIM, LPIPS
 import numpy as np
 from pathlib import Path
 from dataclasses import dataclass
@@ -72,10 +72,10 @@ def main():
     ]
 
     pipeline = Pipeline(
-        (InvisibleWatermarkWrapper(params) for params in marker_params),
+        [InvisibleWatermarkWrapper(params) for params in marker_params],
         dataset,
         aug_list,
-        [PSNR(), BER()],
+        [PSNR(), SSIM(), LPIPS(), BER()],
         res_dir,
         db_config,
     )
