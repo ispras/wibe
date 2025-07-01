@@ -94,7 +94,7 @@ class DFTMarker:
 
     def extract_vec(self, mag: np.ndarray, r):
         # mag,ang,ycrcb = self._convert_img(img)
-        step = np.ceil(np.pi / (2 * np.asin(1 / (2 * r)))).astype(np.int32)
+        step = np.ceil(np.pi / (2 * np.arcsin(1 / (2 * r)))).astype(np.int32)
         # l = len(mark)
         out_vec = np.zeros((step,))
         w_mask = np.zeros(mag.shape, dtype=np.uint8)
