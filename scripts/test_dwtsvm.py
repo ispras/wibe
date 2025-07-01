@@ -1,15 +1,15 @@
-from im_test.algorithms.dwtsvm_marker import DWTSVMMarker
+from imgmarkbench.algorithms.dwtsvm_marker import DWTSVMMarker
 import numpy as np
 from itertools import product
 from pathlib import Path
 from typing import Any
-from im_test.augmentations import aug_list
-from im_test.pipeline import Pipeline
-from im_test.datasets import DiffusionDB512
-from im_test.metrics import PSNR, BER
-from im_test.algorithm_wrapper import AlgorithmWrapper
+from imgmarkbench.augmentations import aug_list
+from imgmarkbench.pipeline import Pipeline
+from imgmarkbench.datasets import DiffusionDB512
+from imgmarkbench.metrics import PSNR, BER
+from imgmarkbench.algorithm_wrapper import AlgorithmWrapper
 from dataclasses import dataclass
-from im_test.metrics import PostExtractMetric
+from imgmarkbench.metrics import PostExtractMetric
 
 
 @dataclass
