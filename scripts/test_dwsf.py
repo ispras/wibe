@@ -5,10 +5,10 @@ from imgmarkbench.algorithms.dwsf_alg import (
     DWSFConfig
 )
 from imgmarkbench.algorithm_wrapper import AlgorithmWrapper
-from imgmarkbench.augmentations import aug_list
+from imgmarkbench.augmentations.base import aug_list
 from imgmarkbench.pipeline import Pipeline
-from imgmarkbench.datasets import DiffusionDB
-from imgmarkbench.metrics import (
+from imgmarkbench.datasets.base import DiffusionDB
+from imgmarkbench.metrics.base import (
     PSNR,
     BER,
     SSIM,

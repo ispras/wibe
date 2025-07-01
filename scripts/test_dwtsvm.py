@@ -3,13 +3,13 @@ import numpy as np
 from itertools import product
 from pathlib import Path
 from typing import Any
-from imgmarkbench.augmentations import aug_list
+from imgmarkbench.augmentations.base import aug_list
 from imgmarkbench.pipeline import Pipeline
-from imgmarkbench.datasets import DiffusionDB512
-from imgmarkbench.metrics import PSNR, BER
+from imgmarkbench.datasets.base import DiffusionDB512
+from imgmarkbench.metrics.base import PSNR, BER
 from imgmarkbench.algorithm_wrapper import AlgorithmWrapper
 from dataclasses import dataclass
-from imgmarkbench.metrics import PostExtractMetric
+from imgmarkbench.metrics.base import PostExtractMetric
 
 
 @dataclass

@@ -1,9 +1,9 @@
 from pathlib import Path
 import numpy as np
 import cv2
-from .datasets import Dataset
+from .datasets.base import Dataset
 from .algorithm_wrapper import AlgorithmWrapper
-from .metrics import Metric, PostEmbedMetric, PostExtractMetric
+from .metrics.base import Metric, PostEmbedMetric, PostExtractMetric
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 import traceback
 from typing import Callable, List, Tuple, Union, Iterable

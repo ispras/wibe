@@ -3,6 +3,7 @@ from itertools import chain
 import cv2
 import numpy as np
 from typing import Generator, Tuple, Union, List
+from imgmarkbench.registry import register_dataset
 
 
 class Dataset:
@@ -51,12 +52,14 @@ class ImageFolderDataset(Dataset):
                 img = cv2.imread(str(path), self.flags)
                 yield path.name, img
 
-
+# ToDo: убрать повторы
+@register_dataset("DiffusionDB")
 class DiffusionDB(ImageFolderDataset):
     def __init__(self, path: Union[Path, str], preload: bool = False) -> None:
         super().__init__("DiffusionDB", path, preload=preload)
 
 
+@register_dataset("DiffusionDB512")
 class DiffusionDB512(ImageFolderDataset):
     def __init__(self, path: Union[Path, str], preload: bool = False) -> None:
         super().__init__("DiffusionDB512", path, preload=preload)

@@ -2,6 +2,7 @@ from typing import Any, Union
 import numpy as np
 import lpips
 import torch
+from imgmarkbench.registry import register_metric
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 
@@ -38,6 +39,7 @@ class PostExtractMetric(Metric):
         raise NotImplementedError
 
 
+@register_metric("PSNR")
 class PSNR(PostEmbedMetric):
     def __init__(self) -> None:
         super().__init__("PSNR")
@@ -52,6 +54,7 @@ class PSNR(PostEmbedMetric):
         return float(psnr(img, marked_img, data_range=255))
 
 
+@register_metric("SSIM")
 class SSIM(PostEmbedMetric):
     def __init__(self) -> None:
         super().__init__("SSIM")
@@ -68,6 +71,7 @@ class SSIM(PostEmbedMetric):
         return float(res)
     
 
+@register_metric("LPIPS")
 class LPIPS(PostEmbedMetric):
     def __init__(self, net: str = "alex") -> None:
         self.loss_fn = lpips.LPIPS(net=net, verbose=False)
@@ -90,6 +94,7 @@ class LPIPS(PostEmbedMetric):
         return float(self.loss_fn(img_tensor, marked_img_tensor))
 
 
+@register_metric("result")
 class Result(PostExtractMetric):
     def __init__(self) -> None:
         super().__init__("result")
@@ -105,6 +110,7 @@ class Result(PostExtractMetric):
         return float(extraction_result)
 
 
+@register_metric("BER")
 class BER(PostExtractMetric):
     def __init__(self) -> None:
         super().__init__("BER")

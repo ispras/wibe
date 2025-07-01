@@ -1,0 +1,20 @@
+algorithms:
+  - dct_marker:
+    img_size: 256
+    wm_length: 100
+    block_size: 256
+    ampl1: 0.01
+    ampl_ratio: 0.7
+    lambda_h: 4
+
+metrics:
+  - psnr
+  - ssim
+  - lpips
+  - ber
+
+datasets:
+  - diffusiondb
+
+augmentations:
+  - all  

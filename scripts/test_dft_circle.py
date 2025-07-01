@@ -1,9 +1,9 @@
 from imgmarkbench.algorithms.dft_circle import DFTMarker
-from imgmarkbench.augmentations import aug_list
+from imgmarkbench.augmentations.base import aug_list
 from imgmarkbench.pipeline import Pipeline
-from imgmarkbench.datasets import DiffusionDB
+from imgmarkbench.datasets.base import DiffusionDB
 from imgmarkbench.algorithm_wrapper import AlgorithmWrapper
-from imgmarkbench.metrics import PSNR, Result
+from imgmarkbench.metrics.base import PSNR, Result
 import numpy as np
 from pathlib import Path
 

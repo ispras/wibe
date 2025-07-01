@@ -1,9 +1,9 @@
 from imgmarkbench.algorithms.dct_marker import DCTMarker, DCTMarkerConfig
 from imgmarkbench.algorithm_wrapper import AlgorithmWrapper
-from imgmarkbench.augmentations import aug_list
+from imgmarkbench.augmentations.base import aug_list
 from imgmarkbench.pipeline import Pipeline
-from imgmarkbench.datasets import DiffusionDB
-from imgmarkbench.metrics import PSNR, BER, SSIM, LPIPS
+from imgmarkbench.datasets.base import DiffusionDB
+from imgmarkbench.metrics.base import PSNR, BER, SSIM, LPIPS
 import numpy as np
 from pathlib import Path
 from itertools import product
