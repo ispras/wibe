@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from typing import *
+from typing import Optional
 
 
 class DFTMarker:

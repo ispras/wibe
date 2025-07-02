@@ -1,5 +1,6 @@
-from imgmarkbench.algorithms.dct_marker import DCTMarker, DCTMarkerConfig
+from imgmarkbench_watermarking_algorithms.dct_marker import DCTMarker, DCTMarkerConfig
 from imgmarkbench.algorithms.base import AlgorithmWrapper
+from imgmarkbench.registry import register_algorithm
 from imgmarkbench.augmentations.base import aug_list
 from imgmarkbench.pipeline import Pipeline
 from imgmarkbench.datasets.base import DiffusionDB
@@ -8,12 +9,15 @@ import numpy as np
 from pathlib import Path
 from itertools import product
 from dataclasses import dataclass
+from typing import Dict
 
 
+@register_algorithm("dct_marker")
 class DCTMarkerWrapper(AlgorithmWrapper):
-    def __init__(self, params: DCTMarkerConfig):
-        super().__init__(params)
-        self.marker = DCTMarker(params)
+    def __init__(self, params: Dict):
+        config = DCTMarkerConfig(**params)
+        super().__init__(config)
+        self.marker = DCTMarker(config)
 
     def embed(self, image, watermark_data):
         watermark = watermark_data.watermark
