@@ -2,7 +2,7 @@ from pathlib import Path
 import numpy as np
 import cv2
 from .datasets.base import Dataset
-from .algorithm_wrapper import AlgorithmWrapper
+from .algorithms.base import AlgorithmWrapper
 from .metrics.base import Metric, PostEmbedMetric, PostExtractMetric
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 import traceback
@@ -14,6 +14,7 @@ import datetime
 from json2clickhouse import JSON2Clickhouse
 import json
 from enum import Enum
+from itertools import chain
 
 
 class ExecutorType(str, Enum):
@@ -25,7 +26,7 @@ class Pipeline:
     def __init__(
         self,
         algorithm_wrapper: Union[AlgorithmWrapper, Iterable[AlgorithmWrapper]],
-        dataset: Dataset,
+        datasets: Union[Dataset, Iterable[Dataset]],
         augmentations: List[Tuple[str, Callable]],
         metrics: List[Metric],
         result_path: Union[Path, str],
@@ -35,7 +36,10 @@ class Pipeline:
             self.algorithm_wrappers = [algorithm_wrapper]
         else:
             self.algorithm_wrappers = algorithm_wrapper
-        self.dataset = dataset
+        if isinstance(algorithm_wrapper, Dataset):
+            self.datasets = [datasets]
+        else:
+            self.datasets = datasets
         self.augmentations = augmentations
         self.post_embed_metrics = [metric for metric in metrics if isinstance(metric, PostEmbedMetric)]
         self.post_extract_metrics = [metric for metric in metrics if isinstance(metric, PostExtractMetric)]
@@ -123,15 +127,22 @@ class Pipeline:
         j2c = JSON2Clickhouse.from_config(self.db_config)
         use_pool = workers > 1
         if use_pool:
-            pool_executer = ThreadPoolExecutor(workers) if executor == ExecutorType.thread else ProcessPoolExecutor(workers)       
-        if hasattr(self.algorithm_wrappers, "__len__") and hasattr(self.dataset, "__len__"):
-            total_iters = len(self.algorithm_wrappers) * len(self.dataset)
-        else:
-            total_iters = None
+            pool_executer = ThreadPoolExecutor(workers) if executor == ExecutorType.thread else ProcessPoolExecutor(workers)
+        total_iters = None
+        if hasattr(self.algorithm_wrappers, "__len__"):
+            dataset_iters = 0
+            for dataset in self.datasets:
+                if not hasattr(dataset, "__len__"):
+                    break
+                else:
+                    dataset_iters += len(dataset)
+            else:
+                total_iters = len(self.algorithm_wrappers) * dataset_iters
+
         progress = tqdm.tqdm(total=total_iters)
         future_set = set()
         for algorithm_wrapper in self.algorithm_wrappers:
-            for img_num, img_tuple in enumerate(self.dataset.generator()):
+            for img_num, img_tuple in enumerate(chain(dataset.generator for dataset in self.datasets)):
                 save_img = img_num % img_save_interval == 0
                 args = (run_id, algorithm_wrapper, img_tuple, save_img)
                 if not use_pool:

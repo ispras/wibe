@@ -7,7 +7,7 @@ from imgmarkbench.augmentations.base import aug_list
 from imgmarkbench.pipeline import Pipeline
 from imgmarkbench.datasets.base import DiffusionDB512
 from imgmarkbench.metrics.base import PSNR, BER
-from imgmarkbench.algorithm_wrapper import AlgorithmWrapper
+from imgmarkbench.algorithms.base import AlgorithmWrapper
 from dataclasses import dataclass
 from imgmarkbench.metrics.base import PostExtractMetric
 

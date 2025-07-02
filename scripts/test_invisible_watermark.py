@@ -1,6 +1,6 @@
 # pip install invisible-watermark
 from imwatermark import WatermarkEncoder, WatermarkDecoder
-from imgmarkbench.algorithm_wrapper import AlgorithmWrapper
+from imgmarkbench.algorithms.base import AlgorithmWrapper
 from imgmarkbench.augmentations.base import aug_list
 from imgmarkbench.pipeline import Pipeline
 from imgmarkbench.datasets.base import DiffusionDB

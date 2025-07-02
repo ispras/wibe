@@ -1,5 +1,5 @@
 from imgmarkbench.algorithms.dct_marker import DCTMarker, DCTMarkerConfig
-from imgmarkbench.algorithm_wrapper import AlgorithmWrapper
+from imgmarkbench.algorithms.base import AlgorithmWrapper
 from imgmarkbench.augmentations.base import aug_list
 from imgmarkbench.pipeline import Pipeline
 from imgmarkbench.datasets.base import DiffusionDB
