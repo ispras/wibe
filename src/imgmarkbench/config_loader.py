@@ -7,6 +7,7 @@ ALGORITHMS_FIELD = "algorithms"
 METRICS_FIELD = "metrics"
 DATASETS_FIELD = "datasets"
 AUGMENTATIONS_FIELD = "augmentations"
+PIPELINE_FIELD = "pipeline"
 
 
 def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
@@ -17,12 +18,17 @@ def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
         METRICS_FIELD,
         DATASETS_FIELD,
         AUGMENTATIONS_FIELD,
+        PIPELINE_FIELD,
     ]:
         assert field in config.keys(), f"Missing '{field}' in yaml config file"
         field_value = config[field]
+        if field == PIPELINE_FIELD:
+            result[field] = field_value
+            continue
+
         field_result = []
         result[field] = field_result
-
+            
         if isinstance(field_value, List):
             for single_obj in field_value:
                 if isinstance(single_obj, Dict):

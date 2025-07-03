@@ -14,6 +14,7 @@ from imgmarkbench.config_loader import (
     METRICS_FIELD,
     DATASETS_FIELD,
     AUGMENTATIONS_FIELD,
+    PIPELINE_FIELD,
 )
 
 import_modules("imgmarkbench.algorithms")
@@ -50,7 +51,8 @@ def run(
     datasets = get_datasets(loaded_config[DATASETS_FIELD])
     augs = get_augmentations(loaded_config[AUGMENTATIONS_FIELD])
 
-
+    pipeline = Pipeline(alg_wrappers, datasets, augs, metrics, **loaded_config[PIPELINE_FIELD])
+    pipeline.run()
     pass
 
 

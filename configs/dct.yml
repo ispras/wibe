@@ -21,10 +21,12 @@ datasets:
 
 augmentations:
   - Identity
-  # - jpeg: 
-  #     quality: 50
-  # - jpeg:
-  #     quality: 20
+  - JPEG: 
+      quality: 50
+  - JPEG:
+      quality: 20
 
 
 pipeline:
+  result_path: ./test_results/dct
+  db_config: ./scripts/dct_wm.ini

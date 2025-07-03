@@ -14,9 +14,22 @@ class Augmentation:
 
 
 @register_augmentation("Identity")
-class Identity():
+class Identity(Augmentation):
+    def __init__(self):
+        super().__init__("Identity")
+
     def __call__(self, image: np.ndarray):
         return {'image': np.copy(image)}
+
+
+@register_augmentation("JPEG")
+class JPEGCompression( A.ImageCompression, Augmentation):
+    def __init__(self, quality=50):
+        Augmentation.__init__(self, "JPEG")
+        A.ImageCompression.__init__(self, quality_range=(quality, quality), always_apply=True, compression_type="jpeg")
+
+    
+
 
 class Rotate90:
     def __init__(self, direction: Literal['clock', 'counter'] = 'clock'):
@@ -102,30 +115,30 @@ class Scale:
         return {'image': resized}
 
 
-aug_list = [
-    ('identity', Identity()),
-    ('jpeg75', A.ImageCompression(75, 75, always_apply=True)),
-    ('jpeg50', A.ImageCompression(50, 50, always_apply=True)),
-    ('jpeg20', A.ImageCompression(20, 20, always_apply=True)),
-    ('rotate90', Rotate90()),
-    ('rotate30', A.Rotate(limit=(30, 30), always_apply=True, border_mode=cv2.BORDER_CONSTANT)),
-    ('rotate60', A.Rotate(limit=(60, 60), always_apply=True, border_mode=cv2.BORDER_CONSTANT)),
-    ('gauss_blur_3', A.GaussianBlur((3, 3), always_apply=True)),
-    ('gaus_blur_5', A.GaussianBlur((5, 5), always_apply=True)),
-    ('gaus_blur_7', A.GaussianBlur((7, 7), always_apply=True)),
-    ('gaus_noise_8', A.GaussNoise((8, 8), always_apply=True)),
-    ('gaus_noise_13', A.GaussNoise((13, 13), always_apply=True)),
-    ('gaus_noise_22', A.GaussNoise((22, 22), always_apply=True)),
-    ('center_crop_80', CropRatio(0.8)),
-    ('center_crop_50', CropRatio(0.5)),
-    ('center_crop_30', CropRatio(0.3)),
-    ('scale_xy2', Scale(2, 2)),
-    ('scale_xy05', Scale(0.5, 0.5)),
-    ('scale_x05', Scale(0.5, 1)),
-    ('random_rst_2', get_random_rst(0.02)),
-    ('random_rst_5', get_random_rst(0.05)),
-    ('random_cropout_80', RandomCropout(0.8)),
-    ('random_cropout_50', RandomCropout(0.5)),
-    ('random_cropout_30', RandomCropout(0.3)),
-    ('random_brightness_contrast_02', A.RandomBrightnessContrast(0.2, 0.2, always_apply=True)),
-]
+# aug_list = [
+#     ('identity', Identity()),
+#     ('jpeg75', A.ImageCompression(75, 75, always_apply=True)),
+#     ('jpeg50', A.ImageCompression(50, 50, always_apply=True)),
+#     ('jpeg20', A.ImageCompression(20, 20, always_apply=True)),
+#     ('rotate90', Rotate90()),
+#     ('rotate30', A.Rotate(limit=(30, 30), always_apply=True, border_mode=cv2.BORDER_CONSTANT)),
+#     ('rotate60', A.Rotate(limit=(60, 60), always_apply=True, border_mode=cv2.BORDER_CONSTANT)),
+#     ('gauss_blur_3', A.GaussianBlur((3, 3), always_apply=True)),
+#     ('gaus_blur_5', A.GaussianBlur((5, 5), always_apply=True)),
+#     ('gaus_blur_7', A.GaussianBlur((7, 7), always_apply=True)),
+#     ('gaus_noise_8', A.GaussNoise((8, 8), always_apply=True)),
+#     ('gaus_noise_13', A.GaussNoise((13, 13), always_apply=True)),
+#     ('gaus_noise_22', A.GaussNoise((22, 22), always_apply=True)),
+#     ('center_crop_80', CropRatio(0.8)),
+#     ('center_crop_50', CropRatio(0.5)),
+#     ('center_crop_30', CropRatio(0.3)),
+#     ('scale_xy2', Scale(2, 2)),
+#     ('scale_xy05', Scale(0.5, 0.5)),
+#     ('scale_x05', Scale(0.5, 1)),
+#     ('random_rst_2', get_random_rst(0.02)),
+#     ('random_rst_5', get_random_rst(0.05)),
+#     ('random_cropout_80', RandomCropout(0.8)),
+#     ('random_cropout_50', RandomCropout(0.5)),
+#     ('random_cropout_30', RandomCropout(0.3)),
+#     ('random_brightness_contrast_02', A.RandomBrightnessContrast(0.2, 0.2, always_apply=True)),
+# ]

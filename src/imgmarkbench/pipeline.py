@@ -85,7 +85,8 @@ class Pipeline:
             path = self.result_path / f"{algorithm_wrapper.param_hash}_{img_id}_diff_x_{coef}.png"
             cv2.imwrite(str(path), canvas)
 
-        for aug_name, aug in self.augmentations:
+        for aug in self.augmentations:
+            aug_name = aug.name
             aug_img = aug(image=marked_img)["image"]
             record[aug_name] = {}
             aug_record = record[aug_name]
@@ -142,7 +143,7 @@ class Pipeline:
         progress = tqdm.tqdm(total=total_iters)
         future_set = set()
         for algorithm_wrapper in self.algorithm_wrappers:
-            for img_num, img_tuple in enumerate(chain(dataset.generator for dataset in self.datasets)):
+            for img_num, img_tuple in enumerate(chain.from_iterable(dataset.generator() for dataset in self.datasets)):
                 save_img = img_num % img_save_interval == 0
                 args = (run_id, algorithm_wrapper, img_tuple, save_img)
                 if not use_pool:

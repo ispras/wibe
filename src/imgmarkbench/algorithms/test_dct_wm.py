@@ -1,7 +1,7 @@
 from imgmarkbench_watermarking_algorithms.dct_marker import DCTMarker, DCTMarkerConfig
 from imgmarkbench.algorithms.base import AlgorithmWrapper
 from imgmarkbench.registry import register_algorithm
-from imgmarkbench.augmentations.base import aug_list
+# from imgmarkbench.augmentations.base import aug_list
 from imgmarkbench.pipeline import Pipeline
 from imgmarkbench.datasets.base import DiffusionDB
 from imgmarkbench.metrics.base import PSNR, BER, SSIM, LPIPS
