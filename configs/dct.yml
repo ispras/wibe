@@ -1,5 +1,6 @@
 algorithms:
   dct_marker:
+    params:
       width: 256
       height: 256
       wm_length: 100
@@ -9,21 +10,21 @@ algorithms:
       lambda_h: 4
 
 metrics:
-  - psnr
-  - ssim
-  - lpips
-  - ber
+  - PSNR
+  - SSIM
+  - LPIPS
+  - BER
 
 datasets:
-  diffusiondb
+  - DiffusionDB:
+      path: /hdd/diffusiondb/filtered 
 
 augmentations:
-  - jpeg: 
-      quality: 50
-  - jpeg:
-      quality: 20
-  - rotate
-  - smth
+  - Identity
+  # - jpeg: 
+  #     quality: 50
+  # - jpeg:
+  #     quality: 20
 
 
 pipeline:

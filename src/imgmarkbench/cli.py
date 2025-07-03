@@ -46,9 +46,10 @@ def run(
     loaded_config = load_pipeline_config_yaml(config)
 
     alg_wrappers = get_algorithms(loaded_config[ALGORITHMS_FIELD])
+    metrics = get_metrics(loaded_config[METRICS_FIELD])
     datasets = get_datasets(loaded_config[DATASETS_FIELD])
     augs = get_augmentations(loaded_config[AUGMENTATIONS_FIELD])
-    metrics = get_metrics(loaded_config[METRICS_FIELD])
+
 
     pass
 

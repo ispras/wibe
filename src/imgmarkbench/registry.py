@@ -42,7 +42,12 @@ def get_objects(
         if not name in registry.objects.keys():
             raise ValueError(f"{registry.type} '{name}' is not registered")
         object_cls = registry.objects[name]
-        result.append(object_cls(config))
+        if isinstance(config, Dict):
+            result.append(object_cls(**config))
+        elif isinstance(config, List):
+            result.append(object_cls(*config))
+        elif config is None:
+            result.append(object_cls())
     return result
 
 

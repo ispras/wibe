@@ -1,13 +1,22 @@
 import cv2
 import numpy as np
 import albumentations as A
-from typing import *
+from imgmarkbench.registry import register_augmentation
+from typing import Dict, Literal
 
 
-class Identity:
+class Augmentation:
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def __call__(self, image: np.ndarray) -> Dict[str, np.ndarray]:
+        raise NotImplementedError
+
+
+@register_augmentation("Identity")
+class Identity():
     def __call__(self, image: np.ndarray):
         return {'image': np.copy(image)}
-
 
 class Rotate90:
     def __init__(self, direction: Literal['clock', 'counter'] = 'clock'):
