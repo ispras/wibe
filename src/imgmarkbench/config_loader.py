@@ -1,13 +1,51 @@
 import yaml
 from pathlib import Path
 from typing import Union, List, Dict, Any
+from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
+from imgmarkbench.attacks.base import BaseAttack
+from imgmarkbench.datasets.base import BaseDataset
+from imgmarkbench.metrics.base import BaseMetric
+from typing import Dict, List, Tuple, Type, Any
+from functools import partial
 
 
 ALGORITHMS_FIELD = "algorithms"
 METRICS_FIELD = "metrics"
 DATASETS_FIELD = "datasets"
-AUGMENTATIONS_FIELD = "augmentations"
+ATTACKS_FIELD = "attacks"
 PIPELINE_FIELD = "pipeline"
+
+
+def get_objects(
+    object_pairs: List[Tuple[str, Any]], registry_cls
+) -> List[Any]:
+    result = []
+    for object_pair in object_pairs:
+        name, config = object_pair
+        name = name.lower()
+        if name not in registry_cls._registry.keys():
+            raise ValueError(f"{registry_cls.type} '{name}' is not registered")
+        object_cls = registry_cls._registry[name]
+        if isinstance(config, Dict):
+            if "report_name" in config:
+                report_name = config["report_name"]
+                del config["report_name"]
+                obj = object_cls(**config)
+                obj.report_name = report_name
+            else:
+                obj = object_cls(**config)
+            result.append(obj)
+        elif isinstance(config, List):
+            result.append(object_cls(*config))
+        elif config is None:
+            result.append(object_cls())
+    return result
+
+
+get_algorithms = partial(get_objects, registry_cls=BaseAlgorithmWrapper)
+get_metrics = partial(get_objects, registry_cls=BaseMetric)
+get_datasets = partial(get_objects, registry_cls=BaseDataset)
+get_attacks = partial(get_objects, registry_cls=BaseAttack)
 
 
 def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
@@ -17,7 +55,7 @@ def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
         ALGORITHMS_FIELD,
         METRICS_FIELD,
         DATASETS_FIELD,
-        AUGMENTATIONS_FIELD,
+        ATTACKS_FIELD,
         PIPELINE_FIELD,
     ]:
         assert field in config.keys(), f"Missing '{field}' in yaml config file"
@@ -28,7 +66,7 @@ def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
 
         field_result = []
         result[field] = field_result
-            
+
         if isinstance(field_value, List):
             for single_obj in field_value:
                 if isinstance(single_obj, Dict):
@@ -42,13 +80,13 @@ def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
                     raise TypeError(
                         f"Unknown type '{type(single_obj)}' for field '{field}'"
                     )
-                
+
         elif isinstance(field_value, Dict):
             field_result.extend(field_value.items())
 
         elif isinstance(field_value, str):
             field_result.append((field_value, None))
-            
+
         else:
             raise TypeError(
                 f"Unknown type '{type(field_value)}' for field '{field}'"

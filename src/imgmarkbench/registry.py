@@ -1,68 +1,27 @@
-import importlib
-import pkgutil
-from typing import Dict, List, Tuple, Type, Any
-from functools import partial
-from dataclasses import dataclass
+class RegistryMeta(type):
+    def __init__(cls, name, bases, dct):
+        super().__init__(name, bases, dct)
+
+        if not hasattr(cls, '_registry'):
+            cls._registry = {}
+            return
+        
+        if cls.__dict__.get('abstract', False):
+            return
+        
+        if not cls.__name__.startswith('Base'):
+            plugin_name = getattr(cls, 'name', cls.__name__)
+            plugin_name = plugin_name.lower()
+            for base in bases:
+                if hasattr(base, '_registry'):
+                    if plugin_name in base._registry:
+                        raise ValueError(f"{plugin_name} already registered")
+                    base._registry[plugin_name] = cls
+                    print(f"Registered {base.type}: {cls.__name__} as {plugin_name}")
+                    break
+
+            if not hasattr(cls, 'report_name'):
+                setattr(cls, 'report_name', plugin_name)
 
 
-@dataclass
-class Registry:
-    type: str
-    objects: Dict[str, Type]
 
-
-algorithm_registry = Registry("algorithm", {})
-metric_registry = Registry("metric", {})
-dataset_registry = Registry("dataset", {})
-augmentation_registry = Registry("augmentation", {})
-
-
-def register_object(name: str, registry: Registry):
-    def decorator(cls):
-        registry.objects[name] = cls
-        return cls
-
-    return decorator
-
-
-register_algorithm = partial(register_object, registry=algorithm_registry)
-register_metric = partial(register_object, registry=metric_registry)
-register_dataset = partial(register_object, registry=dataset_registry)
-register_augmentation = partial(
-    register_object, registry=augmentation_registry
-)
-
-
-def get_objects(
-    object_pairs: List[Tuple[str, Any]], registry: Registry
-) -> List[Any]:
-    result = []
-    for object_pair in object_pairs:
-        name, config = object_pair
-        if not name in registry.objects.keys():
-            raise ValueError(f"{registry.type} '{name}' is not registered")
-        object_cls = registry.objects[name]
-        if isinstance(config, Dict):
-            result.append(object_cls(**config))
-        elif isinstance(config, List):
-            result.append(object_cls(*config))
-        elif config is None:
-            result.append(object_cls())
-    return result
-
-
-get_algorithms = partial(get_objects, registry=algorithm_registry)
-get_metrics = partial(get_objects, registry=metric_registry)
-get_datasets = partial(get_objects, registry=dataset_registry)
-get_augmentations = partial(get_objects, registry=augmentation_registry)
-
-
-def import_modules(package_name):
-    package = importlib.import_module(package_name)
-    for _, module_name, _ in pkgutil.iter_modules(package.__path__):
-        try:
-            importlib.import_module(f"{package_name}.{module_name}")
-        except Exception as e:
-            print(
-                f"Could not import '{module_name}' from '{package_name}': {e}"
-            )  # Todo: logging

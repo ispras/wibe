@@ -1,12 +1,15 @@
 from dataclasses import is_dataclass, asdict
 from hashlib import md5
 from typing import Any
+from imgmarkbench.registry import RegistryMeta
 
 
 WatermarkData = Any
 
 
-class AlgorithmWrapper:
+class BaseAlgorithmWrapper(metaclass=RegistryMeta):
+    type = "algorithm wrapper"
+
     def __init__(self, params: Any) -> None:
         self.params = params
         self.param_dict = self.params2dict(self.params)

@@ -1,8 +1,8 @@
 from imgmarkbench.algorithms.dft_circle import DFTMarker
-from imgmarkbench.augmentations.base import aug_list
+from imgmarkbench.attacks.base import aug_list
 from imgmarkbench.pipeline import Pipeline
 from imgmarkbench.datasets.base import DiffusionDB
-from imgmarkbench.algorithms.base import AlgorithmWrapper
+from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.metrics.base import PSNR, Result
 import numpy as np
 from pathlib import Path
@@ -24,7 +24,7 @@ rnd_mark = np.array([0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1,
 
 
 
-class DFTMarkerWrapper(AlgorithmWrapper):
+class DFTMarkerWrapper(BaseAlgorithmWrapper):
     def __init__(self, params: dict):
         super().__init__(params)
         self.alpha = params["alpha"]

@@ -2,19 +2,17 @@ from typing import Any, Union
 import numpy as np
 import lpips
 import torch
-from imgmarkbench.registry import register_metric
+from imgmarkbench.registry import RegistryMeta
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 
 
-class Metric:
-    def __init__(self, name: str) -> None:
-        self.name = name
+class BaseMetric(metaclass=RegistryMeta):
+    type = "metric"
 
 
-class PostEmbedMetric(Metric):
-    def __init__(self, name: str) -> None:
-        super().__init__(name)
+class PostEmbedMetric(BaseMetric):
+    abstract = True
 
     def __call__(
         self,
@@ -25,9 +23,8 @@ class PostEmbedMetric(Metric):
         raise NotImplementedError
 
 
-class PostExtractMetric(Metric):
-    def __init__(self, name: str) -> None:
-        super().__init__(name)
+class PostExtractMetric(BaseMetric):
+    abstract = True
 
     def __call__(
         self,
@@ -39,10 +36,7 @@ class PostExtractMetric(Metric):
         raise NotImplementedError
 
 
-@register_metric("PSNR")
 class PSNR(PostEmbedMetric):
-    def __init__(self) -> None:
-        super().__init__("PSNR")
 
     def __call__(
         self,
@@ -54,10 +48,7 @@ class PSNR(PostEmbedMetric):
         return float(psnr(img, marked_img, data_range=255))
 
 
-@register_metric("SSIM")
 class SSIM(PostEmbedMetric):
-    def __init__(self) -> None:
-        super().__init__("SSIM")
 
     def __call__(
         self,
@@ -71,11 +62,9 @@ class SSIM(PostEmbedMetric):
         return float(res)
     
 
-@register_metric("LPIPS")
 class LPIPS(PostEmbedMetric):
     def __init__(self, net: str = "alex") -> None:
         self.loss_fn = lpips.LPIPS(net=net, verbose=False)
-        super().__init__("LPIPS")
 
     def __call__(
         self,
@@ -94,10 +83,8 @@ class LPIPS(PostEmbedMetric):
         return float(self.loss_fn(img_tensor, marked_img_tensor))
 
 
-@register_metric("result")
 class Result(PostExtractMetric):
-    def __init__(self) -> None:
-        super().__init__("result")
+    name = "result"
 
     def __call__(
         self,
@@ -110,10 +97,7 @@ class Result(PostExtractMetric):
         return float(extraction_result)
 
 
-@register_metric("BER")
 class BER(PostExtractMetric):
-    def __init__(self) -> None:
-        super().__init__("BER")
 
     def __call__(
         self,

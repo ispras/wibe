@@ -4,8 +4,8 @@ from imgmarkbench.algorithms.dwsf_alg import (
     DWSF,
     DWSFConfig
 )
-from imgmarkbench.algorithms.base import AlgorithmWrapper
-from imgmarkbench.augmentations.base import aug_list
+from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
+from imgmarkbench.attacks.base import aug_list
 from imgmarkbench.pipeline import Pipeline
 from imgmarkbench.datasets.base import DiffusionDB
 from imgmarkbench.metrics.base import (
@@ -26,7 +26,7 @@ class WatermarkData:
     watermark: np.ndarray
 
 
-class DWSFWrapper(AlgorithmWrapper):
+class DWSFWrapper(BaseAlgorithmWrapper):
     def __init__(self, params: DWSFConfig):
         super().__init__(params)
         self.marker: DWSF

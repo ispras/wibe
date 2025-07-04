@@ -1,6 +1,5 @@
 from imgmarkbench_watermarking_algorithms.dct_marker import DCTMarker, DCTMarkerConfig
-from imgmarkbench.algorithms.base import AlgorithmWrapper
-from imgmarkbench.registry import register_algorithm
+from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 # from imgmarkbench.augmentations.base import aug_list
 from imgmarkbench.pipeline import Pipeline
 from imgmarkbench.datasets.base import DiffusionDB
@@ -12,8 +11,9 @@ from dataclasses import dataclass
 from typing import Dict
 
 
-@register_algorithm("dct_marker")
-class DCTMarkerWrapper(AlgorithmWrapper):
+class DCTMarkerWrapper(BaseAlgorithmWrapper):
+    name = "dct_marker"
+
     def __init__(self, params: Dict):
         config = DCTMarkerConfig(**params)
         super().__init__(config)

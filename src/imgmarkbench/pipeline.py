@@ -1,9 +1,9 @@
 from pathlib import Path
 import numpy as np
 import cv2
-from .datasets.base import Dataset
-from .algorithms.base import AlgorithmWrapper
-from .metrics.base import Metric, PostEmbedMetric, PostExtractMetric
+from .datasets.base import BaseDataset
+from .algorithms.base import BaseAlgorithmWrapper
+from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 import traceback
 from typing import Callable, List, Tuple, Union, Iterable
@@ -25,22 +25,22 @@ class ExecutorType(str, Enum):
 class Pipeline:
     def __init__(
         self,
-        algorithm_wrapper: Union[AlgorithmWrapper, Iterable[AlgorithmWrapper]],
-        datasets: Union[Dataset, Iterable[Dataset]],
-        augmentations: List[Tuple[str, Callable]],
-        metrics: List[Metric],
+        algorithm_wrapper: Union[BaseAlgorithmWrapper, Iterable[BaseAlgorithmWrapper]],
+        datasets: Union[BaseDataset, Iterable[BaseDataset]],
+        attacks: List[Tuple[str, Callable]],
+        metrics: List[BaseMetric],
         result_path: Union[Path, str],
         db_config: Union[Path, str],
     ):
-        if isinstance(algorithm_wrapper, AlgorithmWrapper):
+        if isinstance(algorithm_wrapper, BaseAlgorithmWrapper):
             self.algorithm_wrappers = [algorithm_wrapper]
         else:
             self.algorithm_wrappers = algorithm_wrapper
-        if isinstance(algorithm_wrapper, Dataset):
+        if isinstance(algorithm_wrapper, BaseDataset):
             self.datasets = [datasets]
         else:
             self.datasets = datasets
-        self.augmentations = augmentations
+        self.attacks = attacks
         self.post_embed_metrics = [metric for metric in metrics if isinstance(metric, PostEmbedMetric)]
         self.post_extract_metrics = [metric for metric in metrics if isinstance(metric, PostExtractMetric)]
         self.result_path = Path(result_path)
@@ -48,7 +48,7 @@ class Pipeline:
         self.result_path.mkdir(exist_ok=True, parents=True)
         self.records = []
 
-    def process_image(self, args: Tuple[str, AlgorithmWrapper, Tuple[str, np.ndarray], bool]):
+    def process_image(self, args: Tuple[str, BaseAlgorithmWrapper, Tuple[str, np.ndarray], bool]):
         #ToDo: тут может возникнуть проблема, если время у двух процессов совпадет до миллисекунды, в БД это поле используется как primary key 
         dtm = datetime.datetime.now()
         run_id, algorithm_wrapper, (img_id, img), img_save = args
@@ -68,7 +68,7 @@ class Pipeline:
             record["embedded"] = True
 
             for metric in self.post_embed_metrics:
-                record[metric.name] = metric(img, marked_img, watermark_data)
+                record[metric.report_name] = metric(img, marked_img, watermark_data)
         except Exception:
             traceback.print_exc()
             return record
@@ -85,20 +85,20 @@ class Pipeline:
             path = self.result_path / f"{algorithm_wrapper.param_hash}_{img_id}_diff_x_{coef}.png"
             cv2.imwrite(str(path), canvas)
 
-        for aug in self.augmentations:
-            aug_name = aug.name
-            aug_img = aug(image=marked_img)["image"]
-            record[aug_name] = {}
-            aug_record = record[aug_name]
+        for attack in self.attacks:
+            attack_name = attack.report_name
+            attacked_img = attack(image=marked_img)
+            record[attack_name] = {}
+            aug_record = record[attack_name]
             aug_record["extracted"] = False
             try:
                 s_time = perf_counter()
-                extraction_result = algorithm_wrapper.extract(aug_img, watermark_data)
+                extraction_result = algorithm_wrapper.extract(attacked_img, watermark_data)
                 aug_record["extract_time"] = perf_counter() - s_time
                 aug_record["extracted"] = True
 
                 for metric in self.post_extract_metrics:
-                    aug_record[metric.name] = metric(img, marked_img, watermark_data, extraction_result)
+                    aug_record[metric.report_name] = metric(img, marked_img, watermark_data, extraction_result)
             except Exception:
                 traceback.print_exc()
                 continue

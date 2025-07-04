@@ -1,33 +1,31 @@
 import cv2
 import numpy as np
 import albumentations as A
-from imgmarkbench.registry import register_augmentation
+from imgmarkbench.registry import RegistryMeta
 from typing import Dict, Literal
 
 
-class Augmentation:
-    def __init__(self, name: str) -> None:
-        self.name = name
+class BaseAttack(metaclass=RegistryMeta):
+    type = "attack"
 
     def __call__(self, image: np.ndarray) -> Dict[str, np.ndarray]:
         raise NotImplementedError
 
 
-@register_augmentation("Identity")
-class Identity(Augmentation):
-    def __init__(self):
-        super().__init__("Identity")
+class Identity(BaseAttack):
 
     def __call__(self, image: np.ndarray):
-        return {'image': np.copy(image)}
+        return np.copy(image)
 
 
-@register_augmentation("JPEG")
-class JPEGCompression( A.ImageCompression, Augmentation):
+class JPEGCompression(BaseAttack):
+    name = "jpeg"
+
     def __init__(self, quality=50):
-        Augmentation.__init__(self, "JPEG")
-        A.ImageCompression.__init__(self, quality_range=(quality, quality), always_apply=True, compression_type="jpeg")
+        self.compression = A.ImageCompression(quality_range=(quality, quality), always_apply=True, compression_type="jpeg")
 
+    def __call__(self, image):
+        return self.compression(image=image)["image"]
     
 
 

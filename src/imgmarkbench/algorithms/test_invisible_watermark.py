@@ -1,7 +1,7 @@
 # pip install invisible-watermark
 from imwatermark import WatermarkEncoder, WatermarkDecoder
-from imgmarkbench.algorithms.base import AlgorithmWrapper
-from imgmarkbench.augmentations.base import aug_list
+from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
+from imgmarkbench.attacks.base import aug_list
 from imgmarkbench.pipeline import Pipeline
 from imgmarkbench.datasets.base import DiffusionDB
 from imgmarkbench.metrics.base import PSNR, BER, SSIM, LPIPS
@@ -30,7 +30,7 @@ class WatermarkData:
     watermark: list[int]
 
 
-class InvisibleWatermarkWrapper(AlgorithmWrapper):
+class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
     def __init__(self, params: InvisibleWatermarkConfig) -> None:
         super().__init__(params)
         self.encoder = WatermarkEncoder()

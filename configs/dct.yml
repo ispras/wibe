@@ -19,11 +19,13 @@ datasets:
   - DiffusionDB:
       path: /hdd/diffusiondb/filtered 
 
-augmentations:
+attacks:
   - Identity
   - JPEG: 
+      report_name: jpeg_50
       quality: 50
   - JPEG:
+      report_name: jpeg_20
       quality: 20
 
 

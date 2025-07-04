@@ -1,26 +1,26 @@
 import typer
 from imgmarkbench.pipeline import Pipeline
 from pathlib import Path
-from imgmarkbench.registry import (
+from imgmarkbench.module_importer import (
     import_modules,
-    get_algorithms,
-    get_augmentations,
-    get_datasets,
-    get_metrics,
 )
 from imgmarkbench.config_loader import (
     load_pipeline_config_yaml,
     ALGORITHMS_FIELD,
     METRICS_FIELD,
     DATASETS_FIELD,
-    AUGMENTATIONS_FIELD,
+    ATTACKS_FIELD,
     PIPELINE_FIELD,
+    get_algorithms,
+    get_attacks,
+    get_datasets,
+    get_metrics,
 )
 
 import_modules("imgmarkbench.algorithms")
 import_modules("imgmarkbench.datasets")
 import_modules("imgmarkbench.metrics")
-import_modules("imgmarkbench.augmentations")
+import_modules("imgmarkbench.attacks")
 
 
 app = typer.Typer()
@@ -49,9 +49,11 @@ def run(
     alg_wrappers = get_algorithms(loaded_config[ALGORITHMS_FIELD])
     metrics = get_metrics(loaded_config[METRICS_FIELD])
     datasets = get_datasets(loaded_config[DATASETS_FIELD])
-    augs = get_augmentations(loaded_config[AUGMENTATIONS_FIELD])
+    attacks = get_attacks(loaded_config[ATTACKS_FIELD])
 
-    pipeline = Pipeline(alg_wrappers, datasets, augs, metrics, **loaded_config[PIPELINE_FIELD])
+    pipeline = Pipeline(
+        alg_wrappers, datasets, attacks, metrics, **loaded_config[PIPELINE_FIELD]
+    )
     pipeline.run()
     pass
 

@@ -3,11 +3,11 @@ import numpy as np
 from itertools import product
 from pathlib import Path
 from typing import Any
-from imgmarkbench.augmentations.base import aug_list
+from imgmarkbench.attacks.base import aug_list
 from imgmarkbench.pipeline import Pipeline
 from imgmarkbench.datasets.base import DiffusionDB512
 from imgmarkbench.metrics.base import PSNR, BER
-from imgmarkbench.algorithms.base import AlgorithmWrapper
+from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from dataclasses import dataclass
 from imgmarkbench.metrics.base import PostExtractMetric
 
@@ -47,7 +47,7 @@ class BER(PostExtractMetric):
         return float((np.array(wm) != np.array(extraction_result[0])).mean())
 
 
-class DWTSVMWrapper(AlgorithmWrapper):
+class DWTSVMWrapper(BaseAlgorithmWrapper):
     def __init__(self, params: dict[str, Any]):
         super().__init__(params)
         self.marker: DWTSVMMarker = DWTSVMMarker(threshold=params['threshold'])
