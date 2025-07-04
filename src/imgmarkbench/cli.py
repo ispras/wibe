@@ -52,7 +52,7 @@ def run(
     attacks = get_attacks(loaded_config[ATTACKS_FIELD])
 
     pipeline = Pipeline(
-        alg_wrappers, datasets, attacks, metrics, **loaded_config[PIPELINE_FIELD]
+        alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]
     )
     pipeline.run()
     pass

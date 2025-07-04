@@ -1,25 +1,26 @@
 from pathlib import Path
 import numpy as np
 import cv2
+import pandas as pd
 from .datasets.base import BaseDataset
 from .algorithms.base import BaseAlgorithmWrapper
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
+from .config import PipeLineConfig
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 import traceback
 from typing import Callable, List, Tuple, Union, Iterable
+from .typing import AggregatorType, ExecutorType
+from .utils import planarize_dict
 import tqdm
 import uuid
 from time import perf_counter
 import datetime
 from json2clickhouse import JSON2Clickhouse
 import json
-from enum import Enum
 from itertools import chain
 
 
-class ExecutorType(str, Enum):
-    thread = "thread"
-    process = "process"
+
 
 
 class Pipeline:
@@ -29,8 +30,7 @@ class Pipeline:
         datasets: Union[BaseDataset, Iterable[BaseDataset]],
         attacks: List[Tuple[str, Callable]],
         metrics: List[BaseMetric],
-        result_path: Union[Path, str],
-        db_config: Union[Path, str],
+        pipeline_config: PipeLineConfig
     ):
         if isinstance(algorithm_wrapper, BaseAlgorithmWrapper):
             self.algorithm_wrappers = [algorithm_wrapper]
@@ -43,8 +43,9 @@ class Pipeline:
         self.attacks = attacks
         self.post_embed_metrics = [metric for metric in metrics if isinstance(metric, PostEmbedMetric)]
         self.post_extract_metrics = [metric for metric in metrics if isinstance(metric, PostExtractMetric)]
-        self.result_path = Path(result_path)
-        self.db_config = db_config
+        self.result_path = Path(pipeline_config.result_path)
+        self.db_config = pipeline_config.db_config
+        self.aggregator = pipeline_config.aggregator
         self.result_path.mkdir(exist_ok=True, parents=True)
         self.records = []
 
@@ -105,16 +106,25 @@ class Pipeline:
         return record
 
     def process_records(self, j2c):
-        try:
-            j2c.process(self.records)
-        except Exception:
-            traceback.print_exc()
-            for record in self.records:
-                dtm = str(record["dtm"])
-                res_path = self.result_path / f"{dtm}.json"
-                with open(res_path, "w") as f:
-                    record["dtm"] = dtm
-                    json.dump(record, f)
+        if AggregatorType.csv in self.aggregator:
+            flat_dicts = [planarize_dict(record) for record in self.records]
+            if not hasattr(self, "pd_table"):
+                columns = list(flat_dicts[0].keys())
+                self.pd_table = pd.DataFrame(flat_dicts, columns=columns)
+            else:
+                self.pd_table = pd.concat([self.pd_table, pd.DataFrame(flat_dicts)], ignore_index=True)
+            self.pd_table.to_csv(self.result_path / "table.csv") # temporarily
+        if AggregatorType.clickhouse in self.aggregator:
+            try:
+                j2c.process(self.records)
+            except Exception:
+                traceback.print_exc()
+                for record in self.records:
+                    dtm = str(record["dtm"])
+                    res_path = self.result_path / f"{dtm}.json"
+                    with open(res_path, "w") as f:
+                        record["dtm"] = dtm
+                        json.dump(record, f)
 
     def add_record(self, record, j2c, progress, min_batch_size):
         self.records.append(record)

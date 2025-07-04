@@ -6,6 +6,7 @@ from imgmarkbench.attacks.base import BaseAttack
 from imgmarkbench.datasets.base import BaseDataset
 from imgmarkbench.metrics.base import BaseMetric
 from typing import Dict, List, Tuple, Type, Any
+from imgmarkbench.config import PipeLineConfig
 from functools import partial
 
 
@@ -61,7 +62,7 @@ def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
         assert field in config.keys(), f"Missing '{field}' in yaml config file"
         field_value = config[field]
         if field == PIPELINE_FIELD:
-            result[field] = field_value
+            result[field] = PipeLineConfig(**field_value)
             continue
 
         field_result = []
