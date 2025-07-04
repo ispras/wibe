@@ -27,7 +27,6 @@ class ImageFolderDataset(BaseDataset):
         img_ext: List[str] = ["png", "jpg"],
         flags: int = cv2.IMREAD_COLOR,
     ) -> None:
-        super().__init__(name)
         self.path = Path(path)
         self.flags = flags
         path_gen = sorted(
