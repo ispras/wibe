@@ -10,9 +10,6 @@ from imgmarkbench.registry import RegistryMeta
 class BaseDataset(metaclass=RegistryMeta):
     type = "dataset"
 
-    def __init__(self, name: str) -> None:
-        self.name = name
-
     def __len__(self) -> int:
         raise NotImplementedError
 
@@ -25,7 +22,6 @@ class ImageFolderDataset(BaseDataset):
 
     def __init__(
         self,
-        name: str,
         path: Union[Path, str],
         preload: bool = False,
         img_ext: List[str] = ["png", "jpg"],
@@ -60,12 +56,12 @@ class ImageFolderDataset(BaseDataset):
 
 class DiffusionDB(ImageFolderDataset):
     def __init__(self, path: Union[Path, str], preload: bool = False) -> None:
-        super().__init__("DiffusionDB", path, preload=preload)
+        super().__init__(path, preload=preload)
 
 
 class DiffusionDB512(ImageFolderDataset):
     def __init__(self, path: Union[Path, str], preload: bool = False) -> None:
-        super().__init__("DiffusionDB512", path, preload=preload)
+        super().__init__(path, preload=preload)
 
 
 if __name__ == "__main__":

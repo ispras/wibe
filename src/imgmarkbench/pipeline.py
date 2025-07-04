@@ -73,6 +73,7 @@ class Pipeline:
             traceback.print_exc()
             return record
         
+        # ToDo: вынести в коллбек
         if img_save:
             h, w, c = img.shape
             canvas = np.zeros((h, w * 3, c), dtype=np.uint8)
@@ -89,16 +90,16 @@ class Pipeline:
             attack_name = attack.report_name
             attacked_img = attack(image=marked_img)
             record[attack_name] = {}
-            aug_record = record[attack_name]
-            aug_record["extracted"] = False
+            attack_record = record[attack_name]
+            attack_record["extracted"] = False
             try:
                 s_time = perf_counter()
                 extraction_result = algorithm_wrapper.extract(attacked_img, watermark_data)
-                aug_record["extract_time"] = perf_counter() - s_time
-                aug_record["extracted"] = True
+                attack_record["extract_time"] = perf_counter() - s_time
+                attack_record["extracted"] = True
 
                 for metric in self.post_extract_metrics:
-                    aug_record[metric.report_name] = metric(img, marked_img, watermark_data, extraction_result)
+                    attack_record[metric.report_name] = metric(img, marked_img, watermark_data, extraction_result)
             except Exception:
                 traceback.print_exc()
                 continue

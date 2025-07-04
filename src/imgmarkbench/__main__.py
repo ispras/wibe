@@ -1,4 +1,4 @@
-from .cli import app
+from imgmarkbench.cli import app
 
 
 if __name__ == "__main__":
