@@ -1,31 +1,36 @@
 import cv2
 import numpy as np
 import albumentations as A
+from torchvision.transforms.v2 import JPEG
+import torch
 from imgmarkbench.registry import RegistryMeta
+from imgmarkbench.typing import TorchImg
 from typing import Dict, Literal
 
 
 class BaseAttack(metaclass=RegistryMeta):
     type = "attack"
 
-    def __call__(self, image: np.ndarray) -> Dict[str, np.ndarray]:
+    def __call__(self, image: TorchImg) -> TorchImg:
         raise NotImplementedError
 
 
 class Identity(BaseAttack):
 
-    def __call__(self, image: np.ndarray):
-        return np.copy(image)
+    def __call__(self, image: TorchImg) -> TorchImg:
+        return image.clone()
 
 
 class JPEGCompression(BaseAttack):
     name = "jpeg"
 
     def __init__(self, quality=50):
-        self.compression = A.ImageCompression(quality_range=(quality, quality), always_apply=True, compression_type="jpeg")
+        self.compression = JPEG(quality)
 
-    def __call__(self, image):
-        return self.compression(image=image)["image"]
+    def __call__(self, image: TorchImg) -> TorchImg:
+        uint8_tensor = (image * 255).round().to(torch.uint8)
+        compressed_uint8 = self.compression(uint8_tensor)
+        return compressed_uint8.to(torch.float32) / 255
     
 
 

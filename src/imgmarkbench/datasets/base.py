@@ -1,9 +1,9 @@
 from pathlib import Path
 from itertools import chain
-import cv2
-import numpy as np
+from PIL import Image
+from torchvision.transforms import ToTensor
 from typing import Generator, Tuple, Union, List
-
+from imgmarkbench.typing import TorchImg
 from imgmarkbench.registry import RegistryMeta
 
 
@@ -13,10 +13,11 @@ class BaseDataset(metaclass=RegistryMeta):
     def __len__(self) -> int:
         raise NotImplementedError
 
-    def generator(self) -> Generator[Tuple[str, np.ndarray], None, None]:
+    def generator(self) -> Generator[Tuple[str, TorchImg], None, None]:
         raise NotImplementedError
 
 
+# Use torch datasets or not?
 class ImageFolderDataset(BaseDataset):
     abstract = True
 
@@ -25,31 +26,30 @@ class ImageFolderDataset(BaseDataset):
         path: Union[Path, str],
         preload: bool = False,
         img_ext: List[str] = ["png", "jpg"],
-        flags: int = cv2.IMREAD_COLOR,
     ) -> None:
         self.path = Path(path)
-        self.flags = flags
         path_gen = sorted(
             chain.from_iterable(self.path.glob(f"*.{ext}") for ext in img_ext)
         )
         self.path_list = list(path_gen)
+        self.transform = ToTensor()
         assert len(self.path_list) != 0, "Empty dataset, check dataset path"
         self.images = []
         if preload:
             self.images = [
-                cv2.imread(str(img_path), flags) for img_path in self.path_list
+                self.transform(Image.open(img_path)) for img_path in self.path_list
             ]
 
     def __len__(self) -> int:
         return len(self.path_list)
 
-    def generator(self) -> Generator[Tuple[str, np.ndarray], None, None]:
+    def generator(self) -> Generator[Tuple[str, TorchImg], None, None]:
         if len(self.images) > 0:
             for path, img in zip(self.path_list, self.images):
                 yield path.name, img
         else:
             for path in self.path_list:
-                img = cv2.imread(str(path), self.flags)
+                img = self.transform(Image.open(path))
                 yield path.name, img
 
 
