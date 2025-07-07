@@ -31,9 +31,8 @@ attacks:
 
 pipeline:
   result_path: ./test_results/dct
-  aggregator:
-    aggregators:
-      - kind: CSV
-        table_name: 'table'
-      - kind: ClickHouse
+  aggregators:
+    - CSV:
+        table_name: table
+    - ClickHouse:
         db_config: ./scripts/dct_wm.ini

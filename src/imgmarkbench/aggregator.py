@@ -16,6 +16,7 @@ from pathlib import Path
 
 from .config import (
     AggregatorConfig,
+    PipeLineConfig,
     PandasAggregatorConfig,
     ClickHouseAggregatorConfig
 )
@@ -49,7 +50,7 @@ class PandasAggregator(Aggregator):
             self.pd_table = pd.DataFrame(records, columns=columns)
         else:
             self.pd_table = pd.concat([self.pd_table, pd.DataFrame(records)], ignore_index=True)
-        self.pd_table.to_csv(self.result_path / f"{self.config.table_name}.csv")
+        self.pd_table.to_csv(self.result_path / f"{self.config.table_name}.csv", mode="a")
 
 
 class ClickHouseAggregator(Aggregator):
@@ -87,7 +88,7 @@ class FanoutAggregator:
                 traceback.print_exc()
 
 
-def build_fanout_from_config(config: AggregatorConfig, result_path: Union[Path, str]) -> FanoutAggregator:
+def build_fanout_from_config(config: PipeLineConfig, result_path: Union[Path, str]) -> FanoutAggregator:
     aggregators = []
     for aggr_config in config.aggregators:
         if isinstance(aggr_config, PandasAggregatorConfig):

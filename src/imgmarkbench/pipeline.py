@@ -38,7 +38,7 @@ class Pipeline:
         self.post_embed_metrics = [metric for metric in metrics if isinstance(metric, PostEmbedMetric)]
         self.post_extract_metrics = [metric for metric in metrics if isinstance(metric, PostExtractMetric)]
         self.result_path = Path(pipeline_config.result_path)
-        self.aggregator = build_fanout_from_config(pipeline_config.aggregator, self.result_path)
+        self.aggregator = build_fanout_from_config(pipeline_config, self.result_path)
         self.result_path.mkdir(exist_ok=True, parents=True)
         self.records = []
 

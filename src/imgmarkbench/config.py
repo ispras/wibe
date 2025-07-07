@@ -1,6 +1,7 @@
 from pydantic import (
     BaseModel,
-    Field
+    Field,
+    model_validator
 )
 from typing_extensions import (
     Union,
@@ -21,16 +22,23 @@ class ClickHouseAggregatorConfig(BaseModel):
     db_config: Union[Path, str]
 
 
-AggregatorCfg = Annotated[
-    Union[PandasAggregatorConfig, ClickHouseAggregatorConfig],
-    Field(discriminator="kind")
+AggregatorConfig = Annotated[
+    Union[PandasAggregatorConfig, ClickHouseAggregatorConfig], Field(discriminator="kind"),
 ]
-
-
-class AggregatorConfig(BaseModel):
-    aggregators: List[AggregatorCfg]
 
 
 class PipeLineConfig(BaseModel):
     result_path: Union[Path, str]
-    aggregator: AggregatorConfig
+    aggregators: List[AggregatorConfig]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _unpack_yaml_style(cls, data: dict):
+        fixed = []
+        for raw in data.get("aggregators", []):
+            if not isinstance(raw, dict) or len(raw) != 1:
+                raise ValueError("Every element in aggregators must be a dict")
+            kind, params = next(iter(raw.items()))
+            fixed.append({"kind": kind, **params})
+        data["aggregators"] = fixed
+        return data
