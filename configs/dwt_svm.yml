@@ -1,0 +1,28 @@
+algorithms:
+  dwt_svm:
+    params:
+      threshold: 56
+
+metrics:
+  - PSNR
+  - SSIM
+  - LPIPS
+  - BER
+
+datasets:
+  - DiffusionDB:
+      path: /hdd/diffusiondb/filtered 
+
+attacks:
+  - Identity
+  - JPEG: 
+      report_name: jpeg_50
+      quality: 50
+  - JPEG:
+      report_name: jpeg_20
+      quality: 20
+
+
+pipeline:
+  result_path: ./test_results/dwt_svm
+  db_config: ./scripts/dct_wm.ini

@@ -1,0 +1,28 @@
+algorithms:
+  dft_circle:
+    params:
+      alpha: 600
+
+metrics:
+  - PSNR
+  - SSIM
+  - LPIPS
+  - Result
+
+datasets:
+  - DiffusionDB:
+      path: /hdd/diffusiondb/filtered 
+
+attacks:
+  - Identity
+  - JPEG: 
+      report_name: jpeg_50
+      quality: 50
+  - JPEG:
+      report_name: jpeg_20
+      quality: 20
+
+
+pipeline:
+  result_path: ./test_results/dft_circle
+  db_config: ./scripts/dct_wm.ini
