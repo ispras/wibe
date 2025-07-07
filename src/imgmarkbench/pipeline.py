@@ -38,6 +38,7 @@ class Pipeline:
         self.attacks = attacks
         self.post_embed_metrics = [metric for metric in metrics if isinstance(metric, PostEmbedMetric)]
         self.post_extract_metrics = [metric for metric in metrics if isinstance(metric, PostExtractMetric)]
+        self.pipeline_config = pipeline_config
         self.result_path = Path(pipeline_config.result_path)
         self.aggregator = build_fanout_from_config(pipeline_config, self.result_path)
         self.result_path.mkdir(exist_ok=True, parents=True)
@@ -48,6 +49,7 @@ class Pipeline:
         dtm = datetime.datetime.now()
         run_id, algorithm_wrapper, (img_id, img), img_save = args
         record = {
+            "method": algorithm_wrapper.name,
             "dtm": dtm,
             "run_id": run_id,
             "img_id": img_id,

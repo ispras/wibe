@@ -42,15 +42,22 @@ class PandasAggregator(Aggregator):
 
     def __init__(self, config: PandasAggregatorConfig, result_path: Union[Path, str]) -> None:
         super().__init__(config, result_path)
+        self.params_table = pd.DataFrame(columns=["method", "param_hash", "params"])
 
     def add(self, records: Dict[str, Any]) -> None:
-        records = [planarize_dict(record) for record in records]
-        if not hasattr(self, "pd_table"):
+        batch = pd.DataFrame(records)
+        self.params_table = pd.concat([self.params_table, pd.DataFrame(batch[["method", "param_hash", "params"]])],
+                                      ignore_index=True).drop_duplicates(subset=["param_hash"])
+        batch = batch.drop(columns=["params"])
+        modify_records = batch.to_dict(orient="records")
+        records = [planarize_dict(record) for record in modify_records]
+        if (not hasattr(self, "metrics_table")):
             columns = list(records[0].keys())
-            self.pd_table = pd.DataFrame(records, columns=columns)
+            self.metrics_table = pd.DataFrame(records, columns=columns)
         else:
-            self.pd_table = pd.concat([self.pd_table, pd.DataFrame(records)], ignore_index=True)
-        self.pd_table.to_csv(self.result_path / f"{self.config.table_name}.csv")
+            self.metrics_table = pd.concat([self.metrics_table, pd.DataFrame(records)], ignore_index=True)
+        self.metrics_table.to_csv(self.result_path / f"metrics_{self.config.table_name}.csv")
+        self.params_table.to_csv(self.result_path / f"params_{self.config.table_name}.csv")
 
 
 class ClickHouseAggregator(Aggregator):
