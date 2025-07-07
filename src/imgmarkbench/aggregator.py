@@ -50,7 +50,7 @@ class PandasAggregator(Aggregator):
             self.pd_table = pd.DataFrame(records, columns=columns)
         else:
             self.pd_table = pd.concat([self.pd_table, pd.DataFrame(records)], ignore_index=True)
-        self.pd_table.to_csv(self.result_path / f"{self.config.table_name}.csv", mode="a")
+        self.pd_table.to_csv(self.result_path / f"{self.config.table_name}.csv")
 
 
 class ClickHouseAggregator(Aggregator):
