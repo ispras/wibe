@@ -17,7 +17,7 @@ class BaseDataset(metaclass=RegistryMeta):
         raise NotImplementedError
 
 
-# Use torch datasets or not?
+# ToDo: Use torch datasets or not?
 class ImageFolderDataset(BaseDataset):
     abstract = True
 

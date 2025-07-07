@@ -19,7 +19,7 @@ class BaseAlgorithmWrapper(metaclass=RegistryMeta):
     def embed(self, image: TorchImg, watermark_data: WatermarkData) -> TorchImg:
         raise NotImplementedError
 
-    def extract(self, image: TorchImg, watermark_data: WatermarkData) -> TorchImg:
+    def extract(self, image: TorchImg, watermark_data: WatermarkData) -> Any:
         raise NotImplementedError
 
     def watermark_data_gen(self) -> WatermarkData:
