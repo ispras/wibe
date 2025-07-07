@@ -4,22 +4,17 @@ import cv2
 from .datasets.base import BaseDataset
 from .algorithms.base import BaseAlgorithmWrapper
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
+from .config import PipeLineConfig
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 import traceback
 from typing import Callable, List, Tuple, Union, Iterable
+from .typing import ExecutorType
+from .aggregator import build_fanout_from_config
 import tqdm
 import uuid
 from time import perf_counter
 import datetime
-from json2clickhouse import JSON2Clickhouse
-import json
-from enum import Enum
 from itertools import chain
-
-
-class ExecutorType(str, Enum):
-    thread = "thread"
-    process = "process"
 
 
 class Pipeline:
@@ -29,8 +24,7 @@ class Pipeline:
         datasets: Union[BaseDataset, Iterable[BaseDataset]],
         attacks: List[Tuple[str, Callable]],
         metrics: List[BaseMetric],
-        result_path: Union[Path, str],
-        db_config: Union[Path, str],
+        pipeline_config: PipeLineConfig
     ):
         if isinstance(algorithm_wrapper, BaseAlgorithmWrapper):
             self.algorithm_wrappers = [algorithm_wrapper]
@@ -43,8 +37,8 @@ class Pipeline:
         self.attacks = attacks
         self.post_embed_metrics = [metric for metric in metrics if isinstance(metric, PostEmbedMetric)]
         self.post_extract_metrics = [metric for metric in metrics if isinstance(metric, PostExtractMetric)]
-        self.result_path = Path(result_path)
-        self.db_config = db_config
+        self.result_path = Path(pipeline_config.result_path)
+        self.aggregator = build_fanout_from_config(pipeline_config, self.result_path)
         self.result_path.mkdir(exist_ok=True, parents=True)
         self.records = []
 
@@ -105,28 +99,15 @@ class Pipeline:
                 continue
         return record
 
-    def process_records(self, j2c):
-        try:
-            j2c.process(self.records)
-        except Exception:
-            traceback.print_exc()
-            for record in self.records:
-                dtm = str(record["dtm"])
-                res_path = self.result_path / f"{dtm}.json"
-                with open(res_path, "w") as f:
-                    record["dtm"] = dtm
-                    json.dump(record, f)
-
-    def add_record(self, record, j2c, progress, min_batch_size):
+    def add_record(self, record, progress, min_batch_size):
         self.records.append(record)
         progress.update()
         if len(self.records) >= min_batch_size:
-            self.process_records(j2c)
+            self.aggregator.add(self.records)
             self.records = []
 
     def run(self, workers:int = 1, min_batch_size: int = 100, executor: ExecutorType = ExecutorType.process, img_save_interval = 500) -> None:
         run_id = str(uuid.uuid1())
-        j2c = JSON2Clickhouse.from_config(self.db_config)
         use_pool = workers > 1
         if use_pool:
             pool_executer = ThreadPoolExecutor(workers) if executor == ExecutorType.thread else ProcessPoolExecutor(workers)
@@ -148,18 +129,18 @@ class Pipeline:
                 save_img = img_num % img_save_interval == 0
                 args = (run_id, algorithm_wrapper, img_tuple, save_img)
                 if not use_pool:
-                    self.add_record(self.process_image(args), j2c, progress, min_batch_size)
+                    self.add_record(self.process_image(args), progress, min_batch_size)
                     continue
                 future = pool_executer.submit(self.process_image, args)
                 future_set.add(future)
                 if len(future_set) >= workers:
                     completed_future = next(as_completed(future_set))
                     future_set.remove(completed_future)
-                    self.add_record(completed_future.result(), j2c, progress, min_batch_size)
+                    self.add_record(completed_future.result(), progress, min_batch_size)
  
         if use_pool:
             for future in as_completed(future_set):
-                self.add_record(future.result(), j2c, progress, min_batch_size)
+                self.add_record(future.result(), progress, min_batch_size)
             pool_executer.shutdown()
-        self.process_records(j2c)
+        self.aggregator.add(self.records)
         self.records = []

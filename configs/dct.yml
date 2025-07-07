@@ -17,7 +17,7 @@ metrics:
 
 datasets:
   - DiffusionDB:
-      path: /hdd/diffusiondb/filtered 
+      path: /fast-drive/aakimenkov/img-watermarking-test/diffusionDB-filtered
 
 attacks:
   - Identity
@@ -31,4 +31,8 @@ attacks:
 
 pipeline:
   result_path: ./test_results/dct
-  db_config: ./scripts/dct_wm.ini
+  aggregators:
+    - CSV:
+        table_name: table
+    - ClickHouse:
+        db_config: ./scripts/dct_wm.ini
