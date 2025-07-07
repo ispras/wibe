@@ -15,6 +15,7 @@ import uuid
 from time import perf_counter
 import datetime
 from itertools import chain
+from .typing import TorchImg
 
 
 class Pipeline:
@@ -42,7 +43,7 @@ class Pipeline:
         self.result_path.mkdir(exist_ok=True, parents=True)
         self.records = []
 
-    def process_image(self, args: Tuple[str, BaseAlgorithmWrapper, Tuple[str, np.ndarray], bool]):
+    def process_image(self, args: Tuple[str, BaseAlgorithmWrapper, Tuple[str, TorchImg], bool]):
         #ToDo: тут может возникнуть проблема, если время у двух процессов совпадет до миллисекунды, в БД это поле используется как primary key 
         dtm = datetime.datetime.now()
         run_id, algorithm_wrapper, (img_id, img), img_save = args
@@ -68,17 +69,17 @@ class Pipeline:
             return record
         
         # ToDo: вынести в коллбек
-        if img_save:
-            h, w, c = img.shape
-            canvas = np.zeros((h, w * 3, c), dtype=np.uint8)
-            canvas[:, :w, :] = img
-            canvas[:, w: 2*w, :] = marked_img
-            diff = np.abs(marked_img.astype(int) - img)
-            diff_max = diff.max()
-            coef = 255 // diff_max
-            canvas[:, w * 2:, :] = (diff * coef).astype(np.uint8)
-            path = self.result_path / f"{algorithm_wrapper.param_hash}_{img_id}_diff_x_{coef}.png"
-            cv2.imwrite(str(path), canvas)
+        # if img_save:
+        #     h, w, c = img.shape
+        #     canvas = np.zeros((h, w * 3, c), dtype=np.uint8)
+        #     canvas[:, :w, :] = img
+        #     canvas[:, w: 2*w, :] = marked_img
+        #     diff = np.abs(marked_img.astype(int) - img)
+        #     diff_max = diff.max()
+        #     coef = 255 // diff_max
+        #     canvas[:, w * 2:, :] = (diff * coef).astype(np.uint8)
+        #     path = self.result_path / f"{algorithm_wrapper.param_hash}_{img_id}_diff_x_{coef}.png"
+        #     cv2.imwrite(str(path), canvas)
 
         for attack in self.attacks:
             attack_name = attack.report_name
@@ -125,7 +126,8 @@ class Pipeline:
         progress = tqdm.tqdm(total=total_iters)
         future_set = set()
         for algorithm_wrapper in self.algorithm_wrappers:
-            for img_num, img_tuple in enumerate(chain.from_iterable(dataset.generator() for dataset in self.datasets)):
+            img_gen = (img_tuple for dataset in self.datasets for img_tuple in dataset.generator())
+            for img_num, img_tuple in enumerate(img_gen):
                 save_img = img_num % img_save_interval == 0
                 args = (run_id, algorithm_wrapper, img_tuple, save_img)
                 if not use_pool:

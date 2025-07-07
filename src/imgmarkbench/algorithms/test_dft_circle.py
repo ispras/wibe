@@ -1,11 +1,7 @@
-from imgmarkbench.algorithms.dft_circle import DFTMarker
-from imgmarkbench.attacks.base import aug_list
-from imgmarkbench.pipeline import Pipeline
-from imgmarkbench.datasets.base import DiffusionDB
+from imgmarkbench_watermarking_algorithms.dft_circle import DFTMarker
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
-from imgmarkbench.metrics.base import PSNR, Result
 import numpy as np
-from pathlib import Path
+from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 
 
 rnd_mark = np.array([0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1,
@@ -23,8 +19,9 @@ rnd_mark = np.array([0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1,
                      1, 0, 0, 0, 1, 1, 0, 0])
 
 
-
 class DFTMarkerWrapper(BaseAlgorithmWrapper):
+    name = "dft_circle"
+
     def __init__(self, params: dict):
         super().__init__(params)
         self.alpha = params["alpha"]
@@ -32,25 +29,14 @@ class DFTMarkerWrapper(BaseAlgorithmWrapper):
 
     def embed(self, image, watermark_data):
         mark = watermark_data
-        return self.marker.embed(image, mark, self.alpha)
+        np_img = torch_img2numpy_bgr(image)
+        np_res = self.marker.embed(np_img, mark, self.alpha)
+        return numpy_bgr2torch_img(np_res)
         
     def extract(self, image, watermark_data):
         mark = watermark_data
-        return self.marker.extract(image, mark)
+        np_img = torch_img2numpy_bgr(image)
+        return self.marker.extract(np_img, mark)
     
     def watermark_data_gen(self):
         return rnd_mark
-
-
-def main():
-    marker_params = {'alpha': 600}
-    ds_path = '/hdd/diffusiondb/filtered'
-    res_dir = Path(__file__).parent.parent / "test_results" / "dft"
-    db_config = Path(__file__).parent / "dft_circle.ini"
-    dataset = DiffusionDB(ds_path)
-    pipeline = Pipeline(DFTMarkerWrapper(marker_params), dataset, aug_list, [PSNR(), Result()], res_dir, db_config)
-    pipeline.run(workers=6, min_batch_size=20)
-
-
-if __name__ == '__main__':
-    main()

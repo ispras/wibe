@@ -1,8 +1,8 @@
 from typing import Any, Union
 import numpy as np
 import lpips
-import torch
 from imgmarkbench.registry import RegistryMeta
+from imgmarkbench.typing import TorchImg
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 
@@ -16,8 +16,8 @@ class PostEmbedMetric(BaseMetric):
 
     def __call__(
         self,
-        img: np.ndarray,
-        marked_img: np.ndarray,
+        img: TorchImg,
+        marked_img: TorchImg,
         watermark_data: Any,
     ) -> Union[str, int, float]:
         raise NotImplementedError
@@ -28,8 +28,8 @@ class PostExtractMetric(BaseMetric):
 
     def __call__(
         self,
-        img: np.ndarray,
-        marked_img: np.ndarray,
+        img: TorchImg,
+        marked_img: TorchImg,
         watermark_data: Any,
         extraction_result: Any,
     ) -> Union[str, int, float]:
@@ -40,25 +40,25 @@ class PSNR(PostEmbedMetric):
 
     def __call__(
         self,
-        img: np.ndarray,
-        marked_img: np.ndarray,
+        img: TorchImg,
+        marked_img: TorchImg,
         watermark_data: Any,
     ) -> float:
 
-        return float(psnr(img, marked_img, data_range=255))
+        return float(psnr(img.numpy(), marked_img.numpy(), data_range=1))
 
 
 class SSIM(PostEmbedMetric):
 
     def __call__(
         self,
-        img: np.ndarray,
-        marked_img: np.ndarray,
+        img: TorchImg,
+        marked_img: TorchImg,
         watermark_data: Any,
     ) -> float:
         if len(img.shape) == 2:
-            return float(ssim(img, marked_img, data_range=255))
-        res = ssim(img, marked_img, data_range=255, channel_axis=2)
+            return float(ssim(img.numpy(), marked_img.numpy(), data_range=1))
+        res = ssim(img.numpy(), marked_img.numpy(), data_range=1, channel_axis=0)
         return float(res)
     
 
@@ -68,19 +68,11 @@ class LPIPS(PostEmbedMetric):
 
     def __call__(
         self,
-        img: np.ndarray,
-        marked_img: np.ndarray,
+        img: TorchImg,
+        marked_img: TorchImg,
         watermark_data: Any,
     ) -> float:
-        
-        def to_tensor(image):
-            norm_image = image / 127.5 - 1
-            transposed_image = np.transpose(norm_image, (2, 0, 1))[np.newaxis, ...]
-            return torch.tensor(transposed_image, dtype=torch.float32)
-        
-        img_tensor = to_tensor(img)
-        marked_img_tensor = to_tensor(marked_img)
-        return float(self.loss_fn(img_tensor, marked_img_tensor))
+        return float(self.loss_fn(img.unsqueeze(0), marked_img.unsqueeze(0)))
 
 
 class Result(PostExtractMetric):
@@ -88,8 +80,8 @@ class Result(PostExtractMetric):
 
     def __call__(
         self,
-        img: np.ndarray,
-        marked_img: np.ndarray,
+        img: TorchImg,
+        marked_img: TorchImg,
         watermark_data: Any,
         extraction_result: Any,
     ) -> float:
@@ -101,8 +93,8 @@ class BER(PostExtractMetric):
 
     def __call__(
         self,
-        img: np.ndarray,
-        marked_img: np.ndarray,
+        img: TorchImg,
+        marked_img: TorchImg,
         watermark_data: Any,
         extraction_result: Any,
     ) -> float:

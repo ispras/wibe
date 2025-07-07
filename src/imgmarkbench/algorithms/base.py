@@ -2,6 +2,7 @@ from dataclasses import is_dataclass, asdict
 from hashlib import md5
 from typing import Any
 from imgmarkbench.registry import RegistryMeta
+from imgmarkbench.typing import TorchImg
 
 
 WatermarkData = Any
@@ -15,10 +16,10 @@ class BaseAlgorithmWrapper(metaclass=RegistryMeta):
         self.param_dict = self.params2dict(self.params)
         self.param_hash = md5(str(self.param_dict).encode()).hexdigest()
 
-    def embed(self, image, watermark_data: WatermarkData):
+    def embed(self, image: TorchImg, watermark_data: WatermarkData) -> TorchImg:
         raise NotImplementedError
 
-    def extract(self, image, watermark_data: WatermarkData):
+    def extract(self, image: TorchImg, watermark_data: WatermarkData) -> Any:
         raise NotImplementedError
 
     def watermark_data_gen(self) -> WatermarkData:
