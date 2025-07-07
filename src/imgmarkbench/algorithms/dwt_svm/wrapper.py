@@ -1,4 +1,4 @@
-from imgmarkbench_watermarking_algorithms.dwt_svm import DWTSVMMarker
+from .dwtsvm_marker import DWTSVMMarker
 import numpy as np
 from typing import Any
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper

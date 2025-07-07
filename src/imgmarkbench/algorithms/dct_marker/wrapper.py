@@ -1,4 +1,4 @@
-from imgmarkbench_watermarking_algorithms.dct_marker import (
+from imgmarkbench.algorithms.dct_marker.dct_marker import (
     DCTMarker,
     DCTMarkerConfig,
 )

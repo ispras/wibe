@@ -1,13 +1,13 @@
 algorithms:
-  dft_circle:
-    params:
-      alpha: 600
+  - dwt_dct
+  - dwt_dct_svd
+  - riva_gan
 
 metrics:
   - PSNR
   - SSIM
   - LPIPS
-  - Result
+  - BER
 
 datasets:
   - DiffusionDB:
@@ -24,7 +24,7 @@ attacks:
 
 
 pipeline:
-  result_path: ./test_results/dft_circle
+  result_path: ./test_results/invisible_watermark
   aggregators:
     - CSV:
         table_name: table

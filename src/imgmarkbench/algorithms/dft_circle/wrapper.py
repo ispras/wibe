@@ -1,4 +1,4 @@
-from imgmarkbench_watermarking_algorithms.dft_circle import DFTMarker
+from imgmarkbench.algorithms.dft_circle.dft_circle import DFTMarker
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 import numpy as np
 from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img

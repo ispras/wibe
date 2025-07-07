@@ -25,4 +25,6 @@ attacks:
 
 pipeline:
   result_path: ./test_results/dwt_svm
-  db_config: ./scripts/dct_wm.ini
+  aggregators:
+    - CSV:
+        table_name: table
