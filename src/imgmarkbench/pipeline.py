@@ -5,16 +5,13 @@ from .datasets.base import BaseDataset
 from .algorithms.base import BaseAlgorithmWrapper
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 import traceback
 from typing import Callable, List, Tuple, Union, Iterable
-from .typing import ExecutorType
 from .aggregator import build_fanout_from_config
 import tqdm
 import uuid
 from time import perf_counter
 import datetime
-from itertools import chain
 from .typing import TorchImg
 
 
@@ -107,11 +104,8 @@ class Pipeline:
             self.aggregator.add(self.records)
             self.records = []
 
-    def run(self, workers:int = 1, min_batch_size: int = 100, executor: ExecutorType = ExecutorType.process, img_save_interval = 500) -> None:
+    def run(self, min_batch_size: int = 100, img_save_interval = 500) -> None:
         run_id = str(uuid.uuid1())
-        use_pool = workers > 1
-        if use_pool:
-            pool_executer = ThreadPoolExecutor(workers) if executor == ExecutorType.thread else ProcessPoolExecutor(workers)
         total_iters = None
         if hasattr(self.algorithm_wrappers, "__len__"):
             dataset_iters = 0
@@ -124,25 +118,11 @@ class Pipeline:
                 total_iters = len(self.algorithm_wrappers) * dataset_iters
 
         progress = tqdm.tqdm(total=total_iters)
-        future_set = set()
         for algorithm_wrapper in self.algorithm_wrappers:
             img_gen = (img_tuple for dataset in self.datasets for img_tuple in dataset.generator())
             for img_num, img_tuple in enumerate(img_gen):
                 save_img = img_num % img_save_interval == 0
                 args = (run_id, algorithm_wrapper, img_tuple, save_img)
-                if not use_pool:
-                    self.add_record(self.process_image(args), progress, min_batch_size)
-                    continue
-                future = pool_executer.submit(self.process_image, args)
-                future_set.add(future)
-                if len(future_set) >= workers:
-                    completed_future = next(as_completed(future_set))
-                    future_set.remove(completed_future)
-                    self.add_record(completed_future.result(), progress, min_batch_size)
- 
-        if use_pool:
-            for future in as_completed(future_set):
-                self.add_record(future.result(), progress, min_batch_size)
-            pool_executer.shutdown()
+                self.add_record(self.process_image(args), progress, min_batch_size)
         self.aggregator.add(self.records)
         self.records = []

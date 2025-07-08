@@ -7,10 +7,6 @@ class AggregatorType(str, Enum):
     clickhouse = "clickhouse"
 
 
-class ExecutorType(str, Enum):
-    thread = "thread"
-    process = "process"
-
 # ToDo: may be jaxtyping?
 TorchImg = torch.Tensor
 '''
