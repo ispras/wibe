@@ -45,6 +45,7 @@ class Pipeline:
         dtm = datetime.datetime.now()
         run_id, algorithm_wrapper, (img_id, img), img_save = args
         record = {
+            "method": algorithm_wrapper.name,
             "dtm": dtm,
             "run_id": run_id,
             "img_id": img_id,
