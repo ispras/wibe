@@ -1,5 +1,5 @@
 import typer
-from imgmarkbench.pipeline import Pipeline
+from imgmarkbench.pipeline import Pipeline, STAGE_CLASSES
 from pathlib import Path
 from imgmarkbench.module_importer import (
     import_modules,
@@ -54,7 +54,7 @@ def run(
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]
     )
-    pipeline.run()
+    pipeline.run(STAGE_CLASSES.keys())
     pass
 
 

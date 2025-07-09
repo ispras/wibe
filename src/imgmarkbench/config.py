@@ -30,6 +30,7 @@ AggregatorConfig = Annotated[
 class PipeLineConfig(BaseModel):
     result_path: Union[Path, str]
     aggregators: List[AggregatorConfig]
+    min_batch_size: int = 100
 
     @model_validator(mode="before")
     @classmethod

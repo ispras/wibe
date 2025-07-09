@@ -3,26 +3,226 @@ import numpy as np
 import cv2
 from .datasets.base import BaseDataset
 from .algorithms.base import BaseAlgorithmWrapper
+from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
 import traceback
-from typing import Callable, List, Tuple, Union, Iterable
+from typing import List, Tuple, Union, Iterable, Dict, Type
 from .aggregator import build_fanout_from_config
 import tqdm
 import uuid
 from time import perf_counter
 import datetime
 from .typing import TorchImg
+import pickle
+
+
+Context = Dict
+
+
+def load_context(context_dir: Path, image_id: str) -> Context:
+    ctx_file = context_dir / f"{image_id}.pkl"
+    if ctx_file.exists():
+        with open(ctx_file, "rb") as f:
+            return pickle.load(f)
+    return {"image_id": image_id, "steps": {}}
+
+
+def save_context(context_dir: Path, image_id: str, context: Context):
+    ctx_file = context_dir / f"{image_id}.pkl"
+    with open(ctx_file, "wb") as f:
+        pickle.dump(context, f)
+
+
+# ToDo: Ассерты на то, что при исполнения стейджа были выполнены все предыдущие
+
+
+class Stage:
+
+    def process_image(self, image_context: Context) -> None:
+        raise NotImplementedError()
+
+
+class EmbedWatermarkStage(Stage):
+    def __init__(self, algorithm_wrapper: BaseAlgorithmWrapper):
+        self.algorithm_wrapper = algorithm_wrapper
+
+    def process_image(self, image_context: Context):
+        image_context["record"]["dtm"] = datetime.datetime.now()
+        watermark_data = self.algorithm_wrapper.watermark_data_gen()
+        image_context["record"]["method"] = self.algorithm_wrapper.report_name
+        image_context["record"][
+            "param_hash"
+        ] = self.algorithm_wrapper.param_hash
+        image_context["record"]["params"] = self.algorithm_wrapper.param_dict
+        image_context["watermark_data"] = watermark_data
+        image = image_context["image"]
+        s_time = perf_counter()
+        image_context["marked_image"] = self.algorithm_wrapper.embed(
+            image, watermark_data
+        )
+        image_context["record"]["embed_time"] = perf_counter() - s_time
+
+    # def load_context(self, image_id):
+    #     context =
+    #     return super().load_context(image_id)
+
+
+class PostEmbedMetricsStage(Stage):
+    def __init__(self, metrics: List[PostEmbedMetric]):
+        self.metrics = metrics
+
+    def process_image(self, image_context: Context):
+        watermark_data = image_context["watermark_data"]
+        image = image_context["image"]
+        marked_image = image_context["marked_image"]
+        for metric in self.metrics:
+            res = metric(image, marked_image, watermark_data)
+            image_context["record"][metric.report_name] = res
+
+
+class ApplyAttacksStage(Stage):
+    def __init__(self, attacks: List[BaseAttack]):
+        self.attacks = attacks
+
+    def process_image(self, image_context: Context):
+        image = image_context["marked_image"]
+        image_context["attacked_images"] = {}
+        attacks_context = image_context["attacked_images"]
+        for attack in self.attacks:
+            attacks_context[attack.report_name] = attack(image)
+
+
+class ExtractWatermarkStage(Stage):
+    def __init__(self, algorithm_wrapper: BaseAlgorithmWrapper):
+        self.algorithm_wrapper = algorithm_wrapper
+
+    def process_image(self, image_context: Context):
+        image_context["extraction_result"] = {}
+        ext_res_dict = image_context["extraction_result"]
+        watermark_data = image_context["watermark_data"]
+        for attack_name, image in image_context["attacked_images"].items():
+            s_time = perf_counter()
+            extraction_result = self.algorithm_wrapper.extract(
+                image, watermark_data
+            )
+            image_context["record"][attack_name] = {}
+            image_context["record"][attack_name]["extract_time"] = (
+                perf_counter() - s_time
+            )
+
+            ext_res_dict[attack_name] = extraction_result
+
+
+class PostExtractMetricsStage(Stage):
+    def __init__(self, metrics: List[PostExtractMetric]):
+        self.metrics = metrics
+
+    def process_image(self, image_context: Context):
+        watermark_data = image_context["watermark_data"]
+        image = image_context["image"]
+        for attack_name, attacked_image in image_context[
+            "attacked_images"
+        ].items():
+            extraction_result = image_context["extraction_result"][attack_name]
+            for metric in self.metrics:
+                res = metric(
+                    image, attacked_image, watermark_data, extraction_result
+                )
+                image_context["record"][attack_name][metric.report_name] = res
+
+
+class AggregateMetricsStage(Stage):
+    # ToDo: Заменить pipeline_config на что-то другое
+    def __init__(self, pipeline_config: PipeLineConfig):
+        self.config = pipeline_config
+        self.records = []
+        self.aggregator = build_fanout_from_config(
+            pipeline_config, Path(pipeline_config.result_path)
+        )
+
+    def flush(self):
+        self.aggregator.add(self.records)
+        self.records = []
+
+    def process_image(self, image_context: Context):
+        self.records.append(image_context["record"])
+        if len(self.records) > self.config.min_batch_size:
+            self.flush()
+
+
+STAGE_CLASSES: Dict[str, Type[Stage]] = {
+    "embed": EmbedWatermarkStage,
+    "post_embed_metrics": PostEmbedMetricsStage,
+    "attack": ApplyAttacksStage,
+    "extract": ExtractWatermarkStage,
+    "post_extract_metrics": PostExtractMetricsStage,
+    "aggregate": AggregateMetricsStage,
+}
+
+
+class StageRunner:
+    def __init__(
+        self,
+        stages: List[str],
+        algorithm_wrapper: BaseAlgorithmWrapper,
+        # datasets: Union[BaseDataset, Iterable[BaseDataset]],
+        attacks: List[BaseAttack],
+        metrics: List[BaseMetric],
+        pipeline_config: PipeLineConfig,
+    ):
+        post_embed_metrics = [
+            metric for metric in metrics if isinstance(metric, PostEmbedMetric)
+        ]
+        post_extract_metrics = [
+            metric
+            for metric in metrics
+            if isinstance(metric, PostExtractMetric)
+        ]
+
+        stage_classes = self.get_stages(stages)
+        self.stages: List[Stage] = []
+        for stage_class in stage_classes:
+            if stage_class in [EmbedWatermarkStage, ExtractWatermarkStage]:
+                self.stages.append(stage_class(algorithm_wrapper))
+            elif stage_class is PostEmbedMetricsStage:
+                self.stages.append(PostEmbedMetricsStage(post_embed_metrics))
+            elif stage_class is ApplyAttacksStage:
+                self.stages.append(ApplyAttacksStage(attacks))
+            elif stage_class is PostExtractMetricsStage:
+                self.stages.append(
+                    PostExtractMetricsStage(post_extract_metrics)
+                )
+            elif stage_class is AggregateMetricsStage:
+                self.stages.append(AggregateMetricsStage(pipeline_config))
+
+        pass
+
+    def run(self, context: Context) -> Context:
+        for stage in self.stages:
+            stage.process_image(context)
+
+    def get_stages(self, stages: List[str]) -> List[Type[Stage]]:
+        stage_list = []
+        for stage in stages:
+            if stage not in STAGE_CLASSES:
+                raise ValueError(f"Unknown stage: {stage}")
+        for stage_type, stage_class in STAGE_CLASSES.items():
+            if stage_type in stages:
+                stage_list.append(stage_class)
+        return stage_list
 
 
 class Pipeline:
     def __init__(
         self,
-        algorithm_wrapper: Union[BaseAlgorithmWrapper, Iterable[BaseAlgorithmWrapper]],
+        algorithm_wrapper: Union[
+            BaseAlgorithmWrapper, Iterable[BaseAlgorithmWrapper]
+        ],
         datasets: Union[BaseDataset, Iterable[BaseDataset]],
-        attacks: List[Tuple[str, Callable]],
+        attacks: List[BaseAttack],
         metrics: List[BaseMetric],
-        pipeline_config: PipeLineConfig
+        pipeline_config: PipeLineConfig,
     ):
         if isinstance(algorithm_wrapper, BaseAlgorithmWrapper):
             self.algorithm_wrappers = [algorithm_wrapper]
@@ -33,79 +233,20 @@ class Pipeline:
         else:
             self.datasets = datasets
         self.attacks = attacks
-        self.post_embed_metrics = [metric for metric in metrics if isinstance(metric, PostEmbedMetric)]
-        self.post_extract_metrics = [metric for metric in metrics if isinstance(metric, PostExtractMetric)]
-        self.result_path = Path(pipeline_config.result_path)
-        self.aggregator = build_fanout_from_config(pipeline_config, self.result_path)
-        self.result_path.mkdir(exist_ok=True, parents=True)
-        self.records = []
+        self.metrics = metrics
+        self.config = pipeline_config
+        self.context_dir = pipeline_config.result_path / "context"
+        self.context_dir.mkdir(parents=True, exist_ok=True)
 
-    def process_image(self, args: Tuple[str, BaseAlgorithmWrapper, Tuple[str, TorchImg], bool]):
-        #ToDo: тут может возникнуть проблема, если время у двух процессов совпадет до миллисекунды, в БД это поле используется как primary key 
-        dtm = datetime.datetime.now()
-        run_id, algorithm_wrapper, (img_id, img), img_save = args
-        record = {
-            "method": algorithm_wrapper.name,
-            "dtm": dtm,
-            "run_id": run_id,
-            "img_id": img_id,
-            "params": algorithm_wrapper.param_dict,
-            "param_hash": algorithm_wrapper.param_hash,
-            "embedded": False,
+    def init_context(
+        self, run_id: str, image_id: str, dataset_name: str, image
+    ):
+        return {
+            "image": image,
+            "record": {"image_id": image_id, "dataset": dataset_name},
         }
-        try:
-            watermark_data = algorithm_wrapper.watermark_data_gen()
-            s_time = perf_counter()
-            marked_img = algorithm_wrapper.embed(img, watermark_data)
-            record["embed_time"] = perf_counter() - s_time
-            record["embedded"] = True
 
-            for metric in self.post_embed_metrics:
-                record[metric.report_name] = metric(img, marked_img, watermark_data)
-        except Exception:
-            traceback.print_exc()
-            return record
-        
-        # ToDo: вынести в коллбек
-        # if img_save:
-        #     h, w, c = img.shape
-        #     canvas = np.zeros((h, w * 3, c), dtype=np.uint8)
-        #     canvas[:, :w, :] = img
-        #     canvas[:, w: 2*w, :] = marked_img
-        #     diff = np.abs(marked_img.astype(int) - img)
-        #     diff_max = diff.max()
-        #     coef = 255 // diff_max
-        #     canvas[:, w * 2:, :] = (diff * coef).astype(np.uint8)
-        #     path = self.result_path / f"{algorithm_wrapper.param_hash}_{img_id}_diff_x_{coef}.png"
-        #     cv2.imwrite(str(path), canvas)
-
-        for attack in self.attacks:
-            attack_name = attack.report_name
-            attacked_img = attack(image=marked_img)
-            record[attack_name] = {}
-            attack_record = record[attack_name]
-            attack_record["extracted"] = False
-            try:
-                s_time = perf_counter()
-                extraction_result = algorithm_wrapper.extract(attacked_img, watermark_data)
-                attack_record["extract_time"] = perf_counter() - s_time
-                attack_record["extracted"] = True
-
-                for metric in self.post_extract_metrics:
-                    attack_record[metric.report_name] = metric(img, marked_img, watermark_data, extraction_result)
-            except Exception:
-                traceback.print_exc()
-                continue
-        return record
-
-    def add_record(self, record, progress, min_batch_size):
-        self.records.append(record)
-        progress.update()
-        if len(self.records) >= min_batch_size:
-            self.aggregator.add(self.records)
-            self.records = []
-
-    def run(self, min_batch_size: int = 100, img_save_interval = 500) -> None:
+    def run(self, stages: List[str]):
         run_id = str(uuid.uuid1())
         total_iters = None
         if hasattr(self.algorithm_wrappers, "__len__"):
@@ -120,10 +261,32 @@ class Pipeline:
 
         progress = tqdm.tqdm(total=total_iters)
         for algorithm_wrapper in self.algorithm_wrappers:
-            img_gen = (img_tuple for dataset in self.datasets for img_tuple in dataset.generator())
-            for img_num, img_tuple in enumerate(img_gen):
-                save_img = img_num % img_save_interval == 0
-                args = (run_id, algorithm_wrapper, img_tuple, save_img)
-                self.add_record(self.process_image(args), progress, min_batch_size)
-        self.aggregator.add(self.records)
-        self.records = []
+            stage_runner = StageRunner(
+                stages,
+                algorithm_wrapper,
+                self.attacks,
+                self.metrics,
+                self.config,
+            )
+            if "embed" in stages:
+                context_gen = (
+                    self.init_context(
+                        run_id, img_id, dataset.report_name, image
+                    )
+                    for dataset in self.datasets
+                    for img_id, image in dataset.generator()
+                )
+            else:
+                context_gen = (load_context(self.context_dir, None)) #ToDo
+            for (img_id, image), dataset_name in context_gen:
+                context = self.init_context(
+                    run_id, img_id, dataset_name, image
+                )
+                stage_runner.run(context)
+                save_context(self.context_dir, img_id, context)
+                progress.update()
+                pass
+
+            for stage in stage_runner.stages:
+                if isinstance(stage, AggregateMetricsStage):
+                    stage.flush()
