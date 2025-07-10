@@ -15,7 +15,6 @@ from .hidden import HiDDeN
 
 @dataclass
 class HiddenParams:
-    runs_root: str
     run_name: str
     H: int
     W: int
