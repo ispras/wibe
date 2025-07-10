@@ -19,7 +19,7 @@ class PandasAggregatorConfig(BaseModel):
 
 class ClickHouseAggregatorConfig(BaseModel):
     kind: Literal["ClickHouse"]
-    db_config: Union[Path, str]
+    db_config: Path
 
 
 AggregatorConfig = Annotated[
@@ -28,7 +28,7 @@ AggregatorConfig = Annotated[
 
 
 class PipeLineConfig(BaseModel):
-    result_path: Union[Path, str]
+    result_path: Path
     aggregators: List[AggregatorConfig]
     min_batch_size: int = 100
 

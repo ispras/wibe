@@ -1,4 +1,5 @@
 import typer
+from typing import Optional, List
 from imgmarkbench.pipeline import Pipeline, STAGE_CLASSES
 from pathlib import Path
 from imgmarkbench.module_importer import (
@@ -31,15 +32,11 @@ def run(
     config: Path = typer.Option(
         ..., "--config", "-c", help="Path to the .yml configuration file"
     ),
-    db_config: Path = typer.Option(
-        None,
-        "--db",
-        "-d",
-        help="Path to the ClickHouse database config (.ini)",
+    no_save_context: bool = typer.Option(
+        False, "--no-save-context", "-s", help="If enabled, execution contexts is not saved (useful if disk space is limited). Recommended with 'all' stages"
     ),
-    output_dir: Path = typer.Option(
-        "results", "--out", "-o", help="Directory to save test results"
-    ),
+    stages: Optional[List[str]] = typer.Argument(None, help=f"Stages to execute (e.g., embed attack extract), if 'all' or not provided - executes all stages. Available stages are:{list(STAGE_CLASSES.keys())}"),
+
 ):
     """
     Run algorithm evaluation pipeline.
@@ -54,7 +51,7 @@ def run(
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]
     )
-    pipeline.run(STAGE_CLASSES.keys())
+    pipeline.run(stages, no_save_context)
     pass
 
 

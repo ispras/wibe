@@ -7,7 +7,7 @@ from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
 import traceback
-from typing import List, Tuple, Union, Iterable, Dict, Type
+from typing import List, Tuple, Union, Iterable, Dict, Type, Optional
 from .aggregator import build_fanout_from_config
 import tqdm
 import uuid
@@ -25,13 +25,20 @@ def load_context(context_dir: Path, image_id: str) -> Context:
     if ctx_file.exists():
         with open(ctx_file, "rb") as f:
             return pickle.load(f)
-    return {"image_id": image_id, "steps": {}}
+    else:
+        raise FileNotFoundError(f"No context for image {image_id}")
 
 
-def save_context(context_dir: Path, image_id: str, context: Context):
+def save_context(context_dir: Path, context: Context):
+    image_id = context["record"]["image_id"]
     ctx_file = context_dir / f"{image_id}.pkl"
     with open(ctx_file, "wb") as f:
         pickle.dump(context, f)
+
+
+def context_glob(context_dir: Path):
+    for pkl_file in context_dir.glob("*.pkl"):
+        yield pkl_file.stem
 
 
 # ToDo: Ассерты на то, что при исполнения стейджа были выполнены все предыдущие
@@ -235,18 +242,30 @@ class Pipeline:
         self.attacks = attacks
         self.metrics = metrics
         self.config = pipeline_config
-        self.context_dir = pipeline_config.result_path / "context"
-        self.context_dir.mkdir(parents=True, exist_ok=True)
+        self.config.result_path.mkdir(parents=True, exist_ok=True)
 
     def init_context(
         self, run_id: str, image_id: str, dataset_name: str, image
     ):
         return {
             "image": image,
-            "record": {"image_id": image_id, "dataset": dataset_name},
+            "record": {"run_id": run_id, "image_id": image_id, "dataset": dataset_name},
         }
+    
+    def get_stage_list(self, stages: Optional[List[str]]):
+        if stages is None or "all" in stages:
+            stages = list(STAGE_CLASSES.keys())
+        start = None
+        stop = None
+        for stage_num, stage in enumerate(STAGE_CLASSES.keys()):
+            if stage in stages:
+                if start is None:
+                    start = stage_num
+                stop = stage_num
+        return list(STAGE_CLASSES.keys())[start: stop + 1]
 
-    def run(self, stages: List[str]):
+    def run(self, stages: Optional[List[str]], no_save_context: bool = False):
+        stages: List[str] = self.get_stage_list(stages)
         run_id = str(uuid.uuid1())
         total_iters = None
         if hasattr(self.algorithm_wrappers, "__len__"):
@@ -260,7 +279,10 @@ class Pipeline:
                 total_iters = len(self.algorithm_wrappers) * dataset_iters
 
         progress = tqdm.tqdm(total=total_iters)
-        for algorithm_wrapper in self.algorithm_wrappers:
+        for wrapper_num, algorithm_wrapper in enumerate(self.algorithm_wrappers):
+            context_dir = self.config.result_path / f"context_{wrapper_num}"
+            if not no_save_context:
+                context_dir.mkdir(parents=True, exist_ok=True)
             stage_runner = StageRunner(
                 stages,
                 algorithm_wrapper,
@@ -277,13 +299,11 @@ class Pipeline:
                     for img_id, image in dataset.generator()
                 )
             else:
-                context_gen = (load_context(self.context_dir, None)) #ToDo
-            for (img_id, image), dataset_name in context_gen:
-                context = self.init_context(
-                    run_id, img_id, dataset_name, image
-                )
+                context_gen = (load_context(context_dir, img_id) for img_id in context_glob(context_dir))
+            for context in context_gen:
                 stage_runner.run(context)
-                save_context(self.context_dir, img_id, context)
+                if not no_save_context:
+                    save_context(context_dir, context)
                 progress.update()
                 pass
 
