@@ -1,5 +1,11 @@
 import importlib
 import pkgutil
+import sys
+
+
+def import_submodules():
+    sys.path.append(".")
+    sys.path.append("./submodules/HiDDeN")
 
 
 def import_modules(package_name):

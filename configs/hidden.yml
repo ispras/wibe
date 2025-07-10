@@ -1,0 +1,31 @@
+algorithms:
+  hidden:
+    params:
+      runs_root: /home/alexander/img-watermarking-test/submodules/HiDDeN/experiments
+      run_name: combined-noise
+
+metrics:
+  - PSNR
+  - SSIM
+  - LPIPS
+  - BER
+
+datasets:
+  - DiffusionDB:
+      path: /home/alexander/diffusiondb-filtered/
+
+attacks:
+  - Identity
+  - JPEG: 
+      report_name: jpeg_50
+      quality: 50
+  - JPEG:
+      report_name: jpeg_20
+      quality: 20
+
+
+pipeline:
+  result_path: ./test_results/hidden
+  aggregators:
+    - CSV:
+        table_name: table

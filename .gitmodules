@@ -1,3 +1,6 @@
 [submodule "submodules/trustmark"]
 	path = submodules/trustmark
 	url = https://github.com/adobe/trustmark.git
+[submodule "submodules/HiDDeN"]
+	path = submodules/HiDDeN
+	url = https://github.com/ando-khachatryan/HiDDeN.git

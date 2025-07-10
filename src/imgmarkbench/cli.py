@@ -3,6 +3,7 @@ from imgmarkbench.pipeline import Pipeline
 from pathlib import Path
 from imgmarkbench.module_importer import (
     import_modules,
+    import_submodules
 )
 from imgmarkbench.config_loader import (
     load_pipeline_config_yaml,
@@ -16,6 +17,8 @@ from imgmarkbench.config_loader import (
     get_datasets,
     get_metrics,
 )
+
+import_submodules()
 
 import_modules("imgmarkbench.algorithms")
 import_modules("imgmarkbench.datasets")
