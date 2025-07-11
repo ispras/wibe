@@ -12,7 +12,7 @@ metrics:
 
 datasets:
   - DiffusionDB:
-      path: /home/alexander/diffusiondb-filtered/
+      path: /fast-drive/aakimenkov/img-watermarking-test/diffusionDB-filtered/
 
 attacks:
   - Identity
