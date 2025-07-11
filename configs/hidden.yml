@@ -1,9 +1,9 @@
 algorithms:
   hidden:
     params:
-      runs_root: /home/alexander/img-watermarking-test/submodules/HiDDeN/experiments
+      runs_root: /fast-drive/aakimenkov/iwt_develop/submodules/HiDDeN/experiments
       run_name: combined-noise
-
+      module_path: /fast-drive/aakimenkov/iwt_develop/submodules/HiDDeN
 metrics:
   - PSNR
   - SSIM

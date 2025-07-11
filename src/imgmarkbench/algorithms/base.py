@@ -1,9 +1,10 @@
 import os
 import imgmarkbench
+import sys
 
 from dataclasses import is_dataclass, asdict
 from hashlib import md5
-from typing import Any
+from typing import Any, Dict, List
 from imgmarkbench.registry import RegistryMeta
 from imgmarkbench.typing import TorchImg
 from pathlib import Path
@@ -36,7 +37,7 @@ class BaseAlgorithmWrapper(metaclass=RegistryMeta):
         elif is_dataclass(params):
             return asdict(params)
         raise NotImplementedError(f"Cannot convert {type(params)} to dict")
-    
+
     @staticmethod
     def get_model_path(model_filename: str):
         search_paths = [Path(os.environ.get(Path(model_filename).stem.upper(), '')),
