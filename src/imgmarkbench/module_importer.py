@@ -3,9 +3,11 @@ import pkgutil
 import sys
 
 
+# temporary
 def import_submodules():
     sys.path.append(".")
     sys.path.append("./submodules/HiDDeN")
+    sys.path.append("./submodules/ARWGAN")
 
 
 def import_modules(package_name):

@@ -4,3 +4,6 @@
 [submodule "submodules/HiDDeN"]
 	path = submodules/HiDDeN
 	url = https://github.com/ando-khachatryan/HiDDeN.git
+[submodule "submodules/ARWGAN"]
+	path = submodules/ARWGAN
+	url = https://github.com/river-huang/ARWGAN.git
