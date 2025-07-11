@@ -154,7 +154,7 @@ class AggregateMetricsStage(Stage):
 
     def process_image(self, image_context: Context):
         self.records.append(image_context["record"])
-        if len(self.records) > self.config.min_batch_size:
+        if len(self.records) >= self.config.min_batch_size:
             self.flush()
 
 

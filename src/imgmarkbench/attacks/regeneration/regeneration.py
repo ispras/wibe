@@ -14,6 +14,7 @@ class FluxRegeneration(BaseAttack):
                  device: torch.device | str = "cuda:0",
                  dtype: str = "bfloat16",
                  cpu_offload: bool = True,
+                 sequential_cpu_offload: bool = False,
                  cache_dir: str | None = None,
                  prompt: str = "original image",
                  strength: float = 0.3,
@@ -29,7 +30,9 @@ class FluxRegeneration(BaseAttack):
                                                                  torch_dtype=self.dtype,
                                                                  cache_dir=cache_dir,
                                                                  )
-        if cpu_offload:
+        if sequential_cpu_offload:
+            self.flux_pipeline.enable_sequential_cpu_offload(device=device)
+        elif cpu_offload:
             self.flux_pipeline.enable_model_cpu_offload(device=device)  # save some VRAM by offloading the model to CPU. Remove this if you have enough GPU power
             # self.flux_pipeline.enable_sequential_cpu_offload(device=device)
         else:
@@ -43,6 +46,7 @@ class FluxRegeneration(BaseAttack):
         self.generator = torch.Generator(self.device).manual_seed(42)
 
     def __call__(self, img: torch.Tensor) -> torch.Tensor:
+        img = img.unsqueeze(0)
         b, c, h, w = img.shape
         img = img.to(self.dtype)
         img = self.flux_pipeline(
@@ -57,7 +61,7 @@ class FluxRegeneration(BaseAttack):
             generator=self.generator,
             output_type="pt",
         ).images  # [b,c,h,w]
-        return img
+        return img.squeeze(0).to(torch.float32)
 
 
 class FluxRinsing(FluxRegeneration):
@@ -68,6 +72,7 @@ class FluxRinsing(FluxRegeneration):
                  device: torch.device | str = "cuda:0",
                  dtype: str = "bfloat16",
                  cpu_offload: bool = True,
+                 sequential_cpu_offload: bool = False,
                  cache_dir: str | None = None,
                  prompt: str = "original image",
                  strength: float = 0.3,
@@ -75,10 +80,11 @@ class FluxRinsing(FluxRegeneration):
                  num_inference_steps: int = 12,
                  max_sequence_length: int = 512,
                  ) -> None:
-        super().__init__(device, dtype, cpu_offload, cache_dir, prompt, strength, guidance_scale, num_inference_steps, max_sequence_length)
+        super().__init__(device, dtype, cpu_offload, sequential_cpu_offload, cache_dir, prompt, strength, guidance_scale, num_inference_steps, max_sequence_length)
         self.rinsing_times = rinsing_times
 
     def __call__(self, img: torch.Tensor) -> torch.Tensor:
+        img = img.unsqueeze(0)
         b, c, h, w = img.shape
         img = img.to(self.dtype)
 
@@ -96,4 +102,4 @@ class FluxRinsing(FluxRegeneration):
                 output_type="pt",
             ).images  # [b,c,h,w]
 
-        return img
+        return img.squeeze(0).to(torch.float32)

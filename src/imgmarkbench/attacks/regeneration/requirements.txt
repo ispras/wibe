@@ -2,3 +2,5 @@ torch
 diffusers
 transformers
 accelerate
+protobuf
+sentencepiece
