@@ -10,8 +10,13 @@ class RegistryMeta(type):
             return
 
         if not cls.__name__.startswith("Base"):
-            plugin_name = getattr(cls, "name", cls.__name__)
+            if "name" in cls.__dict__:
+                plugin_name = cls.name
+            else:
+                plugin_name = cls.__name__
             plugin_name = plugin_name.lower()
+            if "report_name" not in cls.__dict__:
+                setattr(cls, "report_name", plugin_name)
             for base in bases:
                 if hasattr(base, "_registry"):
                     if plugin_name in base._registry:
@@ -21,6 +26,3 @@ class RegistryMeta(type):
                         f"Registered {base.type}: {cls.__name__} as {plugin_name}"
                     )
                     break
-
-            if not hasattr(cls, "report_name"):
-                setattr(cls, "report_name", plugin_name)
