@@ -8,7 +8,14 @@ from pathlib import Path
 
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.typing import TorchImg
-from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img 
+from imgmarkbench.utils import (
+    resize_torch_img,
+    normalize_image,
+    denormalize_image,
+    overlay_difference,
+    torch_img2numpy_bgr,
+    numpy_bgr2torch_img
+)
 from imgmarkbench.module_importer import load_modules
 
 
@@ -66,7 +73,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         )
         super().__init__(hidden_params)
 
-    def embed(self, image: TorchImg, watermark_data: WatermarkData) -> torch.Tensor:
+    def embed_numpy(self, image: TorchImg, watermark_data: WatermarkData) -> torch.Tensor:
         image = torch_img2numpy_bgr(image)
         orig_height, orig_width = image.shape[:2]
         img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -82,7 +89,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         marked_uint = np.clip(marked_rgb, 0, 255).astype(np.uint8)
         return numpy_bgr2torch_img(cv2.cvtColor(marked_uint, cv2.COLOR_RGB2BGR))
 
-    def extract(self, image: TorchImg, watermark_data: WatermarkData) -> List[int]:
+    def extract_numpy(self, image: TorchImg, watermark_data: WatermarkData) -> List[int]:
         image = torch_img2numpy_bgr(image)
         img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         resized_image = cv2.resize(img_rgb, (self.params.W, self.params.H), cv2.INTER_LINEAR)
@@ -91,5 +98,22 @@ class HiddenWrapper(BaseAlgorithmWrapper):
             res = self.encoder_decoder.decoder(tensor)
         return (res.numpy() > 0.5).astype(int)
     
+    def embed(self, image: TorchImg, watermark_data: Any):
+        orig_height, orig_width = image.shape[1:]
+        resized_image = resize_torch_img(image, (self.params.H, self.params.W))
+        resized_normalize_image = normalize_image(resized_image)
+        with torch.no_grad():
+            encoded_tensor = self.encoder_decoder.encoder(resized_normalize_image, watermark_data.watermark)
+        encoded_tensor = denormalize_image(encoded_tensor)
+        marked_image = overlay_difference(image, resized_image, encoded_tensor, (orig_height, orig_width))
+        return marked_image
+    
+    def extract(self, image: TorchImg, watermark_data: Any):
+        resized_image = resize_torch_img(image, (self.params.H, self.params.W))
+        resized_normalize_image = normalize_image(resized_image)
+        with torch.no_grad():
+            res = self.encoder_decoder.decoder(resized_normalize_image)
+        return (res.numpy() > 0.5).astype(int)
+
     def watermark_data_gen(self) -> WatermarkData:
         return WatermarkData(torch.tensor(np.random.randint(0, 2, size=(1, self.params.wm_length))))
