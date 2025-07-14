@@ -1,8 +1,7 @@
 import torch
 import numpy as np
-import cv2
 
-from typing_extensions import Any, Dict, List
+from typing_extensions import Any, Dict
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,9 +11,7 @@ from imgmarkbench.utils import (
     resize_torch_img,
     normalize_image,
     denormalize_image,
-    overlay_difference,
-    torch_img2numpy_bgr,
-    numpy_bgr2torch_img
+    overlay_difference
 )
 from imgmarkbench.module_importer import load_modules
 
@@ -72,31 +69,6 @@ class HiddenWrapper(BaseAlgorithmWrapper):
             decoder_channels=hidden_config.decoder_channels,
         )
         super().__init__(hidden_params)
-
-    def embed_numpy(self, image: TorchImg, watermark_data: WatermarkData) -> torch.Tensor:
-        image = torch_img2numpy_bgr(image)
-        orig_height, orig_width = image.shape[:2]
-        img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        resized_image = cv2.resize(img_rgb, (self.params.W, self.params.H), cv2.INTER_LINEAR)
-        tensor = self.image_to_tensor(resized_image)
-        with torch.no_grad():
-            encoded_tensor = self.encoder_decoder.encoder(tensor, watermark_data.watermark)
-        tensor_diff = encoded_tensor - tensor
-        img_diff = np.round(tensor_diff.permute(0, 2, 3, 1).cpu().numpy()[0] * (255 / 2)).astype(np.int16)
-        min_val = img_diff.min()
-        diff_resized = cv2.resize((img_diff - min_val).astype(np.uint8), (orig_width, orig_height), interpolation=cv2.INTER_LINEAR)
-        marked_rgb = img_rgb + diff_resized.astype(np.int16) + min_val
-        marked_uint = np.clip(marked_rgb, 0, 255).astype(np.uint8)
-        return numpy_bgr2torch_img(cv2.cvtColor(marked_uint, cv2.COLOR_RGB2BGR))
-
-    def extract_numpy(self, image: TorchImg, watermark_data: WatermarkData) -> List[int]:
-        image = torch_img2numpy_bgr(image)
-        img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        resized_image = cv2.resize(img_rgb, (self.params.W, self.params.H), cv2.INTER_LINEAR)
-        tensor = self.image_to_tensor(resized_image)
-        with torch.no_grad():
-            res = self.encoder_decoder.decoder(tensor)
-        return (res.numpy() > 0.5).astype(int)
     
     def embed(self, image: TorchImg, watermark_data: Any):
         orig_height, orig_width = image.shape[1:]
