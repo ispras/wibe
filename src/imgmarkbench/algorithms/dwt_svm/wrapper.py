@@ -1,8 +1,10 @@
-from .dwtsvm_marker import DWTSVMMarker
 import numpy as np
-from typing import Any
-from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
+
+from typing_extensions import Any
 from dataclasses import dataclass
+
+from .dwtsvm_marker import DWTSVMMarker
+from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 from imgmarkbench.typing import TorchImg
 

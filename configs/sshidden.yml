@@ -1,0 +1,41 @@
+algorithms:
+  sshidden:
+    params:
+      ckpt_path: ./submodules/stable_signature/hidden/ckpts/hidden_replicate.pth
+      encoder_depth: 4
+      encoder_channels: 64
+      decoder_depth: 8
+      decoder_channels: 64
+      num_bits: 48
+      attenuation: jnd
+      scale_channels: False
+      scaling_i: 1.
+      scaling_w: 1.5
+      H: 512
+      W: 512
+      module_path: ./submodules/stable_signature/hidden
+metrics:
+  - PSNR
+  - SSIM
+  - LPIPS
+  - BER
+
+datasets:
+  - DiffusionDB:
+      path: /fast-drive/aakimenkov/img-watermarking-test/diffusionDB-filtered/
+
+attacks:
+  - Identity
+  - JPEG: 
+      report_name: jpeg_50
+      quality: 50
+  - JPEG:
+      report_name: jpeg_20
+      quality: 20
+
+
+pipeline:
+  result_path: ./test_results/sshidden
+  aggregators:
+    - CSV:
+        table_name: table

@@ -1,14 +1,15 @@
-from typing import Any, Dict, List
+import torch
+import numpy as np
+import cv2
+
+from typing_extensions import Any, Dict, List
+from dataclasses import dataclass
+from pathlib import Path
+
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.typing import TorchImg
 from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img 
 from imgmarkbench.module_importer import load_modules
-import os
-import torch
-import numpy as np
-import cv2
-from dataclasses import dataclass
-from pathlib import Path
 
 
 @dataclass

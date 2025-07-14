@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing_extensions import Any, Union
 import numpy as np
 import lpips
 from imgmarkbench.registry import RegistryMeta

@@ -5,7 +5,7 @@ from torchvision.transforms.v2 import JPEG
 import torch
 from imgmarkbench.registry import RegistryMeta
 from imgmarkbench.typing import TorchImg
-from typing import Dict, Literal
+from typing_extensions import Dict, Literal
 
 
 class BaseAttack(metaclass=RegistryMeta):

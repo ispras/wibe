@@ -1,7 +1,7 @@
 from imgmarkbench.typing import TorchImg
 import torch
 import numpy as np
-from typing import Dict, Any
+from typing_extensions import Dict, Any, List
 
 
 def planarize_dict(d: Dict[str, Any]) -> Dict[str, Any]:
@@ -28,3 +28,10 @@ def torch_img2numpy_bgr(image: TorchImg) -> np.ndarray:
 def numpy_bgr2torch_img(image: np.ndarray) -> TorchImg:
     np_float_img = image.transpose(2, 0, 1)[[2, 1, 0], ...] / 255
     return torch.tensor(np_float_img, dtype=torch.float32)
+
+
+def resize_torch_img(image: TorchImg, size: List[int], mode: str = 'bilinear', align_corners: bool = True) -> TorchImg:
+    if mode in ['bilinear', 'bicubic']:
+        image = image.unsqueeze(0)
+    resized_image = torch.nn.functional.interpolate(image, size, mode=mode, align_corners=align_corners).squeeze(0)
+    return resized_image

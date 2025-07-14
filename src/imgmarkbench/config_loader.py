@@ -1,13 +1,20 @@
 import yaml
+
 from pathlib import Path
-from typing import Union, List, Dict, Any
+from typing_extensions import (
+    Dict,
+    List,
+    Tuple,
+    Any,
+    Union
+)
+from functools import partial
+
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.attacks.base import BaseAttack
 from imgmarkbench.datasets.base import BaseDataset
 from imgmarkbench.metrics.base import BaseMetric
-from typing import Dict, List, Tuple, Type, Any
 from imgmarkbench.config import PipeLineConfig
-from functools import partial
 
 
 ALGORITHMS_FIELD = "algorithms"

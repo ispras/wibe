@@ -1,0 +1,103 @@
+import torch
+
+from dataclasses import dataclass
+from torchvision import transforms
+from typing_extensions import Dict, Any, Optional
+from pathlib import Path
+
+from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
+from imgmarkbench.typing import TorchImg
+from imgmarkbench.utils import resize_torch_img
+from imgmarkbench.module_importer import load_modules
+
+
+@dataclass
+class SSHiddenParams:
+    ckpt_path: Optional[str] = None
+    module_path: Optional[str] = None
+    encoder_depth: int = 4
+    encoder_channels: int = 64
+    decoder_depth: int = 8
+    decoder_channels: int = 64
+    num_bits: int = 48
+    attenuation: str = "jnd"
+    scale_channels: bool = False
+    scaling_i: float = 1.
+    scaling_w: float = 1.5
+    H: int = 512
+    W: int = 512
+
+
+@dataclass
+class WatermarkData:
+    watermark: torch.Tensor
+
+
+NORMALIZE_IMAGENET = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+UNNORMALIZE_IMAGENET = transforms.Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225], std=[1/0.229, 1/0.224, 1/0.225])
+default_transform = transforms.Compose([NORMALIZE_IMAGENET])
+
+
+class SSHiddenWrapper(BaseAlgorithmWrapper):
+    name = "sshidden"
+
+    def __init__(self, params: Dict[str, Any]) -> None:
+        load_modules(params, ["models", "attenuations"], self.name)
+        from sshidden.models import (
+            HiddenEncoder,
+            HiddenDecoder,
+            EncoderWithJND
+        )
+        from sshidden.attenuations import JND
+
+        super().__init__(SSHiddenParams(**params))
+        if self.params.ckpt_path is None:
+            raise FileNotFoundError("Model file not found, ckpt_path is none!")
+        state_dict = torch.load(Path(self.params.ckpt_path).resolve(), map_location='cpu')['encoder_decoder']
+        encoder_decoder_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
+        encoder_state_dict = {k.replace('encoder.', ''): v for k, v in encoder_decoder_state_dict.items() if 'encoder' in k}
+        decoder_state_dict = {k.replace('decoder.', ''): v for k, v in encoder_decoder_state_dict.items() if 'decoder' in k}
+
+        self.decoder = HiddenDecoder(
+            num_blocks=self.params.decoder_depth, 
+            num_bits=self.params.num_bits, 
+            channels=self.params.decoder_channels
+        )
+        encoder = HiddenEncoder(
+            num_blocks=self.params.encoder_depth, 
+            num_bits=self.params.num_bits, 
+            channels=self.params.encoder_channels
+        )
+        attenuation = JND(preprocess=UNNORMALIZE_IMAGENET) if self.params.attenuation == "jnd" else None
+        self.encoder_with_jnd = EncoderWithJND(
+            encoder, attenuation, self.params.scale_channels, self.params.scaling_i, self.params.scaling_w,
+        )
+        encoder.load_state_dict(encoder_state_dict)
+        self.decoder.load_state_dict(decoder_state_dict)
+        device = torch.device('cpu')
+        self.encoder_with_jnd = self.encoder_with_jnd.to(device).eval()
+        self.decoder = self.decoder.to(device).eval()
+
+    def embed(self, image: TorchImg, watermark_data: WatermarkData):
+        msg = 2 * watermark_data.watermark.type(torch.float) - 1
+        orig_height, orig_width = image.shape[1:]
+        resized_image = resize_torch_img(image, [self.params.H, self.params.W])
+        img_pt = default_transform(resized_image).unsqueeze(0)
+        with torch.no_grad():
+            img_w = self.encoder_with_jnd(img_pt, msg)
+        unnorm_img = UNNORMALIZE_IMAGENET(img_w)
+        img_diff = unnorm_img - resized_image
+        min_val = img_diff.min()
+        diff_resized = resize_torch_img((img_diff - min_val).squeeze(0), (orig_height, orig_width))
+        marked_image = torch.clip(image + diff_resized + min_val, 0, 1).squeeze(0)
+        return marked_image
+    
+    def extract(self, image: TorchImg, watermark_data: WatermarkData):
+        resized_image = resize_torch_img(image, (self.params.H, self.params.W))
+        tensor = default_transform(resized_image).unsqueeze(0)
+        with torch.no_grad():
+            ft = self.decoder(tensor)
+        return ft > 0
+    
+    def watermark_data_gen(self) -> WatermarkData:
+        return WatermarkData(torch.randint(0, 2, (1, self.params.num_bits)).bool())

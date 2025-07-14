@@ -1,11 +1,12 @@
-from typing import Any, Literal
+import numpy as np
+
+from typing_extensions import Any, Literal
 from dataclasses import dataclass
 from PIL import Image
+
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.typing import TorchImg
 from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
-
-import numpy as np
 from trustmark import TrustMark
 
 

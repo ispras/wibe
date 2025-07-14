@@ -4,7 +4,7 @@ import pkgutil
 import sys
 
 from pathlib import Path
-from typing import Dict, Any, List, Union
+from typing_extensions import Dict, Any, List, Union
 
 
 def import_modules(package_name):
@@ -23,6 +23,8 @@ def load_modules(params: Dict[str, Any], modules: Union[List[str]], package_name
     if module_path is None:
         raise ModuleNotFoundError(f"Missing path to module!")
     module_path = Path(module_path).resolve()
+    if not module_path.exists():
+        raise FileNotFoundError("The path does not exist!")
     sys.path.append(str(module_path))
     for module in modules:
         spec = importlib.util.spec_from_file_location(module, module_path / (module + ".py"))

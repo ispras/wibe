@@ -1,13 +1,13 @@
 import os
 import imgmarkbench
-import sys
 
 from dataclasses import is_dataclass, asdict
 from hashlib import md5
-from typing import Any, Dict, List
+from typing_extensions import Any
+from pathlib import Path
+
 from imgmarkbench.registry import RegistryMeta
 from imgmarkbench.typing import TorchImg
-from pathlib import Path
 
 
 WatermarkData = Any

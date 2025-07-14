@@ -1,9 +1,12 @@
+import numpy as np
+
+from dataclasses import dataclass
+
 from imgmarkbench.algorithms.stega_stamp.stega_stamp import StegaStamp
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.typing import TorchImg
 from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
-from dataclasses import dataclass
-import numpy as np
+
 
 @dataclass
 class StegaStampConfig:
