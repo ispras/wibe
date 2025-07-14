@@ -1,4 +1,4 @@
-from imgmarkbench.typing import TorchImg
+from imgmarkbench.typing import TorchImg, TorchImgNormalize
 import torch
 import numpy as np
 from typing_extensions import Dict, Any, List
@@ -35,3 +35,26 @@ def resize_torch_img(image: TorchImg, size: List[int], mode: str = 'bilinear', a
         image = image.unsqueeze(0)
     resized_image = torch.nn.functional.interpolate(image, size, mode=mode, align_corners=align_corners).squeeze(0)
     return resized_image
+
+
+def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked_image: TorchImg, size: List[int]) -> TorchImg:
+    orig_height, orig_width = size
+    diff = marked_image - resized_image
+    min_val = diff.min()
+    diff_resized = resize_torch_img((diff - min_val).squeeze(0), (orig_height, orig_width))
+    marked_image = torch.clip(original_image + diff_resized + min_val, 0, 1).squeeze(0)
+    return marked_image
+
+
+def normalize_image(image: TorchImg) -> TorchImgNormalize:
+    '''
+    Normalize tensor from [0.0, 1.0] to [-1.0, 1.0] and (C x H x W) to (1 x C x H x W)
+    '''
+    return (image * 2 - 1).unsqueeze(0)
+
+
+def denormalize_image(image: TorchImgNormalize) -> TorchImg:
+    '''
+    Denormalize tensor from [-1.0, 1.0] to [0.0, 1.0] and (1 x C x H x W) to (C x H x W)
+    '''
+    return ((image + 1) / 2).squeeze(0)
