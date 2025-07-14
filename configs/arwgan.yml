@@ -1,9 +1,9 @@
 algorithms:
   arwgan:
     params:
-      options_file_path: /fast-drive/aakimenkov/iwt_develop/submodules/ARWGAN/pretrain/options-and-config.pickle
-      checkpoint_file_path: /fast-drive/aakimenkov/iwt_develop/submodules/ARWGAN/pretrain/checkpoints/ARWGAN.pyt
-      module_path: /fast-drive/aakimenkov/iwt_develop/submodules/ARWGAN
+      options_file_path: ./submodules/ARWGAN/pretrain/options-and-config.pickle
+      checkpoint_file_path: ./submodules/ARWGAN/pretrain/checkpoints/ARWGAN.pyt
+      module_path: ./submodules/ARWGAN
 
 metrics:
   - PSNR

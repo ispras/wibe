@@ -4,10 +4,16 @@ import cv2
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
+from pathlib import Path
 
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.typing import TorchImg
-from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
+from imgmarkbench.utils import (
+    resize_torch_img,
+    overlay_difference,
+    normalize_image,
+    denormalize_image
+)
 from imgmarkbench.module_importer import load_modules
 
 
@@ -41,21 +47,14 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
     def __init__(self, params: Dict[str, Any]) -> None:
         # Load module from ARWGAN submodule
         load_modules(params, ["utils", "model/encoder_decoder", "noise_layers/noiser"], self.name)
-        from arwgan.utils import image_to_tensor, load_options
-        global image_to_tensor
+        from arwgan.utils import load_options
         from arwgan.encoder_decoder import EncoderDecoder
         from arwgan.noiser import Noiser
 
-        options_file_path = params["options_file_path"]
-        checkpoint_file_path = params["checkpoint_file_path"]
+        options_file_path = Path(params["options_file_path"]).resolve()
+        checkpoint_file_path = Path(params["checkpoint_file_path"]).resolve()
         train_options, config, noise_config = load_options(options_file_path)
         checkpoint = torch.load(checkpoint_file_path, map_location="cpu")
-
-        device = torch.device('cpu')
-        noiser = Noiser([], device)
-        self.encoder_decoder = EncoderDecoder(config, noiser)
-        self.encoder_decoder.load_state_dict(checkpoint['enc-dec-model'])
-        self.encoder_decoder.eval()
 
         params = ARWGANParams(
             H=config.H,
@@ -76,29 +75,27 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
         )
         super().__init__(params)
 
+        device = torch.device('cpu')
+        noiser = Noiser([], device)
+        self.encoder_decoder = EncoderDecoder(config, noiser)
+        self.encoder_decoder.load_state_dict(checkpoint['enc-dec-model'])
+        self.encoder_decoder.eval()
+
     def embed(self, image: TorchImg, watermark_data: Any):
-        image = torch_img2numpy_bgr(image)
-        orig_height, orig_width = image.shape[:2]
-        img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        resized_image = cv2.resize(img_rgb, (self.params.W, self.params.H), cv2.INTER_LINEAR)
-        tensor = image_to_tensor(resized_image)
+        orig_height, orig_width = image.shape[1:]
+        resized_image = resize_torch_img(image, (self.params.H, self.params.W))
+        resized_normalize_image = normalize_image(resized_image)
         with torch.no_grad():
-            encoded_tensor = self.encoder_decoder.encoder(tensor, watermark_data.watermark)
-        tensor_diff = encoded_tensor - tensor
-        img_diff = np.round(tensor_diff.permute(0, 2, 3, 1).cpu().numpy()[0] * (255 / 2)).astype(np.int16)
-        min_val = img_diff.min()
-        diff_resized = cv2.resize((img_diff - min_val).astype(np.uint8), (orig_width, orig_height), interpolation=cv2.INTER_LINEAR)
-        marked_rgb = img_rgb + diff_resized.astype(np.int16) + min_val
-        marked_uint = np.clip(marked_rgb, 0, 255).astype(np.uint8)
-        return numpy_bgr2torch_img(cv2.cvtColor(marked_uint, cv2.COLOR_RGB2BGR))
+            encoded_tensor = self.encoder_decoder.encoder(resized_normalize_image, watermark_data.watermark)
+        encoded_tensor = denormalize_image(encoded_tensor)
+        marked_image = overlay_difference(image, resized_image, encoded_tensor, (orig_height, orig_width))
+        return marked_image
     
     def extract(self, image: TorchImg, watermark_data: Any):
-        image = torch_img2numpy_bgr(image)
-        img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        resized_image = cv2.resize(img_rgb, (self.params.W, self.params.H), cv2.INTER_LINEAR)
-        tensor = image_to_tensor(resized_image)
+        resized_image = resize_torch_img(image, (self.params.H, self.params.W))
+        resized_normalize_image = normalize_image(resized_image)
         with torch.no_grad():
-            res = self.encoder_decoder.decoder(tensor)
+            res = self.encoder_decoder.decoder(resized_normalize_image)
         return (res.numpy() > 0.5).astype(int)
     
     def watermark_data_gen(self) -> Any:
