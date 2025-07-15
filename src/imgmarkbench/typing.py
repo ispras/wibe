@@ -1,10 +1,4 @@
 import torch
-from enum import Enum
-
-
-class AggregatorType(str, Enum):
-    csv = "csv"
-    clickhouse = "clickhouse"
 
 
 # ToDo: may be jaxtyping?

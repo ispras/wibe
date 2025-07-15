@@ -10,3 +10,6 @@
 [submodule "submodules/stable_signature"]
 	path = submodules/stable_signature
 	url = https://github.com/facebookresearch/stable_signature.git
+[submodule "submodules/ssl_watermarking"]
+	path = submodules/ssl_watermarking
+	url = https://github.com/facebookresearch/ssl_watermarking.git
