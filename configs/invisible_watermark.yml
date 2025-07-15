@@ -1,6 +1,6 @@
 algorithms:
-  # - dwt_dct
-  # - dwt_dct_svd
+  - dwt_dct
+  - dwt_dct_svd
   - riva_gan
 
 metrics:
@@ -11,38 +11,16 @@ metrics:
 
 datasets:
   - DiffusionDB:
-      path: /fast-drive/aakimenkov/img-watermarking-test/diffusionDB-filtered
+      path: datasets/diffusiondb
 
 attacks:
-  - Identity
-  - JPEG:
-      report_name: jpeg_50
-      quality: 50
-  - JPEG:
-      report_name: jpeg_20
-      quality: 20
-  - rotate90:
-      direction: counter
-  - rotate:
-      angle: 30
-  - gaussianblur:
-      kernel_size: 7
-  - centercrop:
-      ratio: 0.5
-  - resize:
-      x_ratio: 0.5
-      y_ratio: 0.5
-  - randomcropout:
-      ratio: 0.5
-  - brightness:
-      factor: 1.2
-  - contrast:
-      factor: 1.2
+{% include 'distortions.yml' %}
   - vaeattack
   - FluxRegeneration:
       sequential_cpu_offload: true
   - FluxRinsing:
       sequential_cpu_offload: true
+
 
 pipeline:
   result_path: ./test_results/invisible_watermark
