@@ -34,5 +34,3 @@ pipeline:
   aggregators:
     - CSV:
         table_name: table
-    - ClickHouse:
-        db_config: ./scripts/dct_wm.ini

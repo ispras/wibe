@@ -1,13 +1,10 @@
 from pathlib import Path
-import numpy as np
-import cv2
 from .datasets.base import BaseDataset
 from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
-import traceback
-from typing import List, Tuple, Union, Iterable, Dict, Type, Optional
+from typing import List, Union, Iterable, Dict, Type, Optional
 from .aggregator import build_fanout_from_config
 import tqdm
 import uuid
@@ -69,10 +66,6 @@ class EmbedWatermarkStage(Stage):
             image, watermark_data
         )
         image_context["record"]["embed_time"] = perf_counter() - s_time
-
-    # def load_context(self, image_id):
-    #     context =
-    #     return super().load_context(image_id)
 
 
 class PostEmbedMetricsStage(Stage):
