@@ -1,4 +1,5 @@
 import yaml
+import re
 from pathlib import Path
 from typing import Union, List, Dict, Any
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
@@ -8,6 +9,19 @@ from imgmarkbench.metrics.base import BaseMetric
 from typing import Dict, List, Tuple, Type, Any
 from imgmarkbench.config import PipeLineConfig
 from functools import partial
+
+
+loader = yaml.SafeLoader
+loader.add_implicit_resolver(
+    u'tag:yaml.org,2002:float',
+    re.compile(u'''^(?:
+     [-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+]?[0-9]+)?
+    |[-+]?(?:[0-9][0-9_]*)(?:[eE][-+]?[0-9]+)
+    |\\.[0-9_]+(?:[eE][-+][0-9]+)?
+    |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*
+    |[-+]?\\.(?:inf|Inf|INF)
+    |\\.(?:nan|NaN|NAN))$''', re.X),
+    list(u'-+0123456789.'))
 
 
 ALGORITHMS_FIELD = "algorithms"
@@ -100,5 +114,5 @@ def load_pipeline_config_yaml(config_path: Union[str, Path]) -> Dict[str, Any]:
     if not config_path.exists():
         raise FileNotFoundError(f"File: {config_path} not found")
     with open(config_path, "r") as f:
-        yaml_cfg = yaml.safe_load(f)
+        yaml_cfg = yaml.load(f, Loader=loader)
     return validate_and_parse_yaml_config(yaml_cfg)
