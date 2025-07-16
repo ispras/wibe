@@ -1,6 +1,5 @@
 from typing_extensions import Any, Union
 import numpy as np
-import lpips
 from imgmarkbench.registry import RegistryMeta
 from imgmarkbench.typing import TorchImg
 from skimage.metrics import peak_signal_noise_ratio as psnr
@@ -61,19 +60,6 @@ class SSIM(PostEmbedMetric):
         res = ssim(img.numpy(), marked_img.numpy(), data_range=1, channel_axis=0)
         return float(res)
     
-
-class LPIPS(PostEmbedMetric):
-    def __init__(self, net: str = "alex") -> None:
-        self.loss_fn = lpips.LPIPS(net=net, verbose=False)
-
-    def __call__(
-        self,
-        img: TorchImg,
-        marked_img: TorchImg,
-        watermark_data: Any,
-    ) -> float:
-        return float(self.loss_fn(img.unsqueeze(0), marked_img.unsqueeze(0)))
-
 
 class Result(PostExtractMetric):
     name = "result"

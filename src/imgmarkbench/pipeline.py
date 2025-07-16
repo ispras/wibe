@@ -73,10 +73,6 @@ class EmbedWatermarkStage(Stage):
         )
         image_context["record"]["embed_time"] = perf_counter() - s_time
 
-    # def load_context(self, image_id):
-    #     context =
-    #     return super().load_context(image_id)
-
 
 class PostEmbedMetricsStage(Stage):
     def __init__(self, metrics: List[PostEmbedMetric]):
@@ -157,7 +153,7 @@ class AggregateMetricsStage(Stage):
 
     def process_image(self, image_context: Context):
         self.records.append(image_context["record"])
-        if len(self.records) > self.config.min_batch_size:
+        if len(self.records) >= self.config.min_batch_size:
             self.flush()
 
 

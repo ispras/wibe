@@ -11,16 +11,15 @@ metrics:
 
 datasets:
   - DiffusionDB:
-      path: /hdd/diffusiondb/filtered 
+      path: datasets/diffusiondb
 
 attacks:
-  - Identity
-  - JPEG: 
-      report_name: jpeg_50
-      quality: 50
-  - JPEG:
-      report_name: jpeg_20
-      quality: 20
+{% include 'distortions.yml' %}
+  - vaeattack
+  - FluxRegeneration:
+      sequential_cpu_offload: true
+  - FluxRinsing:
+      sequential_cpu_offload: true
 
 
 pipeline:
