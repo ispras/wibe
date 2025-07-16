@@ -14,7 +14,7 @@ from imgmarkbench.utils import (
     normalize_image,
     denormalize_image
 )
-from imgmarkbench.module_importer import load_modules
+from imgmarkbench.module_importer import ModuleImporter
 
 
 @dataclass
@@ -45,11 +45,10 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
     name = "arwgan"
     
     def __init__(self, params: Dict[str, Any]) -> None:
-        # Load module from ARWGAN submodule
-        load_modules(params, ["utils", "model/encoder_decoder", "noise_layers/noiser"], self.name)
-        from arwgan.utils import load_options
-        from arwgan.encoder_decoder import EncoderDecoder
-        from arwgan.noiser import Noiser
+        ModuleImporter("ARWGAN", params["module_path"]).register_module()
+        from ARWGAN.utils import load_options
+        from ARWGAN.model.encoder_decoder import EncoderDecoder
+        from ARWGAN.noise_layers.noiser import Noiser
 
         options_file_path = Path(params["options_file_path"]).resolve()
         checkpoint_file_path = Path(params["checkpoint_file_path"]).resolve()

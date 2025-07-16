@@ -13,7 +13,7 @@ from imgmarkbench.utils import (
     denormalize_image,
     overlay_difference
 )
-from imgmarkbench.module_importer import load_modules
+from imgmarkbench.module_importer import register_and_load_all_modules, ModuleImporter
 
 
 @dataclass
@@ -38,21 +38,25 @@ class HiddenWrapper(BaseAlgorithmWrapper):
     
     def __init__(self, params: Dict[str, Any]) -> None:
         # Load module from HiDDeN submodule
-        load_modules(params, ["utils", "model/encoder_decoder"], self.name)
-        from hidden.utils import (
-            image_to_tensor,
+        ModuleImporter("HiDDeN", params["module_path"]).register_module()
+        # register_and_load_all_modules(
+        #     root_dir=Path(params["module_path"]).resolve(),
+        #     virtual_base="HiDDeN",
+        #     alias_prefix_to_strip="HiDDeN"
+        # )
+        from HiDDeN.utils import (
             load_options,
             load_last_checkpoint
         )
-        from hidden.encoder_decoder import EncoderDecoder
-        
-        self.image_to_tensor = image_to_tensor
+        from HiDDeN.model.encoder_decoder import EncoderDecoder
+
         run_name = params['run_name']
         runs_root = Path(params['runs_root']).resolve()
         current_run = runs_root / run_name
-        options_file = current_run / 'options-and-config.pickle'
-        _, hidden_config, _ = load_options(options_file)
-        checkpoint, _ = load_last_checkpoint(current_run / 'checkpoints')
+        options_file_path = current_run / 'options-and-config.pickle'
+        checkpoint_file_path = current_run / 'checkpoints'
+        _, hidden_config, _ = load_options(options_file_path)
+        checkpoint, _ = load_last_checkpoint(checkpoint_file_path)
 
         self.encoder_decoder = EncoderDecoder(hidden_config, None)
         self.encoder_decoder.load_state_dict(checkpoint['enc-dec-model'])

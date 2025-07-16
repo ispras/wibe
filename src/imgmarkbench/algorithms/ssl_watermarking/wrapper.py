@@ -7,7 +7,7 @@ from typing_extensions import Optional, Dict, Any, Union
 from pathlib import Path
 
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
-from imgmarkbench.module_importer import load_modules
+from imgmarkbench.module_importer import register_and_load_all_modules, ModuleImporter
 from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 from imgmarkbench.typing import TorchImg
 
@@ -93,31 +93,13 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
     name = "ssl_watermarking"
 
     def __init__(self, params: Dict[str, Any]):
-        load_modules(params, ["utils", "utils_img", "data_augmentation", "encode", "decode"], self.name)
-        from ssl_watermarking.utils import (
-            build_backbone,
-            load_normalization_layer,
-            NormLayerWrapper,
-            generate_carriers,
-            generate_messages,
-            pvalue_angle
-        )
-        from ssl_watermarking.utils_img import (
-            default_transform,
-            unnormalize_img
-        )
-        from ssl_watermarking.data_augmentation import (
-            All
-        )
-        from ssl_watermarking.encode import (
-            watermark_multibit,
-            watermark_0bit
-        )
-        from ssl_watermarking.decode import (
-            decode_multibit,
-            decode_0bit
-        )
-        global generate_carriers, generate_messages, default_transform, unnormalize_img, watermark_multibit, watermark_0bit, decode_multibit, decode_0bit, pvalue_angle
+        ModuleImporter("SSL_Watermarking", params["module_path"]).register_module()
+        import SSL_Watermarking.utils as utils
+        import SSL_Watermarking.utils_img as utils_img
+        import SSL_Watermarking.data_augmentation as data_augmentation
+        import SSL_Watermarking.encode as encode
+        import SSL_Watermarking.decode as decode
+        global utils, utils_img, data_augmentation, encode, decode
         
         self.init_method(params)
         super().__init__(self.params_method(**params))
@@ -130,44 +112,44 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         if not backbone_weights_path.exists():
             raise FileNotFoundError(f"The normlayer weight path '{str(normlayer_weights_path)}' does not exist!")
         
-        backbone = build_backbone(path=str(backbone_weights_path), name="resnet50").to(self.device)
-        normlayer = load_normalization_layer(path=str(normlayer_weights_path)).to(self.device)
-        model = NormLayerWrapper(backbone, normlayer).to(self.device)
+        backbone = utils.build_backbone(path=str(backbone_weights_path), name="resnet50").to(self.device)
+        normlayer = utils.load_normalization_layer(path=str(normlayer_weights_path)).to(self.device)
+        model = utils.NormLayerWrapper(backbone, normlayer).to(self.device)
         for p in model.parameters():
             p.requires_grad = False
         model.eval()
         self.model = model
         self.D = self.model(torch.zeros((1,3,224,224)).to(self.device)).size(-1)
         self.K = 1 if isinstance(self.params, SSL0BitParams) else self.params.num_bits
-        self.data_aug = All()
+        self.data_aug = data_augmentation.All()
 
     def init_method(self, params: Dict[str, Any]):        
         self.method = params.get("method")
         if self.method is None:
             raise NotImplementedError("Method must be specified!")
         self.params_method, self.watermark_data, self.encode_func, self.decode_func = \
-            (SSLMultiBitParams, WatermarkMultiBitData, watermark_multibit, decode_multibit) if self.method == "multibit" else \
-            (SSL0BitParams, Watermark0BitData, watermark_0bit, decode_0bit)
+            (SSLMultiBitParams, WatermarkMultiBitData, encode.watermark_multibit, decode.decode_multibit) if self.method == "multibit" else \
+            (SSL0BitParams, Watermark0BitData, encode.watermark_0bit, decode.decode_0bit)
 
     def watermark_data_gen(self) -> Union[WatermarkMultiBitData, Watermark0BitData]:
-        carrier = generate_carriers(self.K, self.D, output_fpath=None)
+        carrier = utils.generate_carriers(self.K, self.D, output_fpath=None)
         carrier = carrier.to(self.device, non_blocking=True)
         if isinstance(self.params, SSLMultiBitParams):
-            msgs = generate_messages(1, self.K)
+            msgs = utils.generate_messages(1, self.K)
             return self.watermark_data(carrier, msgs)
-        angle = pvalue_angle(dim=self.D, k=1, proba=self.params.target_fpr)
+        angle = utils.pvalue_angle(dim=self.D, k=1, proba=self.params.target_fpr)
         return self.watermark_data(carrier, angle)
     
     def embed(self, image: TorchImg, watermark_data: WatermarkData) -> TorchImg:
         image = torch_img2numpy_bgr(image)
         rgb_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        img_tensor = default_transform(rgb_img).to(self.device)
+        img_tensor = utils_img.default_transform(rgb_img).to(self.device)
         img_loader = ImgLoader([([img_tensor], None)])
         args = (img_loader, watermark_data.watermark, watermark_data.carrier, self.model, self.data_aug, self.params) \
             if isinstance(self.params, SSLMultiBitParams) \
                 else (img_loader, watermark_data.carrier, watermark_data.angle, self.model, self.data_aug, self.params)
         pt_imgs_out = self.encode_func(*args)
-        unnorm_img = np.clip(np.round(unnormalize_img(pt_imgs_out[0]).squeeze(0).cpu().numpy().transpose(1,2,0) * 255), 0, 255).astype(np.uint8)
+        unnorm_img = np.clip(np.round(utils_img.unnormalize_img(pt_imgs_out[0]).squeeze(0).cpu().numpy().transpose(1,2,0) * 255), 0, 255).astype(np.uint8)
         return numpy_bgr2torch_img(cv2.cvtColor(unnorm_img, cv2.COLOR_RGB2BGR))
         
     def extract(self, image: TorchImg, watermark_data: WatermarkData):
@@ -179,4 +161,6 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         result = self.decode_func(*args)[0]
         if isinstance(self.params, SSLMultiBitParams):
             result = result["msg"]
-        return result["R"] > 0
+        if isinstance(self.params, SSL0BitParams):
+            result = result["R"] > 0
+        return result

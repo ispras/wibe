@@ -8,7 +8,7 @@ from pathlib import Path
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.typing import TorchImg
 from imgmarkbench.utils import resize_torch_img
-from imgmarkbench.module_importer import load_modules
+from imgmarkbench.module_importer import register_and_load_all_modules, ModuleImporter
 
 
 @dataclass
@@ -42,13 +42,13 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
     name = "sshidden"
 
     def __init__(self, params: Dict[str, Any]) -> None:
-        load_modules(params, ["models", "attenuations"], self.name)
-        from sshidden.models import (
+        ModuleImporter("SSHiDDeN", params["module_path"]).register_module()
+        from SSHiDDeN.models import (
             HiddenEncoder,
             HiddenDecoder,
             EncoderWithJND
         )
-        from sshidden.attenuations import JND
+        from SSHiDDeN.attenuations import JND
 
         super().__init__(SSHiddenParams(**params))
         if self.params.ckpt_path is None:

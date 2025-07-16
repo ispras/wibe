@@ -1,7 +1,9 @@
+from torchvision.transforms import Normalize
 from imgmarkbench.typing import TorchImg, TorchImgNormalize
 import torch
+import torchvision
 import numpy as np
-from typing_extensions import Dict, Any, List
+from typing_extensions import Dict, Any, List, Optional
 
 
 def planarize_dict(d: Dict[str, Any]) -> Dict[str, Any]:
@@ -46,15 +48,19 @@ def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked
     return marked_image
 
 
-def normalize_image(image: TorchImg) -> TorchImgNormalize:
+def normalize_image(image: TorchImg, transform: Optional[Normalize] = None) -> TorchImgNormalize:
     '''
     Normalize tensor from [0.0, 1.0] to [-1.0, 1.0] and (C x H x W) to (1 x C x H x W)
     '''
+    if transform is not None:
+        return transform(image).unsqueeze(0)
     return (image * 2 - 1).unsqueeze(0)
 
 
-def denormalize_image(image: TorchImgNormalize) -> TorchImg:
+def denormalize_image(image: TorchImgNormalize, transform: Optional[Normalize] = None) -> TorchImg:
     '''
     Denormalize tensor from [-1.0, 1.0] to [0.0, 1.0] and (1 x C x H x W) to (C x H x W)
     '''
+    if transform is not None:
+        return transform(image).squeeze(0)
     return ((image + 1) / 2).squeeze(0)
