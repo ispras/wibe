@@ -13,7 +13,9 @@ metrics:
   - PSNR
   - SSIM
   - LPIPS
-  - BER
+  - TPR@xFPR:
+      report_name: tpr@0.1%fpr
+      fpr_rate: 0.0001
 
 datasets:
   - DiffusionDB:
