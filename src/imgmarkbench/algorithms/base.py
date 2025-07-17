@@ -37,14 +37,3 @@ class BaseAlgorithmWrapper(metaclass=RegistryMeta):
         elif is_dataclass(params):
             return asdict(params)
         raise NotImplementedError(f"Cannot convert {type(params)} to dict")
-
-    @staticmethod
-    def get_model_path(model_filename: str):
-        search_paths = [Path(os.environ.get(Path(model_filename).stem.upper(), '')),
-                        Path('src/imgmarkbench/model_files') / model_filename,
-                        Path(imgmarkbench.__path__[0]) / "model_files" / model_filename]
-        for path in search_paths:
-            if path.exists():
-                return str(path)
-        raise FileExistsError(
-            f'{model_filename} model file not found in:{search_paths}')

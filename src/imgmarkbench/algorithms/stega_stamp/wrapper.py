@@ -1,6 +1,8 @@
 import numpy as np
 
 from dataclasses import dataclass
+from typing_extensions import Optional, Union
+from pathlib import Path
 
 from imgmarkbench.algorithms.stega_stamp.stega_stamp import StegaStamp
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
@@ -10,6 +12,7 @@ from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 
 @dataclass
 class StegaStampConfig:
+    weights_path: Optional[Union[str, Path]] = None
     wm_length: int = 100
     width: int = 400
     height: int = 400
@@ -26,7 +29,7 @@ class StegaStampWrapper(BaseAlgorithmWrapper):
     
     def __init__(self, params: StegaStampConfig) -> None:
         super().__init__(StegaStampConfig(**params))
-        self.model_filepath = self.get_model_path("staga_stamp.onnx")
+        self.model_filepath = Path(self.params.weights_path).resolve()
         self.stega_stamp = StegaStamp(self.model_filepath,
                                       self.params.wm_length,
                                       self.params.width,
