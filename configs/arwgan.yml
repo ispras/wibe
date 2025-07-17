@@ -1,28 +1,20 @@
 algorithms:
   arwgan:
     params:
-      options_file_path: ./submodules/ARWGAN/pretrain/options-and-config.pickle
-      checkpoint_file_path: ./submodules/ARWGAN/pretrain/checkpoints/ARWGAN.pyt
+      options_file_path: ./model_files/arwgan/options-and-config.pickle
+      checkpoint_file_path: ./model_files/arwgan/checkpoints/ARWGAN.pyt
       module_path: ./submodules/ARWGAN
+      device: cuda
 
 metrics:
-  - PSNR
-  - SSIM
-  - LPIPS
-  - BER
+{% include 'metrics.yml' %} 
 
 datasets:
   - DiffusionDB:
-      path: /fast-drive/aakimenkov/img-watermarking-test/diffusionDB-filtered/
+      path: datasets/diffusiondb
 
 attacks:
-  - Identity
-  - JPEG: 
-      report_name: jpeg_50
-      quality: 50
-  - JPEG:
-      report_name: jpeg_20
-      quality: 20
+{% include 'distortions.yml' %} 
 
 
 pipeline:

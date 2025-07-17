@@ -2,8 +2,8 @@ algorithms:
   ssl_watermarking:
     params:
       method: multibit
-      backbone_weights_path: ./dino_r50_plus.pth
-      normlayer_weights_path: ./out2048_yfcc_orig.pth
+      backbone_weights_path: ./model_files/ssl_watermarking/dino_r50_plus.pth
+      normlayer_weights_path: ./model_files/ssl_watermarking/out2048_yfcc_orig.pth
       module_path: ./submodules/ssl_watermarking
       epochs: 100
       optimizer_alg: Adam
@@ -16,23 +16,14 @@ algorithms:
       device: cuda
 
 metrics:
-  - PSNR
-  - SSIM
-  - LPIPS
-  - BER
+{% include 'metrics.yml' %} 
 
 datasets:
   - DiffusionDB:
-      path: /fast-drive/aakimenkov/img-watermarking-test/diffusionDB-filtered/
+      path: datasets/diffusiondb
 
 attacks:
-  - Identity
-  - JPEG: 
-      report_name: jpeg_50
-      quality: 50
-  - JPEG:
-      report_name: jpeg_20
-      quality: 20
+{% include 'distortions.yml' %} 
 
 
 pipeline:

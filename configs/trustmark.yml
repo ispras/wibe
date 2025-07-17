@@ -4,6 +4,7 @@ algorithms:
       wm_length: 100
       model_type: Q
       wm_strength: 0.75
+      device: cuda
 
 metrics:
   - PSNR
@@ -13,7 +14,7 @@ metrics:
 
 datasets:
   - DiffusionDB:
-      path: /home/alexander/diffusiondb-filtered/
+      path: /fast-drive/aakimenkov/img-watermarking-test/diffusionDB-filtered/
 
 attacks:
   - Identity

@@ -1,30 +1,21 @@
 algorithms:
   cin:
     params:
-      yaml_config_path: ./cin_weights/opt.yml
-      checkpoint_path: ./cin_weights/cinNet&nsmNet.pth
+      yaml_config_path: ./model_files/cin/opt.yml
+      checkpoint_path: ./model_files/cin/cinNet&nsmNet.pth
       pre_noise_policy: pre_noise_nsm
       device: cuda
       module_path: ./submodules/CIN
 
 metrics:
-  - PSNR
-  - SSIM
-  - LPIPS
-  - BER
+{% include 'metrics.yml' %} 
 
 datasets:
   - DiffusionDB:
-      path: /fast-drive/aakimenkov/img-watermarking-test/diffusionDB-filtered/
+      path: datasets/diffusiondb
 
 attacks:
-  - Identity
-  - JPEG: 
-      report_name: jpeg_50
-      quality: 50
-  - JPEG:
-      report_name: jpeg_20
-      quality: 20
+{% include 'distortions.yml' %} 
 
 
 pipeline:

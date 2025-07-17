@@ -4,24 +4,17 @@ algorithms:
       runs_root: ./submodules/HiDDeN/experiments
       run_name: combined-noise
       module_path: ./submodules/HiDDeN
+      device: cuda
+
 metrics:
-  - PSNR
-  - SSIM
-  - LPIPS
-  - BER
+{% include 'metrics.yml' %} 
 
 datasets:
   - DiffusionDB:
-      path: /fast-drive/aakimenkov/img-watermarking-test/diffusionDB-filtered/
+      path: datasets/diffusiondb
 
 attacks:
-  - Identity
-  - JPEG: 
-      report_name: jpeg_50
-      quality: 50
-  - JPEG:
-      report_name: jpeg_20
-      quality: 20
+{% include 'distortions.yml' %} 
 
 
 pipeline:
