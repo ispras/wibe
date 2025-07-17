@@ -13,7 +13,7 @@ metrics:
 
 datasets:
   - DiffusionDB:
-      path: /home/alexander/diffusiondb-filtered/
+      path: ./datasets/diffusiondb
 
 attacks:
   - Identity

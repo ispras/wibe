@@ -6,7 +6,7 @@
 	url = https://github.com/ando-khachatryan/HiDDeN.git
 [submodule "submodules/ARWGAN"]
 	path = submodules/ARWGAN
-	url = https://github.com/river-huang/ARWGAN.git
+	url = https://github.com/yakulex/ARWGAN.git
 [submodule "submodules/stable_signature"]
 	path = submodules/stable_signature
 	url = https://github.com/facebookresearch/stable_signature.git
