@@ -39,8 +39,8 @@ def resize_torch_img(image: TorchImg, size: List[int], mode: str = 'bilinear', a
     return resized_image
 
 
-def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked_image: TorchImg, size: List[int]) -> TorchImg:
-    orig_height, orig_width = size
+def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked_image: TorchImg) -> TorchImg:
+    orig_height, orig_width = original_image.shape[1:]
     diff = marked_image - resized_image
     min_val = diff.min()
     diff_resized = resize_torch_img((diff - min_val).squeeze(0), (orig_height, orig_width))

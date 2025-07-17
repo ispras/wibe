@@ -13,7 +13,7 @@ from imgmarkbench.utils import (
     denormalize_image,
     overlay_difference
 )
-from imgmarkbench.module_importer import register_and_load_all_modules, ModuleImporter
+from imgmarkbench.module_importer import ModuleImporter
 
 
 @dataclass
@@ -39,11 +39,6 @@ class HiddenWrapper(BaseAlgorithmWrapper):
     def __init__(self, params: Dict[str, Any]) -> None:
         # Load module from HiDDeN submodule
         ModuleImporter("HiDDeN", params["module_path"]).register_module()
-        # register_and_load_all_modules(
-        #     root_dir=Path(params["module_path"]).resolve(),
-        #     virtual_base="HiDDeN",
-        #     alias_prefix_to_strip="HiDDeN"
-        # )
         from HiDDeN.utils import (
             load_options,
             load_last_checkpoint

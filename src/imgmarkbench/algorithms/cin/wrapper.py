@@ -87,24 +87,25 @@ class CINWrapper(BaseAlgorithmWrapper):
 
     def embed(self, image: TorchImg, watermark_data: WatermarkData):
         resized_image = resize_torch_img(image, [self.params.H, self.params.W])
-        normalized_image: TorchImgNormalize
-        normalized_image = normalize_image(resized_image)
+        resized_normalized_image: TorchImgNormalize
+        resized_normalized_image = normalize_image(resized_image)
         with torch.no_grad():
-            marked_image = self.cin_net_wrapper.module.encoder(normalized_image.to(self.device), watermark_data.watermark.float().to(self.device))
+            marked_image = self.cin_net_wrapper.module.encoder(resized_normalized_image.to(self.device), watermark_data.watermark.float().to(self.device))
         denormalized_marked_image = denormalize_image(marked_image.cpu())
-        return overlay_difference(image, resized_image, denormalized_marked_image)
+        marked_image = overlay_difference(image, resized_image, denormalized_marked_image)
+        return marked_image
 
     def extract(self, image: TorchImg, watermark_data: WatermarkData):
         resized_image = resize_torch_img(image, [self.params.H, self.params.W])
-        normalized_image = normalize_image(resized_image)
+        resized_normalized_image = normalize_image(resized_image)
         with torch.no_grad():
             pre_noise = {
                 PreNoisePolicy.pre_noise_0: lambda: 0,
                 PreNoisePolicy.pre_noise_1:lambda: 1,
-                PreNoisePolicy.pre_noise_nsm: lambda: self.cin_net_wrapper.module.nsm(normalized_image.to(self.device))
+                PreNoisePolicy.pre_noise_nsm: lambda: self.cin_net_wrapper.module.nsm(resized_normalized_image.to(self.device))
             }[self.params.pre_noise_policy]()
 
-            img_fake, msg_fake_1, msg_fake_2, msg_nsm = self.cin_net_wrapper.module.test_decoder(normalized_image.to(self.device), pre_noise)
+            img_fake, msg_fake_1, msg_fake_2, msg_nsm = self.cin_net_wrapper.module.test_decoder(resized_normalized_image.to(self.device), pre_noise)
         return (msg_nsm.cpu().numpy() > 0.5).astype(int)
     
     def watermark_data_gen(self) -> Any:

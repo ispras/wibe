@@ -20,6 +20,7 @@ from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.module_importer import ModuleImporter
 from imgmarkbench.typing import TorchImg
 from imgmarkbench.utils import normalize_image, denormalize_image
+from imgmarkbench.config import Params
 
 
 @dataclass
@@ -28,8 +29,7 @@ class WatermarkData:
 
 
 @dataclass
-class DWSFParams:
-    module_path: Optional[str] = None
+class DWSFParams(Params):
     encoder_weights_path: Optional[str] = None
     decoder_weights_path: Optional[str] = None
     message_length: int = 30
@@ -40,7 +40,6 @@ class DWSFParams:
     mean: ClassVar[List[float]] = [0.5, 0.5, 0.5]
     std: ClassVar[List[float]] = [0.5, 0.5, 0.5]
     psnr: int = 35
-    device: str = "cuda"
     gt: float = 0.5
 
 
@@ -69,6 +68,7 @@ class DWSFWrapper(BaseAlgorithmWrapper):
                                               noise_layers=self.params.default_noise_layer)
         self.encoder_decoder.encoder = self.encoder_decoder.encoder.to(self.device)
         self.encoder_decoder.decoder = self.encoder_decoder.decoder.to(self.device)
+        
         encoder_weights_path = Path(self.params.encoder_weights_path).resolve()
         decoder_weights_path = Path(self.params.decoder_weights_path).resolve()
 
@@ -141,24 +141,24 @@ class DWSFWrapper(BaseAlgorithmWrapper):
         return decode_messages
 
     def embed(self, image: TorchImg, watermark_data: WatermarkData) -> np.ndarray:
-        norm_image = normalize_image(image, self.normalize).to(self.device)
-        h_coor, w_coor, splitSize = generate_random_coor(norm_image.shape[2],
-                                                         norm_image.shape[3],
+        normalized_image = normalize_image(image, self.normalize).to(self.device)
+        h_coor, w_coor, splitSize = generate_random_coor(normalized_image.shape[2],
+                                                         normalized_image.shape[3],
                                                          self.params.split_size)
-        encoded_image = self.encode(norm_image,
+        normalized_marked_image = self.encode(normalized_image,
                                     watermark_data.watermark,
                                     splitSize=splitSize,
                                     inputSize=self.params.H,
                                     h_coor=h_coor,
                                     w_coor=w_coor,
                                     psnr=self.params.psnr)
-        encoded_image = torch.clamp(encoded_image, -1, 1)
-        marked_image = denormalize_image(encoded_image, self.denormalize).cpu()
+        normalized_marked_image = torch.clamp(normalized_marked_image, -1, 1)
+        marked_image = denormalize_image(normalized_marked_image, self.denormalize).cpu()
         return marked_image
     
     def extract(self, image: TorchImg, watermark_data: WatermarkData) -> np.ndarray:
-        norm_image = normalize_image(image, self.normalize).to(self.device)
-        extract_bits_raw = self.decode(norm_image)
+        normalized_image = normalize_image(image, self.normalize).to(self.device)
+        extract_bits_raw = self.decode(normalized_image)
         mean_extract_bits_raw = extract_bits_raw.mean(0)
         extract_bits = mean_extract_bits_raw.unsqueeze(0).gt(self.params.gt).cpu().numpy().astype(np.uint8)
         return extract_bits

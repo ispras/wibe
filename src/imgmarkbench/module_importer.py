@@ -42,9 +42,11 @@ class ModuleImporter:
 
     def _register_alias(self, full_name: str) -> None:
         if self.module_name and full_name.startswith(self.module_name + "."):
-            alias = full_name[len(self.module_name) + 1:]
-            if alias not in sys.modules:
-                sys.modules[alias] = sys.modules[full_name]
+            full_alias = full_name[len(self.module_name) + 1:]
+            alias_parts = full_alias.split(".")
+            for alias in [full_alias] + alias_parts:
+                if alias not in sys.modules:
+                    sys.modules[alias] = sys.modules[full_name]
 
     def _collect_modules(self, current_path: Path, current_base: str) -> None:
         if current_base not in sys.modules:

@@ -7,6 +7,7 @@ from PIL import Image
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.typing import TorchImg
 from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
+from imgmarkbench.config import Params
 from trustmark import TrustMark
 
 
@@ -16,7 +17,7 @@ class WatermarkData:
 
 
 @dataclass
-class TrustMarkParams:
+class TrustMarkParams(Params):
     wm_length: int
     model_type: Literal['Q', 'B', 'C']
     wm_strength: float
@@ -27,7 +28,8 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
     
     def __init__(self, params: TrustMarkParams) -> None:
         super().__init__(TrustMarkParams(**params))
-        self.tm = TrustMark(use_ECC=False, device='cpu',
+        self.device = params["device"]
+        self.tm = TrustMark(use_ECC=False, device=self.device,
                             model_type=self.params.model_type)
 
     def _output_to_cv(self, pil_image: Image.Image):

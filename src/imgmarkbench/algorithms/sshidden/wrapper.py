@@ -7,14 +7,19 @@ from pathlib import Path
 
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.typing import TorchImg
-from imgmarkbench.utils import resize_torch_img
-from imgmarkbench.module_importer import register_and_load_all_modules, ModuleImporter
+from imgmarkbench.utils import (
+    resize_torch_img,
+    normalize_image,
+    denormalize_image,
+    overlay_difference
+)
+from imgmarkbench.module_importer import ModuleImporter
+from imgmarkbench.config import Params
 
 
 @dataclass
-class SSHiddenParams:
+class SSHiddenParams(Params):
     ckpt_path: Optional[str] = None
-    module_path: Optional[str] = None
     encoder_depth: int = 4
     encoder_channels: int = 64
     decoder_depth: int = 8
@@ -51,9 +56,12 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
         from SSHiDDeN.attenuations import JND
 
         super().__init__(SSHiddenParams(**params))
+        
         if self.params.ckpt_path is None:
-            raise FileNotFoundError("Model file not found, ckpt_path is none!")
-        state_dict = torch.load(Path(self.params.ckpt_path).resolve(), map_location='cpu')['encoder_decoder']
+            raise FileNotFoundError(f"The yaml config path: '{self.params.ckpt_path}' does not exist!")
+        
+        self.device = self.params.device
+        state_dict = torch.load(Path(self.params.ckpt_path).resolve(), map_location=self.device)['encoder_decoder']
         encoder_decoder_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
         encoder_state_dict = {k.replace('encoder.', ''): v for k, v in encoder_decoder_state_dict.items() if 'encoder' in k}
         decoder_state_dict = {k.replace('decoder.', ''): v for k, v in encoder_decoder_state_dict.items() if 'decoder' in k}
@@ -74,29 +82,24 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
         )
         encoder.load_state_dict(encoder_state_dict)
         self.decoder.load_state_dict(decoder_state_dict)
-        device = torch.device('cpu')
-        self.encoder_with_jnd = self.encoder_with_jnd.to(device).eval()
-        self.decoder = self.decoder.to(device).eval()
+        self.encoder_with_jnd = self.encoder_with_jnd.to(self.device).eval()
+        self.decoder = self.decoder.to(self.device).eval()
 
     def embed(self, image: TorchImg, watermark_data: WatermarkData):
         msg = 2 * watermark_data.watermark.type(torch.float) - 1
-        orig_height, orig_width = image.shape[1:]
         resized_image = resize_torch_img(image, [self.params.H, self.params.W])
-        img_pt = default_transform(resized_image).unsqueeze(0)
+        normalized_resized_image = normalize_image(resized_image, NORMALIZE_IMAGENET)
         with torch.no_grad():
-            img_w = self.encoder_with_jnd(img_pt, msg)
-        unnorm_img = UNNORMALIZE_IMAGENET(img_w)
-        img_diff = unnorm_img - resized_image
-        min_val = img_diff.min()
-        diff_resized = resize_torch_img((img_diff - min_val).squeeze(0), (orig_height, orig_width))
-        marked_image = torch.clip(image + diff_resized + min_val, 0, 1).squeeze(0)
+            img_w = self.encoder_with_jnd(normalized_resized_image.to(self.device), msg.to(self.device))
+        denormalized_marked_image = denormalize_image(img_w.cpu(), UNNORMALIZE_IMAGENET)
+        marked_image = overlay_difference(image, resized_image, denormalized_marked_image)
         return marked_image
     
     def extract(self, image: TorchImg, watermark_data: WatermarkData):
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
-        tensor = default_transform(resized_image).unsqueeze(0)
+        normalized_image = normalize_image(resized_image, NORMALIZE_IMAGENET)
         with torch.no_grad():
-            ft = self.decoder(tensor)
+            ft = self.decoder(normalized_image.to(self.device)).cpu()
         return ft > 0
     
     def watermark_data_gen(self) -> WatermarkData:

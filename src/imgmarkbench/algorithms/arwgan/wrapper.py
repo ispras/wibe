@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-import cv2
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
@@ -50,10 +49,20 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
         from ARWGAN.model.encoder_decoder import EncoderDecoder
         from ARWGAN.noise_layers.noiser import Noiser
 
-        options_file_path = Path(params["options_file_path"]).resolve()
-        checkpoint_file_path = Path(params["checkpoint_file_path"]).resolve()
+        options_file_path = params["options_file_path"]
+        checkpoint_file_path = params["checkpoint_file_path"]
+
+        if options_file_path is None:
+            raise FileNotFoundError(f"The options file path: '{options_file_path}' does not exist!")
+        if checkpoint_file_path is None:
+            raise FileNotFoundError(f"The yaml config path: '{checkpoint_file_path}' does not exist!")
+
+        options_file_path = Path(options_file_path).resolve()
+        checkpoint_file_path = Path(checkpoint_file_path).resolve()
         train_options, config, noise_config = load_options(options_file_path)
-        checkpoint = torch.load(checkpoint_file_path, map_location="cpu")
+        
+        self.device = params["device"]
+        checkpoint = torch.load(checkpoint_file_path, map_location=self.device)
 
         params = ARWGANParams(
             H=config.H,
@@ -74,20 +83,19 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
         )
         super().__init__(params)
 
-        device = torch.device('cpu')
-        noiser = Noiser([], device)
+        noiser = Noiser([], self.device)
         self.encoder_decoder = EncoderDecoder(config, noiser)
         self.encoder_decoder.load_state_dict(checkpoint['enc-dec-model'])
+        self.encoder_decoder = self.encoder_decoder.to(self.device)
         self.encoder_decoder.eval()
 
     def embed(self, image: TorchImg, watermark_data: Any):
-        orig_height, orig_width = image.shape[1:]
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
-        resized_normalize_image = normalize_image(resized_image)
+        resized_normalized_image = normalize_image(resized_image)
         with torch.no_grad():
-            encoded_tensor = self.encoder_decoder.encoder(resized_normalize_image, watermark_data.watermark)
-        encoded_tensor = denormalize_image(encoded_tensor)
-        marked_image = overlay_difference(image, resized_image, encoded_tensor, (orig_height, orig_width))
+            encoded_tensor = self.encoder_decoder.encoder(resized_normalized_image.to(self.device), watermark_data.watermark.to(self.device))
+        denormalized_marked_image = denormalize_image(encoded_tensor.cpu())
+        marked_image = overlay_difference(image, resized_image, denormalized_marked_image)
         return marked_image
     
     def extract(self, image: TorchImg, watermark_data: Any):

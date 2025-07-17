@@ -7,18 +7,17 @@ from typing_extensions import Optional, Dict, Any, Union
 from pathlib import Path
 
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
-from imgmarkbench.module_importer import register_and_load_all_modules, ModuleImporter
+from imgmarkbench.module_importer import ModuleImporter
 from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 from imgmarkbench.typing import TorchImg
+from imgmarkbench.config import Params
 
 
 @dataclass
-class SSLParams:
-    backbone_weights_path: Optional[str] = None
-    normlayer_weights_path: Optional[str] = None
-    module_path: Optional[str] = None
+class SSLParams(Params):
+    backbone_weights_path: Optional[Union[str, Path]] = None
+    normlayer_weights_path: Optional[Union[str, Path]] = None
     method: Optional[str] = None
-    device: str = "cpu"
 
 
 @dataclass
@@ -104,13 +103,17 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         self.init_method(params)
         super().__init__(self.params_method(**params))
         self.device = self.params.device
+
+        backbone_weights_path = self.params.backbone_weights_path
+        normlayer_weights_path = self.params.normlayer_weights_path
+
+        if not backbone_weights_path is None:
+            raise FileNotFoundError(f"The backbone weights path '{str(backbone_weights_path)}' does not exist!")
+        if not backbone_weights_path is None:
+            raise FileNotFoundError(f"The normlayer weight path '{str(normlayer_weights_path)}' does not exist!")
+
         backbone_weights_path = Path(self.params.backbone_weights_path).resolve()
         normlayer_weights_path = Path(self.params.normlayer_weights_path).resolve()
-
-        if not backbone_weights_path.exists():
-            raise FileNotFoundError(f"The backbone weights path '{str(backbone_weights_path)}' does not exist!")
-        if not backbone_weights_path.exists():
-            raise FileNotFoundError(f"The normlayer weight path '{str(normlayer_weights_path)}' does not exist!")
         
         backbone = utils.build_backbone(path=str(backbone_weights_path), name="resnet50").to(self.device)
         normlayer = utils.load_normalization_layer(path=str(normlayer_weights_path)).to(self.device)

@@ -14,6 +14,7 @@ algorithms:
       H: 512
       W: 512
       module_path: ./submodules/stable_signature/hidden
+      device: cuda
 metrics:
   - PSNR
   - SSIM
