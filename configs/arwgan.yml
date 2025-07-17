@@ -11,7 +11,7 @@ metrics:
 
 datasets:
   - DiffusionDB:
-      path: datasets/diffusiondb
+      path: ./datasets/diffusiondb
 
 attacks:
 {% include 'distortions.yml' %} 

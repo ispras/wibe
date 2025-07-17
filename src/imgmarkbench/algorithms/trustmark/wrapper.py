@@ -1,12 +1,9 @@
 import numpy as np
-
 from typing_extensions import Any, Literal
 from dataclasses import dataclass
-from PIL import Image
-
+from torchvision.transforms.functional import to_pil_image, to_tensor
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.typing import TorchImg
-from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 from imgmarkbench.config import Params
 from trustmark import TrustMark
 
@@ -25,15 +22,12 @@ class TrustMarkParams(Params):
 
 class TrustMarkWrapper(BaseAlgorithmWrapper):
     name = "trustmark"
-    
+
     def __init__(self, params: TrustMarkParams) -> None:
         super().__init__(TrustMarkParams(**params))
-        self.device = params["device"]
+        self.device = self.params.device
         self.tm = TrustMark(use_ECC=False, device=self.device,
                             model_type=self.params.model_type)
-
-    def _output_to_cv(self, pil_image: Image.Image):
-        return np.array(pil_image)[:, :, [2, 1, 0]]
 
     def _wm_to_str(self, wm: np.ndarray):
         return ''.join([str(i) for i in wm])
@@ -42,17 +36,14 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
         return np.array([int(i) for i in wm_str])
 
     def embed(self, image: TorchImg, watermark_data: WatermarkData):
-        image = torch_img2numpy_bgr(image)
-        img_pil = Image.fromarray(image[:, :, [2, 1, 0]])
+        img_pil = to_pil_image(image)
         wm_str = self._wm_to_str(watermark_data.watermark)
         emb_pil = self.tm.encode(
             img_pil, wm_str, MODE='binary', WM_STRENGTH=self.params.wm_strength)
-        result = self._output_to_cv(emb_pil)
-        return numpy_bgr2torch_img(result)
+        return to_tensor(emb_pil)
 
     def extract(self, image: TorchImg, watermark_data: Any):
-        image = torch_img2numpy_bgr(image)
-        img_pil = Image.fromarray(image[:, :, [2, 1, 0]])
+        img_pil = to_pil_image(image)
         decoded = self.tm.decode(img_pil, MODE='binary')
         result = self._str_to_wm(decoded[0])
         return result

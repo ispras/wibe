@@ -15,9 +15,11 @@ class StegaStampConfig:
     height: int = 400
     alpha: float = 0.5
 
+
 @dataclass
 class WatermarkData:
     watermark: np.ndarray
+
 
 class StegaStampWrapper(BaseAlgorithmWrapper):
     name = "stega_stamp"
@@ -38,4 +40,4 @@ class StegaStampWrapper(BaseAlgorithmWrapper):
         return self.stega_stamp.decode(torch_img2numpy_bgr(image))
     
     def watermark_data_gen(self) -> WatermarkData:
-        return WatermarkData(np.random.randint(0,2, self.params.wm_length))
+        return WatermarkData(np.random.randint(0, 2, self.params.wm_length))

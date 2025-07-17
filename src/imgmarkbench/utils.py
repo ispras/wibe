@@ -1,7 +1,6 @@
 from torchvision.transforms import Normalize
 from imgmarkbench.typing import TorchImg, TorchImgNormalize
 import torch
-import torchvision
 import numpy as np
 from typing_extensions import Dict, Any, List, Optional
 
