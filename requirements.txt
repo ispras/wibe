@@ -19,7 +19,6 @@ hf-xet==1.1.5
 huggingface-hub==0.33.4
 idna==3.10
 imageio==2.35.1
--e git+ssh://git@gitlab.ispras.ru/watermarking/img-watermarking-test.git@4b4ba6467c90c09d7d818386229fd69c997df357#egg=imgmarkbench
 importlib_metadata==8.5.0
 invisible-watermark==0.2.0
 iopath==0.1.10
