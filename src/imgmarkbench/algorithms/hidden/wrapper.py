@@ -45,6 +45,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         )
         from HiDDeN.model.encoder_decoder import EncoderDecoder
 
+        self.device = params['device']
         run_name = params['run_name']
         runs_root = Path(params['runs_root']).resolve()
         current_run = runs_root / run_name
@@ -55,6 +56,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
 
         self.encoder_decoder = EncoderDecoder(hidden_config, None)
         self.encoder_decoder.load_state_dict(checkpoint['enc-dec-model'])
+        self.encoder_decoder = self.encoder_decoder.to(self.device)
         self.encoder_decoder.eval()
 
         hidden_params = HiddenParams(
@@ -70,21 +72,20 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         super().__init__(hidden_params)
     
     def embed(self, image: TorchImg, watermark_data: Any):
-        orig_height, orig_width = image.shape[1:]
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         resized_normalize_image = normalize_image(resized_image)
         with torch.no_grad():
-            encoded_tensor = self.encoder_decoder.encoder(resized_normalize_image, watermark_data.watermark)
-        encoded_tensor = denormalize_image(encoded_tensor)
-        marked_image = overlay_difference(image, resized_image, encoded_tensor, (orig_height, orig_width))
+            encoded_tensor = self.encoder_decoder.encoder(resized_normalize_image.to(self.device), watermark_data.watermark.to(self.device))
+        encoded_tensor = denormalize_image(encoded_tensor.cpu())
+        marked_image = overlay_difference(image, resized_image, encoded_tensor)
         return marked_image
     
     def extract(self, image: TorchImg, watermark_data: Any):
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         resized_normalize_image = normalize_image(resized_image)
         with torch.no_grad():
-            res = self.encoder_decoder.decoder(resized_normalize_image)
-        return (res.numpy() > 0.5).astype(int)
+            res = self.encoder_decoder.decoder(resized_normalize_image.to(self.device))
+        return (res.cpu().numpy() > 0.5).astype(int)
 
     def watermark_data_gen(self) -> WatermarkData:
         return WatermarkData(torch.tensor(np.random.randint(0, 2, size=(1, self.params.wm_length))))

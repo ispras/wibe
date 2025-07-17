@@ -107,9 +107,9 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         backbone_weights_path = self.params.backbone_weights_path
         normlayer_weights_path = self.params.normlayer_weights_path
 
-        if not backbone_weights_path is None:
+        if backbone_weights_path is None:
             raise FileNotFoundError(f"The backbone weights path '{str(backbone_weights_path)}' does not exist!")
-        if not backbone_weights_path is None:
+        if backbone_weights_path is None:
             raise FileNotFoundError(f"The normlayer weight path '{str(normlayer_weights_path)}' does not exist!")
 
         backbone_weights_path = Path(self.params.backbone_weights_path).resolve()
@@ -117,7 +117,9 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         
         backbone = utils.build_backbone(path=str(backbone_weights_path), name="resnet50").to(self.device)
         normlayer = utils.load_normalization_layer(path=str(normlayer_weights_path)).to(self.device)
-        model = utils.NormLayerWrapper(backbone, normlayer).to(self.device)
+        model = utils.NormLayerWrapper(backbone, normlayer)
+        model.backbone = model.backbone.to(self.device)
+        model.head = model.head.to(self.device)
         for p in model.parameters():
             p.requires_grad = False
         model.eval()

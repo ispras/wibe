@@ -18,9 +18,9 @@ class WatermarkData:
 
 @dataclass
 class TrustMarkParams(Params):
-    wm_length: int
-    model_type: Literal['Q', 'B', 'C']
-    wm_strength: float
+    wm_length: int = 100
+    model_type: Literal['Q', 'B', 'C'] = 'Q'
+    wm_strength: float = 0.75
 
 
 class TrustMarkWrapper(BaseAlgorithmWrapper):

@@ -102,8 +102,8 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         resized_normalize_image = normalize_image(resized_image)
         with torch.no_grad():
-            res = self.encoder_decoder.decoder(resized_normalize_image)
-        return (res.numpy() > 0.5).astype(int)
+            res = self.encoder_decoder.decoder(resized_normalize_image.to(self.device))
+        return (res.cpu().numpy() > 0.5).astype(int)
     
     def watermark_data_gen(self) -> Any:
         return WatermarkData(torch.tensor(np.random.randint(0, 2, size=(1, self.params.wm_length))))
