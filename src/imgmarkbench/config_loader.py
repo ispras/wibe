@@ -1,13 +1,27 @@
 import yaml
+import re
 from pathlib import Path
-from typing import Union, List, Dict, Any
+from typing import Dict, List, Tuple, Any, Union
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.attacks.base import BaseAttack
 from imgmarkbench.datasets.base import BaseDataset
 from imgmarkbench.metrics.base import BaseMetric
-from typing import Dict, List, Tuple, Type, Any
 from imgmarkbench.config import PipeLineConfig
 from functools import partial
+from jinja2 import Environment, FileSystemLoader
+
+
+loader = yaml.SafeLoader
+loader.add_implicit_resolver(
+    u'tag:yaml.org,2002:float',
+    re.compile(u'''^(?:
+     [-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+]?[0-9]+)?
+    |[-+]?(?:[0-9][0-9_]*)(?:[eE][-+]?[0-9]+)
+    |\\.[0-9_]+(?:[eE][-+][0-9]+)?
+    |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*
+    |[-+]?\\.(?:inf|Inf|INF)
+    |\\.(?:nan|NaN|NAN))$''', re.X),
+    list(u'-+0123456789.'))
 
 
 ALGORITHMS_FIELD = "algorithms"
@@ -95,10 +109,17 @@ def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
     return result
 
 
+def render_jinja2_config(config_path: Path):
+    templates_dir = config_path.parent
+    env = Environment(loader=FileSystemLoader(templates_dir), autoescape=False)
+    template = env.get_template(config_path.name)
+    return template.render()
+
+
 def load_pipeline_config_yaml(config_path: Union[str, Path]) -> Dict[str, Any]:
     config_path = Path(config_path)
     if not config_path.exists():
         raise FileNotFoundError(f"File: {config_path} not found")
-    with open(config_path, "r") as f:
-        yaml_cfg = yaml.safe_load(f)
+    rendered = render_jinja2_config(Path(config_path))
+    yaml_cfg = yaml.load(rendered, Loader=loader)
     return validate_and_parse_yaml_config(yaml_cfg)

@@ -1,10 +1,11 @@
 from typing import Any, Union
+from functools import lru_cache
 import numpy as np
-import lpips
 from imgmarkbench.registry import RegistryMeta
 from imgmarkbench.typing import TorchImg
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
+from scipy.stats import binom
 
 
 class BaseMetric(metaclass=RegistryMeta):
@@ -62,19 +63,6 @@ class SSIM(PostEmbedMetric):
         return float(res)
     
 
-class LPIPS(PostEmbedMetric):
-    def __init__(self, net: str = "alex") -> None:
-        self.loss_fn = lpips.LPIPS(net=net, verbose=False)
-
-    def __call__(
-        self,
-        img: TorchImg,
-        marked_img: TorchImg,
-        watermark_data: Any,
-    ) -> float:
-        return float(self.loss_fn(img.unsqueeze(0), marked_img.unsqueeze(0)))
-
-
 class Result(PostExtractMetric):
     name = "result"
 
@@ -100,3 +88,31 @@ class BER(PostExtractMetric):
     ) -> float:
         wm = watermark_data.watermark
         return float((np.array(wm) != np.array(extraction_result)).mean())
+
+
+class TPRxFPR(PostExtractMetric):
+    name = "TPR@xFPR"
+
+    def __init__(self, fpr_rate: float):
+        self.fpr_rate = fpr_rate
+
+    @lru_cache(maxsize=None)
+    def bits_threshold(self, num_bits: int) -> int:
+        for threshold in range(1, num_bits + 1):
+            fpr = 1 - binom.cdf(threshold - 1, num_bits, 0.5)
+            if fpr < self.fpr_rate:
+                return threshold
+        raise ValueError(f"Cannot achieve FPR rate {self.fpr_rate} with {num_bits} bits")
+
+    def __call__(
+        self,
+        img: TorchImg,
+        marked_img: TorchImg,
+        watermark_data: Any,
+        extraction_result: Any,
+    ) -> float:
+        wm = watermark_data.watermark
+        num_bits = len(wm)
+        threshold = self.bits_threshold(num_bits)
+        return int((np.array(wm) == np.array(extraction_result)).sum() >= threshold)
+

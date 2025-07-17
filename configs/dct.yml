@@ -13,20 +13,21 @@ metrics:
   - PSNR
   - SSIM
   - LPIPS
-  - BER
+  - TPR@xFPR:
+      report_name: tpr@0.1%fpr
+      fpr_rate: 0.0001
 
 datasets:
   - DiffusionDB:
-      path: /fast-drive/aakimenkov/img-watermarking-test/diffusionDB-filtered
+      path: datasets/diffusiondb
 
 attacks:
-  - Identity
-  - JPEG: 
-      report_name: jpeg_50
-      quality: 50
-  - JPEG:
-      report_name: jpeg_20
-      quality: 20
+{% include 'distortions.yml' %}
+  - vaeattack
+  - FluxRegeneration:
+      sequential_cpu_offload: true
+  - FluxRinsing:
+      sequential_cpu_offload: true
 
 
 pipeline:
@@ -34,5 +35,3 @@ pipeline:
   aggregators:
     - CSV:
         table_name: table
-    - ClickHouse:
-        db_config: ./scripts/dct_wm.ini
