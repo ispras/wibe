@@ -30,6 +30,7 @@ class FluxRegeneration(BaseAttack):
                                                                  torch_dtype=self.dtype,
                                                                  cache_dir=cache_dir,
                                                                  )
+        self.flux_pipeline.set_progress_bar_config(disable=True)
         if sequential_cpu_offload:
             self.flux_pipeline.enable_sequential_cpu_offload(device=device)
         elif cpu_offload:
