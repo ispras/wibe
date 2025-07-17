@@ -16,3 +16,6 @@
 [submodule "submodules/DWSF"]
 	path = submodules/DWSF
 	url = https://github.com/bytedance/DWSF.git
+[submodule "submodules/CIN"]
+	path = submodules/CIN
+	url = https://github.com/rmpku/CIN.git
