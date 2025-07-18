@@ -5,7 +5,7 @@ algorithms:
       wm_length: 100
       width: 400
       height: 400
-      alpha: 0.5
+      alpha: 1
 
 metrics:
 {% include 'metrics.yml' %} 
