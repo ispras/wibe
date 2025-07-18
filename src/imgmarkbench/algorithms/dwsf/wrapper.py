@@ -32,6 +32,7 @@ class WatermarkData:
 class DWSFParams(Params):
     encoder_weights_path: Optional[str] = None
     decoder_weights_path: Optional[str] = None
+    seg_weights_path: Optional[str] = None
     message_length: int = 30
     H: int = 128
     W: int = 128
@@ -52,9 +53,9 @@ class DWSFWrapper(BaseAlgorithmWrapper):
         from DWSF.utils.util import generate_random_coor
         from DWSF.networks.models.EncoderDecoder import EncoderDecoder
         from DWSF.utils.img import psnr_clip
-        from DWSF.utils.seg import obtain_wm_blocks
+        from DWSF.utils.seg import obtain_wm_blocks, init
         global generate_random_coor, obtain_wm_blocks, psnr_clip
-
+        init(self.params.seg_weights_path)
         self.normalize = torchvision.transforms.Normalize(mean=self.params.mean, std=self.params.std)
         self.denormalize = torchvision.transforms.Compose([
             torchvision.transforms.Normalize(mean=[0., 0., 0.], std=[1/x for x in self.params.std]),

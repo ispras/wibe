@@ -3,6 +3,7 @@ algorithms:
     params:
       encoder_weights_path: ./model_files/dwsf/encoder_best.pth
       decoder_weights_path: ./model_files/dwsf/decoder_best.pth
+      seg_weights_path: ./model_files/dwsf/seg.pth
       message_length: 30
       H: 128
       W: 128
