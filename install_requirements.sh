@@ -1,8 +1,5 @@
 #!/bin/bash
 
-pip install -e .
-pip install -e ./submodules/trustmark/python
-
 
 # Create an array to hold pip arguments
 req_args=()
@@ -25,3 +22,7 @@ fi
 # Call pip once with all -r arguments
 echo "Installing all dependencies in a single pip call..."
 pip install "${req_args[@]}"
+
+
+pip install -e .
+pip install -e ./submodules/trustmark/python

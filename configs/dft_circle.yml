@@ -4,7 +4,10 @@ algorithms:
       alpha: 600
 
 metrics:
-{% include 'common/metrics.yml' %} 
+  - PSNR
+  - SSIM
+  - LPIPS
+  - Result
 
 datasets:
 {% include 'common/datasets.yml' %}

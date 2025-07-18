@@ -4,7 +4,7 @@ algorithms:
       wm_length: 100
       model_type: Q
       wm_strength: 0.75
-      device: cpu
+      device: cuda
 
 metrics:
 {% include 'common/metrics.yml' %} 
