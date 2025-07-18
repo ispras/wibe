@@ -215,3 +215,6 @@ fabric.properties
 # vscode
 .vscode
 init.sh
+
+# models
+model_files
