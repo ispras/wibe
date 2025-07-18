@@ -1,10 +1,13 @@
 import typer
-from typing import Optional, List
-from imgmarkbench.pipeline import Pipeline, STAGE_CLASSES
-from pathlib import Path
-from imgmarkbench.module_importer import (
-    import_modules,
+
+from typing_extensions import (
+    Optional,
+    List
 )
+from pathlib import Path
+
+from imgmarkbench.pipeline import Pipeline, STAGE_CLASSES
+from imgmarkbench.module_importer import import_modules
 from imgmarkbench.config_loader import (
     load_pipeline_config_yaml,
     ALGORITHMS_FIELD,
@@ -17,6 +20,7 @@ from imgmarkbench.config_loader import (
     get_datasets,
     get_metrics,
 )
+
 
 import_modules("imgmarkbench.algorithms")
 import_modules("imgmarkbench.datasets")

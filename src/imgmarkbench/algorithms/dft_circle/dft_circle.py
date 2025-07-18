@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-from typing import Optional
+
+from typing_extensions import Optional
 
 
 class DFTMarker:

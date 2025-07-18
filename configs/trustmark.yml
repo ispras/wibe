@@ -1,0 +1,33 @@
+algorithms:
+  trustmark:
+    params:
+      wm_length: 100
+      model_type: Q
+      wm_strength: 0.75
+      device: cuda
+
+metrics:
+  - PSNR
+  - SSIM
+  - LPIPS
+  - BER
+
+datasets:
+  - DiffusionDB:
+      path: ./datasets/diffusiondb
+
+attacks:
+  - Identity
+  - JPEG: 
+      report_name: jpeg_50
+      quality: 50
+  - JPEG:
+      report_name: jpeg_20
+      quality: 20
+
+
+pipeline:
+  result_path: ./test_results/trustmark
+  aggregators:
+    - CSV:
+        table_name: table

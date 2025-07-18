@@ -4,13 +4,19 @@ from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
-from typing import List, Union, Iterable, Dict, Type, Optional
+from typing_extensions import (
+    List,
+    Union,
+    Iterable,
+    Dict,
+    Type,
+    Optional
+)
 from .aggregator import build_fanout_from_config
 import tqdm
 import uuid
 from time import perf_counter
 import datetime
-from .typing import TorchImg
 import pickle
 
 

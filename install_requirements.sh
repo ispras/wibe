@@ -1,5 +1,9 @@
 #!/bin/bash
 
+pip install -e .
+pip install -e ./submodules/trustmark/python
+
+
 # Create an array to hold pip arguments
 req_args=()
 

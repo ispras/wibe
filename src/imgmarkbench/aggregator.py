@@ -6,7 +6,7 @@ from abc import (
     ABC,
     abstractmethod
 )
-from typing import (
+from typing_extensions import (
     Dict,
     List,
     Any,

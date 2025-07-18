@@ -2,7 +2,7 @@ from pathlib import Path
 from itertools import chain
 from PIL import Image
 from torchvision.transforms import ToTensor
-from typing import Generator, Tuple, Union, List
+from typing_extensions import Generator, Tuple, Union, List
 from imgmarkbench.typing import TorchImg
 from imgmarkbench.registry import RegistryMeta
 

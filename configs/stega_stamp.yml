@@ -1,0 +1,24 @@
+algorithms:
+  stega_stamp:
+    params:
+      weights_path: ./model_files/stega_stamp/stega_stamp.onnx
+      wm_length: 100
+      width: 400
+      height: 400
+      alpha: 0.5
+
+metrics:
+{% include 'metrics.yml' %} 
+
+datasets:
+  - DiffusionDB:
+      path: datasets/diffusiondb
+
+attacks:
+{% include 'distortions.yml' %} 
+
+pipeline:
+  result_path: ./test_results/stega_stamp
+  aggregators:
+    - CSV:
+        table_name: table
