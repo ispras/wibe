@@ -1,5 +1,6 @@
 #!/bin/bash
 
+pip install -e .
 pip install -e ./submodules/trustmark/python
 
 
