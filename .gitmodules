@@ -19,3 +19,6 @@
 [submodule "submodules/CIN"]
 	path = submodules/CIN
 	url = https://github.com/rmpku/CIN.git
+[submodule "submodules/tree-ring-watermark"]
+	path = submodules/tree-ring-watermark
+	url = https://github.com/YuxinWenRick/tree-ring-watermark.git

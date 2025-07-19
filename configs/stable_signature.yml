@@ -1,0 +1,26 @@
+algorithms:
+  stable_signature:
+    params:
+      ldm_config_path: ./v2-inference.yaml
+      ldm_checkpoint_path: ./v2-1_512-ema-pruned.ckpt
+      ldm_decoder_path: /fast-drive/aakimenkov/iwt_develop/models/sd2_decoder.pth
+      decoder_path: /fast-drive/aakimenkov/iwt_develop/models/dec_48b_whit.torchscript.pt
+      module_path: ./submodules/stable_signature
+      device: cuda
+
+metrics:
+  - BER
+# {% include 'common/metrics.yml' %} 
+
+datasets:
+{% include 'common/datasets.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+
+pipeline:
+  result_path: ./test_results/stable_signature
+  aggregators:
+    - CSV:
+        table_name: table
