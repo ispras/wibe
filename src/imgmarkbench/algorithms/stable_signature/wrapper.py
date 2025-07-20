@@ -12,7 +12,7 @@ from pathlib import Path
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.config import Params
 from imgmarkbench.typing import TorchImg
-from imgmarkbench.utils import numpy_bgr2torch_img, normalize_image
+from imgmarkbench.utils import numpy_bgr2torch_img, normalize_image, resize_torch_img
 from imgmarkbench.module_importer import ModuleImporter
 
 
@@ -60,7 +60,8 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
         return marked_image
     
     def extract(self, image: TorchImg, watermark_data: WatermarkData):
-        normalized_image = normalize_image(image, self.normalize).to(self.device)
+        resized_image = resize_torch_img(image, (512, 512))
+        normalized_image = normalize_image(resized_image, self.normalize).to(self.device)
         extracted_raw = self.decoder(normalized_image)
         extracted = (extracted_raw>0).squeeze().cpu().numpy().astype(int)
         return extracted

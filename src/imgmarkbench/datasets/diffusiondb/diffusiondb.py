@@ -1,6 +1,6 @@
 from ..base import BaseDataset
 from datasets import load_dataset
-from typing import Optional, Tuple, Generator
+from typing import Optional, Tuple, Generator, Union
 from imgmarkbench.typing import TorchImg
 from torchvision.transforms.functional import to_tensor
 
@@ -13,6 +13,7 @@ class DiffusionDB(BaseDataset):
         subset: str = "2m_first_5k",
         cache_dir: Optional[str] = None,
         skip_nsfw: bool = True,
+        return_prompt: bool = False
     ):
         self.dataset = load_dataset(
             path=self.dataset_path,
@@ -24,14 +25,17 @@ class DiffusionDB(BaseDataset):
             self.len = self.dataset.num_rows
         else:
             self.len = sum(score < 1 for score in self.dataset["image_nsfw"])
+        self.return_prompt = return_prompt
 
     def __len__(self):
         return self.len
     
-    def generator(self) -> Generator[Tuple[str, TorchImg], None, None]:
+    def generator(self) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:
         img_id = -1
         for sample in self.dataset:
             if self.skip_nsfw and sample["image_nsfw"] >= 1:
                 continue
             img_id += 1
+            if self.return_prompt:
+                yield str(img_id), sample["prompt"]
             yield str(img_id), to_tensor(sample["image"])

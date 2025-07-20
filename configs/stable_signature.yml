@@ -1,26 +1,30 @@
 algorithms:
   stable_signature:
     params:
-      ldm_config_path: ./v2-inference.yaml
-      ldm_checkpoint_path: ./v2-1_512-ema-pruned.ckpt
-      ldm_decoder_path: /fast-drive/aakimenkov/iwt_develop/models/sd2_decoder.pth
-      decoder_path: /fast-drive/aakimenkov/iwt_develop/models/dec_48b_whit.torchscript.pt
+      ldm_config_path: ./submodules/stable_signature/v2-inference.yaml
+      ldm_checkpoint_path: ./model_files/v2-1_512-ema-pruned.ckpt
+      ldm_decoder_path: ./model_files/sd2_decoder.pth
+      decoder_path: ./model_files/dec_48b_whit.torchscript.pt
       module_path: ./submodules/stable_signature
       device: cuda
 
 metrics:
+  - ImageReward
   - BER
-# {% include 'common/metrics.yml' %} 
 
 datasets:
-{% include 'common/datasets.yml' %}
+  - DiffusionDB:
+      cache_dir: ./datasets/diffusiondb
+      subset: 2m_first_5k
+      skip_nsfw: true
+      return_prompt: true
 
 attacks:
 {% include 'common/distortions.yml' %}
-
 
 pipeline:
   result_path: ./test_results/stable_signature
   aggregators:
     - CSV:
         table_name: table
+  min_batch_size: 1
