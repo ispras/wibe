@@ -16,14 +16,16 @@ algorithms:
       device: cuda
 
 metrics:
-{% include 'metrics.yml' %} 
+  - PSNR
+  - SSIM
+  - LPIPS
+  - Result
 
 datasets:
-  - DiffusionDB:
-      path: datasets/diffusiondb
+{% include 'common/datasets.yml' %}
 
 attacks:
-{% include 'distortions.yml' %} 
+{% include 'common/distortions.yml' %}
 
 
 pipeline:

@@ -138,7 +138,7 @@ class DWTSVMMarker:
         sb = dwt_d['hl2']
         sb_or_size = sb.shape
         sb = cv2.resize(sb, (64, 64))
-        full_mark = np.concat([key_mark, mark])
+        full_mark = np.concatenate([key_mark, mark])
         embedded_sb = self._embed_in_sb(sb, full_mark)
         embedded_sb = cv2.resize(embedded_sb, sb_or_size[::-1])
         dwt_d['hl2'] = embedded_sb
