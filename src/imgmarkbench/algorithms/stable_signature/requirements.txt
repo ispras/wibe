@@ -1,0 +1,9 @@
+diffusers==0.34.0
+datasets==4.0.0
+huggingface-hub==0.33.4
+kornia
+lightning-utilities
+torch
+timm
+torchvision
+transformers==4.53.2
