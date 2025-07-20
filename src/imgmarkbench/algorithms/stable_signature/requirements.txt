@@ -1,8 +1,10 @@
 diffusers==0.34.0
-datasets==4.0.0
+datasets
 huggingface-hub==0.33.4
 kornia
-lightning-utilities
+# lightning==1.7.7
+pytorch-lightning
+open-clip-torch
 torch
 timm
 torchvision

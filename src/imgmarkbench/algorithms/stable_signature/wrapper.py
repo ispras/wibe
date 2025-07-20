@@ -12,7 +12,7 @@ from pathlib import Path
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.config import Params
 from imgmarkbench.typing import TorchImg
-from imgmarkbench.utils import numpy_bgr2torch_img, normalize_image, resize_torch_img
+from imgmarkbench.utils import numpy_bgr2torch_img, normalize_image
 from imgmarkbench.module_importer import ModuleImporter
 
 
@@ -38,8 +38,8 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
         super().__init__(StableSignatureParams(**params))
         ModuleImporter("StableSignature", self.params.module_path).register_module()
         from StableSignature.utils_model import load_model_from_config
-        config = OmegaConf.load(f"{self.params.ldm_config_path}")
-        ldm_ae = load_model_from_config(config, self.params.ldm_checkpoint_path)
+        config = OmegaConf.load(f"{str(Path(self.params.ldm_config_path).resolve())}")
+        ldm_ae = load_model_from_config(config, str(Path(self.params.ldm_checkpoint_path).resolve()))
         ldm_aef = ldm_ae.first_stage_model
         ldm_aef.eval()
 
@@ -47,11 +47,11 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
         self.normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
 
         # loading the fine-tuned decoder weights
-        state_dict = torch.load(self.params.ldm_decoder_path, weights_only=False)
+        state_dict = torch.load(Path(self.params.ldm_decoder_path).resolve(), weights_only=False)
         ldm_aef.load_state_dict(state_dict, strict=False)
         self.pipe = StableDiffusionPipeline.from_pretrained(self.params.model).to(self.device)
         self.pipe.vae.decode = (lambda x,  *args, **kwargs: ldm_aef.decode(x).unsqueeze(0))
-        self.decoder = torch.jit.load(self.params.decoder_path).to(self.device)
+        self.decoder = torch.jit.load(Path(self.params.decoder_path).resolve()).to(self.device)
         self.secret = np.array(list(map(int, self.params.secret)))
 
     def embed(self, prompt: str, watermark_data: WatermarkData):
@@ -60,8 +60,7 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
         return marked_image
     
     def extract(self, image: TorchImg, watermark_data: WatermarkData):
-        resized_image = resize_torch_img(image, (512, 512))
-        normalized_image = normalize_image(resized_image, self.normalize).to(self.device)
+        normalized_image = normalize_image(image, self.normalize).to(self.device)
         extracted_raw = self.decoder(normalized_image)
         extracted = (extracted_raw>0).squeeze().cpu().numpy().astype(int)
         return extracted
