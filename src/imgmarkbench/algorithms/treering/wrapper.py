@@ -114,8 +114,9 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
             guidance_scale=1,
             num_inference_steps=self.params.test_num_inference_steps,
         )
+        gt_patch = torch.from_numpy(watermark_data.gt_patch).type(torch.complex32).to(self.device)
         reversed_latents_w_fft = torch.fft.fftshift(torch.fft.fft2(reversed_latents), dim=(-1, -2))
-        w_metric = torch.abs(reversed_latents_w_fft[watermark_data.watermarking_mask] - watermark_data.gt_patch[watermark_data.watermarking_mask]).mean().item()
+        w_metric = torch.abs(reversed_latents_w_fft[watermark_data.watermarking_mask] - gt_patch[watermark_data.watermarking_mask]).mean().item()
         return w_metric <= self.params.threshold
     
     def watermark_data_gen(self) -> WatermarkData:
@@ -127,4 +128,5 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
 
         # inject watermark
         init_latents_w = inject_watermark(init_latents_w, watermarking_mask, self.ground_truth_patch, self.params)
-        return WatermarkData(init_latents_w, watermarking_mask, gt_patch)
+        return WatermarkData(init_latents_w,
+                             watermarking_mask, gt_patch.cpu().type(torch.complex64).numpy())
