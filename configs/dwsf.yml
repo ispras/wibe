@@ -14,14 +14,13 @@ algorithms:
       module_path: ./submodules/DWSF
 
 metrics:
-{% include 'metrics.yml' %} 
+{% include 'common/metrics.yml' %} 
 
 datasets:
-  - DiffusionDB:
-      path: datasets/diffusiondb
+{% include 'common/datasets.yml' %}
 
 attacks:
-{% include 'distortions.yml' %} 
+{% include 'common/distortions.yml' %}
 
 
 pipeline:

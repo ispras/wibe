@@ -113,3 +113,14 @@ class Contrast(BaseAttack):
     
     def __call__(self, image: TorchImg) -> TorchImg:
         return F.adjust_contrast(image, contrast_factor=self.factor)
+
+
+class PixelShift(BaseAttack):
+    def __init__(self, delta: int = 7):
+        self.delta = delta
+
+    def __call__(self, image: TorchImg) -> TorchImg:
+        img_shifted = torch.roll(image, shifts=self.delta, dims=3)
+        img_attacked = torch.clone(img_shifted)
+        img_attacked[..., :self.delta] = image[..., :self.delta]
+        return img_attacked

@@ -4,19 +4,16 @@ algorithms:
       alpha: 600
 
 metrics:
-{% include 'metrics.yml' %} 
+  - PSNR
+  - SSIM
+  - LPIPS
+  - Result
 
 datasets:
-  - DiffusionDB:
-      path: datasets/diffusiondb
+{% include 'common/datasets.yml' %}
 
 attacks:
-{% include 'distortions.yml' %} 
-  - vaeattack
-  - FluxRegeneration:
-      sequential_cpu_offload: true
-  - FluxRinsing:
-      sequential_cpu_offload: true
+{% include 'common/distortions.yml' %}
 
 
 pipeline:
