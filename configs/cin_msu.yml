@@ -4,7 +4,7 @@ algorithms:
       yaml_config_path: ./model_files/cin/opt.yml
       checkpoint_path: ./model_files/cin/cinNet&nsmNet.pth
       pre_noise_policy: pre_noise_nsm
-      device: cpu # {cuda, cpu}
+      device: cuda # {cuda, cpu}
       module_path: ./submodules/CIN
 
 metrics:

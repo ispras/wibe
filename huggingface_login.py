@@ -7,7 +7,7 @@ hf = 'HuggingFace'
 token_var = 'HF_TOKEN'
 
 
-os.environ[token_var] = 'put_your_hf_tokken_here_to_test'
+#os.environ[token_var] = 'put_your_hf_tokken_here_to_test'
 
 
 try:

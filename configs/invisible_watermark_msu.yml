@@ -1,6 +1,4 @@
 algorithms:
-  - dwt_dct
-  - dwt_dct_svd
   - riva_gan
 
 metrics:

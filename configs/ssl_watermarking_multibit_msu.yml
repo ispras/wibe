@@ -13,7 +13,7 @@ algorithms:
       target_psnr: 42.
       target_fpr: 1e-6
       num_bits: 32
-      device: cpu # {cpu, cuda}
+      device: cuda # {cpu, cuda}
 
 metrics:
 {% include 'common/metrics.yml' %} 
