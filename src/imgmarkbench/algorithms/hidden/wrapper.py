@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import sys
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
@@ -13,7 +14,6 @@ from imgmarkbench.utils import (
     denormalize_image,
     overlay_difference
 )
-from imgmarkbench.module_importer import ModuleImporter
 
 
 @dataclass
@@ -38,12 +38,12 @@ class HiddenWrapper(BaseAlgorithmWrapper):
     
     def __init__(self, params: Dict[str, Any]) -> None:
         # Load module from HiDDeN submodule
-        ModuleImporter("HiDDeN", params["module_path"]).register_module()
-        from HiDDeN.utils import (
+        sys.path.append(str(Path(params["module_path"]).resolve()))
+        from utils import (
             load_options,
             load_last_checkpoint
         )
-        from HiDDeN.model.encoder_decoder import EncoderDecoder
+        from model.encoder_decoder import EncoderDecoder
 
         self.device = params['device']
         run_name = params['run_name']

@@ -2,6 +2,9 @@ from torchvision.transforms import Normalize
 from imgmarkbench.typing import TorchImg, TorchImgNormalize
 import torch
 import numpy as np
+import cv2
+import tempfile
+import os
 from typing_extensions import Dict, Any, List, Optional
 
 
@@ -63,3 +66,18 @@ def denormalize_image(image: TorchImgNormalize, transform: Optional[Normalize] =
     if transform is not None:
         return transform(image).squeeze(0)
     return ((image + 1) / 2).squeeze(0)
+
+
+def save_tmp_images(images: List[np.ndarray]):
+    tmp_paths = []
+    for image in images:
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            cv2.imwrite(tmp.name, image)
+            tmp.close()
+            tmp_paths.append(tmp.name)
+    return tmp_paths
+
+
+def delete_tmp_images(tmp_paths: List[str]):
+    for tmp_path in tmp_paths:
+        os.remove(tmp_path)
