@@ -1,4 +1,5 @@
 import torch
+import sys
 
 from dataclasses import dataclass
 from torchvision import transforms
@@ -13,7 +14,6 @@ from imgmarkbench.utils import (
     denormalize_image,
     overlay_difference
 )
-from imgmarkbench.module_importer import ModuleImporter
 from imgmarkbench.config import Params
 
 
@@ -47,13 +47,13 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
     name = "sshidden"
 
     def __init__(self, params: Dict[str, Any]) -> None:
-        ModuleImporter("SSHiDDeN", params["module_path"]).register_module()
-        from SSHiDDeN.models import (
+        sys.path.append(str(Path(params["module_path"]).resolve()))
+        from models import (
             HiddenEncoder,
             HiddenDecoder,
             EncoderWithJND
         )
-        from SSHiDDeN.attenuations import JND
+        from attenuations import JND
 
         super().__init__(SSHiddenParams(**params))
         
