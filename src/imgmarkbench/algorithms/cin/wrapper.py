@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import sys
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
@@ -7,7 +8,6 @@ from pathlib import Path
 from enum import Enum
 
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
-from imgmarkbench.module_importer import ModuleImporter
 from imgmarkbench.utils import (
     normalize_image,
     denormalize_image,
@@ -41,9 +41,10 @@ class CINWrapper(BaseAlgorithmWrapper):
     name = "cin"
 
     def __init__(self, params: Dict[str, Any]) -> None:
-        ModuleImporter("CIN", params["module_path"]).register_module()
-        from CIN.codes.utils.yml import parse_yml, dict_to_nonedict
-        from CIN.codes.models.CIN import CIN
+        sys.path.append(params["module_path"])
+        sys.path.append(str((Path(params["module_path"]) / "codes").resolve()))
+        from codes.utils.yml import parse_yml, dict_to_nonedict
+        from codes.models.CIN import CIN
         
         self.device = torch.device(params["device"])
 
