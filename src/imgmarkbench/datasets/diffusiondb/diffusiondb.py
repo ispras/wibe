@@ -38,4 +38,5 @@ class DiffusionDB(BaseDataset):
             img_id += 1
             if self.return_prompt:
                 yield str(img_id), sample["prompt"]
-            yield str(img_id), to_tensor(sample["image"])
+            else:
+                yield str(img_id), to_tensor(sample["image"])

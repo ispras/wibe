@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import cv2
+import sys
 
 from dataclasses import dataclass
 from typing_extensions import Optional, Dict, Any, Union
@@ -92,12 +93,12 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
     name = "ssl_watermarking"
 
     def __init__(self, params: Dict[str, Any]):
-        ModuleImporter("SSL_Watermarking", params["module_path"]).register_module()
-        import SSL_Watermarking.utils as utils
-        import SSL_Watermarking.utils_img as utils_img
-        import SSL_Watermarking.data_augmentation as data_augmentation
-        import SSL_Watermarking.encode as encode
-        import SSL_Watermarking.decode as decode
+        sys.path.append(str(Path(params["module_path"]).resolve()))
+        import utils
+        import utils_img
+        import data_augmentation
+        import encode
+        import decode
         global utils, utils_img, data_augmentation, encode, decode
         
         self.init_method(params)

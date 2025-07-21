@@ -2,6 +2,7 @@ import torch
 import torchvision
 import numpy as np
 import cv2
+import sys
 
 from typing_extensions import Dict, Any, Optional, Union
 from omegaconf import OmegaConf 
@@ -36,8 +37,8 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
 
     def __init__(self, params: Dict[str, Any]):
         super().__init__(StableSignatureParams(**params))
-        ModuleImporter("StableSignature", self.params.module_path).register_module()
-        from StableSignature.utils_model import load_model_from_config
+        sys.path.append(str(Path(params["module_path"]).resolve()))
+        from utils_model import load_model_from_config
         config = OmegaConf.load(f"{str(Path(self.params.ldm_config_path).resolve())}")
         ldm_ae = load_model_from_config(config, str(Path(self.params.ldm_checkpoint_path).resolve()))
         ldm_aef = ldm_ae.first_stage_model

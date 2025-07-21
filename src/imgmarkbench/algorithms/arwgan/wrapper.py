@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import sys
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
@@ -13,7 +14,6 @@ from imgmarkbench.utils import (
     normalize_image,
     denormalize_image
 )
-from imgmarkbench.module_importer import ModuleImporter
 
 
 @dataclass
@@ -44,10 +44,10 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
     name = "arwgan"
     
     def __init__(self, params: Dict[str, Any]) -> None:
-        ModuleImporter("ARWGAN", params["module_path"]).register_module()
-        from ARWGAN.utils import load_options
-        from ARWGAN.model.encoder_decoder import EncoderDecoder
-        from ARWGAN.noise_layers.noiser import Noiser
+        sys.path.append(params["module_path"])
+        from utils import load_options
+        from model.encoder_decoder import EncoderDecoder
+        from noise_layers.noiser import Noiser
 
         options_file_path = params["options_file_path"]
         checkpoint_file_path = params["checkpoint_file_path"]

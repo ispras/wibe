@@ -2,7 +2,6 @@ diffusers==0.34.0
 datasets
 huggingface-hub==0.33.4
 kornia
-# lightning==1.7.7
 pytorch-lightning
 open-clip-torch
 torch
