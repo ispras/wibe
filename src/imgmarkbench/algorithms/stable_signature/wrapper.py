@@ -37,7 +37,9 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
 
     def __init__(self, params: Dict[str, Any]):
         super().__init__(StableSignatureParams(**params))
-        sys.path.append(str(Path(params["module_path"]).resolve()))
+        module_path = Path(params["module_path"]).resolve()
+        sys.path.append(str(module_path))
+        sys.path.append(str(module_path / "src"))
         from utils_model import load_model_from_config
         config = OmegaConf.load(f"{str(Path(self.params.ldm_config_path).resolve())}")
         ldm_ae = load_model_from_config(config, str(Path(self.params.ldm_checkpoint_path).resolve()))
