@@ -10,10 +10,10 @@ datasets:
 {% include 'common/datasets.yml' %}
 
 attacks:
-{% include 'common/distortions.yml' %}
+{% include 'common/resourceintensive_attacks.yml' %}
 
 pipeline:
-  result_path: ./test_results/invisible_watermark
+  result_path: ./test_results/invisible_watermark_msu
   aggregators:
     - CSV:
         table_name: table

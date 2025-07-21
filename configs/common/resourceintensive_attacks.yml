@@ -1,0 +1,11 @@
+  - vaeattack:
+      device: cpu # {cuda:0 by default}
+  - FluxRegeneration:
+      device: cpu # {cuda:0 by default}
+      sequential_cpu_offload: true
+  - FluxRinsing:
+      device: cpu # {cuda:0 by default}
+      sequential_cpu_offload: true
+  - bm3d
+  - DIP:
+      device: cpu # {cuda:0 if torch.cuda.is_available()}
