@@ -3,7 +3,7 @@ import sys
 import zipfile
 
 
-URL = 'https://nextcloud.ispras.ru/index.php/s/HqpgmnC5D8wP39a'
+URL = 'https://nextcloud.ispras.ru/index.php/s/Dz9cCRjPxpYswXJ/download'
 FILENAME = 'model_files.zip'
 
 
