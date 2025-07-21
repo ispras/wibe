@@ -292,7 +292,7 @@ class Pipeline:
                 stop = stage_num
         return list(STAGE_CLASSES.keys())[start : stop + 1]
 
-    def run(self, stages: Optional[List[str]], no_save_context: bool = False):
+    def run(self, stages: Optional[List[str]], dump_context: bool = False):
         stages: List[str] = self.get_stage_list(stages)
         run_id = str(uuid.uuid1())
         total_iters = None
@@ -311,7 +311,7 @@ class Pipeline:
             self.algorithm_wrappers
         ):
             context_dir = self.config.result_path / f"context_{wrapper_num}"
-            if not no_save_context:
+            if dump_context:
                 context_dir.mkdir(parents=True, exist_ok=True)
             stage_runner = StageRunner(
                 stages,
@@ -335,7 +335,7 @@ class Pipeline:
                 )
             for context in context_gen:
                 stage_runner.run(context)
-                if not no_save_context:
+                if dump_context:
                     save_context(context_dir, context)
                 progress.update()
                 pass

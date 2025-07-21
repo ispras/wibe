@@ -36,8 +36,8 @@ def run(
     config: Path = typer.Option(
         ..., "--config", "-c", help="Path to the .yml configuration file"
     ),
-    no_save_context: bool = typer.Option(
-        False, "--no-save-context", "-s", help="If enabled, execution contexts is not saved (useful if disk space is limited). Recommended with 'all' stages"
+    dump_context: bool = typer.Option(
+        False, "--dump-context", "-d", help="If enabled, execution contexts are saved. Useful for debug or stage-by-stage execution (in case of different environments for algorithms/metrics/attacks)"
     ),
     stages: Optional[List[str]] = typer.Argument(None, help=f"Stages to execute (e.g., embed attack extract), if 'all' or not provided - executes all stages. Available stages are:{list(STAGE_CLASSES.keys())}"),
 
@@ -55,7 +55,7 @@ def run(
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]
     )
-    pipeline.run(stages, no_save_context)
+    pipeline.run(stages, dump_context)
     pass
 
 
