@@ -1,6 +1,6 @@
 algorithms:
   watermark_anything:
-    scaling_w: 1
+    scaling_w: 1.5
     wm_length: 32
     module_path: ./submodules/watermark_anything
     ckpt_path: ./model_files/watermark_anything/wam_mit.pth
