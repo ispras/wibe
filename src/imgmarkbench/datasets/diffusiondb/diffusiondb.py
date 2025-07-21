@@ -11,6 +11,7 @@ class DiffusionDB(BaseDataset):
     def __init__(
         self,
         subset: str = "2m_first_5k",
+        num_images: Optional[int] = None,
         cache_dir: Optional[str] = None,
         skip_nsfw: bool = True,
     ):
@@ -25,6 +26,12 @@ class DiffusionDB(BaseDataset):
             self.len = self.dataset.num_rows
         else:
             self.len = sum(score < 1 for score in self.dataset["image_nsfw"])
+        
+        if num_images is not None:
+            if self.len < num_images:
+                raise ValueError(f"Dataset size is {self.len}, but num_images={num_images}")
+            else:
+                self.len = num_images
 
     def __len__(self):
         return self.len
@@ -35,4 +42,6 @@ class DiffusionDB(BaseDataset):
             if self.skip_nsfw and sample["image_nsfw"] >= 1:
                 continue
             img_id += 1
+            if img_id >= self.len:
+                break
             yield str(img_id), to_tensor(sample["image"])
