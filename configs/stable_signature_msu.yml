@@ -2,9 +2,9 @@ algorithms:
   stable_signature:
     params:
       ldm_config_path: ./submodules/stable_signature/v2-inference.yaml
-      ldm_checkpoint_path: ./model_files/stable_signature/v2-1_512-ema-pruned.ckpt
-      ldm_decoder_path: ./model_files/stable_signature/sd2_decoder.pth
-      decoder_path: ./model_files/stable_signature/dec_48b_whit.torchscript.pt
+      ldm_checkpoint_path: /fast-drive/aakimenkov/iwt_develop/model_files/stable_signature/v2-1_512-ema-pruned.ckpt
+      ldm_decoder_path: /fast-drive/aakimenkov/iwt_develop/model_files/stable_signature/sd2_decoder.pth
+      decoder_path: /fast-drive/aakimenkov/iwt_develop/model_files/stable_signature/dec_48b_whit.torchscript.pt
       module_path: ./submodules/stable_signature
       device: cuda
 
@@ -15,7 +15,12 @@ metrics:
       fpr_rate: 0.0001
 
 datasets:
-{% include 'common/datasets_lim.yml' %}
+  - DiffusionDB:
+      cache_dir: ./datasets/diffusiondb
+      subset: 2m_first_5k
+      num_images: 1000
+      skip_nsfw: true
+      return_prompt: true
 
 attacks:
 {% include 'common/resourceintensive_attacks.yml' %}
