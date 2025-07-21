@@ -7,7 +7,7 @@ import sys
 dir_to_walk = './src/imgmarkbench/'
 requirements_txt = 'requirements.txt'
 all_requirements = []
-python_m_pip_intall = 'venv\Scripts\python.exe -m pip install'
+python_m_pip_intall = 'python -m pip install'
 
 try:
     subprocess.check_call(f'{python_m_pip_intall} --upgrade pip')
