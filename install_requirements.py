@@ -7,11 +7,11 @@ import sys
 dir_to_walk = './src/imgmarkbench/'
 requirements_txt = 'requirements.txt'
 all_requirements = []
-python_m_pip_intall = 'python -m pip install'
+python_m_pip_install = 'python -m pip install'
 
 try:
-    subprocess.check_call('python get-pip.py')
-    subprocess.check_call(f'{python_m_pip_intall} --upgrade pip')
+    #subprocess.check_call('python get-pip.py'.split())
+    subprocess.check_call(f'{python_m_pip_install} --upgrade pip'.split())
 except Exception as e:
     print(f'Exception={str(e)}')
     sys.exit(1)
@@ -36,10 +36,10 @@ force_packages = [
 
 
 try:
-    subprocess.check_call(f'{python_m_pip_intall} {all_requirements_cmd}')
-    subprocess.check_call(f'{python_m_pip_intall} -e .')
-    subprocess.check_call(f'{python_m_pip_intall} -e ./submodules/trustmark/python')
-    subprocess.check_call(f'{python_m_pip_intall} {" ".join(force_packages)}')
+    subprocess.check_call(f'{python_m_pip_install} {all_requirements_cmd}'.split())
+    subprocess.check_call(f'{python_m_pip_install} -e .'.split())
+    subprocess.check_call(f'{python_m_pip_install} -e ./submodules/trustmark/python'.split())
+    subprocess.check_call(f'{python_m_pip_install} {" ".join(force_packages)}'.split())
 except Exception as e:
     print(f'Exception={str(e)}')
     sys.exit(1)
