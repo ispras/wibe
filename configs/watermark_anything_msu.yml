@@ -19,7 +19,7 @@ attacks:
 
 
 pipeline:
-  result_path: ./test_results/watermark_anything_msu
+  result_path: /test/test_results/watermark_anything_msu
   aggregators:
     - CSV:
         table_name: table

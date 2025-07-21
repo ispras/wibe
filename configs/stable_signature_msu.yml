@@ -26,7 +26,7 @@ attacks:
 {% include 'common/resourceintensive_attacks.yml' %}
 
 pipeline:
-  result_path: ./test_results/stable_signature_msu
+  result_path: /test/test_results/stable_signature_msu
   aggregators:
     - CSV:
         table_name: table
