@@ -5,8 +5,7 @@ algorithms:
     module_path: ./submodules/watermark_anything
     ckpt_path: ./model_files/watermark_anything/wam_mit.pth
     params_path: src/imgmarkbench/algorithms/watermark_anything/configs/params.json
-    device: cpu
-
+    device: cuda
 
 
 metrics:

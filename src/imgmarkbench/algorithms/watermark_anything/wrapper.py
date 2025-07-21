@@ -5,6 +5,7 @@ import numpy as np
 import torch.nn.functional as F
 from dataclasses import dataclass
 import sys
+import os
 
 
 @dataclass
@@ -42,6 +43,8 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         self.ckpt_path = ckpt_path
         self.params_path = params_path
         self.device = device
+        if not os.path.exists(ckpt_path):
+            raise FileNotFoundError(f"{ckpt_path} does not exist") 
         self.wam = load_model_from_checkpoint(
             self.params_path, self.ckpt_path
         ).to(device)
