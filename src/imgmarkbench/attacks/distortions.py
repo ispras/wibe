@@ -1,23 +1,31 @@
 from .base import BaseAttack
 import torch
-from torchvision.transforms import v2
+import torchvision
+from PIL import Image
+import io
 from imgmarkbench.typing import TorchImg
 from typing import Literal
 import torchvision.transforms.functional as F
 import torchvision.transforms as T
 import random
-
+    
 
 class JPEGCompression(BaseAttack):
     name = "jpeg"
 
-    def __init__(self, quality: int = 50):
-        self.compression = v2.JPEG(quality)
+    def __init__(self, quality: int = 50) -> None:
+        super().__init__()
+        self.quality = int(quality)
 
-    def __call__(self, image: TorchImg) -> TorchImg:
-        uint8_tensor = (image * 255).round().to(torch.uint8)
-        compressed_uint8 = self.compression(uint8_tensor)
-        return compressed_uint8.to(torch.float32) / 255
+    def __call__(self, img: TorchImg) -> TorchImg:
+        distorted_image = []
+        img_pil = torchvision.transforms.functional.to_pil_image(img)
+        buffer = io.BytesIO()
+        img_pil.save(buffer, format="JPEG", quality=self.quality)
+        img_pil_compressed = Image.open(buffer)
+        img_compressed = torchvision.transforms.functional.to_tensor(img_pil_compressed)
+        distorted_image = img_compressed.to(device=img.device, dtype=img.dtype)
+        return distorted_image
 
 
 class Rotate90(BaseAttack):
@@ -52,11 +60,14 @@ class GaussianBlur(BaseAttack):
 
 
 class GaussianNoise(BaseAttack):
-    def __init__(self, sigma: float):
-        self.transform = v2.GaussianNoise(sigma=sigma)
+    def __init__(self, sigma: float) -> None:
+        super().__init__()
+        self.sigma = sigma
 
-    def __call__(self, image: TorchImg) -> TorchImg:
-        return self.transform(image)
+    def __call__(self, img: TorchImg) -> TorchImg:
+        noise = torch.randn(img.shape, device=img.device) * self.sigma
+        distorted_image = (img + noise).clamp(0, 1)
+        return distorted_image
     
 
 class CenterCrop(BaseAttack):
