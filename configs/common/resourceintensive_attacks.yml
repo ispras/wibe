@@ -9,3 +9,5 @@
   - bm3d
   - DIP:
       device: cuda:0 # {cuda:0 if torch.cuda.is_available()}
+  - DIPNoise:
+      device: cuda:0 # {cuda:0 if torch.cuda.is_available()}

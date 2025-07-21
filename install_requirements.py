@@ -38,7 +38,7 @@ try:
     subprocess.check_call(f'{python_m_pip_intall} {all_requirements_cmd}')
     subprocess.check_call(f'{python_m_pip_intall} -e .')
     subprocess.check_call(f'{python_m_pip_intall} -e ./submodules/trustmark/python')
-    subprocess.check_call(f'{python_m_pip_intall} {' '.join(force_packages)}')
+    subprocess.check_call(f'{python_m_pip_intall} {" ".join(force_packages)}')
 except Exception as e:
     print(f'Exception={str(e)}')
     sys.exit(1)
