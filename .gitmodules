@@ -19,3 +19,6 @@
 [submodule "submodules/CIN"]
 	path = submodules/CIN
 	url = https://github.com/rmpku/CIN.git
+[submodule "submodules/watermark_anything"]
+	path = submodules/watermark_anything
+	url = https://github.com/facebookresearch/watermark-anything.git
