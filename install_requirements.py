@@ -10,6 +10,7 @@ all_requirements = []
 python_m_pip_intall = 'python -m pip install'
 
 try:
+    subprocess.check_call('python get-pip.py')
     subprocess.check_call(f'{python_m_pip_intall} --upgrade pip')
 except Exception as e:
     print(f'Exception={str(e)}')
