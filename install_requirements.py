@@ -7,11 +7,11 @@ import sys
 dir_to_walk = './src/imgmarkbench/'
 requirements_txt = 'requirements.txt'
 all_requirements = []
-python_m_pip_install = 'python -m pip install'
+python_m_pip_install = 'python -m pip install'.split()
 
 try:
-    #subprocess.check_call('python get-pip.py'.split())
-    subprocess.check_call(f'{python_m_pip_install} --upgrade pip'.split())
+    subprocess.check_call('python get-pip.py'.split())
+    subprocess.check_call(python_m_pip_install + ['--upgrade', 'pip'])
 except Exception as e:
     print(f'Exception={str(e)}')
     sys.exit(1)
@@ -25,9 +25,9 @@ for root, folders, files in os.walk(dir_to_walk):
 assert len(all_requirements) > 0
 
 
-all_requirements_cmd = ''
+all_requirements_args = []
 for one_requirements in all_requirements:
-    all_requirements_cmd += f' -r "{one_requirements}"'
+    all_requirements_args += ['-r', one_requirements]
 
 
 force_packages = [
@@ -36,10 +36,10 @@ force_packages = [
 
 
 try:
-    subprocess.check_call(f'{python_m_pip_install} {all_requirements_cmd}'.split())
-    subprocess.check_call(f'{python_m_pip_install} -e .'.split())
-    subprocess.check_call(f'{python_m_pip_install} -e ./submodules/trustmark/python'.split())
-    subprocess.check_call(f'{python_m_pip_install} {" ".join(force_packages)}'.split())
+    subprocess.check_call(python_m_pip_install + all_requirements_args)
+    subprocess.check_call(python_m_pip_install + ['-e', '.'])
+    subprocess.check_call(python_m_pip_install + ['-e', './submodules/trustmark/python'])
+    subprocess.check_call(python_m_pip_install + force_packages)
 except Exception as e:
     print(f'Exception={str(e)}')
     sys.exit(1)
