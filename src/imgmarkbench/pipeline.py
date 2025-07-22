@@ -4,6 +4,7 @@ from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
+from .utils import resize_torch_img
 from typing import (
     List,
     Union,
@@ -114,6 +115,29 @@ class PostEmbedMetricsStage(Stage):
             image_context.marked_image_metrics[metric.report_name] = res
 
 
+class PostAttackedMetricsStage(Stage):
+    def __init__(self, metrics: List[PostEmbedMetric]):
+        self.metrics = metrics
+
+    def process_image(self, image_context: Context):
+        watermark_data = image_context.watermark_data
+        image = image_context.marked_image
+        attacked_images = image_context.attacked_images
+        for (
+            attack_name,
+            attacked_image,
+        ) in attacked_images.items():
+            image_context.attacked_image_metrics[attack_name] = {}
+            for metric in self.metrics:
+                attacked_image = resize_torch_img(attacked_image, list(image.shape)[1:])
+                res = metric(
+                    image, attacked_image, watermark_data
+                )
+                image_context.attacked_image_metrics[attack_name][
+                    metric.report_name
+                ] = res
+
+
 class ApplyAttacksStage(Stage):
     def __init__(self, attacks: List[BaseAttack]):
         self.attacks = attacks
@@ -136,7 +160,6 @@ class ExtractWatermarkStage(Stage):
             extraction_result = self.algorithm_wrapper.extract(
                 image, watermark_data
             )
-            image_context.attacked_image_metrics[attack_name] = {}
             image_context.attacked_image_metrics[attack_name][
                 "extract_time"
             ] = (perf_counter() - s_time)
@@ -188,6 +211,7 @@ STAGE_CLASSES: Dict[str, Type[Stage]] = {
     "embed": EmbedWatermarkStage,
     "post_embed_metrics": PostEmbedMetricsStage,
     "attack": ApplyAttacksStage,
+    "post_attacked_metrics": PostAttackedMetricsStage,
     "extract": ExtractWatermarkStage,
     "post_extract_metrics": PostExtractMetricsStage,
     "aggregate": AggregateMetricsStage,
@@ -201,17 +225,12 @@ class StageRunner:
         algorithm_wrapper: BaseAlgorithmWrapper,
         # datasets: Union[BaseDataset, Iterable[BaseDataset]],
         attacks: List[BaseAttack],
-        metrics: List[BaseMetric],
+        metrics: Dict[str, List[BaseMetric]],
         pipeline_config: PipeLineConfig,
     ):
-        post_embed_metrics = [
-            metric for metric in metrics if isinstance(metric, PostEmbedMetric)
-        ]
-        post_extract_metrics = [
-            metric
-            for metric in metrics
-            if isinstance(metric, PostExtractMetric)
-        ]
+        post_embed_metrics = metrics["post_embed_metrics"]
+        post_attacked_metrics = metrics["post_attacked_metrics"]
+        post_extracted_metrics = metrics["post_extracted_metrics"]
 
         stage_classes = self.get_stages(stages)
         self.stages: List[Stage] = []
@@ -220,11 +239,13 @@ class StageRunner:
                 self.stages.append(stage_class(algorithm_wrapper))
             elif stage_class is PostEmbedMetricsStage:
                 self.stages.append(PostEmbedMetricsStage(post_embed_metrics))
+            elif stage_class is PostAttackedMetricsStage:
+                self.stages.append(PostAttackedMetricsStage(post_attacked_metrics))
             elif stage_class is ApplyAttacksStage:
                 self.stages.append(ApplyAttacksStage(attacks))
             elif stage_class is PostExtractMetricsStage:
                 self.stages.append(
-                    PostExtractMetricsStage(post_extract_metrics)
+                    PostExtractMetricsStage(post_extracted_metrics)
                 )
             elif stage_class is AggregateMetricsStage:
                 self.stages.append(AggregateMetricsStage(pipeline_config))
@@ -254,7 +275,7 @@ class Pipeline:
         ],
         datasets: Union[BaseDataset, Iterable[BaseDataset]],
         attacks: List[BaseAttack],
-        metrics: List[BaseMetric],
+        metrics: Dict[str, List[BaseMetric]],
         pipeline_config: PipeLineConfig,
     ):
         if isinstance(algorithm_wrapper, BaseAlgorithmWrapper):

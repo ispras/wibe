@@ -1,5 +1,6 @@
 from typing import Any, Union
 from functools import lru_cache
+from abc import abstractmethod
 import numpy as np
 import torch
 from imgmarkbench.registry import RegistryMeta
@@ -12,14 +13,18 @@ from scipy.stats import binom
 class BaseMetric(metaclass=RegistryMeta):
     type = "metric"
 
+    @abstractmethod
+    def __call__(self, *args, **kwds):
+        raise NotImplementedError
+
 
 class PostEmbedMetric(BaseMetric):
     abstract = True
 
     def __call__(
         self,
-        img: TorchImg,
-        marked_img: TorchImg,
+        img1: TorchImg,
+        img2: TorchImg,
         watermark_data: Any,
     ) -> Union[str, int, float]:
         raise NotImplementedError
@@ -30,8 +35,8 @@ class PostExtractMetric(BaseMetric):
 
     def __call__(
         self,
-        img: TorchImg,
-        marked_img: TorchImg,
+        img1: TorchImg,
+        img2: TorchImg,
         watermark_data: Any,
         extraction_result: Any,
     ) -> Union[str, int, float]:
@@ -42,25 +47,25 @@ class PSNR(PostEmbedMetric):
 
     def __call__(
         self,
-        img: TorchImg,
-        marked_img: TorchImg,
+        img1: TorchImg,
+        img2: TorchImg,
         watermark_data: Any,
     ) -> float:
 
-        return float(psnr(img.numpy(), marked_img.numpy(), data_range=1))
+        return float(psnr(img1.numpy(), img2.numpy(), data_range=1))
 
 
 class SSIM(PostEmbedMetric):
 
     def __call__(
         self,
-        img: TorchImg,
-        marked_img: TorchImg,
+        img1: TorchImg,
+        img2: TorchImg,
         watermark_data: Any,
     ) -> float:
-        if len(img.shape) == 2:
-            return float(ssim(img.numpy(), marked_img.numpy(), data_range=1))
-        res = ssim(img.numpy(), marked_img.numpy(), data_range=1, channel_axis=0)
+        if len(img1.shape) == 2:
+            return float(ssim(img1.numpy(), img2.numpy(), data_range=1))
+        res = ssim(img1.numpy(), img2.numpy(), data_range=1, channel_axis=0)
         return float(res)
     
 
@@ -69,8 +74,8 @@ class Result(PostExtractMetric):
 
     def __call__(
         self,
-        img: TorchImg,
-        marked_img: TorchImg,
+        img1: TorchImg,
+        img2: TorchImg,
         watermark_data: Any,
         extraction_result: Any,
     ) -> float:
@@ -82,8 +87,8 @@ class BER(PostExtractMetric):
 
     def __call__(
         self,
-        img: TorchImg,
-        marked_img: TorchImg,
+        img1: TorchImg,
+        img2: TorchImg,
         watermark_data: Any,
         extraction_result: Any,
     ) -> float:
@@ -107,8 +112,8 @@ class TPRxFPR(PostExtractMetric):
 
     def __call__(
         self,
-        img: TorchImg,
-        marked_img: TorchImg,
+        img1: TorchImg,
+        img2: TorchImg,
         watermark_data: Any,
         extraction_result: Any,
     ) -> float:

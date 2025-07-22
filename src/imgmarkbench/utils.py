@@ -36,6 +36,8 @@ def numpy_bgr2torch_img(image: np.ndarray) -> TorchImg:
 
 
 def resize_torch_img(image: TorchImg, size: List[int], mode: str = 'bilinear', align_corners: bool = True) -> TorchImg:
+    if list(image.shape)[1:] == size:
+        return image
     if mode in ['bilinear', 'bicubic']:
         image = image.unsqueeze(0)
     resized_image = torch.nn.functional.interpolate(image, size, mode=mode, align_corners=align_corners).squeeze(0)

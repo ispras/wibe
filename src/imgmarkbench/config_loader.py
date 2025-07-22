@@ -25,7 +25,12 @@ loader.add_implicit_resolver(
 
 
 ALGORITHMS_FIELD = "algorithms"
-METRICS_FIELD = "metrics"
+POST_EMBED_METRICS_FIELD = "post_embed_metrics"
+POST_ATTACKED_METRICS_FIELD = "post_attacked_metrics"
+POST_EXTRACTED_METRICS_FIELD = "post_extracted_metrics"
+METRICS_FIELD = [POST_EMBED_METRICS_FIELD,
+                 POST_ATTACKED_METRICS_FIELD,
+                 POST_EXTRACTED_METRICS_FIELD]
 DATASETS_FIELD = "datasets"
 ATTACKS_FIELD = "attacks"
 PIPELINE_FIELD = "pipeline"
@@ -68,11 +73,10 @@ def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
     assert isinstance(config, Dict), "Config is not a dictionary"
     for field in [
         ALGORITHMS_FIELD,
-        METRICS_FIELD,
         DATASETS_FIELD,
         ATTACKS_FIELD,
         PIPELINE_FIELD,
-    ]:
+    ] + METRICS_FIELD:
         assert field in config.keys(), f"Missing '{field}' in yaml config file"
         field_value = config[field]
         if field == PIPELINE_FIELD:

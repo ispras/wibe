@@ -19,10 +19,10 @@ class ImageReward(PostEmbedMetric):
 
     def __call__(self,
                  prompt: str,
-                 marked_img: TorchImg,
+                 img: TorchImg,
                  watermark_data: Any) -> float:
-        numpy_marked_image = torch_img2numpy_bgr(marked_img)
-        tmp_paths = save_tmp_images([numpy_marked_image])
+        numpy_image = torch_img2numpy_bgr(img)
+        tmp_paths = save_tmp_images([numpy_image])
         result = self.model.score(prompt, tmp_paths)
         delete_tmp_images(tmp_paths)
         return result

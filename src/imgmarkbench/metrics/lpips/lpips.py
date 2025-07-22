@@ -11,9 +11,9 @@ class LPIPS(PostEmbedMetric):
 
     def __call__(
         self,
-        img: TorchImg,
-        marked_img: TorchImg,
+        img1: TorchImg,
+        img2: TorchImg,
         watermark_data: Any,
     ) -> float:
-        return float(self.loss_fn(normalize_image(img), normalize_image(marked_img)))
+        return float(self.loss_fn(normalize_image(img1), normalize_image(img2)))
 
