@@ -115,7 +115,7 @@ class PostEmbedMetricsStage(Stage):
             image_context.marked_image_metrics[metric.report_name] = res
 
 
-class PostAttackedMetricsStage(Stage):
+class PostAttackMetricsStage(Stage):
     def __init__(self, metrics: List[PostEmbedMetric]):
         self.metrics = metrics
 
@@ -215,7 +215,7 @@ STAGE_CLASSES: Dict[str, Type[Stage]] = {
     "embed": EmbedWatermarkStage,
     "post_embed_metrics": PostEmbedMetricsStage,
     "attack": ApplyAttacksStage,
-    "post_attacked_metrics": PostAttackedMetricsStage,
+    "post_attack_metrics": PostAttackMetricsStage,
     "extract": ExtractWatermarkStage,
     "post_extract_metrics": PostExtractMetricsStage,
     "aggregate": AggregateMetricsStage,
@@ -233,8 +233,8 @@ class StageRunner:
         pipeline_config: PipeLineConfig,
     ):
         post_embed_metrics = metrics["post_embed_metrics"]
-        post_attacked_metrics = metrics["post_attacked_metrics"]
-        post_extracted_metrics = metrics["post_extracted_metrics"]
+        post_attacked_metrics = metrics["post_attack_metrics"]
+        post_extracted_metrics = metrics["post_extract_metrics"]
 
         stage_classes = self.get_stages(stages)
         self.stages: List[Stage] = []
@@ -243,8 +243,8 @@ class StageRunner:
                 self.stages.append(stage_class(algorithm_wrapper))
             elif stage_class is PostEmbedMetricsStage:
                 self.stages.append(PostEmbedMetricsStage(post_embed_metrics))
-            elif stage_class is PostAttackedMetricsStage:
-                self.stages.append(PostAttackedMetricsStage(post_attacked_metrics))
+            elif stage_class is PostAttackMetricsStage:
+                self.stages.append(PostAttackMetricsStage(post_attacked_metrics))
             elif stage_class is ApplyAttacksStage:
                 self.stages.append(ApplyAttacksStage(attacks))
             elif stage_class is PostExtractMetricsStage:

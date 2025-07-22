@@ -25,11 +25,11 @@ loader.add_implicit_resolver(
 
 ALGORITHMS_FIELD = "algorithms"
 POST_EMBED_METRICS_FIELD = "post_embed_metrics"
-POST_ATTACKED_METRICS_FIELD = "post_attacked_metrics"
-POST_EXTRACTED_METRICS_FIELD = "post_extracted_metrics"
+POST_ATTACK_METRICS_FIELD = "post_attack_metrics"
+POST_EXTRACT_METRICS_FIELD = "post_extract_metrics"
 METRICS_FIELD = [POST_EMBED_METRICS_FIELD,
-                 POST_ATTACKED_METRICS_FIELD,
-                 POST_EXTRACTED_METRICS_FIELD]
+                 POST_ATTACK_METRICS_FIELD,
+                 POST_EXTRACT_METRICS_FIELD]
 DATASETS_FIELD = "datasets"
 ATTACKS_FIELD = "attacks"
 PIPELINE_FIELD = "pipeline"

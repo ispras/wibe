@@ -70,7 +70,7 @@ class SSIM(PostEmbedMetric):
 
 
 class EmbedWatermark(PostEmbedMetric):
-    name = "EBW"
+    name = "EmbWm"
 
     def __call__(self,
                  img1: TorchImg,
@@ -138,7 +138,7 @@ class TPRxFPR(PostExtractMetric):
 
 
 class ExtractedWatermark(PostExtractMetric):
-    name = "EXW"
+    name = "ExtWm"
     
     def __call__(self,
                  img1: TorchImg,
