@@ -1,0 +1,23 @@
+algorithms:
+  cin:
+    params:
+      yaml_config_path: ./model_files/cin/opt.yml
+      checkpoint_path: ./model_files/cin/cinNet&nsmNet.pth
+      pre_noise_policy: pre_noise_nsm
+      device: cuda # {cuda, cpu}
+      module_path: ./submodules/CIN
+
+metrics:
+{% include 'common/metrics.yml' %} 
+
+datasets:
+{% include 'common/datasets_lim.yml' %}
+
+attacks:
+{% include 'common/resourceintensive_attacks.yml' %}
+
+pipeline:
+  result_path: /test/test_results/cin_msu
+  aggregators:
+    - CSV:
+        table_name: table

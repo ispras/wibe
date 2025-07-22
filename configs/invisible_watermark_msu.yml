@@ -1,19 +1,17 @@
 algorithms:
-  - dwt_dct
-  - dwt_dct_svd
   - riva_gan
 
 metrics:
 {% include 'common/metrics.yml' %} 
 
 datasets:
-{% include 'common/datasets.yml' %}
+{% include 'common/datasets_lim.yml' %}
 
 attacks:
-{% include 'common/distortions.yml' %}
+{% include 'common/resourceintensive_attacks.yml' %}
 
 pipeline:
-  result_path: ./test_results/invisible_watermark
+  result_path: /test/test_results/invisible_watermark_msu
   aggregators:
     - CSV:
         table_name: table

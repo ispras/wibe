@@ -7,4 +7,4 @@ open-clip-torch
 torch
 timm
 torchvision
-transformers==4.53.2
+transformers==4.37.2

@@ -5,6 +5,7 @@ from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
 from .utils import resize_torch_img
+from .context import Context
 from typing import (
     List,
     Union,
@@ -12,64 +13,12 @@ from typing import (
     Dict,
     Type,
     Optional,
-    Any,
 )
 from .aggregator import build_fanout_from_config
 import tqdm
 import uuid
 from time import perf_counter
 import datetime
-import pickle
-from dataclasses import dataclass, field
-from .typing import TorchImg
-
-
-@dataclass
-class Context:
-    image_id: str
-    run_id: str
-    dataset: str
-    dtm: Optional[datetime.datetime] = None
-    method: Optional[str] = None
-    param_hash: Optional[str] = None
-    params: Optional[Dict[str, Any]] = None
-    watermark_data: Optional[Any] = None
-    image: Optional[TorchImg] = None
-    marked_image: Optional[TorchImg] = None
-    marked_image_metrics: Dict[str, Union[str, int, float]] = field(default_factory=dict)
-    attacked_images: Dict[str, TorchImg] = field(default_factory=dict)
-    attacked_image_metrics: Dict[str, Dict[str, Union[str, int, float]]] = field(default_factory=dict)
-    extraction_result: Dict[str, Any] = field(default_factory=dict)
-
-    def form_record(self) -> Dict[str, Any]:
-        record_attrs = ["run_id", "image_id", "dataset", "dtm", "method", "param_hash", "params"]
-        record = {}
-        for attr in record_attrs:
-            record[attr] = getattr(self, attr)
-        record.update(self.marked_image_metrics)
-        record.update(self.attacked_image_metrics)
-        return record
-
-
-def load_context(context_dir: Path, image_id: str) -> Context:
-    ctx_file = context_dir / f"{image_id}.pkl"
-    if ctx_file.exists():
-        with open(ctx_file, "rb") as f:
-            return pickle.load(f)
-    else:
-        raise FileNotFoundError(f"No context for image {image_id}")
-
-
-def save_context(context_dir: Path, context: Context):
-    image_id = context.image_id
-    ctx_file = context_dir / f"{image_id}.pkl"
-    with open(ctx_file, "wb") as f:
-        pickle.dump(context, f)
-
-
-def context_glob(context_dir: Path):
-    for pkl_file in context_dir.glob("*.pkl"):
-        yield pkl_file.stem
 
 
 # ToDo: Ассерты на то, что при исполнения стейджа были выполнены все предыдущие
@@ -202,8 +151,9 @@ class AggregateMetricsStage(Stage):
         )
 
     def flush(self):
-        self.aggregator.add(self.records)
-        self.records = []
+        if len(self.records):
+            self.aggregator.add(self.records)
+            self.records = []
 
     def process_image(self, image_context: Context):
         self.records.append(image_context.form_record())
@@ -355,13 +305,13 @@ class Pipeline:
                 )
             else:
                 context_gen = (
-                    load_context(context_dir, img_id)
-                    for img_id in context_glob(context_dir)
+                    Context.load(context_dir, img_id, self.config.dump_type)
+                    for img_id in Context.glob(context_dir, self.config.dump_type)
                 )
             for context in context_gen:
                 stage_runner.run(context)
                 if dump_context:
-                    save_context(context_dir, context)
+                    context.dump(context_dir, self.config.dump_type)
                 progress.update()
                 pass
 
