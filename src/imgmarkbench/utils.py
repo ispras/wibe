@@ -63,3 +63,20 @@ def denormalize_image(image: TorchImgNormalize, transform: Optional[Normalize] =
     if transform is not None:
         return transform(image).squeeze(0)
     return ((image + 1) / 2).squeeze(0)
+
+
+def is_image(tensor: torch.Tensor) -> bool:
+    '''
+    Checks whether tensor represents a TorchImg
+    '''
+    if tensor.dtype != torch.float32:
+        return False
+    shape = tensor.shape
+    if len(shape) != 3:
+        return False
+    channels, height, width = shape
+    if channels != 3:
+        return False
+    if tensor.max() > 1. + 1e-5 or tensor.min() < - 1e-5:
+        return False
+    return True

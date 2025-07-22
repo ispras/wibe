@@ -12,6 +12,12 @@ from typing_extensions import (
 )
 from pathlib import Path
 from dataclasses import dataclass
+from enum import Enum
+
+
+class DumpType(str, Enum):
+    pickle = "pickle"
+    serialized = "serialized"
 
 
 @dataclass
@@ -39,6 +45,7 @@ class PipeLineConfig(BaseModel):
     result_path: Path
     aggregators: List[AggregatorConfig]
     min_batch_size: int = 100
+    dump_type: DumpType = DumpType.serialized
 
     @model_validator(mode="before")
     @classmethod
