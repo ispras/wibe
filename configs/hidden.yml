@@ -1,0 +1,23 @@
+algorithms:
+  hidden:
+    params:
+      runs_root: ./submodules/HiDDeN/experiments
+      run_name: combined-noise
+      module_path: ./submodules/HiDDeN
+      device: cuda
+
+metrics:
+{% include 'common/metrics.yml' %} 
+
+datasets:
+{% include 'common/datasets.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+
+pipeline:
+  result_path: ./test_results/hidden
+  aggregators:
+    - CSV:
+        table_name: table

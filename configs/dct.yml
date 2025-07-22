@@ -10,24 +10,18 @@ algorithms:
       lambda_h: 4
 
 metrics:
-  - PSNR
-  - SSIM
-  - LPIPS
-  - TPR@xFPR:
-      report_name: tpr@0.1%fpr
-      fpr_rate: 0.0001
+{% include 'common/metrics.yml' %} 
 
 datasets:
-  - DiffusionDB:
-      path: datasets/diffusiondb
+{% include 'common/datasets.yml' %}
 
 attacks:
-{% include 'distortions.yml' %}
-  - vaeattack
-  - FluxRegeneration:
-      sequential_cpu_offload: true
-  - FluxRinsing:
-      sequential_cpu_offload: true
+{% include 'common/distortions.yml' %} 
+  # - vaeattack
+  # - FluxRegeneration:
+  #     sequential_cpu_offload: true
+  # - FluxRinsing:
+  #     sequential_cpu_offload: true
 
 
 pipeline:

@@ -1,0 +1,8 @@
+timm
+kornia
+scipy
+augly
+scikit-image
+pandas
+matplotlib
+torch<2.6

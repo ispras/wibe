@@ -4,22 +4,13 @@ algorithms:
       threshold: 56
 
 metrics:
-  - PSNR
-  - SSIM
-  - LPIPS
-  - BER
+{% include 'common/metrics.yml' %} 
 
 datasets:
-  - DiffusionDB:
-      path: datasets/diffusiondb
+{% include 'common/datasets.yml' %}
 
 attacks:
-{% include 'distortions.yml' %}
-  - vaeattack
-  - FluxRegeneration:
-      sequential_cpu_offload: true
-  - FluxRinsing:
-      sequential_cpu_offload: true
+{% include 'common/distortions.yml' %}
 
 
 pipeline:

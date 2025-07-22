@@ -2,7 +2,7 @@ from pathlib import Path
 from itertools import chain
 from PIL import Image
 from torchvision.transforms import ToTensor
-from typing import Generator, Tuple, Union, List
+from typing_extensions import Generator, Tuple, Union, List
 from imgmarkbench.typing import TorchImg
 from imgmarkbench.registry import RegistryMeta
 
@@ -51,16 +51,3 @@ class ImageFolderDataset(BaseDataset):
             for path in self.path_list:
                 img = self.transform(Image.open(path))
                 yield path.name, img
-
-
-class DiffusionDB(ImageFolderDataset):
-    def __init__(self, path: Union[Path, str], preload: bool = False) -> None:
-        super().__init__(path, preload=preload)
-
-
-if __name__ == "__main__":
-    ds_path = "/hdd/diffusiondb/filtered"
-    dataset = DiffusionDB(ds_path)
-    img_gen = dataset.generator()
-    for name, img in img_gen:
-        pass

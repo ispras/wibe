@@ -1,0 +1,24 @@
+[submodule "submodules/trustmark"]
+	path = submodules/trustmark
+	url = https://github.com/adobe/trustmark.git
+[submodule "submodules/HiDDeN"]
+	path = submodules/HiDDeN
+	url = https://github.com/ando-khachatryan/HiDDeN.git
+[submodule "submodules/ARWGAN"]
+	path = submodules/ARWGAN
+	url = https://github.com/yakulex/ARWGAN.git
+[submodule "submodules/stable_signature"]
+	path = submodules/stable_signature
+	url = https://github.com/facebookresearch/stable_signature.git
+[submodule "submodules/ssl_watermarking"]
+	path = submodules/ssl_watermarking
+	url = https://github.com/facebookresearch/ssl_watermarking.git
+[submodule "submodules/DWSF"]
+	path = submodules/DWSF
+	url = https://github.com/yakulex/DWSF.git
+[submodule "submodules/CIN"]
+	path = submodules/CIN
+	url = https://github.com/rmpku/CIN.git
+[submodule "submodules/watermark_anything"]
+	path = submodules/watermark_anything
+	url = https://github.com/facebookresearch/watermark-anything.git

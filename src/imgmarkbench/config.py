@@ -7,9 +7,17 @@ from typing_extensions import (
     Union,
     List,
     Literal,
-    Annotated
+    Annotated,
+    Optional
 )
 from pathlib import Path
+from dataclasses import dataclass
+
+
+@dataclass
+class Params:
+    module_path: Optional[Union[str, Path]] = None
+    device: str = "cpu"
 
 
 class PandasAggregatorConfig(BaseModel):

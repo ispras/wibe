@@ -1,8 +1,10 @@
+import numpy as np
+
+from dataclasses import dataclass
+
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.utils import numpy_bgr2torch_img, torch_img2numpy_bgr
 from imwatermark import WatermarkEncoder, WatermarkDecoder
-from dataclasses import dataclass
-import numpy as np
 
 
 @dataclass

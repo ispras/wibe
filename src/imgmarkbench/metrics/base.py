@@ -1,6 +1,7 @@
 from typing import Any, Union
 from functools import lru_cache
 import numpy as np
+import torch
 from imgmarkbench.registry import RegistryMeta
 from imgmarkbench.typing import TorchImg
 from skimage.metrics import peak_signal_noise_ratio as psnr
@@ -112,7 +113,10 @@ class TPRxFPR(PostExtractMetric):
         extraction_result: Any,
     ) -> float:
         wm = watermark_data.watermark
-        num_bits = len(wm)
+        if isinstance(wm, torch.Tensor) or isinstance(wm, np.ndarray):
+            num_bits = len(wm.flatten())
+        else:
+            num_bits = len(wm)
         threshold = self.bits_threshold(num_bits)
         return int((np.array(wm) == np.array(extraction_result)).sum() >= threshold)
 
