@@ -39,6 +39,7 @@ class PipeLineConfig(BaseModel):
     result_path: Path
     aggregators: List[AggregatorConfig]
     min_batch_size: int = 100
+    seed: Optional[int] = None
 
     @model_validator(mode="before")
     @classmethod

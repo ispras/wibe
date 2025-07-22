@@ -2,6 +2,7 @@ from torchvision.transforms import Normalize
 from imgmarkbench.typing import TorchImg, TorchImgNormalize
 import torch
 import numpy as np
+import random
 import cv2
 import tempfile
 import os
@@ -81,3 +82,14 @@ def save_tmp_images(images: List[np.ndarray]):
 def delete_tmp_images(tmp_paths: List[str]):
     for tmp_path in tmp_paths:
         os.remove(tmp_path)
+
+
+def seed_everything(seed: Optional[int] = None):    
+    if seed is not None:
+        random.seed(seed)
+        os.environ['PYTHONHASHSEED'] = str(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
