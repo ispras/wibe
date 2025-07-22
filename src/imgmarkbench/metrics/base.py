@@ -69,8 +69,8 @@ class SSIM(PostEmbedMetric):
         return float(res)
 
 
-class ExtractedOriginalWatermark(PostEmbedMetric):
-    name = "EOW"
+class EmbedWatermark(PostEmbedMetric):
+    name = "EBW"
 
     def __call__(self,
                  img1: TorchImg,
@@ -137,8 +137,8 @@ class TPRxFPR(PostExtractMetric):
         return int((np.array(wm) == np.array(extraction_result)).sum() >= threshold)
 
 
-class ExtractedAttackedWatermark(PostExtractMetric):
-    name = "EAW"
+class ExtractedWatermark(PostExtractMetric):
+    name = "EXW"
     
     def __call__(self,
                  img1: TorchImg,

@@ -127,7 +127,7 @@ class PostAttackedMetricsStage(Stage):
             attack_name,
             attacked_image,
         ) in attacked_images.items():
-            image_context.attacked_image_metrics[attack_name] = {}
+            # image_context.attacked_image_metrics[attack_name] = {}
             for metric in self.metrics:
                 attacked_image = resize_torch_img(attacked_image, list(image.shape)[1:])
                 res = metric(
@@ -146,7 +146,11 @@ class ApplyAttacksStage(Stage):
         image = image_context.marked_image
         attacks_context = image_context.attacked_images
         for attack in self.attacks:
+            image_context.attacked_image_metrics[attack.report_name] = {}
+            s_time = perf_counter()
             attacks_context[attack.report_name] = attack(image)
+            attack_time = perf_counter() - s_time
+            image_context.attacked_image_metrics[attack.report_name]["attack_time"] = attack_time
 
 
 class ExtractWatermarkStage(Stage):
