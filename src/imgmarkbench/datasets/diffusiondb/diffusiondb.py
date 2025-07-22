@@ -20,6 +20,7 @@ class DiffusionDB(BaseDataset):
             path=self.dataset_path,
             name=subset,
             cache_dir=cache_dir,
+            trust_remote_code=True,
         )["train"]
         self.skip_nsfw = skip_nsfw
         if not skip_nsfw:

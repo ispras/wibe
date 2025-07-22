@@ -25,7 +25,7 @@ attacks:
 
 
 pipeline:
-  result_path: ./test_results/dct
+  result_path: D:\\test_results\\dct
   aggregators:
     - CSV:
         table_name: table
