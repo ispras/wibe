@@ -1,0 +1,30 @@
+algorithms:
+  dwsf:
+    params:
+      encoder_weights_path: ./model_files/dwsf/encoder_best.pth
+      decoder_weights_path: ./model_files/dwsf/decoder_best.pth
+      seg_weights_path: ./model_files/dwsf/seg.pth
+      message_length: 30
+      H: 128
+      W: 128
+      split_size: 128
+      psnr: 35
+      device: cuda
+      gt: 0.5
+      module_path: ./submodules/DWSF
+
+metrics:
+{% include 'common/metrics.yml' %} 
+
+datasets:
+{% include 'common/datasets.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+
+pipeline:
+  result_path: ./test_results/dwsf
+  aggregators:
+    - CSV:
+        table_name: table

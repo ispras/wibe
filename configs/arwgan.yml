@@ -1,0 +1,23 @@
+algorithms:
+  arwgan:
+    params:
+      options_file_path: ./model_files/arwgan/options-and-config.pickle
+      checkpoint_file_path: ./model_files/arwgan/checkpoints/ARWGAN.pyt
+      module_path: ./submodules/ARWGAN
+      device: cuda
+
+metrics:
+{% include 'common/metrics.yml' %} 
+
+datasets:
+{% include 'common/datasets.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+
+pipeline:
+  result_path: ./test_results/arwgan
+  aggregators:
+    - CSV:
+        table_name: table

@@ -1,12 +1,14 @@
+import numpy as np
+
+from typing_extensions import Dict
+from dataclasses import dataclass
+
 from imgmarkbench.algorithms.dct_marker.dct_marker import (
     DCTMarker,
     DCTMarkerConfig,
 )
 from imgmarkbench.algorithms.base import BaseAlgorithmWrapper
 from imgmarkbench.typing import TorchImg
-import numpy as np
-from dataclasses import dataclass
-from typing import Dict
 from imgmarkbench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 
 

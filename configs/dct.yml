@@ -10,23 +10,18 @@ algorithms:
       lambda_h: 4
 
 metrics:
-  - PSNR
-  - SSIM
-  - LPIPS
-  - BER
+{% include 'common/metrics.yml' %} 
 
 datasets:
-  - DiffusionDB:
-      path: /fast-drive/aakimenkov/img-watermarking-test/diffusionDB-filtered
+{% include 'common/datasets.yml' %}
 
 attacks:
-  - Identity
-  - JPEG: 
-      report_name: jpeg_50
-      quality: 50
-  - JPEG:
-      report_name: jpeg_20
-      quality: 20
+{% include 'common/distortions.yml' %} 
+  # - vaeattack
+  # - FluxRegeneration:
+  #     sequential_cpu_offload: true
+  # - FluxRinsing:
+  #     sequential_cpu_offload: true
 
 
 pipeline:
@@ -34,5 +29,3 @@ pipeline:
   aggregators:
     - CSV:
         table_name: table
-    - ClickHouse:
-        db_config: ./scripts/dct_wm.ini

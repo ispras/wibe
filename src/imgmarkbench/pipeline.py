@@ -1,23 +1,53 @@
 from pathlib import Path
-import numpy as np
-import cv2
 from .datasets.base import BaseDataset
 from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
-import traceback
-from typing import List, Tuple, Union, Iterable, Dict, Type, Optional
+from typing import (
+    List,
+    Union,
+    Iterable,
+    Dict,
+    Type,
+    Optional,
+    Any,
+)
 from .aggregator import build_fanout_from_config
 import tqdm
 import uuid
 from time import perf_counter
 import datetime
-from .typing import TorchImg
 import pickle
+from dataclasses import dataclass, field
+from .typing import TorchImg
 
 
-Context = Dict
+@dataclass
+class Context:
+    image_id: str
+    run_id: str
+    dataset: str
+    dtm: Optional[datetime.datetime] = None
+    method: Optional[str] = None
+    param_hash: Optional[str] = None
+    params: Optional[Dict[str, Any]] = None
+    watermark_data: Optional[Any] = None
+    image: Optional[TorchImg] = None
+    marked_image: Optional[TorchImg] = None
+    marked_image_metrics: Dict[str, Union[str, int, float]] = field(default_factory=dict)
+    attacked_images: Dict[str, TorchImg] = field(default_factory=dict)
+    attacked_image_metrics: Dict[str, Dict[str, Union[str, int, float]]] = field(default_factory=dict)
+    extraction_result: Dict[str, Any] = field(default_factory=dict)
+
+    def form_record(self) -> Dict[str, Any]:
+        record_attrs = ["run_id", "image_id", "dataset", "dtm", "method", "param_hash", "params"]
+        record = {}
+        for attr in record_attrs:
+            record[attr] = getattr(self, attr)
+        record.update(self.marked_image_metrics)
+        record.update(self.attacked_image_metrics)
+        return record
 
 
 def load_context(context_dir: Path, image_id: str) -> Context:
@@ -30,7 +60,7 @@ def load_context(context_dir: Path, image_id: str) -> Context:
 
 
 def save_context(context_dir: Path, context: Context):
-    image_id = context["record"]["image_id"]
+    image_id = context.image_id
     ctx_file = context_dir / f"{image_id}.pkl"
     with open(ctx_file, "wb") as f:
         pickle.dump(context, f)
@@ -55,24 +85,20 @@ class EmbedWatermarkStage(Stage):
         self.algorithm_wrapper = algorithm_wrapper
 
     def process_image(self, image_context: Context):
-        image_context["record"]["dtm"] = datetime.datetime.now()
+        image_context.dtm = datetime.datetime.now()
         watermark_data = self.algorithm_wrapper.watermark_data_gen()
-        image_context["record"]["method"] = self.algorithm_wrapper.report_name
-        image_context["record"][
-            "param_hash"
-        ] = self.algorithm_wrapper.param_hash
-        image_context["record"]["params"] = self.algorithm_wrapper.param_dict
-        image_context["watermark_data"] = watermark_data
-        image = image_context["image"]
+        image_context.method = self.algorithm_wrapper.report_name
+        image_context.param_hash = self.algorithm_wrapper.param_hash
+        image_context.params = self.algorithm_wrapper.param_dict
+        image_context.watermark_data = watermark_data
+        image = image_context.image
         s_time = perf_counter()
-        image_context["marked_image"] = self.algorithm_wrapper.embed(
+        image_context.marked_image = self.algorithm_wrapper.embed(
             image, watermark_data
         )
-        image_context["record"]["embed_time"] = perf_counter() - s_time
-
-    # def load_context(self, image_id):
-    #     context =
-    #     return super().load_context(image_id)
+        image_context.marked_image_metrics["embed_time"] = (
+            perf_counter() - s_time
+        )
 
 
 class PostEmbedMetricsStage(Stage):
@@ -80,12 +106,12 @@ class PostEmbedMetricsStage(Stage):
         self.metrics = metrics
 
     def process_image(self, image_context: Context):
-        watermark_data = image_context["watermark_data"]
-        image = image_context["image"]
-        marked_image = image_context["marked_image"]
+        watermark_data = image_context.watermark_data
+        image = image_context.image
+        marked_image = image_context.marked_image
         for metric in self.metrics:
             res = metric(image, marked_image, watermark_data)
-            image_context["record"][metric.report_name] = res
+            image_context.marked_image_metrics[metric.report_name] = res
 
 
 class ApplyAttacksStage(Stage):
@@ -93,9 +119,8 @@ class ApplyAttacksStage(Stage):
         self.attacks = attacks
 
     def process_image(self, image_context: Context):
-        image = image_context["marked_image"]
-        image_context["attacked_images"] = {}
-        attacks_context = image_context["attacked_images"]
+        image = image_context.marked_image
+        attacks_context = image_context.attacked_images
         for attack in self.attacks:
             attacks_context[attack.report_name] = attack(image)
 
@@ -105,20 +130,18 @@ class ExtractWatermarkStage(Stage):
         self.algorithm_wrapper = algorithm_wrapper
 
     def process_image(self, image_context: Context):
-        image_context["extraction_result"] = {}
-        ext_res_dict = image_context["extraction_result"]
-        watermark_data = image_context["watermark_data"]
-        for attack_name, image in image_context["attacked_images"].items():
+        watermark_data = image_context.watermark_data
+        for attack_name, image in image_context.attacked_images.items():
             s_time = perf_counter()
             extraction_result = self.algorithm_wrapper.extract(
                 image, watermark_data
             )
-            image_context["record"][attack_name] = {}
-            image_context["record"][attack_name]["extract_time"] = (
-                perf_counter() - s_time
-            )
+            image_context.attacked_image_metrics[attack_name] = {}
+            image_context.attacked_image_metrics[attack_name][
+                "extract_time"
+            ] = (perf_counter() - s_time)
 
-            ext_res_dict[attack_name] = extraction_result
+            image_context.extraction_result[attack_name] = extraction_result
 
 
 class PostExtractMetricsStage(Stage):
@@ -126,17 +149,20 @@ class PostExtractMetricsStage(Stage):
         self.metrics = metrics
 
     def process_image(self, image_context: Context):
-        watermark_data = image_context["watermark_data"]
-        image = image_context["image"]
-        for attack_name, attacked_image in image_context[
-            "attacked_images"
-        ].items():
-            extraction_result = image_context["extraction_result"][attack_name]
+        watermark_data = image_context.watermark_data
+        image = image_context.image
+        for (
+            attack_name,
+            attacked_image,
+        ) in image_context.attacked_images.items():
+            extraction_result = image_context.extraction_result[attack_name]
             for metric in self.metrics:
                 res = metric(
                     image, attacked_image, watermark_data, extraction_result
                 )
-                image_context["record"][attack_name][metric.report_name] = res
+                image_context.attacked_image_metrics[attack_name][
+                    metric.report_name
+                ] = res
 
 
 class AggregateMetricsStage(Stage):
@@ -153,8 +179,8 @@ class AggregateMetricsStage(Stage):
         self.records = []
 
     def process_image(self, image_context: Context):
-        self.records.append(image_context["record"])
-        if len(self.records) > self.config.min_batch_size:
+        self.records.append(image_context.form_record())
+        if len(self.records) >= self.config.min_batch_size:
             self.flush()
 
 
@@ -247,11 +273,13 @@ class Pipeline:
     def init_context(
         self, run_id: str, image_id: str, dataset_name: str, image
     ):
-        return {
-            "image": image,
-            "record": {"run_id": run_id, "image_id": image_id, "dataset": dataset_name},
-        }
-    
+        return Context(
+            image_id=image_id,
+            run_id=run_id,
+            dataset=dataset_name,
+            image=image,
+        )
+
     def get_stage_list(self, stages: Optional[List[str]]):
         if stages is None or "all" in stages:
             stages = list(STAGE_CLASSES.keys())
@@ -262,9 +290,9 @@ class Pipeline:
                 if start is None:
                     start = stage_num
                 stop = stage_num
-        return list(STAGE_CLASSES.keys())[start: stop + 1]
+        return list(STAGE_CLASSES.keys())[start : stop + 1]
 
-    def run(self, stages: Optional[List[str]], no_save_context: bool = False):
+    def run(self, stages: Optional[List[str]], dump_context: bool = False):
         stages: List[str] = self.get_stage_list(stages)
         run_id = str(uuid.uuid1())
         total_iters = None
@@ -279,9 +307,11 @@ class Pipeline:
                 total_iters = len(self.algorithm_wrappers) * dataset_iters
 
         progress = tqdm.tqdm(total=total_iters)
-        for wrapper_num, algorithm_wrapper in enumerate(self.algorithm_wrappers):
+        for wrapper_num, algorithm_wrapper in enumerate(
+            self.algorithm_wrappers
+        ):
             context_dir = self.config.result_path / f"context_{wrapper_num}"
-            if not no_save_context:
+            if dump_context:
                 context_dir.mkdir(parents=True, exist_ok=True)
             stage_runner = StageRunner(
                 stages,
@@ -299,10 +329,13 @@ class Pipeline:
                     for img_id, image in dataset.generator()
                 )
             else:
-                context_gen = (load_context(context_dir, img_id) for img_id in context_glob(context_dir))
+                context_gen = (
+                    load_context(context_dir, img_id)
+                    for img_id in context_glob(context_dir)
+                )
             for context in context_gen:
                 stage_runner.run(context)
-                if not no_save_context:
+                if dump_context:
                     save_context(context_dir, context)
                 progress.update()
                 pass
