@@ -10,7 +10,6 @@ from imgmarkbench.config import PipeLineConfig
 from functools import partial
 from jinja2 import Environment, FileSystemLoader
 
-
 loader = yaml.SafeLoader
 loader.add_implicit_resolver(
     u'tag:yaml.org,2002:float',
