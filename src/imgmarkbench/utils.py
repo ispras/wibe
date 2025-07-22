@@ -93,3 +93,20 @@ def seed_everything(seed: Optional[int] = None):
         torch.cuda.manual_seed(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+
+
+def is_image(tensor: torch.Tensor) -> bool:
+    '''
+    Checks whether tensor represents a TorchImg
+    '''
+    if tensor.dtype != torch.float32:
+        return False
+    shape = tensor.shape
+    if len(shape) != 3:
+        return False
+    channels, height, width = shape
+    if channels != 3:
+        return False
+    if tensor.max() > 1. + 1e-5 or tensor.min() < - 1e-5:
+        return False
+    return True
