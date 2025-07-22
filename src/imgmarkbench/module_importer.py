@@ -58,7 +58,7 @@ class ModuleImporter:
         for item in current_path.iterdir():
             if item.is_dir():
                 self._collect_modules(item, current_base + "." + item.name)
-            elif item.suffix == ".py":
+            elif (item.suffix == ".py") and (item.stem not in ["__pycache__", "setup", "__init__"]):
                 self.max_attempts += 1
                 modname = current_base + "." + item.stem
                 self.remaining[modname] = item
@@ -72,91 +72,26 @@ class ModuleImporter:
         """
         for attempt in range(self.max_attempts):
             failed = {}
-
             for module_name, file_path in self.remaining.items():
                 try:
                     spec = importlib.util.spec_from_file_location(module_name, file_path)
                     module = importlib.util.module_from_spec(spec)
                     sys.modules[module_name] = module
                     spec.loader.exec_module(module)
-                    self.loaded[module_name] = True
+                    self.loaded[module_name] = (True, None, None)
                     self._register_alias(module_name)
-                    print(f"Successfully registered module: {module_name}")
                 except Exception as e:
-                    print(f"Failed to register module: {module_name}. Attempt {attempt + 1}/{self.max_attempts}. Problem: {e}")
                     failed[module_name] = file_path
-                    self.loaded[module_name] = False
+                    self.loaded[module_name] = (False, file_path, e)
     
             if not failed:
                 break
             self.remaining = failed
-        return self.loaded
-
-
-# def register_and_load_all_modules(root_dir: Path, virtual_base: str, alias_prefix_to_strip: str = None):
-#     loaded = {}
-#     remaining = {}
-#     amount_of_py_files = 0
-
-#     def register_alias(full_name: str):
-#         if alias_prefix_to_strip and full_name.startswith(alias_prefix_to_strip + "."):
-#             alias = full_name[len(alias_prefix_to_strip) + 1:]
-#             if alias not in sys.modules:
-#                 sys.modules[alias] = sys.modules[full_name]
-
-#     def collect_modules(current_path: Path, current_base: str):
-#         if current_base not in sys.modules:
-#             pkg = types.ModuleType(current_base)
-#             pkg.__path__ = [str(current_path)]
-#             sys.modules[current_base] = pkg
-#             register_alias(current_base)
-
-#         for item in current_path.iterdir():
-#             if item.is_dir():
-#                 collect_modules(item, current_base + "." + item.name)
-#             elif item.suffix == ".py":
-#                 amount_of_py_files += 1
-#                 modname = current_base + "." + item.stem
-#                 remaining[modname] = item
-
-#     collect_modules(root_dir, virtual_base)
-
-#     max_attempts = amount_of_py_files
-#     for attempt in range(max_attempts):
-#         failed = {}
-
-#         for module_name, file_path in remaining.items():
-#             try:
-#                 spec = importlib.util.spec_from_file_location(module_name, file_path)
-#                 module = importlib.util.module_from_spec(spec)
-#                 sys.modules[module_name] = module
-#                 spec.loader.exec_module(module)
-#                 loaded[module_name] = True
-#                 register_alias(module_name)
-#                 print(f"Successful register module: {module_name}")
-#             except Exception as e:
-#                 print(f"Failed to register module: {module_name}. Attempt {attempt + 1}/{max_attempts}. Problem: {e}")
-#                 failed[module_name] = file_path
-#                 loaded[module_name] = False
         
-#         if not failed:
-#             break
-#         remaining = failed
-
-#     return loaded
-
-
-# def load_modules(params: Dict[str, Any], modules: Union[List[str]], package_name: str) -> None:
-#     module_path = params.get("module_path", None)
-#     if module_path is None:
-#         raise ModuleNotFoundError(f"Missing path to module!")
-#     module_path = Path(module_path).resolve()
-#     if not module_path.exists():
-#         raise FileNotFoundError("The path does not exist!")
-#     sys.path.append(str(module_path))
-#     for module in modules:
-#         spec = importlib.util.spec_from_file_location(module, module_path / (module + ".py"))
-#         mod = importlib.util.module_from_spec(spec)
-#         submodule_name = package_name + "." + Path(module).stem
-#         sys.modules[submodule_name] = mod
-#         spec.loader.exec_module(mod)
+        for module in self.loaded.keys():
+            status, file_path, exs = self.loaded[module]
+            if status:
+                print(f"Successfully registered module: {module}")
+            else:
+                print(f"Failed to register module: {module}. Problem: {exs}")
+        return self.loaded

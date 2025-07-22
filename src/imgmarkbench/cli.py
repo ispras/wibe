@@ -20,6 +20,7 @@ from imgmarkbench.config_loader import (
     get_datasets,
     get_metrics,
 )
+from imgmarkbench.utils import seed_everything
 
 
 import_modules("imgmarkbench.algorithms")
@@ -51,6 +52,8 @@ def run(
     metrics = get_metrics(loaded_config[METRICS_FIELD])
     datasets = get_datasets(loaded_config[DATASETS_FIELD])
     attacks = get_attacks(loaded_config[ATTACKS_FIELD])
+
+    seed_everything(loaded_config[PIPELINE_FIELD].seed)
 
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]

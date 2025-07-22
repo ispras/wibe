@@ -9,7 +9,7 @@
 	url = https://github.com/yakulex/ARWGAN.git
 [submodule "submodules/stable_signature"]
 	path = submodules/stable_signature
-	url = https://github.com/facebookresearch/stable_signature.git
+	url = https://github.com/Powss/stable_signature.git
 [submodule "submodules/ssl_watermarking"]
 	path = submodules/ssl_watermarking
 	url = https://github.com/facebookresearch/ssl_watermarking.git
@@ -22,3 +22,6 @@
 [submodule "submodules/watermark_anything"]
 	path = submodules/watermark_anything
 	url = https://github.com/facebookresearch/watermark-anything.git
+[submodule "submodules/tree-ring-watermark"]
+	path = submodules/tree-ring-watermark
+	url = https://github.com/YuxinWenRick/tree-ring-watermark.git

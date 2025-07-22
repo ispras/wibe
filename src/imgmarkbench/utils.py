@@ -2,6 +2,10 @@ from torchvision.transforms import Normalize
 from imgmarkbench.typing import TorchImg, TorchImgNormalize
 import torch
 import numpy as np
+import random
+import cv2
+import tempfile
+import os
 from typing_extensions import Dict, Any, List, Optional
 
 
@@ -63,3 +67,46 @@ def denormalize_image(image: TorchImgNormalize, transform: Optional[Normalize] =
     if transform is not None:
         return transform(image).squeeze(0)
     return ((image + 1) / 2).squeeze(0)
+
+
+def save_tmp_images(images: List[np.ndarray]):
+    tmp_paths = []
+    for image in images:
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            cv2.imwrite(tmp.name, image)
+            tmp.close()
+            tmp_paths.append(tmp.name)
+    return tmp_paths
+
+
+def delete_tmp_images(tmp_paths: List[str]):
+    for tmp_path in tmp_paths:
+        os.remove(tmp_path)
+
+
+def seed_everything(seed: Optional[int] = None):    
+    if seed is not None:
+        random.seed(seed)
+        os.environ['PYTHONHASHSEED'] = str(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+
+def is_image(tensor: torch.Tensor) -> bool:
+    '''
+    Checks whether tensor represents a TorchImg
+    '''
+    if tensor.dtype != torch.float32:
+        return False
+    shape = tensor.shape
+    if len(shape) != 3:
+        return False
+    channels, height, width = shape
+    if channels != 3:
+        return False
+    if tensor.max() > 1. + 1e-5 or tensor.min() < - 1e-5:
+        return False
+    return True
