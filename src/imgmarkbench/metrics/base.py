@@ -67,7 +67,18 @@ class SSIM(PostEmbedMetric):
             return float(ssim(img1.numpy(), img2.numpy(), data_range=1))
         res = ssim(img1.numpy(), img2.numpy(), data_range=1, channel_axis=0)
         return float(res)
-    
+
+
+class ExtractedOriginalWatermark(PostEmbedMetric):
+    name = "EOW"
+
+    def __call__(self,
+                 img1: TorchImg,
+                 img2: TorchImg,
+                 watermark_data: Any):
+        str_watermark = ''.join(str(x) for x in np.array(watermark_data.watermark).flatten().tolist())
+        return str_watermark
+
 
 class Result(PostExtractMetric):
     name = "result"
@@ -125,3 +136,14 @@ class TPRxFPR(PostExtractMetric):
         threshold = self.bits_threshold(num_bits)
         return int((np.array(wm) == np.array(extraction_result)).sum() >= threshold)
 
+
+class ExtractedAttackedWatermark(PostExtractMetric):
+    name = "EAW"
+    
+    def __call__(self,
+                 img1: TorchImg,
+                 img2: TorchImg,
+                 watermark_data: Any,
+                 extraction_result):
+        str_extract_watermark = ''.join(str(x) for x in np.array(extraction_result).flatten().tolist())
+        return str_extract_watermark
