@@ -1,0 +1,2 @@
+compressai
+torch
