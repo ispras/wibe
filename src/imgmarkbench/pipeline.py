@@ -124,8 +124,9 @@ class AggregateMetricsStage(Stage):
         )
 
     def flush(self):
-        self.aggregator.add(self.records)
-        self.records = []
+        if len(self.records):
+            self.aggregator.add(self.records)
+            self.records = []
 
     def process_image(self, image_context: Context):
         self.records.append(image_context.form_record())
