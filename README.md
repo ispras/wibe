@@ -40,7 +40,7 @@ python -m venv venv
 
 7. Запускаем тестирование с заданной конфигурацией:
 ```bash
-(venv) python -m wibench --config configs/trustmark_msu.yml
+(venv) wibench --config configs/trustmark.yml
 ```
 
 ## Поддерживаемые ОС

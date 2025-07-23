@@ -17,15 +17,10 @@ post_extract_metrics:
 {% include 'common/post_extract_metrics.yml' %} 
 
 datasets:
-{% include 'common/mscoco.yml' %}
+{% include 'common/diffusiondb.yml' %}
 
 attacks:
 {% include 'common/distortions.yml' %} 
-  # - vaeattack
-  # - FluxRegeneration:
-  #     sequential_cpu_offload: true
-  # - FluxRinsing:
-  #     sequential_cpu_offload: true
 
 pipeline:
   result_path: ./test_results/dct

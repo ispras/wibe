@@ -45,7 +45,7 @@ def clear_sys_path():
     path_to_remove = Path(wibench.__file__).parent
     remove_values = []
     for path in sys.path:
-        if Path(path) == path_to_remove:
+        if Path(path).resolve() == path_to_remove.resolve():
             remove_values.append(path)
     for val in remove_values:
         sys.path.remove(val)
@@ -55,10 +55,6 @@ CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
 RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
 
 clear_sys_path()
-import_modules("wibench.algorithms")
-import_modules("wibench.datasets")
-import_modules("wibench.metrics")
-import_modules("wibench.attacks")
 
 
 def set_cuda_devices(environ, device_list: List[int]):
@@ -100,6 +96,11 @@ def run(
     """
     Run algorithm evaluation pipeline.
     """
+    import_modules("wibench.algorithms")
+    import_modules("wibench.datasets")
+    import_modules("wibench.metrics")
+    import_modules("wibench.attacks")
+
     run_id = str(uuid.uuid1()) if RUN_ID_ENV_NAME not in os.environ else os.environ[RUN_ID_ENV_NAME]
     os.environ[RUN_ID_ENV_NAME] = run_id
     loaded_config = load_pipeline_config_yaml(config)
