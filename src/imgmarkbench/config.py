@@ -47,6 +47,8 @@ class PipeLineConfig(BaseModel):
     min_batch_size: int = 100
     seed: Optional[int] = None
     dump_type: DumpType = DumpType.serialized
+    workers: int = 1
+    cuda_visible_devices: list[int] = Field(default_factory=list)
 
 
     @model_validator(mode="before")
@@ -59,4 +61,9 @@ class PipeLineConfig(BaseModel):
             kind, params = next(iter(raw.items()))
             fixed.append({"kind": kind, **params})
         data["aggregators"] = fixed
+        if "cuda_visible_devices" in data:
+            value = data["cuda_visible_devices"]
+            if isinstance(value, str):
+                numbers = [int(x.strip()) for x in value.split(',')]
+                data["cuda_visible_devices"] = numbers
         return data
