@@ -10,7 +10,7 @@ metrics:
   - Result
 
 datasets:
-{% include 'common/datasets.yml' %}
+{% include 'common/diffusiondb.yml' %}
 
 attacks:
 {% include 'common/distortions.yml' %}
