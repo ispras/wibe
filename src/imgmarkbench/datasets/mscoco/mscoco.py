@@ -33,11 +33,9 @@ class MSCOCO(BaseDataset):
     def generator(
         self,
     ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:
-        img_id = -1
-        for sample in self.dataset:
-            img_id += 1
-
-            if img_id >= self.len:
+        for img_num, sample in enumerate(self.dataset):
+            if img_num >= self.len:
                 break
-
-            yield str(img_id), to_tensor(sample["image"])
+            img = sample["image"]
+            img_id = sample["image_id"]
+            yield str(img_id), to_tensor(img.convert("RGB"))
