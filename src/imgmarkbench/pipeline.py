@@ -116,7 +116,6 @@ class PostExtractMetricsStage(Stage):
 
 
 class AggregateMetricsStage(Stage):
-    # ToDo: Заменить pipeline_config на что-то другое
     def __init__(self, pipeline_config: PipeLineConfig):
         self.config = pipeline_config
         self.records = []
@@ -150,7 +149,6 @@ class StageRunner:
         self,
         stages: List[str],
         algorithm_wrapper: BaseAlgorithmWrapper,
-        # datasets: Union[BaseDataset, Iterable[BaseDataset]],
         attacks: List[BaseAttack],
         metrics: List[BaseMetric],
         pipeline_config: PipeLineConfig,
@@ -279,12 +277,12 @@ class Pipeline:
 
     def run(
         self,
+        run_id: str,
         stages: Optional[List[str]],
         dump_context: bool = False,
         process_num: int = 0,
     ):
         stages: List[str] = self.get_stage_list(stages)
-        run_id = str(uuid.uuid1())
         total_iters = None
         if hasattr(self.algorithm_wrappers, "__len__"):
             dataset_iters = 0

@@ -5,7 +5,7 @@ from typing_extensions import (
     List
 )
 from pathlib import Path
-
+import uuid
 from imgmarkbench.pipeline import Pipeline, STAGE_CLASSES
 from imgmarkbench.module_importer import import_modules
 from imgmarkbench.config_loader import (
@@ -26,6 +26,19 @@ from imgmarkbench.config import PipeLineConfig
 import sys
 import subprocess
 import os 
+from imgmarkbench.aggregator import PandasAggregatorConfig
+
+
+def clear_tables(config: PipeLineConfig):
+    for aggregator_config in config.aggregators:
+        if not isinstance(aggregator_config, PandasAggregatorConfig):
+            continue
+        metrics_table_result_path = config.result_path / f"metrics_{aggregator_config.table_name}.csv"
+        params_table_result_path = config.result_path / f"params_{aggregator_config.table_name}.csv"
+        if metrics_table_result_path.exists():
+            metrics_table_result_path.unlink()
+        if params_table_result_path.exists():
+            params_table_result_path.unlink()
 
 
 def clear_sys_path():
@@ -39,6 +52,7 @@ def clear_sys_path():
 
 
 CHILD_NUM_ENV_NAME = "IMGMARKBENCH_CHILD_PROCESS_NUM"
+RUN_ID_ENV_NAME = "IMGMARKBENCH_RUN_ID"
 
 clear_sys_path()
 import_modules("imgmarkbench.algorithms")
@@ -86,10 +100,12 @@ def run(
     """
     Run algorithm evaluation pipeline.
     """
-
+    run_id = str(uuid.uuid1()) if RUN_ID_ENV_NAME not in os.environ else os.environ[RUN_ID_ENV_NAME]
+    os.environ[RUN_ID_ENV_NAME] = run_id
     loaded_config = load_pipeline_config_yaml(config)
     seed_everything(loaded_config[PIPELINE_FIELD].seed)
     pipeline_config = loaded_config[PIPELINE_FIELD]
+    clear_tables(pipeline_config)
 
     if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
         subprocess_run(pipeline_config)
@@ -103,7 +119,7 @@ def run(
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]
     )
-    pipeline.run(stages, dump_context, process_num=process_num)
+    pipeline.run(run_id, stages, dump_context, process_num=process_num)
 
 
 if __name__ == "__main__":
