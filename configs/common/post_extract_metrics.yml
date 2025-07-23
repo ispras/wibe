@@ -1,6 +1,5 @@
-  - PSNR
-  - SSIM
-  - LPIPS
+  - ExtWm
+  - BER
   - TPR@xFPR:
       report_name: tpr@0.1%fpr
       fpr_rate: 0.0001

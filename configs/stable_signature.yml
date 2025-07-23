@@ -8,9 +8,17 @@ algorithms:
       module_path: ./submodules/stable_signature
       device: cuda
 
-metrics:
+post_embed_metrics:
+  - CLIP_IQA
+  - Aesthetic
   - ImageReward
-  - BER
+  - CLIP
+  - BLIP
+  - EmbWm
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
 
 datasets:
   - DiffusionDB:
@@ -27,4 +35,3 @@ pipeline:
   aggregators:
     - CSV:
         table_name: table
-  min_batch_size: 1

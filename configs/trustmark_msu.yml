@@ -6,8 +6,12 @@ algorithms:
       wm_strength: 0.75
       device: cuda # {cpu, cuda}
 
-metrics:
-{% include 'common/metrics.yml' %} 
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
 
 datasets:
 {% include 'common/datasets_lim.yml' %}

@@ -9,8 +9,12 @@ algorithms:
       ampl_ratio: 0.7
       lambda_h: 4
 
-metrics:
-{% include 'common/metrics.yml' %} 
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
 
 datasets:
 {% include 'common/mscoco.yml' %}
@@ -22,7 +26,6 @@ attacks:
   #     sequential_cpu_offload: true
   # - FluxRinsing:
   #     sequential_cpu_offload: true
-
 
 pipeline:
   result_path: D:\\test_results\\dct
