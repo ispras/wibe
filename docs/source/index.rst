@@ -31,7 +31,6 @@ The extensions implement:
    :maxdepth: 2
    :caption: Contents
 
-   overview
    quick_start
    system_requirements
    code_structure
