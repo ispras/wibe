@@ -223,11 +223,12 @@ class Progress:
         res = 0
         for proc_num in range(self.num_processes):
             path = self.res_dir / f"tqdm{proc_num}"
+            if not path.exists():
+                continue
             with open(path, "r") as f:
                 res += int(f.read())
         self.progress.update(res - self.curr_res)
         self.curr_res = res
-
 
 
 class Pipeline:
