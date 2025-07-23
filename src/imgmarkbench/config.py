@@ -63,9 +63,7 @@ class PipeLineConfig(BaseModel):
         data["aggregators"] = fixed
         if "cuda_visible_devices" in data:
             value = data["cuda_visible_devices"]
-            if isinstance(value, int):
-                pass
-            elif isinstance(value, str):
+            if isinstance(value, str):
                 numbers = [int(x.strip()) for x in value.split(',')]
                 data["cuda_visible_devices"] = numbers
         return data

@@ -11,7 +11,7 @@ class DiffusionDB(BaseDataset):
     def __init__(
         self,
         subset: str = "2m_first_5k",
-        image_range: Optional[Tuple[int]] = None,
+        image_range: Optional[Tuple[int, int]] = None,
         cache_dir: Optional[str] = None,
         skip_nsfw: bool = True,
         return_prompt: bool = False,

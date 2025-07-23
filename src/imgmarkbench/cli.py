@@ -95,6 +95,7 @@ def run(
         subprocess_run(pipeline_config)
         return
 
+    process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
     alg_wrappers = get_algorithms(loaded_config[ALGORITHMS_FIELD])
     metrics = get_metrics(loaded_config[METRICS_FIELD])
     datasets = get_datasets(loaded_config[DATASETS_FIELD])
@@ -102,7 +103,7 @@ def run(
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]
     )
-    pipeline.run(stages, dump_context)
+    pipeline.run(stages, dump_context, process_num=process_num)
 
 
 if __name__ == "__main__":

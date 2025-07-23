@@ -18,7 +18,7 @@ import tqdm
 import uuid
 from time import perf_counter
 import datetime
-
+from itertools import islice
 
 # ToDo: Ассерты на то, что при исполнения стейджа были выполнены все предыдущие
 
@@ -242,7 +242,12 @@ class Pipeline:
                 stop = stage_num
         return list(STAGE_CLASSES.keys())[start : stop + 1]
 
-    def run(self, stages: Optional[List[str]], dump_context: bool = False):
+    def run(
+        self,
+        stages: Optional[List[str]],
+        dump_context: bool = False,
+        process_num: int = 0,
+    ):
         stages: List[str] = self.get_stage_list(stages)
         run_id = str(uuid.uuid1())
         total_iters = None
@@ -276,12 +281,22 @@ class Pipeline:
                         run_id, img_id, dataset.report_name, image
                     )
                     for dataset in self.datasets
-                    for img_id, image in dataset.generator()
+                    for img_id, image in islice(
+                        dataset.generator(),
+                        process_num,
+                        None,
+                        self.config.workers,
+                    )
                 )
             else:
                 context_gen = (
                     Context.load(context_dir, img_id, self.config.dump_type)
-                    for img_id in Context.glob(context_dir, self.config.dump_type)
+                    for img_id in islice(
+                        Context.glob(context_dir, self.config.dump_type),
+                        process_num,
+                        None,
+                        self.config.workers,
+                    )
                 )
             for context in context_gen:
                 stage_runner.run(context)
