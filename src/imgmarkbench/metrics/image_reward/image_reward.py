@@ -13,7 +13,7 @@ from imgmarkbench.metrics.base import PostEmbedMetric
 
 class ImageReward(PostEmbedMetric):
 
-    def __init__(self, device: str = "cpu"):
+    def __init__(self, device: str = "cuda"):
         self.model = RM.load("ImageReward-v1.0", device=device)
 
     def __call__(self,

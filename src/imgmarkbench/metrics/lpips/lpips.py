@@ -6,7 +6,7 @@ from imgmarkbench.utils import normalize_image
 
 
 class LPIPS(PostEmbedMetric):
-    def __init__(self, net: str = "alex", device: str = "cpu") -> None:
+    def __init__(self, net: str = "alex", device: str = "cuda") -> None:
         self.device = device
         self.loss_fn = lpips.LPIPS(net=net, verbose=False).to(self.device)
 

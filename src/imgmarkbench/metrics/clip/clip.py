@@ -13,7 +13,7 @@ from imgmarkbench.metrics.base import PostEmbedMetric
 
 class CLIP(PostEmbedMetric):
 
-    def __init__(self, device: str = "cpu"):
+    def __init__(self, device: str = "cuda"):
         self.model = RM.load_score("CLIP", device=device)
 
     def __call__(self,

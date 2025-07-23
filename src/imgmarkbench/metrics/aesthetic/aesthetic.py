@@ -13,7 +13,7 @@ from imgmarkbench.metrics.base import PostEmbedMetric
 
 class Aesthetic(PostEmbedMetric):
 
-    def __init__(self, device: str = "cpu"):
+    def __init__(self, device: str = "cuda"):
         self.model = RM.load_score("Aesthetic", device=device)
 
     def __call__(self,

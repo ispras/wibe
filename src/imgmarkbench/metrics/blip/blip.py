@@ -13,7 +13,7 @@ from imgmarkbench.metrics.base import PostEmbedMetric
 
 class BLIP(PostEmbedMetric):
 
-    def __init__(self, device: str = "cpu"):
+    def __init__(self, device: str = "cuda"):
         self.model = RM.load_score("BLIP", device=device)
 
     def __call__(self,

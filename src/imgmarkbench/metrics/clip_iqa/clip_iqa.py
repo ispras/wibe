@@ -6,7 +6,7 @@ from imgmarkbench.utils import normalize_image
 
 
 class CLIP_IQA(PostEmbedMetric):
-    def __init__(self, prompts: Tuple[Union[str, Tuple[str]]] = ("quality",), device: str = "cpu") -> None:
+    def __init__(self, prompts: Tuple[Union[str, Tuple[str]]] = ("quality",), device: str = "cuda") -> None:
         self.device = device
         self.metric = CLIPImageQualityAssessment(prompts=prompts).to(self.device)
 
