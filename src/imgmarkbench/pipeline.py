@@ -196,6 +196,37 @@ class StageRunner:
         return stage_list
 
 
+class Progress:
+    def __init__(self, res_dir: Path, total_iters: int, proc_num: int):
+        self.res_dir = res_dir
+        self.proc_num = proc_num
+        self.progress = None
+        if proc_num == 0:
+            self.curr_res = 0
+            self.progress = tqdm.tqdm(total=total_iters)
+        self.passed = 0
+        self.progress_file = res_dir / f"tqdm{proc_num}"
+        self.total_iters = total_iters
+        with open(self.progress_file, "w") as f:
+            f.write("0")
+
+    def update(self):
+        self.passed += 1
+        with open(self.progress_file, "w") as f:
+            f.write(str(self.passed))
+        if self.proc_num == 0:
+            self.update_bar()
+
+    def update_bar(self):
+        res = 0
+        for path in self.res_dir.glob("tqdm*"):
+            with open(path, "r") as f:
+                res += int(f.read())
+        self.progress.update(res - self.curr_res)
+        self.curr_res = res
+
+
+
 class Pipeline:
     def __init__(
         self,
@@ -261,7 +292,7 @@ class Pipeline:
             else:
                 total_iters = len(self.algorithm_wrappers) * dataset_iters
 
-        progress = tqdm.tqdm(total=total_iters)
+        progress = Progress(self.config.result_path, total_iters, process_num)
         for wrapper_num, algorithm_wrapper in enumerate(
             self.algorithm_wrappers
         ):
@@ -308,3 +339,6 @@ class Pipeline:
             for stage in stage_runner.stages:
                 if isinstance(stage, AggregateMetricsStage):
                     stage.flush()
+
+            if progress.progress is not None:
+                progress.progress.close()
