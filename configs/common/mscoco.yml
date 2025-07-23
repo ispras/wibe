@@ -1,0 +1,4 @@
+  - MSCOCO:
+      cache_dir: ./datasets/mscoco
+      split: val
+      num_images: 10
