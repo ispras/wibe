@@ -6,7 +6,7 @@ WIBE: Watermarks for generated Images – Benchmarking & Evaluation
 Overview
 --------
 
-.. include:: ./docs/source/overview.rst
+.. include:: overview.rst
 
 Key features
 ------------
