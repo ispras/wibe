@@ -47,4 +47,4 @@ class DiffusionRegeneration(BaseAttack):
         ).images  # np.array
         # TODO is there a way to get a tensor from the pipeline?
         out = torch.tensor(out, dtype=torch.float32, device=self.device).permute(0, 3, 1, 2)
-        return out.squeeze(0)
+        return out.squeeze(0).cpu()

@@ -49,4 +49,4 @@ class VAEAttack(BaseAttack):
                 att_img_tensor = att_imgs_list[0]
         
             att_img_tensor = (att_img_tensor * 0.5 + 0.5).clamp(0, 1)
-        return att_img_tensor.squeeze(0).to(torch.float32)
+        return att_img_tensor.squeeze(0).to(torch.float32).cpu()

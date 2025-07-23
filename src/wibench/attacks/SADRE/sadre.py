@@ -173,4 +173,4 @@ class WPWMAttacker(BaseAttack):
             res = batched_attack(latents_buf, prompts).squeeze(0)
             res -= res.min()
             res /= res.max()
-            return res
+            return res.cpu()

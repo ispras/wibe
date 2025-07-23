@@ -62,7 +62,7 @@ class FluxRegeneration(BaseAttack):
             generator=self.generator,
             output_type="pt",
         ).images  # [b,c,h,w]
-        return img.squeeze(0).to(torch.float32)
+        return img.squeeze(0).to(torch.float32).cpu()
 
 
 class FluxRinsing(FluxRegeneration):
@@ -103,4 +103,4 @@ class FluxRinsing(FluxRegeneration):
                 output_type="pt",
             ).images  # [b,c,h,w]
 
-        return img.squeeze(0).to(torch.float32)
+        return img.squeeze(0).to(torch.float32).cpu()

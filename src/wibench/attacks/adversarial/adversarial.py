@@ -10,7 +10,7 @@ class AdversarialEmbedding(BaseAttack):
     """Adversarial embedding attack from WAVES benchmark."""
 
     def __init__(self,
-                 encoder: str,
+                 encoder: str = "resnet18",
                  device: torch.device | str = "cuda",
                  loss_type: str = "l2",  # metric between attacked and non-attacked embeddings
                  strength: int = 2,  # 2,4,6,8
@@ -102,14 +102,14 @@ class AdversarialEmbedding(BaseAttack):
 
     def __call__(self, img: torch.Tensor) -> torch.Tensor:
         img = img.unsqueeze(0)
-        return self.pgd(img).squeeze(0)
+        return self.pgd(img).squeeze(0).cpu()
 
 
 class AdversarialEmbeddingPSNR(BaseAttack):
     r"""Modification of adversarial embedding attack that uses PSNR instead of l_\infty norm to measure closeness between images."""
 
     def __init__(self,
-                 encoder: str,
+                 encoder: str = "resnet18",
                  device: torch.device | str = "cuda",
                  psnr: float = 40,
                  loss_type: str = "l2",  # metric between attacked and non-attacked embeddings
@@ -197,4 +197,4 @@ class AdversarialEmbeddingPSNR(BaseAttack):
 
     def __call__(self, img: torch.Tensor) -> torch.Tensor:
         img = img.unsqueeze(0)
-        return self.pgd(img).squeeze(0)
+        return self.pgd(img).squeeze(0).cpu()

@@ -2,12 +2,22 @@
       device: cuda:0 # {cuda:0 by default}
   - FluxRegeneration:
       device: cuda:0 # {cuda:0 by default}
-      sequential_cpu_offload: false
+      sequential_cpu_offload: true
   - FluxRinsing:
       device: cuda:0 # {cuda:0 by default}
-      sequential_cpu_offload: false
+      sequential_cpu_offload: true
   - bm3d
   - DIP:
       device: cuda:0 # {cuda:0 if torch.cuda.is_available()}
   - DIPNoise:
       device: cuda:0 # {cuda:0 if torch.cuda.is_available()}
+  - WPWMAttacker:
+      device: cuda:0
+  - VAERegeneration:
+      device: cuda:0
+  - AdversarialEmbedding:
+      device: cuda:0
+  - AdversarialEmbeddingPSNR:
+      device: cuda:0
+  - DiffusionRegeneration:
+      device: cuda:0

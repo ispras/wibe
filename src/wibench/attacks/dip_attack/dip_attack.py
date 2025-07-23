@@ -80,7 +80,7 @@ class DIPAttack(BaseAttack):
             net_input = cur_image
             net_output = dip_model(net_input)
             attacked_imgs.append(net_output.clone().squeeze())
-        return torch.stack(attacked_imgs).detach().squeeze(0)
+        return torch.stack(attacked_imgs).detach().squeeze(0).cpu()
 
 
 def fill_noise(x, noise_type):
@@ -199,4 +199,4 @@ class DIPAttackNoise(BaseAttack):
             net_input = cur_model_input
             net_output = dip_model(net_input)
             attacked_imgs.append(net_output.clone().squeeze())
-        return torch.stack(attacked_imgs).detach().squeeze(0)
+        return torch.stack(attacked_imgs).detach().squeeze(0).cpu()

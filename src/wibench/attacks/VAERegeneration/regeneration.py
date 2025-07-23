@@ -13,7 +13,7 @@ from ..base import BaseAttack
 class VAERegeneration(BaseAttack):
     """Based on the code from https://github.com/XuandongZhao/WatermarkAttacker/blob/main/wmattacker.py."""
 
-    def __init__(self, model_name, quality=1, device="cuda"):
+    def __init__(self, model_name="bmshj2018-factorized", quality=1, device="cuda"):
         if model_name == "bmshj2018-factorized":
             self.model = bmshj2018_factorized(quality=quality, pretrained=True)
         elif model_name == "bmshj2018-hyperprior":
