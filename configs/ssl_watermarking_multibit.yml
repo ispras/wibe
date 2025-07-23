@@ -30,3 +30,5 @@ pipeline:
   aggregators:
     - CSV:
         table_name: table
+  workers: 2
+  cuda_visible_devices: 2, 3
