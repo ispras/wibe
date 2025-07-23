@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 
-dir_to_walk = './src/imgmarkbench/'
+dir_to_walk = './src/wibench/'
 requirements_txt = 'requirements.txt'
 all_requirements = []
 python_m_pip_install = 'python -m pip install'.split()

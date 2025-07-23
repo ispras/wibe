@@ -4,7 +4,7 @@ algorithms:
     wm_length: 32
     module_path: ./submodules/watermark_anything
     ckpt_path: ./model_files/watermark_anything/wam_mit.pth
-    params_path: src/imgmarkbench/algorithms/watermark_anything/configs/params.json
+    params_path: src/wibench/algorithms/watermark_anything/configs/params.json
     device: cuda
 
 post_embed_metrics:
