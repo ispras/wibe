@@ -19,7 +19,8 @@ import tqdm
 import uuid
 from time import perf_counter
 import datetime
-
+from itertools import islice
+import tempfile
 
 # ToDo: Ассерты на то, что при исполнения стейджа были выполнены все предыдущие
 
@@ -142,7 +143,6 @@ class PostExtractMetricsStage(Stage):
 
 
 class AggregateMetricsStage(Stage):
-    # ToDo: Заменить pipeline_config на что-то другое
     def __init__(self, pipeline_config: PipeLineConfig):
         self.config = pipeline_config
         self.records = []
@@ -177,7 +177,6 @@ class StageRunner:
         self,
         stages: List[str],
         algorithm_wrapper: BaseAlgorithmWrapper,
-        # datasets: Union[BaseDataset, Iterable[BaseDataset]],
         attacks: List[BaseAttack],
         metrics: Dict[str, List[BaseMetric]],
         pipeline_config: PipeLineConfig,
@@ -219,6 +218,40 @@ class StageRunner:
             if stage_type in stages:
                 stage_list.append(stage_class)
         return stage_list
+
+
+class Progress:
+    def __init__(self, res_dir: Path, total_iters: int, proc_num: int, num_processes: int):
+        self.res_dir = res_dir
+        self.proc_num = proc_num
+        self.progress = None
+        self.num_processes = num_processes
+        if proc_num == 0:
+            self.curr_res = 0
+            self.progress = tqdm.tqdm(total=total_iters)
+        self.passed = 0
+        self.progress_file = res_dir / f"tqdm{proc_num}"
+        self.total_iters = total_iters
+        with open(self.progress_file, "w") as f:
+            f.write("0")
+
+    def update(self):
+        self.passed += 1
+        with open(self.progress_file, "w") as f:
+            f.write(str(self.passed))
+        if self.proc_num == 0:
+            self.update_bar()
+
+    def update_bar(self):
+        res = 0
+        for proc_num in range(self.num_processes):
+            path = self.res_dir / f"tqdm{proc_num}"
+            if not path.exists():
+                continue
+            with open(path, "r") as f:
+                res += int(f.read())
+        self.progress.update(res - self.curr_res)
+        self.curr_res = res
 
 
 class Pipeline:
@@ -267,9 +300,14 @@ class Pipeline:
                 stop = stage_num
         return list(STAGE_CLASSES.keys())[start : stop + 1]
 
-    def run(self, stages: Optional[List[str]], dump_context: bool = False):
+    def run(
+        self,
+        run_id: str,
+        stages: Optional[List[str]],
+        dump_context: bool = False,
+        process_num: int = 0,
+    ):
         stages: List[str] = self.get_stage_list(stages)
-        run_id = str(uuid.uuid1())
         total_iters = None
         if hasattr(self.algorithm_wrappers, "__len__"):
             dataset_iters = 0
@@ -281,7 +319,7 @@ class Pipeline:
             else:
                 total_iters = len(self.algorithm_wrappers) * dataset_iters
 
-        progress = tqdm.tqdm(total=total_iters)
+        progress = Progress(self.config.result_path, total_iters, process_num, self.config.workers)
         for wrapper_num, algorithm_wrapper in enumerate(
             self.algorithm_wrappers
         ):
@@ -301,12 +339,22 @@ class Pipeline:
                         run_id, img_id, dataset.report_name, image
                     )
                     for dataset in self.datasets
-                    for img_id, image in dataset.generator()
+                    for img_id, image in islice(
+                        dataset.generator(),
+                        process_num,
+                        None,
+                        self.config.workers,
+                    )
                 )
             else:
                 context_gen = (
                     Context.load(context_dir, img_id, self.config.dump_type)
-                    for img_id in Context.glob(context_dir, self.config.dump_type)
+                    for img_id in islice(
+                        Context.glob(context_dir, self.config.dump_type),
+                        process_num,
+                        None,
+                        self.config.workers,
+                    )
                 )
             for context in context_gen:
                 stage_runner.run(context)
@@ -318,3 +366,6 @@ class Pipeline:
             for stage in stage_runner.stages:
                 if isinstance(stage, AggregateMetricsStage):
                     stage.flush()
+
+            if progress.progress is not None:
+                progress.progress.close()

@@ -2,13 +2,27 @@ from pathlib import Path
 from itertools import chain
 from PIL import Image
 from torchvision.transforms import ToTensor
-from typing_extensions import Generator, Tuple, Union, List
+from typing_extensions import Generator, Tuple, Union, List, Optional
 from imgmarkbench.typing import TorchImg
 from imgmarkbench.registry import RegistryMeta
 
 
 class BaseDataset(metaclass=RegistryMeta):
     type = "dataset"
+
+    def __init__(self, image_range: Optional[Tuple[int, int]], len: int):
+        if image_range is not None:
+            self.image_range = image_range
+            images_len = (image_range[1] - image_range[0]) + 1
+            if len < images_len:
+                raise ValueError(
+                    f"Dataset size is {len}, but num_images={images_len}"
+                )
+            else:
+                self.len = images_len
+        else:
+            self.image_range = [0, len - 1]
+            self.len = len
 
     def __len__(self) -> int:
         raise NotImplementedError

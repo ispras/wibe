@@ -11,21 +11,13 @@ class MSCOCO(BaseDataset):
     def __init__(
         self,
         split: str = "val",
-        num_images: Optional[int] = None,
+        image_range:  Optional[Tuple[int, int]] = None,
         cache_dir: Optional[str] = None
     ):
         self.dataset = load_dataset(self.dataset_path,
                                     split=split,
                                     cache_dir=cache_dir)
-        self.len = len(self.dataset)
-
-        if num_images is not None:
-            if self.len < num_images:
-                raise ValueError(
-                    f"Dataset size is {self.len}, but num_images={num_images}"
-                )
-            else:
-                self.len = num_images
+        super().__init__(image_range, len(self.dataset))
 
     def __len__(self):
         return self.len
