@@ -11,3 +11,4 @@ enabled = true
 [project]
 name = "wibe"
 authors = [{name = "ISP RAS"}]
+dynamic = ["version", "description"]
