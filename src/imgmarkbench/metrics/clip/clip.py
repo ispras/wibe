@@ -11,10 +11,10 @@ from imgmarkbench.typing import TorchImg
 from imgmarkbench.metrics.base import PostEmbedMetric
 
 
-class ImageReward(PostEmbedMetric):
+class CLIP(PostEmbedMetric):
 
     def __init__(self, device: str = "cuda"):
-        self.model = RM.load("ImageReward-v1.0", device=device)
+        self.model = RM.load_score("CLIP", device=device)
 
     def __call__(self,
                  prompt: str,

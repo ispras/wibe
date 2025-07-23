@@ -8,11 +8,17 @@ algorithms:
       module_path: ./submodules/stable_signature
       device: cuda
 
-metrics:
+post_embed_metrics:
+  - CLIP_IQA
+  - Aesthetic
   - ImageReward
-  - TPR@xFPR:
-      report_name: tpr@0.1%fpr
-      fpr_rate: 0.0001
+  - CLIP
+  - BLIP
+  - EmbWm
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %}
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
 
 datasets:
   - DiffusionDB:

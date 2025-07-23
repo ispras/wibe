@@ -15,10 +15,15 @@ algorithms:
       verbose: 0
       device: cuda
 
-metrics:
+post_embed_metrics:
   - PSNR
   - SSIM
   - LPIPS
+  - CLIP_IQA
+  - Aesthetic
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
   - Result
 
 datasets:
@@ -26,7 +31,6 @@ datasets:
 
 attacks:
 {% include 'common/distortions.yml' %}
-
 
 pipeline:
   result_path: ./test_results/ssl_watermarking_0bit

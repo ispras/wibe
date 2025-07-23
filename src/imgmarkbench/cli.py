@@ -49,7 +49,9 @@ def run(
     loaded_config = load_pipeline_config_yaml(config)
 
     alg_wrappers = get_algorithms(loaded_config[ALGORITHMS_FIELD])
-    metrics = get_metrics(loaded_config[METRICS_FIELD])
+    metrics = {}
+    for metric_field in METRICS_FIELD:
+        metrics[metric_field] = get_metrics(loaded_config[metric_field])
     datasets = get_datasets(loaded_config[DATASETS_FIELD])
     attacks = get_attacks(loaded_config[ATTACKS_FIELD])
 

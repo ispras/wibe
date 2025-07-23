@@ -3,15 +3,18 @@ algorithms:
     params:
       threshold: 56
 
-metrics:
-{% include 'common/metrics.yml' %} 
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
 
 datasets:
 {% include 'common/diffusiondb.yml' %}
 
 attacks:
 {% include 'common/distortions.yml' %}
-
 
 pipeline:
   result_path: ./test_results/dwt_svm
