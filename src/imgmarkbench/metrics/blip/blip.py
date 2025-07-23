@@ -11,10 +11,10 @@ from imgmarkbench.typing import TorchImg
 from imgmarkbench.metrics.base import PostEmbedMetric
 
 
-class ImageReward(PostEmbedMetric):
+class BLIP(PostEmbedMetric):
 
     def __init__(self, device: str = "cpu"):
-        self.model = RM.load("ImageReward-v1.0", device=device)
+        self.model = RM.load_score("BLIP", device=device)
 
     def __call__(self,
                  prompt: str,

@@ -11,17 +11,17 @@ from imgmarkbench.typing import TorchImg
 from imgmarkbench.metrics.base import PostEmbedMetric
 
 
-class ImageReward(PostEmbedMetric):
+class Aesthetic(PostEmbedMetric):
 
     def __init__(self, device: str = "cpu"):
-        self.model = RM.load("ImageReward-v1.0", device=device)
+        self.model = RM.load_score("Aesthetic", device=device)
 
     def __call__(self,
-                 prompt: str,
-                 img: TorchImg,
+                 img1: TorchImg,
+                 img2: TorchImg,
                  watermark_data: Any) -> float:
-        numpy_image = torch_img2numpy_bgr(img)
+        numpy_image = torch_img2numpy_bgr(img2)
         tmp_paths = save_tmp_images([numpy_image])
-        result = self.model.score(prompt, tmp_paths)
+        result = self.model.score(None, tmp_paths)
         delete_tmp_images(tmp_paths)
         return result

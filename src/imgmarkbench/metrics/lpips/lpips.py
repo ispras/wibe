@@ -6,8 +6,9 @@ from imgmarkbench.utils import normalize_image
 
 
 class LPIPS(PostEmbedMetric):
-    def __init__(self, net: str = "alex") -> None:
-        self.loss_fn = lpips.LPIPS(net=net, verbose=False)
+    def __init__(self, net: str = "alex", device: str = "cpu") -> None:
+        self.device = device
+        self.loss_fn = lpips.LPIPS(net=net, verbose=False).to(self.device)
 
     def __call__(
         self,
@@ -15,5 +16,6 @@ class LPIPS(PostEmbedMetric):
         img2: TorchImg,
         watermark_data: Any,
     ) -> float:
-        return float(self.loss_fn(normalize_image(img1), normalize_image(img2)))
+        return float(self.loss_fn(normalize_image(img1).to(self.device),
+                                  normalize_image(img2).to(self.device)))
 
