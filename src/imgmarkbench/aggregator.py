@@ -6,6 +6,7 @@ from abc import (
     ABC,
     abstractmethod
 )
+from filelock import FileLock, Timeout
 from typing_extensions import (
     Dict,
     List,
@@ -42,22 +43,49 @@ class PandasAggregator(Aggregator):
 
     def __init__(self, config: PandasAggregatorConfig, result_path: Union[Path, str]) -> None:
         super().__init__(config, result_path)
+        self.metrics_table_result_path = self.result_path / f"metrics_{self.config.table_name}.csv"
+        self.params_table_result_path = self.result_path / f"params_{self.config.table_name}.csv"
         self.params_table = pd.DataFrame(columns=["method", "param_hash", "params"])
+
+    def safe_append_csv(self, df: pd.DataFrame, path: Path, timeout: float = 0.05):
+        """
+        Безопасно добавляет DataFrame в CSV, защищённо от гонок через filelock.
+
+        :param df: DataFrame с новыми строками
+        :param path: Путь до файла .csv
+        :param timeout: Время ожидания блокировки (секунды)
+        :param verbose: Печатать логи при ошибках
+        """
+        lock_path = path.parent / (path.name + ".lock")
+        lock = FileLock(lock_path, timeout=timeout)
+
+        try:
+            with lock:
+                df.to_csv(
+                    path,
+                    mode='a',
+                    header=not path.exists(),
+                    index=False
+                )
+        except Timeout:
+            print(f"Timeout: Could not acquire lock on {lock_path}")
+        except Exception as e:
+            print(f"Error: {e}")
 
     def add(self, records: Dict[str, Any]) -> None:
         batch = pd.DataFrame(records)
-        self.params_table = pd.concat([self.params_table, pd.DataFrame(batch[["method", "param_hash", "params"]])],
-                                      ignore_index=True).drop_duplicates(subset=["param_hash"])
+        params_batch = pd.DataFrame(batch[["method", "param_hash", "params"]]).drop_duplicates(subset=["param_hash"])
+        for value in params_batch["param_hash"]:
+            if value not in self.params_table["param_hash"].values.tolist():
+                params_value = params_batch[params_batch["param_hash"] == value]
+                self.params_table = pd.concat([self.params_table, params_value], ignore_index=True)
+                self.safe_append_csv(params_value, self.params_table_result_path)
         batch = batch.drop(columns=["params"])
         modify_records = batch.to_dict(orient="records")
         records = [planarize_dict(record) for record in modify_records]
-        if (not hasattr(self, "metrics_table")):
-            columns = list(records[0].keys())
-            self.metrics_table = pd.DataFrame(records, columns=columns)
-        else:
-            self.metrics_table = pd.concat([self.metrics_table, pd.DataFrame(records)], ignore_index=True)
-        self.metrics_table.to_csv(self.result_path / f"metrics_{self.config.table_name}.csv")
-        self.params_table.to_csv(self.result_path / f"params_{self.config.table_name}.csv")
+        columns = list(records[0].keys())
+        self.metrics_table = pd.DataFrame(records, columns=columns)
+        self.safe_append_csv(self.metrics_table, self.metrics_table_result_path)
 
 
 class ClickHouseAggregator(Aggregator):
