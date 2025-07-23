@@ -61,7 +61,7 @@ To assess implemented watermarking algorithms and attacks on watermarks, follow 
 
     (venv) python install_requirements.py
 
-6. Set the **HF_TOKEN** environment variable with your **HuggingFace** `token <https://huggingface.co/settings/tokens>`_ (see :ref:`HuggingFace Authentication Setup <hfas-link>` for details), then authenticate:
+6. Set the **HF_TOKEN** environment variable with your **HuggingFace** `token <https://huggingface.co/settings/tokens>`_ (see `HuggingFace Authentication Setup <https://ispras-wibe.readthedocs.io/en/latest/quick_start.html#huggingface-authentication-setup>`_ for details), then authenticate:
 
 .. code-block:: console
 
@@ -73,24 +73,11 @@ To assess implemented watermarking algorithms and attacks on watermarks, follow 
 
     (venv) python -m wibench --config configs/demo.yml
 
-.. _hfas-link:
-
-HuggingFace Authentication Setup
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The **huggingface_hub** requires a token generated on the `page <https://huggingface.co/settings/tokens>`_ with the following setup:
-
-* Token Configuration:
-    * Enable "Read access to contents of all public gated repos you can access" (Required for accessing restricted model repositories)
-* Repository Access:
-    * Visit `FLUX.1-dev <https://huggingface.co/black-forest-labs/FLUX.1-dev>`_ repository and request access to it
-    * Click "Agree and access repository" (Grants legal approval for model usage)
-
 
 .. TODO: Image with original/watermarked/attacked
 
 
-Average TPR@0.1%FPR under different types of attacks (Figure 2).
+Average ``TPR@0.1%FPR`` under different types of attacks (Figure 2).
 
 
 .. TODO: add tpr/fpr rose-wind plot
