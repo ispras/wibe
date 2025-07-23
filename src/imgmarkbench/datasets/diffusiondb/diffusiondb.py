@@ -16,7 +16,6 @@ class DiffusionDB(BaseDataset):
         skip_nsfw: bool = True,
         return_prompt: bool = False,
     ):
-        self.image_range = image_range
         self.dataset = load_dataset(
             path=self.dataset_path,
             name=subset,
@@ -25,18 +24,11 @@ class DiffusionDB(BaseDataset):
         )["train"]
         self.skip_nsfw = skip_nsfw
         if not skip_nsfw:
-            self.len = self.dataset.num_rows
+            len = self.dataset.num_rows
         else:
-            self.len = sum(score < 1 for score in self.dataset["image_nsfw"])
+            len = sum(score < 1 for score in self.dataset["image_nsfw"])
 
-        if self.image_range is not None:
-            images_len = (self.image_range[1] - self.image_range[0]) + 1
-            if self.len < images_len:
-                raise ValueError(
-                    f"Dataset size is {self.len}, but num_images={images_len}"
-                )
-            else:
-                self.len = images_len
+        super().__init__(image_range, len)
         self.return_prompt = return_prompt
 
     def __len__(self):
