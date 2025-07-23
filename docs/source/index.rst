@@ -7,8 +7,8 @@ WIBE
 ====
 
 .. |number_of_algorithms| replace:: 17
-.. |number_of_attacks| replace:: ?
-.. |number_of_metrics| replace:: 7
+.. |number_of_attacks| replace:: 23
+.. |number_of_metrics| replace:: 10
 
 .. _DiffusionDB: https://poloclub.github.io/diffusiondb/
 .. _COCO: https://cocodataset.org/#home
@@ -31,6 +31,7 @@ The extensions implement:
    :maxdepth: 2
    :caption: Contents
 
+   overview
    quick_start
    system_requirements
    code_structure
