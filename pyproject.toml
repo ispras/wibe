@@ -1,0 +1,13 @@
+[build-system]
+requires = [ "setuptools>=41", "wheel", "setuptools-git-versioning", ]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 79
+
+[tool.setuptools-git-versioning]
+enabled = true
+
+[project]
+name = "wibe"
+authors = [{name = "ISP RAS"}]
