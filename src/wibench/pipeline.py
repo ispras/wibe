@@ -16,13 +16,9 @@ from typing import (
 )
 from .aggregator import build_fanout_from_config
 import tqdm
-import uuid
 from time import perf_counter
 import datetime
 from itertools import islice
-import tempfile
-
-# ToDo: Ассерты на то, что при исполнения стейджа были выполнены все предыдущие
 
 
 class Stage:
