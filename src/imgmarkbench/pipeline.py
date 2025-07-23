@@ -19,6 +19,7 @@ import uuid
 from time import perf_counter
 import datetime
 from itertools import islice
+import tempfile
 
 # ToDo: Ассерты на то, что при исполнения стейджа были выполнены все предыдущие
 
@@ -197,10 +198,11 @@ class StageRunner:
 
 
 class Progress:
-    def __init__(self, res_dir: Path, total_iters: int, proc_num: int):
+    def __init__(self, res_dir: Path, total_iters: int, proc_num: int, num_processes: int):
         self.res_dir = res_dir
         self.proc_num = proc_num
         self.progress = None
+        self.num_processes = num_processes
         if proc_num == 0:
             self.curr_res = 0
             self.progress = tqdm.tqdm(total=total_iters)
@@ -219,7 +221,8 @@ class Progress:
 
     def update_bar(self):
         res = 0
-        for path in self.res_dir.glob("tqdm*"):
+        for proc_num in range(self.num_processes):
+            path = self.res_dir / f"tqdm{proc_num}"
             with open(path, "r") as f:
                 res += int(f.read())
         self.progress.update(res - self.curr_res)
@@ -292,7 +295,7 @@ class Pipeline:
             else:
                 total_iters = len(self.algorithm_wrappers) * dataset_iters
 
-        progress = Progress(self.config.result_path, total_iters, process_num)
+        progress = Progress(self.config.result_path, total_iters, process_num, self.config.workers)
         for wrapper_num, algorithm_wrapper in enumerate(
             self.algorithm_wrappers
         ):
