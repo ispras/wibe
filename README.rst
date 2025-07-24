@@ -76,7 +76,7 @@ To assess implemented watermarking algorithms and attacks on watermarks, follow 
 
 8. Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking algorithms, attacks, and computed performance metrics.
 
-Below, from left to right, are the original, watermarked, and attacked images.
+Below, from left to right, are the original, watermarked with `StegaStamp <https://www.matthewtancik.com/stegastamp>`_, and attacked by `FLUX Regeneration <https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb>`_ images.
 
 .. image:: docs/imgs/original_watermarked_attacked.png
    :alt: ``Original, watermarked, and attacked images``
@@ -96,7 +96,7 @@ To explore interactive wind rose chart with average ``TPR@0.1%FPR`` for all algo
 
     (venv) python make_plots.py --results_dir path_to_results_directory
 
-Below is a average ``TPR@0.1%FPR`` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the `DiffusionDB <https://poloclub.github.io/diffusiondb/>`_ dataset).
+Below is an average ``TPR@0.1%FPR`` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the `DiffusionDB <https://poloclub.github.io/diffusiondb/>`_ dataset).
 
 .. image:: docs/imgs/tpr_0.1_fpr_avg.png
    :alt: ``Average TPR@0.1%FPR for 7 algorithms``
