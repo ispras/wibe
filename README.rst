@@ -111,4 +111,4 @@ See the full documentation `here <https://ispras-wibe.readthedocs.io/en/latest/i
 Tutorial video
 --------------
 
-.. TODO: add link to youtube video
+Watch our video tutorial `here <https://youtu.be/31kiJ8G2NG8>`_.
