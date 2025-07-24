@@ -7,9 +7,3 @@ line-length = 79
 
 [tool.setuptools-git-versioning]
 enabled = true
-
-[project]
-name = "wibe"
-version = "0.1.0"
-authors = [{name = "ISP RAS", email = "info-isp@ispras.ru"}]
-description = "An Extensible Open Source Framework for Evaluating Imperceptibility and Robustness of Digital Watermarks for Generated Images"

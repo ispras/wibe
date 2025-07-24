@@ -1,0 +1,5 @@
+  - PSNR
+  - SSIM
+  - LPIPS
+  - CLIP_IQA
+  - Aesthetic

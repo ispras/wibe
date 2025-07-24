@@ -39,11 +39,18 @@ To assess implemented watermarking algorithms and attacks on watermarks, follow 
 
     (venv) python huggingface_login.py
 
-7. All set! Specify the path to your :ref:`Сonfiguration file <configuration-link>` (e.g. ``configs/trustmark.yml``) as a required parameter:
+7. All set! Specify the path to your :ref:`Сonfiguration file <configuration-link>` (e.g. ``configs/trustmark_demo.yml``) as a required parameter:
 
 .. code-block:: console
 
-    (venv) python -m imgmarkbench --config configs/trustmark.yml
+    (venv) python -m wibench --config configs/trustmark_demo.yml -d
+
+8. Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking algorithms, attacks, and computed performance metrics.
+To explore interactive wind rose chart with average ``TPR@0.1%FPR`` for all algorithms and attacks evaluated so far, run the following command:
+
+.. code-block:: console
+
+    (venv) python make_plots.py --results_directory path_to_results_directory
 
 .. _hfas-link:
 

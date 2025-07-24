@@ -1,0 +1,5 @@
+  - DiffusionDB:
+      cache_dir: ./datasets/diffusiondb
+      subset: 2m_first_5k
+      num_images: 1000
+      skip_nsfw: true

@@ -12,7 +12,7 @@ through a customizable processing pipeline.
 
 The system architecture consists of a sequence of processing configurable stages.
 
-.. image:: imgs/wibe_schema.png
+.. image:: docs/imgs/wibe_schema.png
    :alt: ``WIBE schema``
    :align: center
 
@@ -20,12 +20,12 @@ The system architecture consists of a sequence of processing configurable stages
 Key features
 ------------
 
-* Modularity and extensibility through a plugin-based architecture.
-* Reproducibility ensured by YAML-configured experiments.
-* Usability with a simple command-line interface.
-* Flexible persistence through multiple storage backends, including files and ClickHouse database.
-* Transparency via real-time visual feedback.
-* Scalability to run experiments on clusters.
+* Modularity and extensibility through a plugin-based architecture
+* Reproducibility ensured by YAML-configured experiments
+* Usability with a simple command-line interface
+* Flexible persistence through multiple storage backends, including files and ClickHouse database
+* Transparency via real-time visual feedback
+* Scalability to run experiments on clusters
 
 Quick start
 -----------
@@ -72,20 +72,33 @@ To assess implemented watermarking algorithms and attacks on watermarks, follow 
 
 .. code-block:: console
 
-    (venv) python -m wibench --config configs/demo.yml
+    (venv) python -m wibench --config configs/trustmark_demo.yml -d
 
-8. Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking techniques, attacks, and computed performance metrics.
+8. Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking algorithms, attacks, and computed performance metrics.
 
 Below, from left to right, are the original, watermarked, and attacked images.
 
-.. image:: imgs/original_watermarked_attacked.png
+.. image:: docs/imgs/original_watermarked_attacked.png
    :alt: ``Original, watermarked, and attacked images``
    :align: center
 
 
-Below is a ``TPR@0.1%FPR`` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the `DiffusionDB <https://poloclub.github.io/diffusiondb/>`_ dataset).
+And here are the same as above, the original and watermarked images, as well as their difference.
 
-.. image:: imgs/tpr_0.1_fpr_avg.png
+.. image:: docs/imgs/original_watermarked_difference.png
+   :alt: ``Original and watermarked images, and their difference``
+   :align: center
+
+
+To explore interactive wind rose chart with average ``TPR@0.1%FPR`` for all algorithms and attacks evaluated so far, run the following command:
+
+.. code-block:: console
+
+    (venv) python make_plots.py --results_dir path_to_results_directory
+
+Below is a average ``TPR@0.1%FPR`` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the `DiffusionDB <https://poloclub.github.io/diffusiondb/>`_ dataset).
+
+.. image:: docs/imgs/tpr_0.1_fpr_avg.png
    :alt: ``Average TPR@0.1%FPR for 7 algorithms``
    :align: center
 
