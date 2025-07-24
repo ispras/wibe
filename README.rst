@@ -84,7 +84,7 @@ Below are the original, watermarked, and attacked images (Figure 2).
 Below is a ``TPR@0.1%FPR`` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the `DiffusionDB <https://poloclub.github.io/diffusiondb/>`_ dataset).
 
 
-.. image:: ./imgs/tpr@0.1%fpr_avg.png
+.. image:: imgs/tpr@0.1%fpr_avg.png
    :alt: Average TPR@0.1%FPR for 7 algorithms
    :align: center
    :width: 600px
