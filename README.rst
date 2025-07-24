@@ -73,14 +73,21 @@ To assess implemented watermarking algorithms and attacks on watermarks, follow 
 
     (venv) python -m wibench --config configs/demo.yml
 
+8. Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking techniques, attacks, and computed performance metrics.
+
+Below are the original, watermarked, and attacked images (Figure 2).
+
 
 .. TODO: Image with original/watermarked/attacked
 
 
-Average ``TPR@0.1%FPR`` under different types of attacks (Figure 2).
+Below is a ``TPR@0.1%FPR`` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the `DiffusionDB <https://poloclub.github.io/diffusiondb/>`_ dataset).
 
 
-.. TODO: add tpr/fpr rose-wind plot
+.. image:: ./imgs/tpr@0.1%fpr_avg.png
+   :alt: Average TPR@0.1%FPR for 7 algorithms
+   :align: center
+   :width: 600px
 
 
 Documentation
