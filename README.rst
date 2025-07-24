@@ -10,10 +10,11 @@ WIBE: Watermarks for generated Images – Benchmarking & Evaluation
 The system is designed to support research and development of robust watermarking techniques by enabling systematic evaluation
 through a customizable processing pipeline.
 
-The system architecture consists of a sequence of processing configurable stages (Figure 1).
+The system architecture consists of a sequence of processing configurable stages.
 
-
-.. TODO: add WIBE scheme
+.. image:: imgs/tpr_0.1_fpr_avg.png
+   :alt: ``WIBE schema``
+   :align: center
 
 
 Key features
@@ -75,19 +76,18 @@ To assess implemented watermarking algorithms and attacks on watermarks, follow 
 
 8. Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking techniques, attacks, and computed performance metrics.
 
-Below are the original, watermarked, and attacked images (Figure 2).
+Below, from left to right, are the original, watermarked, and attacked images.
 
-
-.. TODO: Image with original/watermarked/attacked
+.. image:: imgs/original_watermarked_attacked.png
+   :alt: ``Original, watermarked, and attacked images``
+   :align: center
 
 
 Below is a ``TPR@0.1%FPR`` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the `DiffusionDB <https://poloclub.github.io/diffusiondb/>`_ dataset).
 
-
 .. image:: imgs/tpr_0.1_fpr_avg.png
-   :alt: Average TPR@0.1%FPR for 7 algorithms
+   :alt: ``Average TPR@0.1%FPR for 7 algorithms``
    :align: center
-   :width: 600px
 
 
 Documentation
