@@ -1,17 +1,17 @@
-from ..base import BaseDataset
+from ..base import RangeBaseDataset
 from datasets import load_dataset
 from typing import Optional, Tuple, Generator, Union
 from wibench.typing import TorchImg
 from torchvision.transforms.functional import to_tensor
 
 
-class DiffusionDB(BaseDataset):
+class DiffusionDB(RangeBaseDataset):
     dataset_path = "poloclub/diffusiondb"
 
     def __init__(
         self,
         subset: str = "2m_first_5k",
-        image_range: Optional[Tuple[int, int]] = None,
+        range: Optional[Tuple[int, int]] = None,
         cache_dir: Optional[str] = None,
         skip_nsfw: bool = True,
         return_prompt: bool = False,
@@ -28,7 +28,8 @@ class DiffusionDB(BaseDataset):
         else:
             len = sum(score < 1 for score in self.dataset["image_nsfw"])
 
-        super().__init__(image_range, len)
+        self.dataset_len = len
+        super().__init__(range, len)
         self.return_prompt = return_prompt
 
     def __len__(self):
@@ -36,17 +37,18 @@ class DiffusionDB(BaseDataset):
 
     def generator(
         self,
-    ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:
-        img_id = -1
-        for idx in range(self.image_range[0], self.image_range[1] + 1, 1):
-            if self.skip_nsfw and self.dataset[idx]["image_nsfw"] >= 1:
-                continue
-            img_id += 1
-
-            if img_id >= self.len:
+    ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:      
+        len_idx = -1
+        while (True):
+            len_idx += 1
+            start_idx = self.range.start + len_idx
+            if (len_idx >= self.len) or (start_idx >= self.dataset_len):
                 break
-
+            data = self.dataset[start_idx]
+            if self.skip_nsfw and data["image_nsfw"] >= 1:
+                print(f"Skip image with index: {start_idx} because skip_nswf=True")
+                continue
             if self.return_prompt:
-                yield str(img_id), self.dataset[idx]["prompt"]
+                yield str(start_idx), data["prompt"]
             else:
-                yield str(img_id), to_tensor(self.dataset[idx]["image"])
+                yield str(start_idx), to_tensor(data["image"])
