@@ -18,27 +18,29 @@ class BaseDataset(metaclass=RegistryMeta):
 
 
 class RangeBaseDataset(BaseDataset):
-    def __init__(self, range: Optional[Tuple[int, int]], len: int):
-        if range is not None:
-            self.range = Range(*range)
-            range_len = (self.range.stop - self.range.start) + 1
-            if range_len <= 0:
+    abstract = True
+
+    def __init__(self, samples_range: Optional[Tuple[int, int]], dataset_len: int):
+        if samples_range is not None:
+            self.samples_range = Range(*samples_range)
+            range_len = (self.samples_range.stop - self.samples_range.start) + 1
+            if (self.samples_range.stop < 0) or (self.samples_range.start < 0):
                 raise ValueError(
-                    f"Range must be positive, but range_len={range_len}"
+                    f"Range start or stop must be >= 0, but current values={self.samples_range}"
                 )
-            if (len < range_len):
+            elif ((self.samples_range.start >= dataset_len) or (self.samples_range.stop >= dataset_len)):
                 raise ValueError(
-                    f"Dataset size is {len}, but num_images={range_len}"
+                    f"Data range {self.samples_range.start} - {self.samples_range.stop} exceeds dataset size 0 - {dataset_len - 1}"
                 )
-            elif ((self.range.start >= len) or (self.range.stop >= len)):
+            elif (self.samples_range.stop > self.samples_range.start):
                 raise ValueError(
-                    f"Dataset's max index is {len - 1}, but range={range}"
+                    f"Range stop value must be <= than range start value, but current values={self.samples_range}"
                 )
             else:
                 self.len = range_len
         else:
-            self.range = Range(*[0, len - 1])
-            self.len = len
+            self.samples_range = Range(*[0, dataset_len - 1])
+            self.len = dataset_len
 
 
 # ToDo: Use torch datasets or not?
