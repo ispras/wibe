@@ -34,7 +34,7 @@ class RangeBaseDataset(BaseDataset):
                 )
             elif (self.samples_range.stop > self.samples_range.start):
                 raise ValueError(
-                    f"Range stop value must be <= than range start value, but current values={self.samples_range}"
+                    f"Range start value must be <= than range stop value, but current values={self.samples_range}"
                 )
             else:
                 self.len = range_len
