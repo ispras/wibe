@@ -11,7 +11,7 @@ class DiffusionDB(RangeBaseDataset):
     def __init__(
         self,
         subset: str = "2m_first_5k",
-        range: Optional[Tuple[int, int]] = None,
+        samples_range: Optional[Tuple[int, int]] = None,
         cache_dir: Optional[str] = None,
         skip_nsfw: bool = True,
         return_prompt: bool = False,
@@ -26,10 +26,11 @@ class DiffusionDB(RangeBaseDataset):
         if not skip_nsfw:
             len = self.dataset.num_rows
         else:
+            #print([idx for idx, sample in enumerate(self.dataset) if sample["image_nsfw"] >= 1])
             len = sum(score < 1 for score in self.dataset["image_nsfw"])
 
         self.dataset_len = len
-        super().__init__(range, len)
+        super().__init__(samples_range, self.dataset_len)
         self.return_prompt = return_prompt
 
     def __len__(self):
@@ -38,16 +39,17 @@ class DiffusionDB(RangeBaseDataset):
     def generator(
         self,
     ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:      
-        len_idx = -1
+        len_idx = 0
+        start_idx = self.samples_range.start
         while (True):
-            len_idx += 1
-            start_idx = self.range.start + len_idx
             if (len_idx >= self.len) or (start_idx >= self.dataset_len):
                 break
             data = self.dataset[start_idx]
+            start_idx += 1
             if self.skip_nsfw and data["image_nsfw"] >= 1:
                 print(f"Skip image with index: {start_idx} because skip_nswf=True")
                 continue
+            len_idx += 1
             if self.return_prompt:
                 yield str(start_idx), data["prompt"]
             else:

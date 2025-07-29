@@ -32,7 +32,7 @@ class RangeBaseDataset(BaseDataset):
                 raise ValueError(
                     f"Data range {self.samples_range.start} - {self.samples_range.stop} exceeds dataset size 0 - {dataset_len - 1}"
                 )
-            elif (self.samples_range.stop > self.samples_range.start):
+            elif (self.samples_range.start > self.samples_range.stop):
                 raise ValueError(
                     f"Range start value must be <= than range stop value, but current values={self.samples_range}"
                 )
