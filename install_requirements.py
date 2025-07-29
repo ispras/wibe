@@ -7,10 +7,10 @@ import sys
 dir_to_walk = './src/wibench/'
 requirements_txt = 'requirements.txt'
 all_requirements = []
-python_m_pip_install = 'python -m pip install'.split()
+python_m_pip_install = f'{sys.executable} -m pip install'.split()
 
 try:
-    subprocess.check_call('python get-pip.py'.split())
+    subprocess.check_call(f'{sys.executable} get-pip.py'.split())
     subprocess.check_call(python_m_pip_install + ['--upgrade', 'pip'])
 except Exception as e:
     print(f'Exception={str(e)}')
@@ -31,7 +31,9 @@ for one_requirements in all_requirements:
 
 
 force_packages = [
-    'huggingface_hub'
+    'huggingface_hub',
+    'git+https://gitlab.ispras.ru/discopal/jsons2clickhouse',
+    'plotly',
     ]
 
 
