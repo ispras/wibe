@@ -218,3 +218,10 @@ init.sh
 
 # models
 model_files
+model_files.zip
+
+# datasets
+datasets
+
+# results
+test_results
