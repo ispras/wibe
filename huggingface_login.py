@@ -21,4 +21,4 @@ except Exception as e:
     sys.exit(1)
 
 
-print('Successfully logged into the {hf}.')
+print(f'Successfully logged into the {hf}.')

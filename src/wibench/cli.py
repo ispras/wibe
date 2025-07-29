@@ -1,10 +1,26 @@
-import typer
+from pathlib import Path
+import sys
+import wibench
 
+
+def clear_sys_path():
+    path_to_remove = Path(wibench.__file__).parent
+    remove_values = []
+    for path in sys.path:
+        if Path(path).resolve() == path_to_remove.resolve():
+            remove_values.append(path)
+    for val in remove_values:
+        sys.path.remove(val)
+
+
+clear_sys_path()
+
+
+import typer
 from typing_extensions import (
     Optional,
     List
 )
-from pathlib import Path
 import uuid
 from wibench.pipeline import Pipeline, STAGE_CLASSES
 from wibench.module_importer import import_modules
@@ -20,12 +36,11 @@ from wibench.config_loader import (
     get_datasets,
     get_metrics,
 )
-import wibench
 from wibench.utils import seed_everything
 from wibench.config import PipeLineConfig
 import sys
 import subprocess
-import os 
+import os
 from wibench.aggregator import PandasAggregatorConfig
 
 
@@ -41,20 +56,8 @@ def clear_tables(config: PipeLineConfig):
             params_table_result_path.unlink()
 
 
-def clear_sys_path():
-    path_to_remove = Path(wibench.__file__).parent
-    remove_values = []
-    for path in sys.path:
-        if Path(path).resolve() == path_to_remove.resolve():
-            remove_values.append(path)
-    for val in remove_values:
-        sys.path.remove(val)
-
-
 CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
 RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
-
-clear_sys_path()
 
 
 def set_cuda_devices(environ, device_list: List[int]):
@@ -64,6 +67,11 @@ def set_cuda_devices(environ, device_list: List[int]):
 
 def subprocess_run(pipeline_config: PipeLineConfig):
     args = [sys.executable] + sys.argv
+    
+    # Hack for windows parallel execution via console script wibench.exe
+    if os.name == "nt" and Path(args[1]).with_suffix(".exe").exists():
+        args[1] = str(Path(args[1]).with_suffix(".exe"))
+
     env = os.environ
     procs = []
     for process_num in range(pipeline_config.workers):

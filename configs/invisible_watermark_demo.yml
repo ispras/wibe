@@ -1,0 +1,31 @@
+algorithms:
+  - riva_gan
+
+post_embed_metrics:         # Watermark impeccability metrics
+  - PSNR
+  - SSIM
+
+post_attack_metrics:        # Visual quality of attacked image
+  - PSNR
+  - SSIM
+
+post_extract_metrics:       # Extraction effectiveness after attack
+  - TPR@xFPR:
+      report_name: tpr@0.1%fpr
+      fpr_rate: 0.001
+
+datasets:                   # Dataset of images to test on
+  - DiffusionDB:
+      cache_dir: ./datasets/diffusiondb 
+      subset: 2m_first_5k
+      skip_nsfw: true
+      samples_range: [0, 9]   # Test with 10 images: 0, ..., 9
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/riva_gan
+  aggregators:
+    - CSV:
+        table_name: table
