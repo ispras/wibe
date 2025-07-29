@@ -1,5 +1,6 @@
 from ..base import BaseDataset
 from datasets import load_dataset
+from ..typing import ImageData, PromptData
 from typing import Optional, Tuple, Generator, Union
 from wibench.typing import TorchImg
 from torchvision.transforms.functional import to_tensor

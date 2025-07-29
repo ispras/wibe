@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from wibench.registry import RegistryMeta
 from wibench.typing import TorchImg
+from wibench.utils import resize_torch_img
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 from scipy.stats import binom
@@ -51,7 +52,7 @@ class PSNR(PostEmbedMetric):
         img2: TorchImg,
         watermark_data: Any,
     ) -> float:
-
+        img2 = resize_torch_img(img2, list(img1.shape)[1:])
         return float(psnr(img1.numpy(), img2.numpy(), data_range=1))
 
 
@@ -63,6 +64,7 @@ class SSIM(PostEmbedMetric):
         img2: TorchImg,
         watermark_data: Any,
     ) -> float:
+        img2 = resize_torch_img(img2, list(img1.shape)[1:])
         if len(img1.shape) == 2:
             return float(ssim(img1.numpy(), img2.numpy(), data_range=1))
         res = ssim(img1.numpy(), img2.numpy(), data_range=1, channel_axis=0)

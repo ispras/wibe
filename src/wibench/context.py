@@ -108,7 +108,7 @@ class ContextDecoder:
 
 @dataclass
 class Context:
-    image_id: str
+    object_id: str
     run_id: str
     dataset: str
     dtm: Optional[datetime.datetime] = None
@@ -116,13 +116,13 @@ class Context:
     param_hash: Optional[str] = None
     params: Optional[Dict[str, Any]] = None
     watermark_data: Optional[Any] = None
-    image: Optional[TorchImg] = None
-    marked_image: Optional[TorchImg] = None
-    marked_image_metrics: Dict[str, Union[str, int, float]] = field(
+    watermark_object: Optional[TorchImg] = None
+    marked_object: Optional[TorchImg] = None
+    marked_object_metrics: Dict[str, Union[str, int, float]] = field(
         default_factory=dict
     )
-    attacked_images: Dict[str, TorchImg] = field(default_factory=dict)
-    attacked_image_metrics: Dict[str, Dict[str, Union[str, int, float]]] = (
+    attacked_objects: Dict[str, TorchImg] = field(default_factory=dict)
+    attacked_object_metrics: Dict[str, Dict[str, Union[str, int, float]]] = (
         field(default_factory=dict)
     )
     extraction_result: Dict[str, Any] = field(default_factory=dict)
@@ -130,7 +130,7 @@ class Context:
     def form_record(self) -> Dict[str, Any]:
         record_attrs = [
             "run_id",
-            "image_id",
+            "object_id",
             "dataset",
             "dtm",
             "method",
@@ -140,8 +140,8 @@ class Context:
         record = {}
         for attr in record_attrs:
             record[attr] = getattr(self, attr)
-        record.update(self.marked_image_metrics)
-        record.update(self.attacked_image_metrics)
+        record.update(self.marked_object_metrics)
+        record.update(self.attacked_object_metrics)
         return record
 
     @classmethod
