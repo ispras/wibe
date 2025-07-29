@@ -24,12 +24,12 @@ class DiffusionDB(RangeBaseDataset):
         )["train"]
         self.skip_nsfw = skip_nsfw
         if not skip_nsfw:
-            len = self.dataset.num_rows
+            dataset_len = self.dataset.num_rows
         else:
             #print([idx for idx, sample in enumerate(self.dataset) if sample["image_nsfw"] >= 1])
-            len = sum(score < 1 for score in self.dataset["image_nsfw"])
+            dataset_len = sum(score < 1 for score in self.dataset["image_nsfw"])
 
-        self.dataset_len = len
+        self.dataset_len = dataset_len
         super().__init__(samples_range, self.dataset_len)
         self.return_prompt = return_prompt
 
