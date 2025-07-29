@@ -11,13 +11,13 @@ class MSCOCO(RangeBaseDataset):
     def __init__(
         self,
         split: str = "val",
-        range: Optional[Tuple[int, int]] = None,
+        sample_range: Optional[Tuple[int, int]] = None,
         cache_dir: Optional[str] = None
     ):
         self.dataset = load_dataset(self.dataset_path,
                                     split=split,
                                     cache_dir=cache_dir)
-        super().__init__(range, len(self.dataset))
+        super().__init__(sample_range, len(self.dataset))
 
     def __len__(self):
         return self.len
@@ -28,7 +28,7 @@ class MSCOCO(RangeBaseDataset):
         len_idx = -1
         while (True):
             len_idx += 1
-            start_idx = self.range.start + len_idx
+            start_idx = self.sample_range.start + len_idx
             if (len_idx >= self.len):
                 break
             data = self.dataset[start_idx]

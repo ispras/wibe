@@ -11,7 +11,7 @@ class DiffusionDB(RangeBaseDataset):
     def __init__(
         self,
         subset: str = "2m_first_5k",
-        samples_range: Optional[Tuple[int, int]] = None,
+        sample_range: Optional[Tuple[int, int]] = None,
         cache_dir: Optional[str] = None,
         skip_nsfw: bool = True,
         return_prompt: bool = False,
@@ -26,11 +26,10 @@ class DiffusionDB(RangeBaseDataset):
         if not skip_nsfw:
             dataset_len = self.dataset.num_rows
         else:
-            #print([idx for idx, sample in enumerate(self.dataset) if sample["image_nsfw"] >= 1])
             dataset_len = sum(score < 1 for score in self.dataset["image_nsfw"])
 
         self.dataset_len = dataset_len
-        super().__init__(samples_range, self.dataset_len)
+        super().__init__(sample_range, self.dataset_len)
         self.return_prompt = return_prompt
 
     def __len__(self):
@@ -40,7 +39,7 @@ class DiffusionDB(RangeBaseDataset):
         self,
     ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:      
         len_idx = 0
-        start_idx = self.samples_range.start
+        start_idx = self.sample_range.start
         while (True):
             if (len_idx >= self.len) or (start_idx >= self.dataset_len):
                 break

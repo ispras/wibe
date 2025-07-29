@@ -19,7 +19,7 @@ datasets:                   # Dataset of images to test on
       cache_dir: ./datasets/diffusiondb 
       subset: 2m_first_5k
       skip_nsfw: true
-      samples_range: [0, 9]   # Test with 10 images: 0, ..., 9
+      sample_range: [0, 9]   # Test with 10 images: 0, ..., 9
 
 attacks:
 {% include 'common/distortions.yml' %}

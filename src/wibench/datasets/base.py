@@ -20,26 +20,26 @@ class BaseDataset(metaclass=RegistryMeta):
 class RangeBaseDataset(BaseDataset):
     abstract = True
 
-    def __init__(self, samples_range: Optional[Tuple[int, int]], dataset_len: int):
-        if samples_range is not None:
-            self.samples_range = Range(*samples_range)
-            range_len = (self.samples_range.stop - self.samples_range.start) + 1
-            if (self.samples_range.stop < 0) or (self.samples_range.start < 0):
+    def __init__(self, sample_range: Optional[Tuple[int, int]], dataset_len: int):
+        if sample_range is not None:
+            self.sample_range = Range(*sample_range)
+            range_len = (self.sample_range.stop - self.sample_range.start) + 1
+            if (self.sample_range.stop < 0) or (self.sample_range.start < 0):
                 raise ValueError(
-                    f"Range start or stop must be >= 0, but current values={self.samples_range}"
+                    f"Range start or stop must be >= 0, but current values={self.sample_range}"
                 )
-            elif ((self.samples_range.start >= dataset_len) or (self.samples_range.stop >= dataset_len)):
+            elif ((self.sample_range.start >= dataset_len) or (self.sample_range.stop >= dataset_len)):
                 raise ValueError(
-                    f"Data range {self.samples_range.start} - {self.samples_range.stop} exceeds dataset size 0 - {dataset_len - 1}"
+                    f"Data range {self.sample_range.start} - {self.sample_range.stop} exceeds dataset size 0 - {dataset_len - 1}"
                 )
-            elif (self.samples_range.start > self.samples_range.stop):
+            elif (self.sample_range.start > self.sample_range.stop):
                 raise ValueError(
-                    f"Range start value must be <= than range stop value, but current values={self.samples_range}"
+                    f"Range start value must be <= than range stop value, but current values={self.sample_range}"
                 )
             else:
                 self.len = range_len
         else:
-            self.samples_range = Range(*[0, dataset_len - 1])
+            self.sample_range = Range(*[0, dataset_len - 1])
             self.len = dataset_len
 
 
