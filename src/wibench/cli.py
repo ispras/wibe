@@ -93,9 +93,31 @@ def run(
     stages: Optional[List[str]] = typer.Argument(None, help=f"Stages to execute (e.g., embed attack extract), if 'all' or not provided - executes all stages. Available stages are:{list(STAGE_CLASSES.keys())}"),
 
 ):
+    """Run the watermarking evaluation pipeline.
+
+    Parameters
+    ----------
+    config : Path
+        Path to YAML configuration file
+    dump_context : bool
+        Whether to save intermediate contexts
+    stages : Optional[List[str]]
+        Pipeline stages to execute. Available stages:
+        - embed: Watermark embedding
+        - post_embed_metrics: Metrics after embedding
+        - attack: Apply attacks  
+        - post_attack_metrics: Metrics after attacks
+        - extract: Watermark extraction
+        - post_extract_metrics: Metrics after extraction
+        - aggregate: Aggregate metrics
+        
+    Notes
+    -----
+    This is the main command line interface for running experiments.
+    It loads configuration, initializes all components, and executes
+    the specified pipeline stages.
     """
-    Run algorithm evaluation pipeline.
-    """
+
     import_modules("wibench.algorithms")
     import_modules("wibench.datasets")
     import_modules("wibench.metrics")

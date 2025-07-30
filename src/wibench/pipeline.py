@@ -22,16 +22,47 @@ from itertools import islice
 
 
 class Stage:
+    """Abstract base class for all pipeline processing stages.
 
+    Each stage represents a distinct step in the watermarking pipeline workflow.
+    Concrete implementations must override the process_image method.
+
+    Methods
+    -------
+    process_image(image_context)
+        Process an image through this stage (abstract)
+    """
     def process_image(self, image_context: Context) -> None:
+        """Process an image through this pipeline stage.
+
+        Parameters
+        ----------
+        image_context : Context
+            The context object containing all image data and metadata
+        """
         raise NotImplementedError()
 
 
 class EmbedWatermarkStage(Stage):
+    """Stage for embedding watermarks into images using specified algorithm.
+
+    Parameters
+    ----------
+    algorithm_wrapper : BaseAlgorithmWrapper
+        The watermarking algorithm implementation to use
+    """
+
     def __init__(self, algorithm_wrapper: BaseAlgorithmWrapper):
         self.algorithm_wrapper = algorithm_wrapper
 
     def process_image(self, image_context: Context):
+        """Embed watermark into the source image.
+
+        Parameters
+        ----------
+        image_context : Context
+            Context object containing the source image
+        """
         image_context.dtm = datetime.datetime.now()
         watermark_data = self.algorithm_wrapper.watermark_data_gen()
         image_context.method = self.algorithm_wrapper.report_name
@@ -49,10 +80,24 @@ class EmbedWatermarkStage(Stage):
 
 
 class PostEmbedMetricsStage(Stage):
+    """Stage for computing metrics after watermark embedding.
+
+    Parameters
+    ----------
+    metrics : List[PostEmbedMetric]
+        List of metric calculators to apply
+    """
     def __init__(self, metrics: List[PostEmbedMetric]):
         self.metrics = metrics
 
     def process_image(self, image_context: Context):
+        """Calculate quality metrics between original and watermarked images.
+
+        Parameters
+        ----------
+        image_context : Context
+            Context containing both original and marked images
+        """
         watermark_data = image_context.watermark_data
         image = image_context.image
         marked_image = image_context.marked_image
@@ -62,10 +107,30 @@ class PostEmbedMetricsStage(Stage):
 
 
 class PostAttackMetricsStage(Stage):
+    """Stage for computing quality metrics after attack transformations.
+
+    This stage calculates metrics between the watermarked image and each attacked version,
+    assessing the visual impact and distortion introduced by each attack.
+
+    Parameters
+    ----------
+    metrics : List[PostEmbedMetric]
+        List of metric calculators to apply. These should be metrics that compare
+        two images (watermarked vs attacked), such as PSNR or SSIM.
+    """
     def __init__(self, metrics: List[PostEmbedMetric]):
         self.metrics = metrics
 
     def process_image(self, image_context: Context):
+        """Compute metrics between watermarked and attacked images.
+
+        Parameters
+        ----------
+        image_context : Context
+            The context object containing:
+            - marked_image: Original watermarked image
+            - attacked_images: Dictionary of attacked images
+        """
         watermark_data = image_context.watermark_data
         image = image_context.marked_image
         attacked_images = image_context.attacked_images
@@ -85,10 +150,24 @@ class PostAttackMetricsStage(Stage):
 
 
 class ApplyAttacksStage(Stage):
+    """Stage for applying attacks to watermarked images.
+
+    Parameters
+    ----------
+    attacks : List[BaseAttack]
+        List of attack transformations to apply
+    """
     def __init__(self, attacks: List[BaseAttack]):
         self.attacks = attacks
 
     def process_image(self, image_context: Context):
+        """Apply all attacks to the watermarked image.
+
+        Parameters
+        ----------
+        image_context : Context
+            Context containing the watermarked image
+        """
         image = image_context.marked_image
         attacks_context = image_context.attacked_images
         for attack in self.attacks:
@@ -100,10 +179,25 @@ class ApplyAttacksStage(Stage):
 
 
 class ExtractWatermarkStage(Stage):
+    """Stage for extracting watermarks from attacked images.
+
+    Parameters
+    ----------
+    algorithm_wrapper : BaseAlgorithmWrapper
+        The algorithm implementation to use for extraction
+    """
+
     def __init__(self, algorithm_wrapper: BaseAlgorithmWrapper):
         self.algorithm_wrapper = algorithm_wrapper
 
     def process_image(self, image_context: Context):
+        """Attempt watermark extraction from all attacked images.
+
+        Parameters
+        ----------
+        image_context : Context
+            Context containing attacked images
+        """
         watermark_data = image_context.watermark_data
         for attack_name, image in image_context.attacked_images.items():
             s_time = perf_counter()
@@ -118,10 +212,30 @@ class ExtractWatermarkStage(Stage):
 
 
 class PostExtractMetricsStage(Stage):
+    """Stage for evaluating watermark extraction quality after attacks.
+
+    This stage computes metrics comparing the original watermark data with the
+    extracted watermark from each attacked image version, measuring the robustness
+    of the watermarking algorithm.
+
+    Parameters
+    ----------
+    metrics : List[PostExtractMetric]
+        List of metric calculators that compare original and extracted watermarks.
+    """
     def __init__(self, metrics: List[PostExtractMetric]):
         self.metrics = metrics
 
     def process_image(self, image_context: Context):
+        """Compute extraction quality metrics for all attacks.
+
+        Parameters
+        ----------
+        image_context : Context
+            The context object containing:
+            - watermark_data: Original embedded watermark
+            - extraction_result: Dictionary of extracted watermarks by attack
+        """
         watermark_data = image_context.watermark_data
         image = image_context.image
         for (
@@ -139,6 +253,17 @@ class PostExtractMetricsStage(Stage):
 
 
 class AggregateMetricsStage(Stage):
+    """Final pipeline stage that collects and aggregates metrics across all processed images.
+
+    This stage batches processed results and periodically flushes them to configured
+    aggregators (CSV files, databases, etc.). Ensures efficient bulk writing of metrics
+    while maintaining data consistency.
+
+    Parameters
+    ----------
+    pipeline_config : PipeLineConfig
+        Complete pipeline configuration 
+    """
     def __init__(self, pipeline_config: PipeLineConfig):
         self.config = pipeline_config
         self.records = []
@@ -147,14 +272,27 @@ class AggregateMetricsStage(Stage):
         )
 
     def flush(self):
+        """Force write all buffered records to aggregators.
+        """
         if len(self.records):
             self.aggregator.add(self.records)
             self.records = []
 
     def process_image(self, image_context: Context):
+        """Add image metrics to aggregation batch and flush if threshold reached.
+        
+        Parameters
+        ----------
+        image_context : Context
+            Processed context containing all metrics and metadata
+        """
         self.records.append(image_context.form_record())
         if len(self.records) >= self.config.min_batch_size:
             self.flush()
+
+    def __del__(self):
+        """Destructor ensures all records are flushed when stage is destroyed."""
+        self.flush()
 
 
 STAGE_CLASSES: Dict[str, Type[Stage]] = {
@@ -169,6 +307,21 @@ STAGE_CLASSES: Dict[str, Type[Stage]] = {
 
 
 class StageRunner:
+    """Orchestrates execution of multiple pipeline stages in sequence.
+
+    Parameters
+    ----------
+    stages : List[str]
+        Names of stages to execute (e.g., ['embed', 'attack'])
+    algorithm_wrapper : BaseAlgorithmWrapper
+        Watermarking algorithm implementation
+    attacks : List[BaseAttack]
+        List of attack transformations
+    metrics : Dict[str, List[BaseMetric]]
+        Metrics to compute at each stage
+    pipeline_config : PipeLineConfig
+        Pipeline configuration object
+    """
     def __init__(
         self,
         stages: List[str],
@@ -202,6 +355,18 @@ class StageRunner:
         pass
 
     def run(self, context: Context) -> Context:
+        """Execute all stages on the given image context.
+
+        Parameters
+        ----------
+        context : Context
+            Image context to process
+
+        Returns
+        -------
+        Context
+            Processed context with all results
+        """
         for stage in self.stages:
             stage.process_image(context)
 
@@ -217,6 +382,22 @@ class StageRunner:
 
 
 class Progress:
+    """Distributed progress tracking system for parallel pipeline execution.
+
+    Tracks completion across multiple processes using a file-based coordination system.
+    Provides both per-process counters and an aggregated progress bar for the root process.
+
+    Parameters
+    ----------
+    res_dir : Path
+        Directory for storing progress tracking files
+    total_iters : int
+        Total number of iterations expected across all processes
+    proc_num : int
+        Current process number (0 for root/main process)
+    num_processes : int
+        Total number of parallel processes
+    """
     def __init__(self, res_dir: Path, total_iters: int, proc_num: int, num_processes: int):
         self.res_dir = res_dir
         self.proc_num = proc_num
@@ -251,6 +432,22 @@ class Progress:
 
 
 class Pipeline:
+    """Main watermarking evaluation pipeline controller.
+
+    Parameters
+    ----------
+    algorithm_wrapper : Union[BaseAlgorithmWrapper, Iterable[BaseAlgorithmWrapper]]
+        One or more watermarking algorithms to evaluate
+    datasets : Union[BaseDataset, Iterable[BaseDataset]]
+        One or more image datasets to process
+    attacks : List[BaseAttack]
+        List of attacks to apply
+    metrics : Dict[str, List[BaseMetric]]
+        Metrics to compute at each stage
+    pipeline_config : PipeLineConfig
+        Pipeline configuration
+
+    """
     def __init__(
         self,
         algorithm_wrapper: Union[
@@ -303,6 +500,26 @@ class Pipeline:
         dump_context: bool = False,
         process_num: int = 0,
     ):
+        """Execute the watermarking evaluation pipeline.
+
+        Parameters
+        ----------
+        run_id : str
+            Unique identifier for this pipeline run
+        stages : Optional[List[str]], optional
+            Specific stages to execute (None for all stages)
+        dump_context : bool, optional
+            Whether to save intermediate contexts (default False)
+        process_num : int, optional
+            Current process number for parallel execution (default 0)
+
+         Notes
+        -----
+        - Handles both single-process and parallel execution
+        - Manages progress reporting
+        - Flushes aggregators after processing
+        - Supports partial stage execution
+        """
         stages: List[str] = self.get_stage_list(stages)
         total_iters = None
         if hasattr(self.algorithm_wrappers, "__len__"):

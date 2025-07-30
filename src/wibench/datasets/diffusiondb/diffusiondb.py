@@ -6,6 +6,24 @@ from torchvision.transforms.functional import to_tensor
 
 
 class DiffusionDB(BaseDataset):
+    """Dataset loader for the DiffusionDB large-scale text-to-image dataset (https://github.com/poloclub/diffusiondb).
+
+    Provides access to generated images and their prompts from DiffusionDB,
+    with optional NSFW filtering and prompt-only retrieval modes.
+
+    Parameters
+    ----------
+    subset : str
+        Dataset subset name (e.g., '2m_first_5k')
+    image_range : Optional[Tuple[int, int]]
+        Optional (start, end) index range to subset the dataset
+    cache_dir : Optional[str]
+        Directory to cache downloaded dataset files
+    skip_nsfw : bool
+        Whether to automatically filter out NSFW images (default True)
+    return_prompt : bool
+        Whether to return prompts instead of images (default False)
+    """
     dataset_path = "poloclub/diffusiondb"
 
     def __init__(

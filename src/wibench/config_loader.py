@@ -120,6 +120,32 @@ def render_jinja2_config(config_path: Path):
 
 
 def load_pipeline_config_yaml(config_path: Union[str, Path]) -> Dict[str, Any]:
+    """Load and validate pipeline configuration from YAML file. Supports jinja2 templates for file inclusion.
+
+    Parameters
+    ----------
+    config_path : Union[str, Path]
+        Path to YAML configuration file
+
+    Returns
+    -------
+    Dict[str, Any]
+        Parsed configuration dictionary with keys:
+        - 'algorithms': watermarking algorithm configurations
+        - 'datasets': dataset configurations  
+        - 'attacks': attack configurations
+        - 'post_embed_metrics': metric after watermark embedding configurations
+        - 'post_attack_metrics': metrics after applying attacks configurations
+        - 'post_extract_metrics': metrics after watermark extraction configurations
+        - 'pipeline': Pipeline configuration
+
+    Raises
+    ------
+    FileNotFoundError
+        If config file doesn't exist
+    ValueError
+        If config is invalid or missing required fields
+    """
     config_path = Path(config_path)
     if not config_path.exists():
         raise FileNotFoundError(f"File: {config_path} not found")
