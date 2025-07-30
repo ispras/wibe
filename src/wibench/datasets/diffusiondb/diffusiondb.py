@@ -1,8 +1,9 @@
+import datasets
 from ..base import BaseDataset
-from datasets import load_dataset
 from typing import Optional, Tuple, Generator, Union
 from wibench.typing import TorchImg
 from torchvision.transforms.functional import to_tensor
+from packaging import version
 
 
 class DiffusionDB(BaseDataset):
@@ -16,12 +17,10 @@ class DiffusionDB(BaseDataset):
         skip_nsfw: bool = True,
         return_prompt: bool = False,
     ):
-        self.dataset = load_dataset(
-            path=self.dataset_path,
-            name=subset,
-            cache_dir=cache_dir,
-            trust_remote_code=True,
-        )["train"]
+        dataset_args = {"path": self.dataset_path, "name": subset, "cache_dir": cache_dir}
+        if (version.parse(datasets.__version__) >= version.parse("2.16.0")):
+            dataset_args["trust_remote_code"] = True
+        self.dataset = datasets.load_dataset(**dataset_args)["train"]
         self.skip_nsfw = skip_nsfw
         if not skip_nsfw:
             len = self.dataset.num_rows
