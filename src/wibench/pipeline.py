@@ -13,7 +13,6 @@ from typing import (
     Type,
     Optional,
 )
-from dataclasses import astuple
 from .aggregator import build_fanout_from_config
 import tqdm
 from time import perf_counter
