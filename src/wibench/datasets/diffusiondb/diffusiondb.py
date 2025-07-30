@@ -46,7 +46,6 @@ class DiffusionDB(RangeBaseDataset):
             data = self.dataset[start_idx]
             start_idx += 1
             if self.skip_nsfw and data["image_nsfw"] >= 1:
-                print(f"Skip image with index: {start_idx - 1} because skip_nswf=True")
                 continue
             len_idx += 1
             if self.return_prompt:
