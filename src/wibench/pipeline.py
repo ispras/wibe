@@ -13,6 +13,7 @@ from typing import (
     Type,
     Optional,
 )
+from dataclasses import astuple
 from .aggregator import build_fanout_from_config
 import tqdm
 from time import perf_counter
@@ -40,7 +41,7 @@ class EmbedWatermarkStage(Stage):
         watermark_object = object_context.watermark_object
         s_time = perf_counter()
         object_context.marked_object = self.algorithm_wrapper.embed(
-            watermark_object.data, watermark_data
+            watermark_object, watermark_data
         )
         object_context.marked_object_metrics["embed_time"] = (
             perf_counter() - s_time
@@ -100,37 +101,37 @@ class ExtractWatermarkStage(Stage):
     def __init__(self, algorithm_wrapper: BaseAlgorithmWrapper):
         self.algorithm_wrapper = algorithm_wrapper
 
-    def process_object(self, watermark_object_context: Context):
-        watermark_data = watermark_object_context.watermark_data
-        for attack_name, image in watermark_object_context.attacked_images.items():
+    def process_object(self, object_context: Context):
+        watermark_data = object_context.watermark_data
+        for attack_name, attacked_object in object_context.attacked_objects.items():
             s_time = perf_counter()
             extraction_result = self.algorithm_wrapper.extract(
-                image, watermark_data
+                attacked_object.data, watermark_data
             )
-            watermark_object_context.attacked_image_metrics[attack_name][
+            object_context.attacked_object_metrics[attack_name][
                 "extract_time"
             ] = (perf_counter() - s_time)
 
-            watermark_object_context.extraction_result[attack_name] = extraction_result
+            object_context.extraction_result[attack_name] = extraction_result
 
 
 class PostExtractMetricsStage(Stage):
     def __init__(self, metrics: List[PostExtractMetric]):
         self.metrics = metrics
 
-    def process_object(self, watermark_object_context: Context):
-        watermark_data = watermark_object_context.watermark_data
-        image = watermark_object_context.image
+    def process_object(self, object_context: Context):
+        watermark_data = object_context.watermark_data
+        watermark_object = object_context.watermark_object
         for (
             attack_name,
-            attacked_image,
-        ) in watermark_object_context.attacked_images.items():
-            extraction_result = watermark_object_context.extraction_result[attack_name]
+            attacked_object,
+        ) in object_context.attacked_objects.items():
+            extraction_result = object_context.extraction_result[attack_name]
             for metric in self.metrics:
                 res = metric(
-                    image, attacked_image, watermark_data, extraction_result
+                    watermark_object.data, attacked_object.data, watermark_data, extraction_result
                 )
-                watermark_object_context.attacked_image_metrics[attack_name][
+                object_context.attacked_object_metrics[attack_name][
                     metric.report_name
                 ] = res
 
@@ -148,8 +149,8 @@ class AggregateMetricsStage(Stage):
             self.aggregator.add(self.records)
             self.records = []
 
-    def process_watermark_object(self, watermark_object_context: Context):
-        self.records.append(watermark_object_context.form_record())
+    def process_object(self, object_context: Context):
+        self.records.append(object_context.form_record())
         if len(self.records) >= self.config.min_batch_size:
             self.flush()
 
@@ -200,7 +201,7 @@ class StageRunner:
 
     def run(self, context: Context) -> Context:
         for stage in self.stages:
-            stage.process_watermark_object(context)
+            stage.process_object(context)
 
     def get_stages(self, stages: List[str]) -> List[Type[Stage]]:
         stage_list = []
@@ -275,13 +276,13 @@ class Pipeline:
         self.config.result_path.mkdir(parents=True, exist_ok=True)
 
     def init_context(
-        self, run_id: str, image_id: str, dataset_name: str, image
+        self, run_id: str, object_id: str, dataset_name: str, watermark_object
     ):
         return Context(
-            image_id=image_id,
+            object_id=object_id,
             run_id=run_id,
             dataset=dataset_name,
-            image=image,
+            watermark_object=watermark_object,
         )
 
     def get_stage_list(self, stages: Optional[List[str]]):
@@ -332,10 +333,10 @@ class Pipeline:
             if "embed" in stages:
                 context_gen = (
                     self.init_context(
-                        run_id, img_id, dataset.report_name, image
+                        run_id, object_id, dataset.report_name, watermark_object.data
                     )
                     for dataset in self.datasets
-                    for img_id, image in islice(
+                    for object_id, watermark_object in islice(
                         dataset.generator(),
                         process_num,
                         None,

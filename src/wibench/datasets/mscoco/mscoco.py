@@ -1,7 +1,7 @@
 from ..base import BaseDataset
+from ..typing import ImageData
 from datasets import load_dataset
-from typing import Optional, Tuple, Generator, Union
-from wibench.typing import TorchImg
+from typing import Optional, Tuple, Generator
 from torchvision.transforms.functional import to_tensor
 
 
@@ -24,10 +24,10 @@ class MSCOCO(BaseDataset):
 
     def generator(
         self,
-    ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:
+    ) -> Generator[Tuple[str, ImageData], None, None]:
         for img_num, sample in enumerate(self.dataset):
             if img_num >= self.len:
                 break
             img = sample["image"]
             img_id = sample["image_id"]
-            yield str(img_id), to_tensor(img.convert("RGB"))
+            yield str(img_id), ImageData(to_tensor(img.convert("RGB")))

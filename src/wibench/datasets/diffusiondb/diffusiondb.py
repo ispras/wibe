@@ -2,7 +2,6 @@ from ..base import BaseDataset
 from datasets import load_dataset
 from ..typing import ImageData, PromptData
 from typing import Optional, Tuple, Generator, Union
-from wibench.typing import TorchImg
 from torchvision.transforms.functional import to_tensor
 
 
@@ -37,7 +36,7 @@ class DiffusionDB(BaseDataset):
 
     def generator(
         self,
-    ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:
+    ) -> Generator[Tuple[str, Union[ImageData, PromptData]], None, None]:
         img_id = -1
         for idx in range(self.image_range[0], self.image_range[1] + 1, 1):
             if self.skip_nsfw and self.dataset[idx]["image_nsfw"] >= 1:
@@ -48,6 +47,6 @@ class DiffusionDB(BaseDataset):
                 break
 
             if self.return_prompt:
-                yield str(img_id), self.dataset[idx]["prompt"]
+                yield str(img_id), PromptData(self.dataset[idx]["prompt"])
             else:
-                yield str(img_id), to_tensor(self.dataset[idx]["image"])
+                yield str(img_id), ImageData(to_tensor(self.dataset[idx]["image"]))
