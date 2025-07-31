@@ -23,7 +23,7 @@ from PIL import Image
 from wibench.config import DumpType
 
 
-def asdict_nonrecursive(obj) -> dict[str, Any]:
+def asdict_nonrecursive(obj) -> Dict[str, Any]:
     return {field.name: getattr(obj, field.name) for field in fields(obj)}
 
 

@@ -178,8 +178,8 @@ class StageRunner:
         pipeline_config: PipeLineConfig,
     ):
         post_embed_metrics = metrics["post_embed_metrics"]
-        post_attacked_metrics = metrics["post_attack_metrics"]
-        post_extracted_metrics = metrics["post_extract_metrics"]
+        post_attack_metrics = metrics["post_attack_metrics"]
+        post_extract_metrics = metrics["post_extract_metrics"]
 
         stage_classes = self.get_stages(stages)
         self.stages: List[Stage] = []
@@ -189,12 +189,12 @@ class StageRunner:
             elif stage_class is PostEmbedMetricsStage:
                 self.stages.append(PostEmbedMetricsStage(post_embed_metrics))
             elif stage_class is PostAttackMetricsStage:
-                self.stages.append(PostAttackMetricsStage(post_attacked_metrics))
+                self.stages.append(PostAttackMetricsStage(post_attack_metrics))
             elif stage_class is ApplyAttacksStage:
                 self.stages.append(ApplyAttacksStage(attacks))
             elif stage_class is PostExtractMetricsStage:
                 self.stages.append(
-                    PostExtractMetricsStage(post_extracted_metrics)
+                    PostExtractMetricsStage(post_extract_metrics)
                 )
             elif stage_class is AggregateMetricsStage:
                 self.stages.append(AggregateMetricsStage(pipeline_config))
