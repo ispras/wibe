@@ -39,12 +39,12 @@ class DiffusionDB(RangeBaseDataset):
         self,
     ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:      
         len_idx = 0
-        start_idx = self.sample_range.start
+        start_idx = self.sample_range.start - 1
         while (True):
+            start_idx += 1
             if (len_idx >= self.len) or (start_idx >= self.dataset_len):
                 break
             data = self.dataset[start_idx]
-            start_idx += 1
             if self.skip_nsfw and data["image_nsfw"] >= 1:
                 continue
             len_idx += 1
