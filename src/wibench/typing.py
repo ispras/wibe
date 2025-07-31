@@ -1,5 +1,10 @@
 import torch
 
+from collections import namedtuple
+
+
+Range = namedtuple("Range", ["start", "stop"])
+
 
 # ToDo: may be jaxtyping?
 TorchImg = torch.Tensor
