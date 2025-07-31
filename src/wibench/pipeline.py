@@ -318,13 +318,11 @@ class Pipeline:
             else:
                 total_iters = len(self.algorithm_wrappers) * dataset_iters
         else:
-            context_paths = self.config.result_path.glob("context_*")
-            amount_total = 0
+            context_paths = list(self.config.result_path.glob("context_*"))
             context_total = 0
             for context_path in context_paths:
-                amount_total += 1
                 context_total += len(list(context_path.glob("*")))
-            total_iters = amount_total * context_total
+            total_iters = len(context_paths) * context_total
 
         progress = Progress(self.config.result_path, total_iters, process_num, self.config.workers)
         for wrapper_num, algorithm_wrapper in enumerate(
