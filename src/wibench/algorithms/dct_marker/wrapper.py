@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing_extensions import Dict
+from typing import Dict, Optional
 from dataclasses import dataclass
 
 from wibench.algorithms.dct_marker.dct_marker import (
@@ -21,8 +21,11 @@ class WatermarkData:
 class DCTMarkerWrapper(BaseAlgorithmWrapper):
     name = "dct_marker"
 
-    def __init__(self, params: Dict):
-        config = DCTMarkerConfig(**params)
+    def __init__(self, params: Optional[Dict] = None):
+        if params is not None:
+            config = DCTMarkerConfig(**params)
+        else:
+            config = DCTMarkerConfig()
         super().__init__(config)
         self.marker = DCTMarker(config)
 

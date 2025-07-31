@@ -1,33 +1,36 @@
-from ..base import BaseDataset
+
 from ..typing import ImageData
+from ..base import RangeBaseDataset
 from datasets import load_dataset
-from typing import Optional, Tuple, Generator
+from typing import Optional, Tuple, Generator, Union
 from torchvision.transforms.functional import to_tensor
 
 
-class MSCOCO(BaseDataset):
+class MSCOCO(RangeBaseDataset):
     dataset_path = "rafaelpadilla/coco2017"
 
     def __init__(
         self,
         split: str = "val",
-        image_range:  Optional[Tuple[int, int]] = None,
+        sample_range: Optional[Tuple[int, int]] = None,
         cache_dir: Optional[str] = None
     ):
         self.dataset = load_dataset(self.dataset_path,
                                     split=split,
                                     cache_dir=cache_dir)
-        super().__init__(image_range, len(self.dataset))
+        super().__init__(sample_range, len(self.dataset))
 
     def __len__(self):
         return self.len
 
     def generator(
         self,
-    ) -> Generator[Tuple[str, ImageData], None, None]:
-        for img_num, sample in enumerate(self.dataset):
-            if img_num >= self.len:
+    ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:
+        len_idx = -1
+        while (True):
+            len_idx += 1
+            start_idx = self.sample_range.start + len_idx
+            if (len_idx >= self.len):
                 break
-            img = sample["image"]
-            img_id = sample["image_id"]
-            yield str(img_id), ImageData(to_tensor(img.convert("RGB")))
+            data = self.dataset[start_idx]
+            yield str(data["image_id"]), to_tensor(data["image"].convert("RGB"))

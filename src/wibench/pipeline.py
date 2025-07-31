@@ -7,11 +7,19 @@ from .config import PipeLineConfig
 from .context import Context
 from typing import (
     List,
+    Tuple,
     Union,
     Iterable,
     Dict,
     Type,
     Optional,
+    Any,
+)
+from .config_loader import (
+    get_algorithms,
+    get_attacks,
+    get_datasets,
+    get_metrics,
 )
 from .aggregator import build_fanout_from_config
 import tqdm
@@ -169,29 +177,36 @@ class StageRunner:
     def __init__(
         self,
         stages: List[str],
-        algorithm_wrapper: BaseAlgorithmWrapper,
-        attacks: List[BaseAttack],
-        metrics: Dict[str, List[BaseMetric]],
+        algorithm_wrapper: Tuple[str, Dict[str, Any]],
+        attacks: List[Tuple[str, Dict[str, Any]]],
+        metrics: Dict[str, List[Tuple[str, Dict[str, Any]]]],
         pipeline_config: PipeLineConfig,
     ):
-        post_embed_metrics = metrics["post_embed_metrics"]
-        post_attacked_metrics = metrics["post_attack_metrics"]
-        post_extracted_metrics = metrics["post_extract_metrics"]
-
         stage_classes = self.get_stages(stages)
         self.stages: List[Stage] = []
         for stage_class in stage_classes:
             if stage_class in [EmbedWatermarkStage, ExtractWatermarkStage]:
-                self.stages.append(stage_class(algorithm_wrapper))
+                self.stages.append(
+                    stage_class(get_algorithms([algorithm_wrapper])[0])
+                )
             elif stage_class is PostEmbedMetricsStage:
+                post_embed_metrics = get_metrics(metrics["post_embed_metrics"])
                 self.stages.append(PostEmbedMetricsStage(post_embed_metrics))
             elif stage_class is PostAttackMetricsStage:
-                self.stages.append(PostAttackMetricsStage(post_attacked_metrics))
+                post_attack_metrics = get_metrics(
+                    metrics["post_attack_metrics"]
+                )
+
+                self.stages.append(PostAttackMetricsStage(post_attack_metrics))
             elif stage_class is ApplyAttacksStage:
-                self.stages.append(ApplyAttacksStage(attacks))
+                self.stages.append(ApplyAttacksStage(get_attacks(attacks)))
             elif stage_class is PostExtractMetricsStage:
+                post_extract_metrics = get_metrics(
+                    metrics["post_extract_metrics"]
+                )
+
                 self.stages.append(
-                    PostExtractMetricsStage(post_extracted_metrics)
+                    PostExtractMetricsStage(post_extract_metrics)
                 )
             elif stage_class is AggregateMetricsStage:
                 self.stages.append(AggregateMetricsStage(pipeline_config))
@@ -214,7 +229,13 @@ class StageRunner:
 
 
 class Progress:
-    def __init__(self, res_dir: Path, total_iters: int, proc_num: int, num_processes: int):
+    def __init__(
+        self,
+        res_dir: Path,
+        total_iters: int,
+        proc_num: int,
+        num_processes: int,
+    ):
         self.res_dir = res_dir
         self.proc_num = proc_num
         self.progress = None
@@ -253,22 +274,14 @@ class Progress:
 class Pipeline:
     def __init__(
         self,
-        algorithm_wrapper: Union[
-            BaseAlgorithmWrapper, Iterable[BaseAlgorithmWrapper]
-        ],
-        datasets: Union[BaseDataset, Iterable[BaseDataset]],
-        attacks: List[BaseAttack],
-        metrics: Dict[str, List[BaseMetric]],
+        algorithm_wrappers: List[Tuple[str, Dict[str, Any]]],
+        datasets: List[Tuple[str, Dict[str, Any]]],
+        attacks: List[Tuple[str, Dict[str, Any]]],
+        metrics: Dict[str, List[Tuple[str, Dict[str, Any]]]],
         pipeline_config: PipeLineConfig,
     ):
-        if isinstance(algorithm_wrapper, BaseAlgorithmWrapper):
-            self.algorithm_wrappers = [algorithm_wrapper]
-        else:
-            self.algorithm_wrappers = algorithm_wrapper
-        if isinstance(algorithm_wrapper, BaseDataset):
-            self.datasets = [datasets]
-        else:
-            self.datasets = datasets
+        self.algorithm_wrappers = algorithm_wrappers
+        self.datasets = get_datasets(datasets) # ToDo: init only with embed stage
         self.attacks = attacks
         self.metrics = metrics
         self.config = pipeline_config
@@ -305,18 +318,22 @@ class Pipeline:
     ):
         stages: List[str] = self.get_stage_list(stages)
         total_iters = None
-        if hasattr(self.algorithm_wrappers, "__len__"):
-            dataset_iters = 0
-            for dataset in self.datasets:
-                if not hasattr(dataset, "__len__"):
-                    break
-                else:
-                    dataset_iters += len(dataset)
+        dataset_iters = 0
+        for dataset in self.datasets:
+            if not hasattr(dataset, "__len__"):
+                break
             else:
-                total_iters = len(self.algorithm_wrappers) * dataset_iters
+                dataset_iters += len(dataset)
+        else:
+            total_iters = len(self.algorithm_wrappers) * dataset_iters
 
-        progress = Progress(self.config.result_path, total_iters, process_num, self.config.workers)
-        for wrapper_num, algorithm_wrapper in enumerate(
+        progress = Progress(
+            self.config.result_path,
+            total_iters,
+            process_num,
+            self.config.workers,
+        )
+        for wrapper_num, algorithm_wrapper_tuple in enumerate(
             self.algorithm_wrappers
         ):
             context_dir = self.config.result_path / f"context_{wrapper_num}"
@@ -324,7 +341,7 @@ class Pipeline:
                 context_dir.mkdir(parents=True, exist_ok=True)
             stage_runner = StageRunner(
                 stages,
-                algorithm_wrapper,
+                algorithm_wrapper_tuple,
                 self.attacks,
                 self.metrics,
                 self.config,
@@ -363,5 +380,5 @@ class Pipeline:
                 if isinstance(stage, AggregateMetricsStage):
                     stage.flush()
 
-            if progress.progress is not None:
-                progress.progress.close()
+        if progress.progress is not None:
+            progress.progress.close()

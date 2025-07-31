@@ -1,34 +1,35 @@
-from ..base import BaseDataset
-from datasets import load_dataset
 from ..typing import ImageData, PromptData
+from ..base import RangeBaseDataset
+import datasets
 from typing import Optional, Tuple, Generator, Union
 from torchvision.transforms.functional import to_tensor
+from packaging import version
+from wibench.typing import TorchImg
 
 
-class DiffusionDB(BaseDataset):
+class DiffusionDB(RangeBaseDataset):
     dataset_path = "poloclub/diffusiondb"
 
     def __init__(
         self,
         subset: str = "2m_first_5k",
-        image_range: Optional[Tuple[int, int]] = None,
+        sample_range: Optional[Tuple[int, int]] = None,
         cache_dir: Optional[str] = None,
         skip_nsfw: bool = True,
         return_prompt: bool = False,
     ):
-        self.dataset = load_dataset(
-            path=self.dataset_path,
-            name=subset,
-            cache_dir=cache_dir,
-            trust_remote_code=True,
-        )["train"]
+        dataset_args = {"path": self.dataset_path, "name": subset, "cache_dir": cache_dir}
+        if (version.parse(datasets.__version__) >= version.parse("2.16.0")):
+            dataset_args["trust_remote_code"] = True
+        self.dataset = datasets.load_dataset(**dataset_args)["train"]
         self.skip_nsfw = skip_nsfw
         if not skip_nsfw:
-            len = self.dataset.num_rows
+            dataset_len = self.dataset.num_rows
         else:
-            len = sum(score < 1 for score in self.dataset["image_nsfw"])
+            dataset_len = sum(score < 1 for score in self.dataset["image_nsfw"])
 
-        super().__init__(image_range, len)
+        self.dataset_len = dataset_len
+        super().__init__(sample_range, self.dataset_len)
         self.return_prompt = return_prompt
 
     def __len__(self):
@@ -36,17 +37,18 @@ class DiffusionDB(BaseDataset):
 
     def generator(
         self,
-    ) -> Generator[Tuple[str, Union[ImageData, PromptData]], None, None]:
-        img_id = -1
-        for idx in range(self.image_range[0], self.image_range[1] + 1, 1):
-            if self.skip_nsfw and self.dataset[idx]["image_nsfw"] >= 1:
-                continue
-            img_id += 1
-
-            if img_id >= self.len:
+    ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:      
+        len_idx = 0
+        start_idx = self.sample_range.start - 1
+        while (True):
+            start_idx += 1
+            if (len_idx >= self.len) or (start_idx >= self.dataset_len):
                 break
-
+            data = self.dataset[start_idx]
+            if self.skip_nsfw and data["image_nsfw"] >= 1:
+                continue
+            len_idx += 1
             if self.return_prompt:
-                yield str(img_id), PromptData(self.dataset[idx]["prompt"])
+                yield str(start_idx), PromptData(data["prompt"])
             else:
-                yield str(img_id), ImageData(to_tensor(self.dataset[idx]["image"]))
+                yield str(start_idx), ImageData(to_tensor(data["image"]))
