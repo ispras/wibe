@@ -385,5 +385,5 @@ class Pipeline:
                 if isinstance(stage, AggregateMetricsStage):
                     stage.flush()
 
-            if progress.progress is not None:
-                progress.progress.close()
+        if progress.progress is not None:
+            progress.progress.close()
