@@ -31,10 +31,6 @@ from wibench.config_loader import (
     DATASETS_FIELD,
     ATTACKS_FIELD,
     PIPELINE_FIELD,
-    get_algorithms,
-    get_attacks,
-    get_datasets,
-    get_metrics,
 )
 from wibench.utils import seed_everything
 from wibench.config import PipeLineConfig
@@ -121,12 +117,12 @@ def run(
         return
 
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
-    alg_wrappers = get_algorithms(loaded_config[ALGORITHMS_FIELD])
+    alg_wrappers = loaded_config[ALGORITHMS_FIELD]
     metrics = {}
     for metric_field in METRICS_FIELD:
-        metrics[metric_field] = get_metrics(loaded_config[metric_field])
-    datasets = get_datasets(loaded_config[DATASETS_FIELD])
-    attacks = get_attacks(loaded_config[ATTACKS_FIELD])
+        metrics[metric_field] = loaded_config[metric_field]
+    datasets = loaded_config[DATASETS_FIELD]
+    attacks = loaded_config[ATTACKS_FIELD]
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]
     )
