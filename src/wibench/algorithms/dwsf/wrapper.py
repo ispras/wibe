@@ -21,11 +21,7 @@ from wibench.module_importer import ModuleImporter
 from wibench.typing import TorchImg
 from wibench.utils import normalize_image, denormalize_image
 from wibench.config import Params
-
-
-@dataclass
-class WatermarkData:
-    watermark: torch.Tensor
+from wibench.watermark_data import TorchBitWatermarkData
 
 
 @dataclass
@@ -141,7 +137,7 @@ class DWSFWrapper(BaseAlgorithmWrapper):
         
         return decode_messages
 
-    def embed(self, image: TorchImg, watermark_data: WatermarkData) -> np.ndarray:
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> np.ndarray:
         normalized_image = normalize_image(image, self.normalize).to(self.device)
         h_coor, w_coor, splitSize = generate_random_coor(normalized_image.shape[2],
                                                          normalized_image.shape[3],
@@ -157,13 +153,12 @@ class DWSFWrapper(BaseAlgorithmWrapper):
         marked_image = denormalize_image(normalized_marked_image, self.denormalize).cpu()
         return marked_image
     
-    def extract(self, image: TorchImg, watermark_data: WatermarkData) -> np.ndarray:
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> np.ndarray:
         normalized_image = normalize_image(image, self.normalize).to(self.device)
         extract_bits_raw = self.decode(normalized_image)
         mean_extract_bits_raw = extract_bits_raw.mean(0)
         extract_bits = mean_extract_bits_raw.unsqueeze(0).gt(self.params.gt).cpu().numpy().astype(np.uint8)
         return extract_bits
     
-    def watermark_data_gen(self) -> WatermarkData:
-        wm = np.random.choice([0, 1], (1, self.params.message_length))
-        return WatermarkData(torch.tensor(wm, dtype=torch.float32))
+    def watermark_data_gen(self) -> TorchBitWatermarkData:
+        return TorchBitWatermarkData.get_random(self.params.message_length)

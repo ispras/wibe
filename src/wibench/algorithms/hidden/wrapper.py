@@ -1,11 +1,11 @@
 import torch
-import numpy as np
 import sys
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
 from pathlib import Path
 
+from wibench.watermark_data import TorchBitWatermarkData
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
 from wibench.utils import (
@@ -26,11 +26,6 @@ class HiddenParams:
     encoder_channels: int
     decoder_blocks: int
     decoder_channels: int
-
-
-@dataclass
-class WatermarkData:
-    watermark: torch.Tensor
 
 
 class HiddenWrapper(BaseAlgorithmWrapper):
@@ -71,7 +66,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         )
         super().__init__(hidden_params)
     
-    def embed(self, image: TorchImg, watermark_data: Any):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         resized_normalize_image = normalize_image(resized_image)
         with torch.no_grad():
@@ -80,12 +75,12 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         marked_image = overlay_difference(image, resized_image, encoded_tensor)
         return marked_image
     
-    def extract(self, image: TorchImg, watermark_data: Any):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         resized_normalize_image = normalize_image(resized_image)
         with torch.no_grad():
             res = self.encoder_decoder.decoder(resized_normalize_image.to(self.device))
         return (res.cpu().numpy() > 0.5).astype(int)
 
-    def watermark_data_gen(self) -> WatermarkData:
-        return WatermarkData(torch.tensor(np.random.randint(0, 2, size=(1, self.params.wm_length))))
+    def watermark_data_gen(self) -> TorchBitWatermarkData:
+        return TorchBitWatermarkData.get_random(self.params.wm_length)

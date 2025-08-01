@@ -1,16 +1,10 @@
-import os
-import wibench
-
+from wibench.watermark_data import WatermarkData
 from dataclasses import is_dataclass, asdict
 from hashlib import md5
 from typing_extensions import Any
-from pathlib import Path
 
 from wibench.registry import RegistryMeta
 from wibench.typing import TorchImg
-
-
-WatermarkData = Any
 
 
 class BaseAlgorithmWrapper(metaclass=RegistryMeta):
