@@ -1,6 +1,6 @@
 
 from ..typing import (
-    ImageDatasetData,
+    DatasetImageData,
     ImageData
 )
 from ..base import RangeBaseDataset
@@ -28,7 +28,7 @@ class MSCOCO(RangeBaseDataset):
 
     def generator(
         self,
-    ) -> Generator[ImageDatasetData, None, None]:
+    ) -> Generator[DatasetImageData, None, None]:
         len_idx = -1
         while (True):
             len_idx += 1
@@ -36,5 +36,5 @@ class MSCOCO(RangeBaseDataset):
             if (len_idx >= self.len):
                 break
             data = self.dataset[start_idx]
-            yield ImageDatasetData(str(data["image_id"]),
+            yield DatasetImageData(str(data["image_id"]),
                                    ImageData(to_tensor(data["image"].convert("RGB"))))

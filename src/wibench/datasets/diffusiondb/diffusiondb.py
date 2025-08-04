@@ -1,6 +1,6 @@
 from ..typing import (
-    ImageDatasetData,
-    PromptDatasetData,
+    DatasetImageData,
+    DatasetPromptData,
     ImageData,
     PromptData,
 )
@@ -41,7 +41,7 @@ class DiffusionDB(RangeBaseDataset):
 
     def generator(
         self,
-    ) -> Generator[Union[PromptDatasetData, ImageDatasetData], None, None]:      
+    ) -> Generator[Union[DatasetPromptData, DatasetImageData], None, None]:      
         len_idx = 0
         start_idx = self.sample_range.start - 1
         while (True):
@@ -53,6 +53,6 @@ class DiffusionDB(RangeBaseDataset):
                 continue
             len_idx += 1
             if self.return_prompt:
-                yield PromptDatasetData(str(start_idx), PromptData(data["prompt"]))
+                yield DatasetPromptData(str(start_idx), PromptData(data["prompt"]))
             else:
-                yield ImageDatasetData(str(start_idx), ImageData(to_tensor(data["image"])))
+                yield DatasetImageData(str(start_idx), ImageData(to_tensor(data["image"])))

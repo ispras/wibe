@@ -12,6 +12,7 @@ from typing_extensions import (
 )
 from wibench.typing import TorchImg, Range
 from wibench.registry import RegistryMeta
+from wibench.datasets.typing import DatasetImageData, ImageData
 
 
 class BaseDataset(metaclass=RegistryMeta):
@@ -54,7 +55,7 @@ class RangeBaseDataset(BaseDataset):
 
 
 # ToDo: Use torch datasets or not?
-class ImageFolderDataset(BaseDataset):
+class ImageFolderDataset(RangeBaseDataset):
     abstract = True
 
     def __init__(
@@ -62,6 +63,7 @@ class ImageFolderDataset(BaseDataset):
         path: Union[Path, str],
         preload: bool = False,
         img_ext: List[str] = ["png", "jpg"],
+        sample_range: Optional[Tuple[int, int]] = None
     ) -> None:
         self.path = Path(path)
         path_gen = sorted(
@@ -70,6 +72,8 @@ class ImageFolderDataset(BaseDataset):
         self.path_list = list(path_gen)
         self.transform = ToTensor()
         assert len(self.path_list) != 0, "Empty dataset, check dataset path"
+        dataset_len = len(self.path_list)
+        super().__init__(sample_range, dataset_len)
         self.images = []
         if preload:
             self.images = [
@@ -77,13 +81,19 @@ class ImageFolderDataset(BaseDataset):
             ]
 
     def __len__(self) -> int:
-        return len(self.path_list)
+        return self.len
 
     def generator(self) -> Generator[Tuple[str, TorchImg], None, None]:
-        if len(self.images) > 0:
-            for path, img in zip(self.path_list, self.images):
-                yield path.name, img
-        else:
-            for path in self.path_list:
-                img = self.transform(Image.open(path))
-                yield path.name, img
+        len_idx = -1
+        while (True):
+            len_idx += 1
+            start_idx = self.sample_range.start + len_idx
+            if (len_idx >= self.len):
+                break
+            if len(self.images) > 0:
+                image = self.images[start_idx]
+                yield DatasetImageData(str(start_idx), data=ImageData(image))
+            else:
+                image_path = self.path_list[start_idx]
+                image = self.transform(Image.open(image_path))
+                yield DatasetImageData(str(start_idx), data=ImageData(image))

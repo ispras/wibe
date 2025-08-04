@@ -29,10 +29,10 @@ class PromptData(ObjectData):
 
 
 @dataclass
-class ImageDatasetData(DatasetData):
+class DatasetImageData(DatasetData):
     data: ImageData
 
 
 @dataclass
-class PromptDatasetData(DatasetData):
+class DatasetPromptData(DatasetData):
     data: PromptData
