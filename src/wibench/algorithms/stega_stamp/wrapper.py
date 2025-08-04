@@ -8,6 +8,7 @@ from wibench.algorithms.stega_stamp.stega_stamp import StegaStamp
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
 from wibench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
+from wibench.watermark_data import TorchBitWatermarkData
 
 
 @dataclass
@@ -17,11 +18,6 @@ class StegaStampConfig:
     width: int = 400
     height: int = 400
     alpha: float = 0.5
-
-
-@dataclass
-class WatermarkData:
-    watermark: np.ndarray
 
 
 class StegaStampWrapper(BaseAlgorithmWrapper):
@@ -36,11 +32,11 @@ class StegaStampWrapper(BaseAlgorithmWrapper):
                                       self.params.height,
                                       self.params.alpha)
 
-    def embed(self, image: TorchImg, watermark_data: WatermarkData):
-        return numpy_bgr2torch_img(self.stega_stamp.encode(torch_img2numpy_bgr(image), watermark_data.watermark))
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+        return numpy_bgr2torch_img(self.stega_stamp.encode(torch_img2numpy_bgr(image), watermark_data.watermark.squeeze(0).numpy()))
     
-    def extract(self, image: TorchImg, watermark_data: WatermarkData):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
         return self.stega_stamp.decode(torch_img2numpy_bgr(image))
     
-    def watermark_data_gen(self) -> WatermarkData:
-        return WatermarkData(np.random.randint(0, 2, self.params.wm_length))
+    def watermark_data_gen(self) -> TorchBitWatermarkData:
+        return TorchBitWatermarkData.get_random(self.params.wm_length)

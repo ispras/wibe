@@ -14,6 +14,7 @@ from wibench.utils import (
     overlay_difference,
     resize_torch_img
 )
+from wibench.watermark_data import TorchBitWatermarkData
 from wibench.typing import TorchImg, TorchImgNormalize
 
 
@@ -30,11 +31,6 @@ class CINParams:
     wm_length: int
     pre_noise_policy: PreNoisePolicy
     experiment: str = ""
-
-
-@dataclass
-class WatermarkData:
-    watermark: torch.Tensor
 
 
 class CINWrapper(BaseAlgorithmWrapper):
@@ -86,7 +82,7 @@ class CINWrapper(BaseAlgorithmWrapper):
         )
         super().__init__(params)
 
-    def embed(self, image: TorchImg, watermark_data: WatermarkData):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
         resized_image = resize_torch_img(image, [self.params.H, self.params.W])
         resized_normalized_image: TorchImgNormalize
         resized_normalized_image = normalize_image(resized_image)
@@ -96,7 +92,7 @@ class CINWrapper(BaseAlgorithmWrapper):
         marked_image = overlay_difference(image, resized_image, denormalized_marked_image)
         return marked_image
 
-    def extract(self, image: TorchImg, watermark_data: WatermarkData):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
         resized_image = resize_torch_img(image, [self.params.H, self.params.W])
         resized_normalized_image = normalize_image(resized_image)
         with torch.no_grad():
@@ -108,6 +104,6 @@ class CINWrapper(BaseAlgorithmWrapper):
 
             img_fake, msg_fake_1, msg_fake_2, msg_nsm = self.cin_net_wrapper.module.test_decoder(resized_normalized_image.to(self.device), pre_noise)
         return (msg_nsm.cpu().numpy() > 0.5).astype(int)
-    
-    def watermark_data_gen(self) -> Any:
-        return WatermarkData(torch.tensor(np.random.randint(0, 2, size=(1, self.params.wm_length))))
+
+    def watermark_data_gen(self) -> TorchBitWatermarkData:
+        return TorchBitWatermarkData.get_random(self.params.wm_length)

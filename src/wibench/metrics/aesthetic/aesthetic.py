@@ -1,5 +1,5 @@
 import ImageReward as RM
-
+import torch
 from typing_extensions import Any
 
 from wibench.utils import (
@@ -13,7 +13,7 @@ from wibench.metrics.base import PostEmbedMetric
 
 class Aesthetic(PostEmbedMetric):
 
-    def __init__(self, device: str = "cuda"):
+    def __init__(self, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
         self.model = RM.load_score("Aesthetic", device=device)
 
     def __call__(self,

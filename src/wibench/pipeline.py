@@ -326,14 +326,21 @@ class Pipeline:
     ):
         stages: List[str] = self.get_stage_list(stages)
         total_iters = None
-        dataset_iters = 0
-        for dataset in self.datasets:
-            if not hasattr(dataset, "__len__"):
-                break
+        if "embed" in stages:
+            dataset_iters = 0
+            for dataset in self.datasets:
+                if not hasattr(dataset, "__len__"):
+                    break
+                else:
+                    dataset_iters += len(dataset)
             else:
-                dataset_iters += len(dataset)
+                total_iters = len(self.algorithm_wrappers) * dataset_iters
         else:
-            total_iters = len(self.algorithm_wrappers) * dataset_iters
+            context_paths = list(self.config.result_path.glob("context_*"))
+            context_total = 0
+            for context_path in context_paths:
+                context_total += len(list(context_path.glob("*")))
+            total_iters = context_total
 
         progress = Progress(
             self.config.result_path,
