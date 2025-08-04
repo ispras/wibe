@@ -1,4 +1,4 @@
-from typing import Any, Union, Generic
+from typing import Any
 from functools import lru_cache
 from abc import abstractmethod
 import numpy as np
