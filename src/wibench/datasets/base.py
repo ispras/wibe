@@ -2,7 +2,14 @@ from pathlib import Path
 from itertools import chain
 from PIL import Image
 from torchvision.transforms import ToTensor
-from typing_extensions import Generator, Tuple, Union, List, Optional
+from typing_extensions import (
+    Generator,
+    Tuple,
+    Union,
+    List,
+    Optional,
+    Any
+)
 from wibench.typing import TorchImg, Range
 from wibench.registry import RegistryMeta
 
@@ -10,17 +17,20 @@ from wibench.registry import RegistryMeta
 class BaseDataset(metaclass=RegistryMeta):
     type = "dataset"
 
+    def __init__(self, *args, **kwargs) -> None:
+        raise NotImplementedError
+
     def __len__(self) -> int:
         raise NotImplementedError
 
-    def generator(self) -> Generator[Tuple[str, TorchImg], None, None]:
+    def generator(self) -> Generator[Any, None, None]:
         raise NotImplementedError
 
 
 class RangeBaseDataset(BaseDataset):
     abstract = True
 
-    def __init__(self, sample_range: Optional[Tuple[int, int]], dataset_len: int):
+    def __init__(self, sample_range: Optional[Tuple[int, int]], dataset_len: int) -> None:
         if sample_range is not None:
             self.sample_range = Range(*sample_range)
             range_len = (self.sample_range.stop - self.sample_range.start) + 1

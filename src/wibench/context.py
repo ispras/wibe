@@ -1,6 +1,5 @@
 import pickle
 from dataclasses import dataclass, field, fields
-from .typing import TorchImg
 from .utils import is_image
 from typing import (
     List,
@@ -21,6 +20,7 @@ from torchvision.utils import save_image
 from torchvision.transforms.functional import to_tensor
 from PIL import Image
 from wibench.config import DumpType
+from wibench.datasets.typing import ObjectData
 
 
 def asdict_nonrecursive(obj) -> Dict[str, Any]:
@@ -116,12 +116,12 @@ class Context:
     param_hash: Optional[str] = None
     params: Optional[Dict[str, Any]] = None
     watermark_data: Optional[Any] = None
-    watermark_object: Optional[TorchImg] = None
-    marked_object: Optional[TorchImg] = None
+    watermark_object_data: Optional[ObjectData] = None
+    marked_object: Optional[Any] = None
     marked_object_metrics: Dict[str, Union[str, int, float]] = field(
         default_factory=dict
     )
-    attacked_objects: Dict[str, TorchImg] = field(default_factory=dict)
+    attacked_objects: Dict[str, Any] = field(default_factory=dict)
     attacked_object_metrics: Dict[str, Dict[str, Union[str, int, float]]] = (
         field(default_factory=dict)
     )

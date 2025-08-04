@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import Any, Union, Generic
 from functools import lru_cache
 from abc import abstractmethod
 import numpy as np
@@ -24,10 +24,9 @@ class PostEmbedMetric(BaseMetric):
 
     def __call__(
         self,
-        img1: TorchImg,
-        img2: TorchImg,
-        watermark_data: Any,
-    ) -> Union[str, int, float]:
+        *args,
+        **kwargs,
+    ) -> Any:
         raise NotImplementedError
 
 
@@ -36,11 +35,9 @@ class PostExtractMetric(BaseMetric):
 
     def __call__(
         self,
-        img1: TorchImg,
-        img2: TorchImg,
-        watermark_data: Any,
-        extraction_result: Any,
-    ) -> Union[str, int, float]:
+        *args,
+        **kwargs
+    ) -> Any:
         raise NotImplementedError
 
 
@@ -50,7 +47,8 @@ class PSNR(PostEmbedMetric):
         self,
         img1: TorchImg,
         img2: TorchImg,
-        watermark_data: Any,
+        *args,
+        **kwargs
     ) -> float:
         img2 = resize_torch_img(img2, list(img1.shape)[1:])
         return float(psnr(img1.numpy(), img2.numpy(), data_range=1))

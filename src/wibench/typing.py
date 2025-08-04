@@ -1,17 +1,18 @@
 import torch
 
 from collections import namedtuple
+from typing_extensions import NewType
 
 
 Range = namedtuple("Range", ["start", "stop"])
 
 
 # ToDo: may be jaxtyping?
-TorchImg = torch.Tensor
+TorchImg = NewType("TorchImg", torch.Tensor)
 '''
  Image is represented as float32 torch tensor of shape (C x H x W) in the range [0.0, 1.0], channels RGB 
 '''
-TorchImgNormalize = torch.Tensor
+TorchImgNormalize = NewType("TorchImgNormalize", torch.Tensor)
 '''
  Image is represented as float32 torch tensor of shape (B x C x H x W) in the range [-1.0, 1.0], channels RGB
 '''

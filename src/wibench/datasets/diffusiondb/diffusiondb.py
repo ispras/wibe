@@ -1,10 +1,14 @@
-from ..typing import ImageData, PromptData
+from ..typing import (
+    ImageDatasetData,
+    PromptDatasetData,
+    ImageData,
+    PromptData,
+)
 from ..base import RangeBaseDataset
 import datasets
 from typing import Optional, Tuple, Generator, Union
 from torchvision.transforms.functional import to_tensor
 from packaging import version
-from wibench.typing import TorchImg
 
 
 class DiffusionDB(RangeBaseDataset):
@@ -37,7 +41,7 @@ class DiffusionDB(RangeBaseDataset):
 
     def generator(
         self,
-    ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:      
+    ) -> Generator[Union[PromptDatasetData, ImageDatasetData], None, None]:      
         len_idx = 0
         start_idx = self.sample_range.start - 1
         while (True):
@@ -49,6 +53,6 @@ class DiffusionDB(RangeBaseDataset):
                 continue
             len_idx += 1
             if self.return_prompt:
-                yield str(start_idx), PromptData(data["prompt"])
+                yield PromptDatasetData(str(start_idx), PromptData(data["prompt"]))
             else:
-                yield str(start_idx), ImageData(to_tensor(data["image"]))
+                yield ImageDatasetData(str(start_idx), ImageData(to_tensor(data["image"])))

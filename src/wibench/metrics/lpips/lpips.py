@@ -2,7 +2,7 @@ from typing import Any
 import lpips
 from wibench.typing import TorchImg
 from wibench.metrics.base import PostEmbedMetric
-from wibench.utils import normalize_image
+from wibench.utils import normalize_image, resize_torch_img
 
 
 class LPIPS(PostEmbedMetric):
@@ -16,6 +16,7 @@ class LPIPS(PostEmbedMetric):
         img2: TorchImg,
         watermark_data: Any,
     ) -> float:
+        img2 = resize_torch_img(img2, list(img1.shape)[1:])
         return float(self.loss_fn(normalize_image(img1).to(self.device),
                                   normalize_image(img2).to(self.device)))
 
