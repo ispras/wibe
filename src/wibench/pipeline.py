@@ -149,16 +149,17 @@ class PostExtractMetricsStage(Stage):
 
 
 class AggregateMetricsStage(Stage):
-    def __init__(self, pipeline_config: PipeLineConfig):
+    def __init__(self, pipeline_config: PipeLineConfig, dry_run: bool = False):
         self.config = pipeline_config
         self.records = []
         self.aggregator = build_fanout_from_config(
             pipeline_config, Path(pipeline_config.result_path)
         )
+        self.dry_run = dry_run
 
     def flush(self):
         if len(self.records):
-            self.aggregator.add(self.records)
+            self.aggregator.add(self.records, self.dry_run)
             self.records = []
 
     def process_image(self, image_context: Context):
@@ -186,6 +187,7 @@ class StageRunner:
         attacks: List[Tuple[str, Dict[str, Any]]],
         metrics: Dict[str, List[Tuple[str, Dict[str, Any]]]],
         pipeline_config: PipeLineConfig,
+        dry_run: bool = False,
     ):
         stage_classes = self.get_stages(stages)
         self.stages: List[Stage] = []
@@ -214,7 +216,7 @@ class StageRunner:
                     PostExtractMetricsStage(post_extract_metrics)
                 )
             elif stage_class is AggregateMetricsStage:
-                self.stages.append(AggregateMetricsStage(pipeline_config))
+                self.stages.append(AggregateMetricsStage(pipeline_config, dry_run))
 
         pass
 
@@ -319,6 +321,7 @@ class Pipeline:
         run_id: str,
         stages: Optional[List[str]],
         dump_context: bool = False,
+        dry_run: bool = False,
         process_num: int = 0,
     ):
         stages: List[str] = self.get_stage_list(stages)
@@ -338,7 +341,10 @@ class Pipeline:
             for context_path in context_paths:
                 context_total += len(list(context_path.glob("*")))
             total_iters = context_total
-
+        
+        if dry_run:
+            total_iters = len(self.algorithm_wrappers) * len(self.datasets) * 2 * self.config.workers
+        
         progress = Progress(
             self.config.result_path,
             total_iters,
@@ -357,7 +363,9 @@ class Pipeline:
                 self.attacks,
                 self.metrics,
                 self.config,
+                dry_run,
             )
+            dataset_stop = self.config.workers * 2 if dry_run else None
             if "embed" in stages:
                 context_gen = (
                     self.init_context(
@@ -367,7 +375,7 @@ class Pipeline:
                     for img_id, image in islice(
                         dataset.generator(),
                         process_num,
-                        None,
+                        dataset_stop,
                         self.config.workers,
                     )
                 )
@@ -377,7 +385,7 @@ class Pipeline:
                     for img_id in islice(
                         Context.glob(context_dir, self.config.dump_type),
                         process_num,
-                        None,
+                        dataset_stop,
                         self.config.workers,
                     )
                 )

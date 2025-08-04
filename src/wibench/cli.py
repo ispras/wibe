@@ -94,6 +94,7 @@ def run(
     dump_context: bool = typer.Option(
         False, "--dump-context", "-d", help="If enabled, execution contexts are saved. Useful for debug or stage-by-stage execution (in case of different environments for algorithms/metrics/attacks)"
     ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Quick run on a few samples to check everything working"),
     stages: Optional[List[str]] = typer.Argument(None, help=f"Stages to execute (e.g., embed attack extract), if 'all' or not provided - executes all stages. Available stages are:{list(STAGE_CLASSES.keys())}"),
 
 ):
@@ -104,10 +105,12 @@ def run(
     import_modules("wibench.datasets")
     import_modules("wibench.metrics")
     import_modules("wibench.attacks")
-
+    
     run_id = str(uuid.uuid1()) if RUN_ID_ENV_NAME not in os.environ else os.environ[RUN_ID_ENV_NAME]
     os.environ[RUN_ID_ENV_NAME] = run_id
     loaded_config = load_pipeline_config_yaml(config)
+    if dry_run:
+        loaded_config[PIPELINE_FIELD].result_path /= "dry"
     seed_everything(loaded_config[PIPELINE_FIELD].seed)
     pipeline_config = loaded_config[PIPELINE_FIELD]
     clear_tables(pipeline_config)
@@ -123,10 +126,11 @@ def run(
         metrics[metric_field] = loaded_config[metric_field]
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
+    
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]
     )
-    pipeline.run(run_id, stages, dump_context, process_num=process_num)
+    pipeline.run(run_id, stages, dump_context=dump_context, dry_run=dry_run, process_num=process_num)
 
 
 if __name__ == "__main__":
