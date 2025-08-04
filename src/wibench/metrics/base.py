@@ -50,7 +50,7 @@ class PSNR(PostEmbedMetric):
         *args,
         **kwargs
     ) -> float:
-        if (img1 == img2).all():
+        if torch.equal(img1, img2):
             return float("inf")
         img2 = resize_torch_img(img2, list(img1.shape)[1:])
         return float(psnr(img1.numpy(), img2.numpy(), data_range=1))
