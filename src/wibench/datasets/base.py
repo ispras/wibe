@@ -92,8 +92,7 @@ class ImageFolderDataset(RangeBaseDataset):
                 break
             if len(self.images) > 0:
                 image = self.images[start_idx]
-                yield DatasetImageData(str(start_idx), data=ImageData(image))
             else:
                 image_path = self.path_list[start_idx]
                 image = self.transform(Image.open(image_path))
-                yield DatasetImageData(str(start_idx), data=ImageData(image))
+            yield DatasetImageData(str(start_idx), data=ImageData(image))
