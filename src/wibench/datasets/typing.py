@@ -1,5 +1,4 @@
 from ..typing import TorchImg
-from ..utils import dict_to_dataclass
 from dataclasses import dataclass, field, fields, asdict
 from typing_extensions import Any, Dict, Optional
 
@@ -11,22 +10,28 @@ class DatasetData:
 
 @dataclass
 class ObjectData:
-    _alias: Optional[Any] = field(default=None, init=False, metadata={"serialize": False})
+    _alias: Optional[Any] = field(default=None, init=False)
     
     def get_object(self) -> Any:
+        
+        if self._alias is not None:
+            return getattr(self, self._alias)
+
         for f in fields(self):
             if hasattr(self, f.name):
-                name = f.metadata.get("alias", f.name)
-                if name is not None:
-                    return getattr(self, f.name)
+                alias_name = f.metadata.get("alias", None)
+                if alias_name is not None:
+                    return getattr(self, alias_name)
         raise ValueError("Mapping alias -> object not found!")
+    
+
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]):
         _alias = data.pop("_alias", None)
         obj = cls()
         if _alias is not None:
-            obj._alias = data[_alias]
+            obj._alias = _alias
         for key, value in data.items():
             setattr(obj, key, value)
         return obj
@@ -56,12 +61,12 @@ class CustomDatasetData(DatasetData):
 
 @dataclass
 class ImageData(ObjectData):
-    image: TorchImg = field(metadata={"alias": "object"})
+    image: TorchImg = field(metadata={"alias": "image"})
 
 
 @dataclass
 class PromptData(ObjectData):
-    prompt: str = field(metadata={"alias": "object"})
+    prompt: str = field(metadata={"alias": "prompt"})
 
 
 @dataclass
