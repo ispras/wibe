@@ -25,10 +25,9 @@ class ObjectData:
         raise ValueError("Mapping alias -> object not found!")
     
 
-    
     @classmethod
     def from_dict(cls, data: Dict[str, Any]):
-        _alias = data.pop("_alias", None)
+        _alias = data.pop("alias", None)
         obj = cls()
         if _alias is not None:
             obj._alias = _alias
