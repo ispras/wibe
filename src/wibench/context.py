@@ -145,10 +145,10 @@ class Context:
         return record
 
     @classmethod
-    def load(cls, context_dir: Path, image_id: str, dump_type: DumpType) -> "Context":
+    def load(cls, context_dir: Path, object_id: str, dump_type: DumpType) -> "Context":
         if dump_type == DumpType.pickle:
-            return load_context_pkl(context_dir, image_id)
-        img_context_dir = context_dir / image_id
+            return load_context_pkl(context_dir, object_id)
+        img_context_dir = context_dir / object_id
         with open(img_context_dir / "context.json", "r") as f:
             data = json.load(f)
         return Context(**ContextDecoder.decode(data, img_context_dir))
@@ -156,7 +156,7 @@ class Context:
     def dump(self, context_dir: Path, dump_type: DumpType) -> None:
         if dump_type == DumpType.pickle:
             return save_context(context_dir, self)
-        img_context_dir = context_dir / self.image_id
+        img_context_dir = context_dir / self.object_id
         img_context_dir.mkdir(exist_ok=True)
 
         encoded = ContextEncoder.encode(self, img_context_dir)
@@ -174,18 +174,18 @@ class Context:
                 yield path.name
 
 
-def load_context_pkl(context_dir: Path, image_id: str) -> Context:
-    ctx_file = context_dir / f"{image_id}.pkl"
+def load_context_pkl(context_dir: Path, object_id: str) -> Context:
+    ctx_file = context_dir / f"{object_id}.pkl"
     if ctx_file.exists():
         with open(ctx_file, "rb") as f:
             return pickle.load(f)
     else:
-        raise FileNotFoundError(f"No context for image {image_id}")
+        raise FileNotFoundError(f"No context for image {object_id}")
 
 
 def save_context(context_dir: Path, context: Context):
-    image_id = context.image_id
-    ctx_file = context_dir / f"{image_id}.pkl"
+    object_id = context.object_id
+    ctx_file = context_dir / f"{object_id}.pkl"
     with open(ctx_file, "wb") as f:
         pickle.dump(context, f)
 
