@@ -64,7 +64,8 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
     
     def extract(self, image: TorchImg, watermark_data: WatermarkData):
         normalized_image = normalize_image(image, self.normalize).to(self.device)
-        extracted_raw = self.decoder(normalized_image)
+        with torch.no_grad():
+            extracted_raw = self.decoder(normalized_image)
         extracted = (extracted_raw>0).squeeze().cpu().numpy().astype(int)
         return extracted
     

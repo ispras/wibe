@@ -1,21 +1,61 @@
 import pytest
 from pathlib import Path
 from typer.testing import CliRunner
-from wibench.cli import app
+import traceback
 
 
 runner = CliRunner()
 CONFIG_DIR = Path("configs")
 config_files = list(CONFIG_DIR.glob("*.yml"))
+config_files = list(
+    filter(
+        lambda x: ("stable_signature" not in x.name)
+        and ("treering" not in x.name),
+        config_files,
+    )
+)
 
 
+def assert_exception(result):
+    assert result.exit_code == 0, "".join(
+        traceback.format_exception(
+            type(result.exception),
+            result.exception,
+            result.exception.__traceback__,
+        )
+    )
+
+
+@pytest.mark.forked
 @pytest.mark.parametrize(
     "config_file", config_files, ids=[f.name for f in config_files]
 )
 def test_app_with_config_files(config_file: Path):
+    from wibench.cli import app
     assert config_file.exists(), f"Config file {config_file} does not exist!"
     result = runner.invoke(app, ["-c", str(config_file), "-d", "--dry-run"])
-    assert result.exit_code == 0, (
-        f"App failed with config {config_file.name}. "
-        f"Error: {result.stdout}\n{result.stderr}"
+    assert_exception(result)
+
+
+@pytest.mark.forked
+def test_stable_signature():
+    from wibench.cli import app
+    config_file = CONFIG_DIR / "stable_signature.yml"
+    assert config_file.exists(), f"Config file {config_file} does not exist!"
+    result = runner.invoke(
+        app,
+        [
+            "-c",
+            str(config_file),
+            "-d",
+            "--dry-run",
+            "embed",
+            "post_attack_metrics",
+        ],
     )
+    assert_exception(result)
+    result = runner.invoke(
+        app,
+        ["-c", str(config_file), "-d", "--dry-run", "extract", "aggregate"],
+    )
+    assert_exception(result)

@@ -343,7 +343,7 @@ class Pipeline:
             total_iters = context_total
         
         if dry_run:
-            total_iters = len(self.algorithm_wrappers) * len(self.datasets) * 2 * self.config.workers
+            total_iters = len(self.algorithm_wrappers) * len(self.datasets) * self.config.workers
         
         progress = Progress(
             self.config.result_path,
@@ -365,7 +365,7 @@ class Pipeline:
                 self.config,
                 dry_run,
             )
-            dataset_stop = self.config.workers * 2 if dry_run else None
+            dataset_stop = self.config.workers if dry_run else None
             if "embed" in stages:
                 context_gen = (
                     self.init_context(

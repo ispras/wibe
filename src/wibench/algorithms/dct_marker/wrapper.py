@@ -30,20 +30,20 @@ class DCTMarkerWrapper(BaseAlgorithmWrapper):
         self.marker = DCTMarker(config)
 
     def embed(self, image: TorchImg, watermark_data: WatermarkData):
-        watermark = watermark_data.watermark
-        key = watermark_data.key
+        watermark = watermark_data.watermark * 2 - 1
+        key = watermark_data.key * 2 - 1
         np_img = torch_img2numpy_bgr(image)
         np_res = self.marker.embed_wm(np_img, watermark, key)
         return numpy_bgr2torch_img(np_res)
 
     def extract(self, image: TorchImg, watermark_data: WatermarkData):
-        key = watermark_data.key
+        key = watermark_data.key * 2 - 1
         np_img = torch_img2numpy_bgr(image)
-        return self.marker.extract_wm(np_img, key)
+        return (self.marker.extract_wm(np_img, key) + 1) // 2
 
     def watermark_data_gen(self):
-        wm = np.random.randint(0, 2, self.params.wm_length) * 2 - 1
-        key = np.random.randint(0, 2, self.params.block_size) * 2 - 1
+        wm = np.random.randint(0, 2, self.params.wm_length)
+        key = np.random.randint(0, 2, self.params.block_size)
         return WatermarkData(wm, key)
 
 

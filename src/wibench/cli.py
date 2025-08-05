@@ -101,11 +101,16 @@ def run(
     """
     Run algorithm evaluation pipeline.
     """
+    if stages is not None:
+        for stage in stages:
+            if stage not in STAGE_CLASSES.keys():
+                raise ValueError(f"Unknown stage: {stage}")
+
     import_modules("wibench.algorithms")
     import_modules("wibench.datasets")
     import_modules("wibench.metrics")
     import_modules("wibench.attacks")
-    
+
     run_id = str(uuid.uuid1()) if RUN_ID_ENV_NAME not in os.environ else os.environ[RUN_ID_ENV_NAME]
     os.environ[RUN_ID_ENV_NAME] = run_id
     loaded_config = load_pipeline_config_yaml(config)
