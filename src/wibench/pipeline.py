@@ -15,8 +15,12 @@ from typing import (
     Optional,
     Any,
 )
-from wibench.datasets.typing import ObjectData
-from dataclasses import asdict
+from wibench.datasets.typing import (
+    ObjectData,
+    CustomDatasetData,
+    DatasetData
+)
+from dataclasses import is_dataclass
 from .config_loader import (
     get_algorithms,
     get_attacks,
@@ -49,7 +53,7 @@ class EmbedWatermarkStage(Stage):
         object_context.watermark_data = watermark_data
         watermark_object_data = object_context.watermark_object_data
         watermark_object_data: ObjectData
-        watermark_object_data_dict = asdict(watermark_object_data)
+        watermark_object_data_dict = watermark_object_data.dynamic_asdict()
         s_time = perf_counter()
         object_context.marked_object = self.algorithm_wrapper.embed(
             **watermark_object_data_dict, watermark_data=watermark_data
@@ -296,13 +300,15 @@ class Pipeline:
         self.config.result_path.mkdir(parents=True, exist_ok=True)
 
     def init_context(
-        self, run_id: str, object_id: str, dataset_name: str, watermark_object_data: ObjectData
+        self, run_id: str, dataset_name: str, watermark_object: Union[DatasetData, Dict[str, Any]]
     ):
+        if not is_dataclass(watermark_object):
+            watermark_object = CustomDatasetData().from_dict(watermark_object)
         return Context(
-            object_id=object_id,
+            object_id=watermark_object.id,
             run_id=run_id,
             dataset=dataset_name,
-            watermark_object_data=watermark_object_data,
+            watermark_object_data=watermark_object.data,
         )
 
     def get_stage_list(self, stages: Optional[List[str]]):
@@ -364,7 +370,7 @@ class Pipeline:
             if "embed" in stages:
                 context_gen = (
                     self.init_context(
-                        run_id, watermark_object.id, dataset.report_name, watermark_object.data
+                        run_id, dataset.report_name, watermark_object
                     )
                     for dataset in self.datasets
                     for watermark_object in islice(
