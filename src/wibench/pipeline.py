@@ -226,9 +226,9 @@ class StageRunner:
     def run(self, context: Context) -> Context:
         for stage_num, stage in enumerate(self.stages):
             seed_everything(
-                None if self.seed is None else self.seed + stage_num + object_id_to_seed(context.image_id)
+                None if self.seed is None else self.seed + stage_num + object_id_to_seed(context.object_id)
             )
-            stage.process_image(context)
+            stage.process_object(context)
 
     def get_stages(self, stages: List[str]) -> List[Type[Stage]]:
         stage_list = []
