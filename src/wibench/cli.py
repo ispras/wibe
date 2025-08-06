@@ -32,7 +32,6 @@ from wibench.config_loader import (
     ATTACKS_FIELD,
     PIPELINE_FIELD,
 )
-from wibench.utils import seed_everything
 from wibench.config import PipeLineConfig
 import sys
 import subprocess
@@ -108,7 +107,6 @@ def run(
     run_id = str(uuid.uuid1()) if RUN_ID_ENV_NAME not in os.environ else os.environ[RUN_ID_ENV_NAME]
     os.environ[RUN_ID_ENV_NAME] = run_id
     loaded_config = load_pipeline_config_yaml(config)
-    seed_everything(loaded_config[PIPELINE_FIELD].seed)
     pipeline_config = loaded_config[PIPELINE_FIELD]
     clear_tables(pipeline_config)
 

@@ -4,7 +4,11 @@ from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
-from .utils import resize_torch_img
+from .utils import (
+    resize_torch_img,
+    seed_everything,
+    object_id_to_seed
+)
 from .context import Context
 from typing import (
     List,
@@ -189,6 +193,7 @@ class StageRunner:
     ):
         stage_classes = self.get_stages(stages)
         self.stages: List[Stage] = []
+        self.seed = pipeline_config.seed
         for stage_class in stage_classes:
             if stage_class in [EmbedWatermarkStage, ExtractWatermarkStage]:
                 self.stages.append(
@@ -219,7 +224,11 @@ class StageRunner:
         pass
 
     def run(self, context: Context) -> Context:
-        for stage in self.stages:
+        for stage_num, stage in enumerate(self.stages):
+            seed = None if self.seed is None else self.seed + stage_num + object_id_to_seed(context.image_id)
+            seed_everything(
+                None if self.seed is None else self.seed + stage_num + object_id_to_seed(context.image_id)
+            )
             stage.process_image(context)
 
     def get_stages(self, stages: List[str]) -> List[Type[Stage]]:
