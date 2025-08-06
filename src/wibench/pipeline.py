@@ -226,7 +226,7 @@ class StageRunner:
     def run(self, context: Context) -> Context:
         for stage_num, stage in enumerate(self.stages):
             seed_everything(
-                None if self.seed is None else self.seed + stage_num + object_id_to_seed(context.object_id)
+                None if self.seed is None else object_id_to_seed(context.object_id + str(self.seed) + str(stage_num))
             )
             stage.process_object(context)
 
