@@ -6,6 +6,7 @@ import random
 import cv2
 import tempfile
 import os
+import hashlib
 from typing_extensions import Dict, Any, List, Optional
 
 
@@ -95,6 +96,11 @@ def seed_everything(seed: Optional[int] = None):
         torch.cuda.manual_seed(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+
+
+def object_id_to_seed(object_id: str, bits: int = 32) -> int:
+    hash_bytes = hashlib.sha256(object_id.encode()).digest()[:bits//8]
+    return int.from_bytes(hash_bytes, byteorder='little')
 
 
 def is_image(tensor: torch.Tensor) -> bool:

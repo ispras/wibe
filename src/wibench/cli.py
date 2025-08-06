@@ -32,7 +32,6 @@ from wibench.config_loader import (
     ATTACKS_FIELD,
     PIPELINE_FIELD,
 )
-from wibench.utils import seed_everything
 from wibench.config import PipeLineConfig
 import sys
 import subprocess
@@ -116,7 +115,6 @@ def run(
     loaded_config = load_pipeline_config_yaml(config)
     if dry_run:
         loaded_config[PIPELINE_FIELD].result_path /= "dry"
-    seed_everything(loaded_config[PIPELINE_FIELD].seed)
     pipeline_config = loaded_config[PIPELINE_FIELD]
     clear_tables(pipeline_config)
 

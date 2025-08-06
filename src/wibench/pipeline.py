@@ -4,6 +4,10 @@ from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
+from .utils import (
+    seed_everything,
+    object_id_to_seed
+)
 from .context import Context
 from typing import (
     List,
@@ -130,7 +134,7 @@ class PostExtractMetricsStage(Stage):
     def process_object(self, object_context: Context):
         watermark_data = object_context.watermark_data
         watermark_object_data = object_context.original_object
-        watermark_object_data: ObjectData
+        watermark_object_data: Object
         watermark_object = watermark_object_data
         for (
             attack_name,
@@ -189,6 +193,7 @@ class StageRunner:
     ):
         stage_classes = self.get_stages(stages)
         self.stages: List[Stage] = []
+        self.seed = pipeline_config.seed
         for stage_class in stage_classes:
             if stage_class in [EmbedWatermarkStage, ExtractWatermarkStage]:
                 self.stages.append(
@@ -219,7 +224,10 @@ class StageRunner:
         pass
 
     def run(self, context: Context) -> Context:
-        for stage in self.stages:
+        for stage_num, stage in enumerate(self.stages):
+            seed_everything(
+                None if self.seed is None else object_id_to_seed(context.object_id + str(self.seed) + str(stage_num))
+            )
             stage.process_object(context)
 
     def get_stages(self, stages: List[str]) -> List[Type[Stage]]:
