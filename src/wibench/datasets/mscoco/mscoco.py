@@ -1,8 +1,4 @@
-
-from ..typing import (
-    DatasetImageData,
-    ImageData
-)
+from wibench.typing import ImageObject
 from ..base import RangeBaseDataset
 from datasets import load_dataset
 from typing import Optional, Tuple, Generator
@@ -28,7 +24,7 @@ class MSCOCO(RangeBaseDataset):
 
     def generator(
         self,
-    ) -> Generator[DatasetImageData, None, None]:
+    ) -> Generator[ImageObject, None, None]:
         len_idx = -1
         while (True):
             len_idx += 1
@@ -36,5 +32,4 @@ class MSCOCO(RangeBaseDataset):
             if (len_idx >= self.len):
                 break
             data = self.dataset[start_idx]
-            yield DatasetImageData(str(data["image_id"]),
-                                   ImageData(to_tensor(data["image"].convert("RGB"))))
+            yield ImageObject(str(data["image_id"]), to_tensor(data["image"].convert("RGB")))

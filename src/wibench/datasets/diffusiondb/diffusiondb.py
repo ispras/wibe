@@ -1,9 +1,4 @@
-from ..typing import (
-    DatasetImageData,
-    DatasetPromptData,
-    ImageData,
-    PromptData,
-)
+from wibench.typing import ImageObject, PromptObject
 from ..base import RangeBaseDataset
 import datasets
 from typing import Optional, Tuple, Generator, Union
@@ -41,7 +36,7 @@ class DiffusionDB(RangeBaseDataset):
 
     def generator(
         self,
-    ) -> Generator[Union[DatasetPromptData, DatasetImageData], None, None]:      
+    ) -> Generator[Union[ImageObject, PromptObject], None, None]:      
         len_idx = 0
         start_idx = self.sample_range.start - 1
         while (True):
@@ -53,6 +48,6 @@ class DiffusionDB(RangeBaseDataset):
                 continue
             len_idx += 1
             if self.return_prompt:
-                yield DatasetPromptData(str(start_idx), PromptData(data["prompt"]))
+                yield PromptObject(str(start_idx), data["prompt"])
             else:
-                yield DatasetImageData(str(start_idx), ImageData(to_tensor(data["image"])))
+                yield ImageObject(str(start_idx), to_tensor(data["image"]))

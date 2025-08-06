@@ -15,8 +15,8 @@ from typing import (
     Optional,
     Any,
 )
-from wibench.datasets.typing import ObjectData
-from dataclasses import asdict
+from wibench.typing import Object
+from dataclasses import is_dataclass
 from .config_loader import (
     get_algorithms,
     get_attacks,
@@ -47,12 +47,9 @@ class EmbedWatermarkStage(Stage):
         object_context.param_hash = self.algorithm_wrapper.param_hash
         object_context.params = self.algorithm_wrapper.param_dict
         object_context.watermark_data = watermark_data
-        watermark_object_data = object_context.watermark_object_data
-        watermark_object_data: ObjectData
-        watermark_object_data_dict = asdict(watermark_object_data)
         s_time = perf_counter()
         object_context.marked_object = self.algorithm_wrapper.embed(
-            **watermark_object_data_dict, watermark_data=watermark_data
+            **object_context.original_object, watermark_data=watermark_data
         )
         object_context.marked_object_metrics["embed_time"] = (
             perf_counter() - s_time
@@ -65,12 +62,10 @@ class PostEmbedMetricsStage(Stage):
 
     def process_object(self, object_context: Context):
         watermark_data = object_context.watermark_data
-        watermark_object_data = object_context.watermark_object_data
-        watermark_object_data: ObjectData
-        watermark_object = watermark_object_data.get_object()
+        original_object_data = object_context.object_data
         marked_object = object_context.marked_object
         for metric in self.metrics:
-            res = metric(watermark_object, marked_object, watermark_data)
+            res = metric(original_object_data, marked_object, watermark_data)
             object_context.marked_object_metrics[metric.report_name] = res
 
 
@@ -119,7 +114,7 @@ class ExtractWatermarkStage(Stage):
         for attack_name, attacked_object in object_context.attacked_objects.items():
             s_time = perf_counter()
             extraction_result = self.algorithm_wrapper.extract(
-                attacked_object.data, watermark_data
+                attacked_object, watermark_data
             )
             object_context.attacked_object_metrics[attack_name][
                 "extract_time"
@@ -134,9 +129,9 @@ class PostExtractMetricsStage(Stage):
 
     def process_object(self, object_context: Context):
         watermark_data = object_context.watermark_data
-        watermark_object_data = object_context.watermark_object_data
+        watermark_object_data = object_context.original_object
         watermark_object_data: ObjectData
-        watermark_object = watermark_object_data.get_object()
+        watermark_object = watermark_object_data
         for (
             attack_name,
             attacked_object,
@@ -296,13 +291,26 @@ class Pipeline:
         self.config.result_path.mkdir(parents=True, exist_ok=True)
 
     def init_context(
-        self, run_id: str, object_id: str, dataset_name: str, watermark_object_data: ObjectData
+        self, run_id: str, dataset_name: str, original_object: Union[Object, Dict[str, Any]]
     ):
+        if is_dataclass(original_object):
+            object_data_field = original_object.get_object_alias()
+            object_id = original_object.id
+            original_object = original_object.dynamic_asdict()
+
+        else:
+            object_id = original_object["id"]
+            object_data_field = original_object["alias"] if "alias" in original_object else None
+            original_object = {
+                k: v for k, v in original_object.items()
+                if not k == "alias" and not k == "id"
+            }
         return Context(
             object_id=object_id,
             run_id=run_id,
             dataset=dataset_name,
-            watermark_object_data=watermark_object_data,
+            original_object=original_object,
+            object_data_field=object_data_field,
         )
 
     def get_stage_list(self, stages: Optional[List[str]]):
@@ -364,7 +372,7 @@ class Pipeline:
             if "embed" in stages:
                 context_gen = (
                     self.init_context(
-                        run_id, watermark_object.id, dataset.report_name, watermark_object.data
+                        run_id, dataset.report_name, watermark_object
                     )
                     for dataset in self.datasets
                     for watermark_object in islice(

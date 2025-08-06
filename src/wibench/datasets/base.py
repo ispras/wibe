@@ -10,9 +10,8 @@ from typing_extensions import (
     Optional,
     Any
 )
-from wibench.typing import TorchImg, Range
+from wibench.typing import Range, ImageObject
 from wibench.registry import RegistryMeta
-from wibench.datasets.typing import DatasetImageData, ImageData
 
 
 class BaseDataset(metaclass=RegistryMeta):
@@ -54,9 +53,7 @@ class RangeBaseDataset(BaseDataset):
             self.len = dataset_len
 
 
-# ToDo: Use torch datasets or not?
 class ImageFolderDataset(RangeBaseDataset):
-    abstract = True
 
     def __init__(
         self,
@@ -83,7 +80,7 @@ class ImageFolderDataset(RangeBaseDataset):
     def __len__(self) -> int:
         return self.len
 
-    def generator(self) -> Generator[Tuple[str, TorchImg], None, None]:
+    def generator(self) -> Generator[ImageObject, None, None]:
         len_idx = -1
         while (True):
             len_idx += 1
@@ -95,4 +92,4 @@ class ImageFolderDataset(RangeBaseDataset):
             else:
                 image_path = self.path_list[start_idx]
                 image = self.transform(Image.open(image_path))
-            yield DatasetImageData(str(start_idx), data=ImageData(image))
+            yield ImageObject(str(start_idx), image)
