@@ -20,7 +20,6 @@ from torchvision.utils import save_image
 from torchvision.transforms.functional import to_tensor
 from PIL import Image
 from wibench.config import DumpType
-from wibench.datasets.typing import ObjectData
 
 
 def asdict_nonrecursive(obj) -> Dict[str, Any]:
@@ -116,7 +115,8 @@ class Context:
     param_hash: Optional[str] = None
     params: Optional[Dict[str, Any]] = None
     watermark_data: Optional[Any] = None
-    watermark_object_data: Optional[ObjectData] = None
+    original_object: Optional[Any] = None
+    object_data_field: Optional[str] = None
     marked_object: Optional[Any] = None
     marked_object_metrics: Dict[str, Union[str, int, float]] = field(
         default_factory=dict
@@ -126,6 +126,13 @@ class Context:
         field(default_factory=dict)
     )
     extraction_result: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def object_data(self):
+        if self.object_data_field is not None:
+            return self.original_object[self.object_data_field]
+        else:
+            return next(iter(self.original_object.values()))
 
     def form_record(self) -> Dict[str, Any]:
         record_attrs = [
