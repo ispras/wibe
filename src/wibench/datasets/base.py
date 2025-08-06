@@ -2,25 +2,35 @@ from pathlib import Path
 from itertools import chain
 from PIL import Image
 from torchvision.transforms import ToTensor
-from typing_extensions import Generator, Tuple, Union, List, Optional
-from wibench.typing import TorchImg, Range
+from typing_extensions import (
+    Generator,
+    Tuple,
+    Union,
+    List,
+    Optional,
+    Any
+)
+from wibench.typing import Range, ImageObject
 from wibench.registry import RegistryMeta
 
 
 class BaseDataset(metaclass=RegistryMeta):
     type = "dataset"
 
+    def __init__(self, *args, **kwargs) -> None:
+        raise NotImplementedError
+
     def __len__(self) -> int:
         raise NotImplementedError
 
-    def generator(self) -> Generator[Tuple[str, TorchImg], None, None]:
+    def generator(self) -> Generator[Any, None, None]:
         raise NotImplementedError
 
 
 class RangeBaseDataset(BaseDataset):
     abstract = True
 
-    def __init__(self, sample_range: Optional[Tuple[int, int]], dataset_len: int):
+    def __init__(self, sample_range: Optional[Tuple[int, int]], dataset_len: int) -> None:
         if sample_range is not None:
             self.sample_range = Range(*sample_range)
             range_len = (self.sample_range.stop - self.sample_range.start) + 1
@@ -43,15 +53,14 @@ class RangeBaseDataset(BaseDataset):
             self.len = dataset_len
 
 
-# ToDo: Use torch datasets or not?
-class ImageFolderDataset(BaseDataset):
-    abstract = True
+class ImageFolderDataset(RangeBaseDataset):
 
     def __init__(
         self,
         path: Union[Path, str],
         preload: bool = False,
         img_ext: List[str] = ["png", "jpg"],
+        sample_range: Optional[Tuple[int, int]] = None
     ) -> None:
         self.path = Path(path)
         path_gen = sorted(
@@ -60,20 +69,22 @@ class ImageFolderDataset(BaseDataset):
         self.path_list = list(path_gen)
         self.transform = ToTensor()
         assert len(self.path_list) != 0, "Empty dataset, check dataset path"
+        dataset_len = len(self.path_list)
+        super().__init__(sample_range, dataset_len)
         self.images = []
         if preload:
             self.images = [
-                self.transform(Image.open(img_path)) for img_path in self.path_list
+                self.transform(Image.open(img_path)) for img_path in self.path_list[self.sample_range[0]: self.sample_range[1] + 1]
             ]
 
     def __len__(self) -> int:
-        return len(self.path_list)
+        return self.len
 
-    def generator(self) -> Generator[Tuple[str, TorchImg], None, None]:
+    def generator(self) -> Generator[ImageObject, None, None]:
         if len(self.images) > 0:
-            for path, img in zip(self.path_list, self.images):
-                yield path.name, img
+            for path, img in zip(self.path_list[self.sample_range[0]: self.sample_range[1] + 1], self.images):
+                yield ImageObject(path.name, img)
         else:
-            for path in self.path_list:
+            for path in self.path_list[self.sample_range[0]: self.sample_range[1] + 1]:
                 img = self.transform(Image.open(path))
-                yield path.name, img
+                yield ImageObject(path.name, img)

@@ -4,7 +4,6 @@ from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
-from .utils import resize_torch_img
 from .context import Context
 from typing import (
     List,
@@ -16,6 +15,8 @@ from typing import (
     Optional,
     Any,
 )
+from wibench.typing import Object
+from dataclasses import is_dataclass
 from .config_loader import (
     get_algorithms,
     get_attacks,
@@ -31,7 +32,7 @@ from itertools import islice
 
 class Stage:
 
-    def process_image(self, image_context: Context) -> None:
+    def process_object(self, object_context: Context) -> None:
         raise NotImplementedError()
 
 
@@ -39,19 +40,18 @@ class EmbedWatermarkStage(Stage):
     def __init__(self, algorithm_wrapper: BaseAlgorithmWrapper):
         self.algorithm_wrapper = algorithm_wrapper
 
-    def process_image(self, image_context: Context):
-        image_context.dtm = datetime.datetime.now()
+    def process_object(self, object_context: Context):
+        object_context.dtm = datetime.datetime.now()
         watermark_data = self.algorithm_wrapper.watermark_data_gen()
-        image_context.method = self.algorithm_wrapper.report_name
-        image_context.param_hash = self.algorithm_wrapper.param_hash
-        image_context.params = self.algorithm_wrapper.param_dict
-        image_context.watermark_data = watermark_data
-        image = image_context.image
+        object_context.method = self.algorithm_wrapper.report_name
+        object_context.param_hash = self.algorithm_wrapper.param_hash
+        object_context.params = self.algorithm_wrapper.param_dict
+        object_context.watermark_data = watermark_data
         s_time = perf_counter()
-        image_context.marked_image = self.algorithm_wrapper.embed(
-            image, watermark_data
+        object_context.marked_object = self.algorithm_wrapper.embed(
+            **object_context.original_object, watermark_data=watermark_data
         )
-        image_context.marked_image_metrics["embed_time"] = (
+        object_context.marked_object_metrics["embed_time"] = (
             perf_counter() - s_time
         )
 
@@ -60,34 +60,32 @@ class PostEmbedMetricsStage(Stage):
     def __init__(self, metrics: List[PostEmbedMetric]):
         self.metrics = metrics
 
-    def process_image(self, image_context: Context):
-        watermark_data = image_context.watermark_data
-        image = image_context.image
-        marked_image = image_context.marked_image
+    def process_object(self, object_context: Context):
+        watermark_data = object_context.watermark_data
+        original_object_data = object_context.object_data
+        marked_object = object_context.marked_object
         for metric in self.metrics:
-            res = metric(image, marked_image, watermark_data)
-            image_context.marked_image_metrics[metric.report_name] = res
+            res = metric(original_object_data, marked_object, watermark_data)
+            object_context.marked_object_metrics[metric.report_name] = res
 
 
 class PostAttackMetricsStage(Stage):
     def __init__(self, metrics: List[PostEmbedMetric]):
         self.metrics = metrics
 
-    def process_image(self, image_context: Context):
-        watermark_data = image_context.watermark_data
-        image = image_context.marked_image
-        attacked_images = image_context.attacked_images
+    def process_object(self, object_context: Context):
+        watermark_data = object_context.watermark_data
+        marked_object = object_context.marked_object
+        attacked_objects = object_context.attacked_objects
         for (
             attack_name,
-            attacked_image,
-        ) in attacked_images.items():
-            # image_context.attacked_image_metrics[attack_name] = {}
+            attacked_object,
+        ) in attacked_objects.items():
             for metric in self.metrics:
-                attacked_image = resize_torch_img(
-                    attacked_image, list(image.shape)[1:]
+                res = metric(
+                    marked_object, attacked_object, watermark_data
                 )
-                res = metric(image, attacked_image, watermark_data)
-                image_context.attacked_image_metrics[attack_name][
+                object_context.attacked_object_metrics[attack_name][
                     metric.report_name
                 ] = res
 
@@ -96,54 +94,54 @@ class ApplyAttacksStage(Stage):
     def __init__(self, attacks: List[BaseAttack]):
         self.attacks = attacks
 
-    def process_image(self, image_context: Context):
-        image = image_context.marked_image
-        attacks_context = image_context.attacked_images
+    def process_object(self, object_context: Context):
+        marked_object = object_context.marked_object
+        attacked_object_context = object_context.attacked_objects
         for attack in self.attacks:
-            image_context.attacked_image_metrics[attack.report_name] = {}
+            object_context.attacked_object_metrics[attack.report_name] = {}
             s_time = perf_counter()
-            attacks_context[attack.report_name] = attack(image)
+            attacked_object_context[attack.report_name] = attack(marked_object)
             attack_time = perf_counter() - s_time
-            image_context.attacked_image_metrics[attack.report_name][
-                "attack_time"
-            ] = attack_time
+            object_context.attacked_object_metrics[attack.report_name]["attack_time"] = attack_time
 
 
 class ExtractWatermarkStage(Stage):
     def __init__(self, algorithm_wrapper: BaseAlgorithmWrapper):
         self.algorithm_wrapper = algorithm_wrapper
 
-    def process_image(self, image_context: Context):
-        watermark_data = image_context.watermark_data
-        for attack_name, image in image_context.attacked_images.items():
+    def process_object(self, object_context: Context):
+        watermark_data = object_context.watermark_data
+        for attack_name, attacked_object in object_context.attacked_objects.items():
             s_time = perf_counter()
             extraction_result = self.algorithm_wrapper.extract(
-                image, watermark_data
+                attacked_object, watermark_data
             )
-            image_context.attacked_image_metrics[attack_name][
+            object_context.attacked_object_metrics[attack_name][
                 "extract_time"
             ] = (perf_counter() - s_time)
 
-            image_context.extraction_result[attack_name] = extraction_result
+            object_context.extraction_result[attack_name] = extraction_result
 
 
 class PostExtractMetricsStage(Stage):
     def __init__(self, metrics: List[PostExtractMetric]):
         self.metrics = metrics
 
-    def process_image(self, image_context: Context):
-        watermark_data = image_context.watermark_data
-        image = image_context.image
+    def process_object(self, object_context: Context):
+        watermark_data = object_context.watermark_data
+        watermark_object_data = object_context.original_object
+        watermark_object_data: ObjectData
+        watermark_object = watermark_object_data
         for (
             attack_name,
-            attacked_image,
-        ) in image_context.attacked_images.items():
-            extraction_result = image_context.extraction_result[attack_name]
+            attacked_object,
+        ) in object_context.attacked_objects.items():
+            extraction_result = object_context.extraction_result[attack_name]
             for metric in self.metrics:
                 res = metric(
-                    image, attacked_image, watermark_data, extraction_result
+                    watermark_object, attacked_object, watermark_data, extraction_result
                 )
-                image_context.attacked_image_metrics[attack_name][
+                object_context.attacked_object_metrics[attack_name][
                     metric.report_name
                 ] = res
 
@@ -162,8 +160,8 @@ class AggregateMetricsStage(Stage):
             self.aggregator.add(self.records, self.dry_run)
             self.records = []
 
-    def process_image(self, image_context: Context):
-        self.records.append(image_context.form_record())
+    def process_object(self, object_context: Context):
+        self.records.append(object_context.form_record())
         if len(self.records) >= self.config.min_batch_size:
             self.flush()
 
@@ -222,7 +220,7 @@ class StageRunner:
 
     def run(self, context: Context) -> Context:
         for stage in self.stages:
-            stage.process_image(context)
+            stage.process_object(context)
 
     def get_stages(self, stages: List[str]) -> List[Type[Stage]]:
         stage_list = []
@@ -295,13 +293,26 @@ class Pipeline:
         self.config.result_path.mkdir(parents=True, exist_ok=True)
 
     def init_context(
-        self, run_id: str, image_id: str, dataset_name: str, image
+        self, run_id: str, dataset_name: str, original_object: Union[Object, Dict[str, Any]]
     ):
+        if is_dataclass(original_object):
+            object_data_field = original_object.get_object_alias()
+            object_id = original_object.id
+            original_object = original_object.dynamic_asdict()
+
+        else:
+            object_id = original_object["id"]
+            object_data_field = original_object["alias"] if "alias" in original_object else None
+            original_object = {
+                k: v for k, v in original_object.items()
+                if not k == "alias" and not k == "id"
+            }
         return Context(
-            image_id=image_id,
+            object_id=object_id,
             run_id=run_id,
             dataset=dataset_name,
-            image=image,
+            original_object=original_object,
+            object_data_field=object_data_field,
         )
 
     def get_stage_list(self, stages: Optional[List[str]]):
@@ -369,10 +380,10 @@ class Pipeline:
             if "embed" in stages:
                 context_gen = (
                     self.init_context(
-                        run_id, img_id, dataset.report_name, image
+                        run_id, dataset.report_name, watermark_object
                     )
                     for dataset in self.datasets
-                    for img_id, image in islice(
+                    for watermark_object in islice(
                         dataset.generator(),
                         process_num,
                         dataset_stop,
