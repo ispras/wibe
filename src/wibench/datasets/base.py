@@ -74,22 +74,17 @@ class ImageFolderDataset(RangeBaseDataset):
         self.images = []
         if preload:
             self.images = [
-                self.transform(Image.open(img_path)) for img_path in self.path_list
+                self.transform(Image.open(img_path)) for img_path in self.path_list[self.sample_range[0]: self.sample_range[1] + 1]
             ]
 
     def __len__(self) -> int:
         return self.len
 
     def generator(self) -> Generator[ImageObject, None, None]:
-        len_idx = -1
-        while (True):
-            len_idx += 1
-            start_idx = self.sample_range.start + len_idx
-            if (len_idx >= self.len):
-                break
-            if len(self.images) > 0:
-                image = self.images[start_idx]
-            else:
-                image_path = self.path_list[start_idx]
-                image = self.transform(Image.open(image_path))
-            yield ImageObject(str(start_idx), image)
+        if len(self.images) > 0:
+            for path, img in zip(self.path_list[self.sample_range[0]: self.sample_range[1] + 1], self.images):
+                yield ImageObject(path.name, img)
+        else:
+            for path in self.path_list[self.sample_range[0]: self.sample_range[1] + 1]:
+                img = self.transform(Image.open(path))
+                yield ImageObject(path.name, img)
