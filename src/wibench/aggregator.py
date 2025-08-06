@@ -33,7 +33,7 @@ class Aggregator(ABC):
         self.result_path = result_path if isinstance(result_path, Path) else Path(result_path)
 
     @abstractmethod
-    def add(self, records: Dict[str, Any]) -> None:
+    def add(self, records: Dict[str, Any], dry: bool = False) -> None:
         raise NotImplementedError
     
 
@@ -72,7 +72,7 @@ class PandasAggregator(Aggregator):
         except Exception as e:
             print(f"Error: {e}")
 
-    def add(self, records: Dict[str, Any]) -> None:
+    def add(self, records: Dict[str, Any], dry: bool = False) -> None:
         batch = pd.DataFrame(records)
         params_batch = pd.DataFrame(batch[["method", "param_hash", "params"]]).drop_duplicates(subset=["param_hash"])
         for value in params_batch["param_hash"]:
@@ -97,27 +97,29 @@ class ClickHouseAggregator(Aggregator):
         from json2clickhouse import JSON2Clickhouse
         self.j2c = JSON2Clickhouse.from_config(self.config.db_config)
 
-    def add(self, records: Dict[str, Any]) -> None:
-        try:
-            self.j2c.process(records)
-        except Exception:
-            traceback.print_exc()
-            for record in records:
-                dtm = str(record["dtm"])
-                res_path = self.result_path / f"{dtm}.json"
-                with open(res_path, "w") as f:
-                    record["dtm"] = dtm
-                    json.dump(record, f)
+    def add(self, records: Dict[str, Any], dry: bool = False) -> None:
+        if not dry:
+            try:
+                self.j2c.process(records)
+                return
+            except Exception:
+                traceback.print_exc()
+        for record in records:
+            dtm = str(record["dtm"])
+            res_path = self.result_path / f"{dtm}.json"
+            with open(res_path, "w") as f:
+                record["dtm"] = dtm
+                json.dump(record, f)
 
 
 class FanoutAggregator:
     def __init__(self, aggregators: List[Aggregator]) -> None:
         self.aggregators = aggregators
 
-    def add(self, records: List[Dict[str, Any]]) -> None:
+    def add(self, records: List[Dict[str, Any]], dry = False) -> None:
         for aggregator in self.aggregators:
             try:
-                aggregator.add(records)
+                aggregator.add(records, dry)
             except Exception:
                 print(f"An error occurred while aggregating information using the {aggregator.name} aggregator")  # TODO: logging
                 traceback.print_exc()
