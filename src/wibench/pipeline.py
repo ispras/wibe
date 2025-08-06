@@ -4,15 +4,28 @@ from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
 from .config import PipeLineConfig
-from .utils import resize_torch_img
+from .utils import (
+    seed_everything,
+    object_id_to_seed
+)
 from .context import Context
 from typing import (
     List,
+    Tuple,
     Union,
     Iterable,
     Dict,
     Type,
     Optional,
+    Any,
+)
+from wibench.typing import Object
+from dataclasses import is_dataclass
+from .config_loader import (
+    get_algorithms,
+    get_attacks,
+    get_datasets,
+    get_metrics,
 )
 from .aggregator import build_fanout_from_config
 import tqdm
@@ -32,7 +45,7 @@ class Stage:
     process_image(image_context)
         Process an image through this stage (abstract)
     """
-    def process_image(self, image_context: Context) -> None:
+    def process_object(self, object_context: Context) -> None:
         """Process an image through this pipeline stage.
 
         Parameters
@@ -55,7 +68,7 @@ class EmbedWatermarkStage(Stage):
     def __init__(self, algorithm_wrapper: BaseAlgorithmWrapper):
         self.algorithm_wrapper = algorithm_wrapper
 
-    def process_image(self, image_context: Context):
+    def process_object(self, object_context: Context):
         """Embed watermark into the source image.
 
         Parameters
@@ -63,18 +76,17 @@ class EmbedWatermarkStage(Stage):
         image_context : Context
             Context object containing the source image
         """
-        image_context.dtm = datetime.datetime.now()
+        object_context.dtm = datetime.datetime.now()
         watermark_data = self.algorithm_wrapper.watermark_data_gen()
-        image_context.method = self.algorithm_wrapper.report_name
-        image_context.param_hash = self.algorithm_wrapper.param_hash
-        image_context.params = self.algorithm_wrapper.param_dict
-        image_context.watermark_data = watermark_data
-        image = image_context.image
+        object_context.method = self.algorithm_wrapper.report_name
+        object_context.param_hash = self.algorithm_wrapper.param_hash
+        object_context.params = self.algorithm_wrapper.param_dict
+        object_context.watermark_data = watermark_data
         s_time = perf_counter()
-        image_context.marked_image = self.algorithm_wrapper.embed(
-            image, watermark_data
+        object_context.marked_object = self.algorithm_wrapper.embed(
+            **object_context.original_object, watermark_data=watermark_data
         )
-        image_context.marked_image_metrics["embed_time"] = (
+        object_context.marked_object_metrics["embed_time"] = (
             perf_counter() - s_time
         )
 
@@ -90,7 +102,7 @@ class PostEmbedMetricsStage(Stage):
     def __init__(self, metrics: List[PostEmbedMetric]):
         self.metrics = metrics
 
-    def process_image(self, image_context: Context):
+    def process_object(self, object_context: Context):
         """Calculate quality metrics between original and watermarked images.
 
         Parameters
@@ -98,12 +110,12 @@ class PostEmbedMetricsStage(Stage):
         image_context : Context
             Context containing both original and marked images
         """
-        watermark_data = image_context.watermark_data
-        image = image_context.image
-        marked_image = image_context.marked_image
+        watermark_data = object_context.watermark_data
+        original_object_data = object_context.object_data
+        marked_object = object_context.marked_object
         for metric in self.metrics:
-            res = metric(image, marked_image, watermark_data)
-            image_context.marked_image_metrics[metric.report_name] = res
+            res = metric(original_object_data, marked_object, watermark_data)
+            object_context.marked_object_metrics[metric.report_name] = res
 
 
 class PostAttackMetricsStage(Stage):
@@ -121,7 +133,7 @@ class PostAttackMetricsStage(Stage):
     def __init__(self, metrics: List[PostEmbedMetric]):
         self.metrics = metrics
 
-    def process_image(self, image_context: Context):
+    def process_object(self, object_context: Context):
         """Compute metrics between watermarked and attacked images.
 
         Parameters
@@ -131,20 +143,18 @@ class PostAttackMetricsStage(Stage):
             - marked_image: Original watermarked image
             - attacked_images: Dictionary of attacked images
         """
-        watermark_data = image_context.watermark_data
-        image = image_context.marked_image
-        attacked_images = image_context.attacked_images
+        watermark_data = object_context.watermark_data
+        marked_object = object_context.marked_object
+        attacked_objects = object_context.attacked_objects
         for (
             attack_name,
-            attacked_image,
-        ) in attacked_images.items():
-            # image_context.attacked_image_metrics[attack_name] = {}
+            attacked_object,
+        ) in attacked_objects.items():
             for metric in self.metrics:
-                attacked_image = resize_torch_img(attacked_image, list(image.shape)[1:])
                 res = metric(
-                    image, attacked_image, watermark_data
+                    marked_object, attacked_object, watermark_data
                 )
-                image_context.attacked_image_metrics[attack_name][
+                object_context.attacked_object_metrics[attack_name][
                     metric.report_name
                 ] = res
 
@@ -160,7 +170,7 @@ class ApplyAttacksStage(Stage):
     def __init__(self, attacks: List[BaseAttack]):
         self.attacks = attacks
 
-    def process_image(self, image_context: Context):
+    def process_object(self, object_context: Context):
         """Apply all attacks to the watermarked image.
 
         Parameters
@@ -168,14 +178,14 @@ class ApplyAttacksStage(Stage):
         image_context : Context
             Context containing the watermarked image
         """
-        image = image_context.marked_image
-        attacks_context = image_context.attacked_images
+        marked_object = object_context.marked_object
+        attacked_object_context = object_context.attacked_objects
         for attack in self.attacks:
-            image_context.attacked_image_metrics[attack.report_name] = {}
+            object_context.attacked_object_metrics[attack.report_name] = {}
             s_time = perf_counter()
-            attacks_context[attack.report_name] = attack(image)
+            attacked_object_context[attack.report_name] = attack(marked_object)
             attack_time = perf_counter() - s_time
-            image_context.attacked_image_metrics[attack.report_name]["attack_time"] = attack_time
+            object_context.attacked_object_metrics[attack.report_name]["attack_time"] = attack_time
 
 
 class ExtractWatermarkStage(Stage):
@@ -190,7 +200,7 @@ class ExtractWatermarkStage(Stage):
     def __init__(self, algorithm_wrapper: BaseAlgorithmWrapper):
         self.algorithm_wrapper = algorithm_wrapper
 
-    def process_image(self, image_context: Context):
+    def process_object(self, object_context: Context):
         """Attempt watermark extraction from all attacked images.
 
         Parameters
@@ -198,17 +208,17 @@ class ExtractWatermarkStage(Stage):
         image_context : Context
             Context containing attacked images
         """
-        watermark_data = image_context.watermark_data
-        for attack_name, image in image_context.attacked_images.items():
+        watermark_data = object_context.watermark_data
+        for attack_name, attacked_object in object_context.attacked_objects.items():
             s_time = perf_counter()
             extraction_result = self.algorithm_wrapper.extract(
-                image, watermark_data
+                attacked_object, watermark_data
             )
-            image_context.attacked_image_metrics[attack_name][
+            object_context.attacked_object_metrics[attack_name][
                 "extract_time"
             ] = (perf_counter() - s_time)
 
-            image_context.extraction_result[attack_name] = extraction_result
+            object_context.extraction_result[attack_name] = extraction_result
 
 
 class PostExtractMetricsStage(Stage):
@@ -226,7 +236,7 @@ class PostExtractMetricsStage(Stage):
     def __init__(self, metrics: List[PostExtractMetric]):
         self.metrics = metrics
 
-    def process_image(self, image_context: Context):
+    def process_object(self, object_context: Context):
         """Compute extraction quality metrics for all attacks.
 
         Parameters
@@ -236,18 +246,20 @@ class PostExtractMetricsStage(Stage):
             - watermark_data: Original embedded watermark
             - extraction_result: Dictionary of extracted watermarks by attack
         """
-        watermark_data = image_context.watermark_data
-        image = image_context.image
+        watermark_data = object_context.watermark_data
+        watermark_object_data = object_context.original_object
+        watermark_object_data: Object
+        watermark_object = watermark_object_data
         for (
             attack_name,
-            attacked_image,
-        ) in image_context.attacked_images.items():
-            extraction_result = image_context.extraction_result[attack_name]
+            attacked_object,
+        ) in object_context.attacked_objects.items():
+            extraction_result = object_context.extraction_result[attack_name]
             for metric in self.metrics:
                 res = metric(
-                    image, attacked_image, watermark_data, extraction_result
+                    watermark_object, attacked_object, watermark_data, extraction_result
                 )
-                image_context.attacked_image_metrics[attack_name][
+                object_context.attacked_object_metrics[attack_name][
                     metric.report_name
                 ] = res
 
@@ -264,21 +276,22 @@ class AggregateMetricsStage(Stage):
     pipeline_config : PipeLineConfig
         Complete pipeline configuration 
     """
-    def __init__(self, pipeline_config: PipeLineConfig):
+    def __init__(self, pipeline_config: PipeLineConfig, dry_run: bool = False):
         self.config = pipeline_config
         self.records = []
         self.aggregator = build_fanout_from_config(
             pipeline_config, Path(pipeline_config.result_path)
         )
+        self.dry_run = dry_run
 
     def flush(self):
         """Force write all buffered records to aggregators.
         """
         if len(self.records):
-            self.aggregator.add(self.records)
+            self.aggregator.add(self.records, self.dry_run)
             self.records = []
 
-    def process_image(self, image_context: Context):
+    def process_object(self, object_context: Context):
         """Add image metrics to aggregation batch and flush if threshold reached.
         
         Parameters
@@ -286,7 +299,7 @@ class AggregateMetricsStage(Stage):
         image_context : Context
             Processed context containing all metrics and metadata
         """
-        self.records.append(image_context.form_record())
+        self.records.append(object_context.form_record())
         if len(self.records) >= self.config.min_batch_size:
             self.flush()
 
@@ -325,32 +338,41 @@ class StageRunner:
     def __init__(
         self,
         stages: List[str],
-        algorithm_wrapper: BaseAlgorithmWrapper,
-        attacks: List[BaseAttack],
-        metrics: Dict[str, List[BaseMetric]],
+        algorithm_wrapper: Tuple[str, Dict[str, Any]],
+        attacks: List[Tuple[str, Dict[str, Any]]],
+        metrics: Dict[str, List[Tuple[str, Dict[str, Any]]]],
         pipeline_config: PipeLineConfig,
+        dry_run: bool = False,
     ):
-        post_embed_metrics = metrics["post_embed_metrics"]
-        post_attacked_metrics = metrics["post_attack_metrics"]
-        post_extracted_metrics = metrics["post_extract_metrics"]
-
         stage_classes = self.get_stages(stages)
         self.stages: List[Stage] = []
+        self.seed = pipeline_config.seed
         for stage_class in stage_classes:
             if stage_class in [EmbedWatermarkStage, ExtractWatermarkStage]:
-                self.stages.append(stage_class(algorithm_wrapper))
+                self.stages.append(
+                    stage_class(get_algorithms([algorithm_wrapper])[0])
+                )
             elif stage_class is PostEmbedMetricsStage:
+                post_embed_metrics = get_metrics(metrics["post_embed_metrics"])
                 self.stages.append(PostEmbedMetricsStage(post_embed_metrics))
             elif stage_class is PostAttackMetricsStage:
-                self.stages.append(PostAttackMetricsStage(post_attacked_metrics))
+                post_attack_metrics = get_metrics(
+                    metrics["post_attack_metrics"]
+                )
+
+                self.stages.append(PostAttackMetricsStage(post_attack_metrics))
             elif stage_class is ApplyAttacksStage:
-                self.stages.append(ApplyAttacksStage(attacks))
+                self.stages.append(ApplyAttacksStage(get_attacks(attacks)))
             elif stage_class is PostExtractMetricsStage:
+                post_extract_metrics = get_metrics(
+                    metrics["post_extract_metrics"]
+                )
+
                 self.stages.append(
-                    PostExtractMetricsStage(post_extracted_metrics)
+                    PostExtractMetricsStage(post_extract_metrics)
                 )
             elif stage_class is AggregateMetricsStage:
-                self.stages.append(AggregateMetricsStage(pipeline_config))
+                self.stages.append(AggregateMetricsStage(pipeline_config, dry_run))
 
         pass
 
@@ -367,8 +389,11 @@ class StageRunner:
         Context
             Processed context with all results
         """
-        for stage in self.stages:
-            stage.process_image(context)
+        for stage_num, stage in enumerate(self.stages):
+            seed_everything(
+                None if self.seed is None else object_id_to_seed(context.object_id + str(self.seed) + str(stage_num))
+            )
+            stage.process_object(context)
 
     def get_stages(self, stages: List[str]) -> List[Type[Stage]]:
         stage_list = []
@@ -398,7 +423,13 @@ class Progress:
     num_processes : int
         Total number of parallel processes
     """
-    def __init__(self, res_dir: Path, total_iters: int, proc_num: int, num_processes: int):
+    def __init__(
+        self,
+        res_dir: Path,
+        total_iters: int,
+        proc_num: int,
+        num_processes: int,
+    ):
         self.res_dir = res_dir
         self.proc_num = proc_num
         self.progress = None
@@ -425,8 +456,11 @@ class Progress:
             path = self.res_dir / f"tqdm{proc_num}"
             if not path.exists():
                 continue
-            with open(path, "r") as f:
-                res += int(f.read())
+            try:
+                with open(path, "r") as f:
+                    res += int(f.read())
+            except:
+                continue
         self.progress.update(res - self.curr_res)
         self.curr_res = res
 
@@ -450,35 +484,40 @@ class Pipeline:
     """
     def __init__(
         self,
-        algorithm_wrapper: Union[
-            BaseAlgorithmWrapper, Iterable[BaseAlgorithmWrapper]
-        ],
-        datasets: Union[BaseDataset, Iterable[BaseDataset]],
-        attacks: List[BaseAttack],
-        metrics: Dict[str, List[BaseMetric]],
+        algorithm_wrappers: List[Tuple[str, Dict[str, Any]]],
+        datasets: List[Tuple[str, Dict[str, Any]]],
+        attacks: List[Tuple[str, Dict[str, Any]]],
+        metrics: Dict[str, List[Tuple[str, Dict[str, Any]]]],
         pipeline_config: PipeLineConfig,
     ):
-        if isinstance(algorithm_wrapper, BaseAlgorithmWrapper):
-            self.algorithm_wrappers = [algorithm_wrapper]
-        else:
-            self.algorithm_wrappers = algorithm_wrapper
-        if isinstance(algorithm_wrapper, BaseDataset):
-            self.datasets = [datasets]
-        else:
-            self.datasets = datasets
+        self.algorithm_wrappers = algorithm_wrappers
+        self.datasets = get_datasets(datasets) # ToDo: init only with embed stage
         self.attacks = attacks
         self.metrics = metrics
         self.config = pipeline_config
         self.config.result_path.mkdir(parents=True, exist_ok=True)
 
     def init_context(
-        self, run_id: str, image_id: str, dataset_name: str, image
+        self, run_id: str, dataset_name: str, original_object: Union[Object, Dict[str, Any]]
     ):
+        if is_dataclass(original_object):
+            object_data_field = original_object.get_object_alias()
+            object_id = original_object.id
+            original_object = original_object.dynamic_asdict()
+
+        else:
+            object_id = original_object["id"]
+            object_data_field = original_object["alias"] if "alias" in original_object else None
+            original_object = {
+                k: v for k, v in original_object.items()
+                if not k == "alias" and not k == "id"
+            }
         return Context(
-            image_id=image_id,
+            object_id=object_id,
             run_id=run_id,
             dataset=dataset_name,
-            image=image,
+            original_object=original_object,
+            object_data_field=object_data_field,
         )
 
     def get_stage_list(self, stages: Optional[List[str]]):
@@ -498,6 +537,7 @@ class Pipeline:
         run_id: str,
         stages: Optional[List[str]],
         dump_context: bool = False,
+        dry_run: bool = False,
         process_num: int = 0,
     ):
         """Execute the watermarking evaluation pipeline.
@@ -522,7 +562,7 @@ class Pipeline:
         """
         stages: List[str] = self.get_stage_list(stages)
         total_iters = None
-        if hasattr(self.algorithm_wrappers, "__len__"):
+        if "embed" in stages:
             dataset_iters = 0
             for dataset in self.datasets:
                 if not hasattr(dataset, "__len__"):
@@ -531,9 +571,23 @@ class Pipeline:
                     dataset_iters += len(dataset)
             else:
                 total_iters = len(self.algorithm_wrappers) * dataset_iters
-
-        progress = Progress(self.config.result_path, total_iters, process_num, self.config.workers)
-        for wrapper_num, algorithm_wrapper in enumerate(
+        else:
+            context_paths = list(self.config.result_path.glob("context_*"))
+            context_total = 0
+            for context_path in context_paths:
+                context_total += len(list(context_path.glob("*")))
+            total_iters = context_total
+        
+        if dry_run:
+            total_iters = len(self.algorithm_wrappers) * len(self.datasets) * self.config.workers
+        
+        progress = Progress(
+            self.config.result_path,
+            total_iters,
+            process_num,
+            self.config.workers,
+        )
+        for wrapper_num, algorithm_wrapper_tuple in enumerate(
             self.algorithm_wrappers
         ):
             context_dir = self.config.result_path / f"context_{wrapper_num}"
@@ -541,21 +595,23 @@ class Pipeline:
                 context_dir.mkdir(parents=True, exist_ok=True)
             stage_runner = StageRunner(
                 stages,
-                algorithm_wrapper,
+                algorithm_wrapper_tuple,
                 self.attacks,
                 self.metrics,
                 self.config,
+                dry_run,
             )
+            dataset_stop = self.config.workers if dry_run else None
             if "embed" in stages:
                 context_gen = (
                     self.init_context(
-                        run_id, img_id, dataset.report_name, image
+                        run_id, dataset.report_name, watermark_object
                     )
                     for dataset in self.datasets
-                    for img_id, image in islice(
+                    for watermark_object in islice(
                         dataset.generator(),
                         process_num,
-                        None,
+                        dataset_stop,
                         self.config.workers,
                     )
                 )
@@ -565,7 +621,7 @@ class Pipeline:
                     for img_id in islice(
                         Context.glob(context_dir, self.config.dump_type),
                         process_num,
-                        None,
+                        dataset_stop,
                         self.config.workers,
                     )
                 )
@@ -580,5 +636,5 @@ class Pipeline:
                 if isinstance(stage, AggregateMetricsStage):
                     stage.flush()
 
-            if progress.progress is not None:
-                progress.progress.close()
+        if progress.progress is not None:
+            progress.progress.close()

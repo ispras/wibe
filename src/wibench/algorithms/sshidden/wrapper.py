@@ -15,6 +15,7 @@ from wibench.utils import (
     overlay_difference
 )
 from wibench.config import Params
+from wibench.watermark_data import TorchBitWatermarkData
 
 
 @dataclass
@@ -31,11 +32,6 @@ class SSHiddenParams(Params):
     scaling_w: float = 1.5
     H: int = 512
     W: int = 512
-
-
-@dataclass
-class WatermarkData:
-    watermark: torch.Tensor
 
 
 NORMALIZE_IMAGENET = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -85,7 +81,7 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
         self.encoder_with_jnd = self.encoder_with_jnd.to(self.device).eval()
         self.decoder = self.decoder.to(self.device).eval()
 
-    def embed(self, image: TorchImg, watermark_data: WatermarkData):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
         msg = 2 * watermark_data.watermark.type(torch.float) - 1
         resized_image = resize_torch_img(image, [self.params.H, self.params.W])
         normalized_resized_image = normalize_image(resized_image, NORMALIZE_IMAGENET)
@@ -95,12 +91,12 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
         marked_image = overlay_difference(image, resized_image, denormalized_marked_image)
         return marked_image
     
-    def extract(self, image: TorchImg, watermark_data: WatermarkData):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         normalized_image = normalize_image(resized_image, NORMALIZE_IMAGENET)
         with torch.no_grad():
             ft = self.decoder(normalized_image.to(self.device)).cpu()
         return ft > 0
     
-    def watermark_data_gen(self) -> WatermarkData:
-        return WatermarkData(torch.randint(0, 2, (1, self.params.num_bits)).bool())
+    def watermark_data_gen(self) -> TorchBitWatermarkData:
+        return TorchBitWatermarkData.get_random(self.params.num_bits)

@@ -111,7 +111,7 @@ class PipeLineConfig(BaseModel):
     seed: Optional[int] = None
     dump_type: DumpType = DumpType.serialized
     workers: int = 1
-    cuda_visible_devices: list[int] = Field(default_factory=list)
+    cuda_visible_devices: List[int] = Field(default_factory=list)
 
     @model_validator(mode="before")
     @classmethod

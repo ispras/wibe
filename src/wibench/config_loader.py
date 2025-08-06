@@ -51,6 +51,7 @@ def get_objects(
                 del config["report_name"]
                 obj = object_cls(**config)
                 obj.report_name = report_name
+                config["report_name"] = report_name
             else:
                 obj = object_cls(**config)
             result.append(obj)

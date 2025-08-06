@@ -5,14 +5,9 @@ algorithms:
       device: cuda
 
 post_embed_metrics:
-  - CLIP_IQA
-  - Aesthetic
-  - ImageReward
-  - CLIP
-  - BLIP
   - EmbWm
 post_attack_metrics:
-{% include 'common/post_attack_metrics.yml' %} 
+  - PSNR
 post_extract_metrics:
   - Result
 

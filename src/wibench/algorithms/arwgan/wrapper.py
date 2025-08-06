@@ -6,6 +6,7 @@ from typing_extensions import Any, Dict
 from dataclasses import dataclass
 from pathlib import Path
 
+from wibench.watermark_data import TorchBitWatermarkData
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
 from wibench.utils import (
@@ -33,11 +34,6 @@ class ARWGANParams:
     encoder_loss: float
     adversarial_loss: float
     enable_fp16: bool = False
-
-
-@dataclass
-class WatermarkData:
-    watermark: torch.Tensor
 
 
 class ARWGANWrapper(BaseAlgorithmWrapper):
@@ -89,7 +85,7 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
         self.encoder_decoder = self.encoder_decoder.to(self.device)
         self.encoder_decoder.eval()
 
-    def embed(self, image: TorchImg, watermark_data: Any):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         resized_normalized_image = normalize_image(resized_image)
         with torch.no_grad():
@@ -105,5 +101,5 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
             res = self.encoder_decoder.decoder(resized_normalize_image.to(self.device))
         return (res.cpu().numpy() > 0.5).astype(int)
     
-    def watermark_data_gen(self) -> Any:
-        return WatermarkData(torch.tensor(np.random.randint(0, 2, size=(1, self.params.wm_length))))
+    def watermark_data_gen(self) -> TorchBitWatermarkData:
+        return TorchBitWatermarkData.get_random(self.params.wm_length)

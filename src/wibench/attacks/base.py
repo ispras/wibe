@@ -1,5 +1,6 @@
 from wibench.registry import RegistryMeta
 from wibench.typing import TorchImg
+from typing_extensions import Any
 
 
 class BaseAttack(metaclass=RegistryMeta):
@@ -10,6 +11,9 @@ class BaseAttack(metaclass=RegistryMeta):
     All concrete attack classes should implement `__call__` method.
     """
     type = "attack"
+
+    def __init__(self, *args, **kwargs) -> None:
+        pass
 
     def __call__(self, image: TorchImg) -> TorchImg:
         """
@@ -33,7 +37,7 @@ class Identity(BaseAttack):
     Implementation of "no attack" case
     """
 
-    def __call__(self, image: TorchImg) -> TorchImg:
+    def __call__(self, watermark_object: TorchImg) -> TorchImg:
         """
         Copy of input image.
         
@@ -47,6 +51,4 @@ class Identity(BaseAttack):
         TorchImg
             Copy of image tensor
         """
-        return image.clone()
-
-
+        return watermark_object.clone()

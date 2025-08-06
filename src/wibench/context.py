@@ -1,6 +1,5 @@
 import pickle
 from dataclasses import dataclass, field, fields
-from .typing import TorchImg
 from .utils import is_image
 from typing import (
     List,
@@ -23,7 +22,7 @@ from PIL import Image
 from wibench.config import DumpType
 
 
-def asdict_nonrecursive(obj) -> dict[str, Any]:
+def asdict_nonrecursive(obj) -> Dict[str, Any]:
     return {field.name: getattr(obj, field.name) for field in fields(obj)}
 
 
@@ -189,7 +188,7 @@ class Context:
     """
     Data class holding all context information for an image being processed.
     """
-    image_id: str
+    object_id: str
     run_id: str
     dataset: str
     dtm: Optional[datetime.datetime] = None
@@ -197,16 +196,24 @@ class Context:
     param_hash: Optional[str] = None
     params: Optional[Dict[str, Any]] = None
     watermark_data: Optional[Any] = None
-    image: Optional[TorchImg] = None
-    marked_image: Optional[TorchImg] = None
-    marked_image_metrics: Dict[str, Union[str, int, float]] = field(
+    original_object: Optional[Any] = None
+    object_data_field: Optional[str] = None
+    marked_object: Optional[Any] = None
+    marked_object_metrics: Dict[str, Union[str, int, float]] = field(
         default_factory=dict
     )
-    attacked_images: Dict[str, TorchImg] = field(default_factory=dict)
-    attacked_image_metrics: Dict[str, Dict[str, Union[str, int, float]]] = (
+    attacked_objects: Dict[str, Any] = field(default_factory=dict)
+    attacked_object_metrics: Dict[str, Dict[str, Union[str, int, float]]] = (
         field(default_factory=dict)
     )
     extraction_result: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def object_data(self):
+        if self.object_data_field is not None:
+            return self.original_object[self.object_data_field]
+        else:
+            return next(iter(self.original_object.values()))
 
     def form_record(self) -> Dict[str, Any]:
         """Format context data into a metrics record.
@@ -220,7 +227,7 @@ class Context:
 
         record_attrs = [
             "run_id",
-            "image_id",
+            "object_id",
             "dataset",
             "dtm",
             "method",
@@ -230,20 +237,20 @@ class Context:
         record = {}
         for attr in record_attrs:
             record[attr] = getattr(self, attr)
-        record.update(self.marked_image_metrics)
-        record.update(self.attacked_image_metrics)
+        record.update(self.marked_object_metrics)
+        record.update(self.attacked_object_metrics)
         return record
 
     @classmethod
-    def load(cls, context_dir: Path, image_id: str, dump_type: DumpType) -> "Context":
+    def load(cls, context_dir: Path, object_id: str, dump_type: DumpType) -> "Context":
         """Load context from disk.
         
         Parameters
         ----------
         context_dir : Path
             Directory containing saved context
-        image_id : str
-            Identifier of image to load
+        object_id : str
+            Identifier of object to load
         dump_type : DumpType
             Serialization format used
             
@@ -258,8 +265,8 @@ class Context:
             If context file doesn't exist
         """
         if dump_type == DumpType.pickle:
-            return load_context_pkl(context_dir, image_id)
-        img_context_dir = context_dir / image_id
+            return load_context_pkl(context_dir, object_id)
+        img_context_dir = context_dir / object_id
         with open(img_context_dir / "context.json", "r") as f:
             data = json.load(f)
         return Context(**ContextDecoder.decode(data, img_context_dir))
@@ -276,7 +283,7 @@ class Context:
         """
         if dump_type == DumpType.pickle:
             return save_context_pkl(context_dir, self)
-        img_context_dir = context_dir / self.image_id
+        img_context_dir = context_dir / self.object_id
         img_context_dir.mkdir(exist_ok=True)
 
         encoded = ContextEncoder.encode(self, img_context_dir)
@@ -308,18 +315,18 @@ class Context:
                 yield path.name
 
 
-def load_context_pkl(context_dir: Path, image_id: str) -> Context:
-    ctx_file = context_dir / f"{image_id}.pkl"
+def load_context_pkl(context_dir: Path, object_id: str) -> Context:
+    ctx_file = context_dir / f"{object_id}.pkl"
     if ctx_file.exists():
         with open(ctx_file, "rb") as f:
             return pickle.load(f)
     else:
-        raise FileNotFoundError(f"No context for image {image_id}")
+        raise FileNotFoundError(f"No context for image {object_id}")
 
 
 def save_context_pkl(context_dir: Path, context: Context):
-    image_id = context.image_id
-    ctx_file = context_dir / f"{image_id}.pkl"
+    object_id = context.object_id
+    ctx_file = context_dir / f"{object_id}.pkl"
     with open(ctx_file, "wb") as f:
         pickle.dump(context, f)
 
