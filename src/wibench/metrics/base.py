@@ -1,10 +1,11 @@
-from typing import Any, Union
+from typing import Any
 from functools import lru_cache
 from abc import abstractmethod
 import numpy as np
 import torch
 from wibench.registry import RegistryMeta
 from wibench.typing import TorchImg
+from wibench.utils import resize_torch_img
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 from scipy.stats import binom
@@ -23,10 +24,9 @@ class PostEmbedMetric(BaseMetric):
 
     def __call__(
         self,
-        img1: TorchImg,
-        img2: TorchImg,
-        watermark_data: Any,
-    ) -> Union[str, int, float]:
+        *args,
+        **kwargs,
+    ) -> Any:
         raise NotImplementedError
 
 
@@ -35,11 +35,9 @@ class PostExtractMetric(BaseMetric):
 
     def __call__(
         self,
-        img1: TorchImg,
-        img2: TorchImg,
-        watermark_data: Any,
-        extraction_result: Any,
-    ) -> Union[str, int, float]:
+        *args,
+        **kwargs
+    ) -> Any:
         raise NotImplementedError
 
 
@@ -49,10 +47,12 @@ class PSNR(PostEmbedMetric):
         self,
         img1: TorchImg,
         img2: TorchImg,
-        watermark_data: Any,
+        *args,
+        **kwargs
     ) -> float:
-        if (img1 == img2).all():
+        if torch.equal(img1, img2):
             return float("inf")
+        img2 = resize_torch_img(img2, list(img1.shape)[1:])
         return float(psnr(img1.numpy(), img2.numpy(), data_range=1))
 
 
@@ -64,6 +64,7 @@ class SSIM(PostEmbedMetric):
         img2: TorchImg,
         watermark_data: Any,
     ) -> float:
+        img2 = resize_torch_img(img2, list(img1.shape)[1:])
         if len(img1.shape) == 2:
             return float(ssim(img1.numpy(), img2.numpy(), data_range=1))
         res = ssim(img1.numpy(), img2.numpy(), data_range=1, channel_axis=0)
@@ -77,7 +78,7 @@ class EmbedWatermark(PostEmbedMetric):
                  img1: TorchImg,
                  img2: TorchImg,
                  watermark_data: Any):
-        str_watermark = ''.join(str(x) for x in np.array(watermark_data.watermark).astype(np.uint8).flatten().tolist())
+        str_watermark = ''.join(str(x) for x in np.array(watermark_data.watermark).flatten().tolist())
         return str_watermark
 
 
@@ -146,5 +147,5 @@ class ExtractedWatermark(PostExtractMetric):
                  img2: TorchImg,
                  watermark_data: Any,
                  extraction_result):
-        str_extract_watermark = ''.join(str(x) for x in np.array(extraction_result).astype(np.uint8).flatten().tolist())
+        str_extract_watermark = ''.join(str(x) for x in np.array(extraction_result).flatten().tolist())
         return str_extract_watermark

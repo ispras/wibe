@@ -15,7 +15,6 @@ from typing_extensions import (
     Optional
 )
 from pathlib import Path
-
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.module_importer import ModuleImporter
 from wibench.typing import TorchImg
@@ -62,7 +61,7 @@ class DWSFWrapper(BaseAlgorithmWrapper):
         self.encoder_decoder = EncoderDecoder(H=self.params.H,
                                               W=self.params.W,
                                               message_length=self.params.message_length,
-                                              noise_layers=self.params.default_noise_layer)
+                                              noise_layers=[*self.params.default_noise_layer])
         self.encoder_decoder.encoder = self.encoder_decoder.encoder.to(self.device)
         self.encoder_decoder.decoder = self.encoder_decoder.decoder.to(self.device)
         
@@ -143,7 +142,7 @@ class DWSFWrapper(BaseAlgorithmWrapper):
                                                          normalized_image.shape[3],
                                                          self.params.split_size)
         normalized_marked_image = self.encode(normalized_image,
-                                    watermark_data.watermark,
+                                    watermark_data.watermark.type(torch.float32),
                                     splitSize=splitSize,
                                     inputSize=self.params.H,
                                     h_coor=h_coor,

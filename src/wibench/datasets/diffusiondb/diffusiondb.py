@@ -1,7 +1,7 @@
+from wibench.typing import ImageObject, PromptObject
 from ..base import RangeBaseDataset
 import datasets
 from typing import Optional, Tuple, Generator, Union
-from wibench.typing import TorchImg
 from torchvision.transforms.functional import to_tensor
 from packaging import version
 
@@ -36,7 +36,7 @@ class DiffusionDB(RangeBaseDataset):
 
     def generator(
         self,
-    ) -> Generator[Tuple[str, Union[TorchImg, str]], None, None]:      
+    ) -> Generator[Union[ImageObject, PromptObject], None, None]:      
         len_idx = 0
         start_idx = self.sample_range.start - 1
         while (True):
@@ -48,6 +48,6 @@ class DiffusionDB(RangeBaseDataset):
                 continue
             len_idx += 1
             if self.return_prompt:
-                yield str(start_idx), data["prompt"]
+                yield PromptObject(str(start_idx), data["prompt"])
             else:
-                yield str(start_idx), to_tensor(data["image"])
+                yield ImageObject(str(start_idx), to_tensor(data["image"]))
