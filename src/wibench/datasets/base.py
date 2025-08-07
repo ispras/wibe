@@ -1,4 +1,3 @@
-import pandas as pd
 from pathlib import Path
 from itertools import chain
 from PIL import Image
