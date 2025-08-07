@@ -19,32 +19,41 @@ from wibench.utils import (
 
 @dataclass
 class ARWGANParams:
-    """Configuration parameters of the ARWGAN image watermarking algorithm.
+    """
+    Configuration parameters for the ARWGAN (Attention-Guided Robust Image Watermarking Model Based on GAN) algorithm.
 
-    Parameters
-    ----------
-    H : int
-        Required image size vertically
-    W : int
-        Required image size horizontally
-    wm_length : int
-        Length of the embedded bit sequence
-    encoder_blocks : int
-    encoder_channels : int
-    decoder_blocks : int
-    decoder_channels : int
-    use_discriminator : bool
-    use_vgg : bool
-    discriminator_blocks : int
-    discriminator_channels : int
-    decoder_loss : float
-        Decoder regularization Coefficient
-    encoder_loss : float
-        Encoder regularization coefficient
-    adversarial_loss : float
-        Adversarial regularization coefficient
-    enable_fp16 : bool
-        Use fp16 in watermarking process
+    ARWGAN is an adversarially trained deep learning model for robust image watermarking.
+    It embeds a binary watermark into an image using a CNN-based encoder, and extracts
+    it using a decoder, while optionally leveraging a discriminator and perceptual loss
+    for improved imperceptibility and robustness.
+
+    Attributes:
+        H (int): Height of the input image (in pixels). Determines the vertical size of image tensors.
+        W (int): Width of the input image (in pixels). Determines the horizontal size of image tensors.
+        wm_length (int): Length of the binary watermark message to embed (in bits).
+
+        encoder_blocks (int): Number of convolutional blocks in the encoder network.
+        encoder_channels (int): Number of filters (channels) in each encoder block.
+
+        decoder_blocks (int): Number of convolutional blocks in the decoder network.
+        decoder_channels (int): Number of filters in each decoder block.
+
+        use_discriminator (bool): If True, enables the use of an adversarial discriminator
+        use_vgg (bool): If True, adds a perceptual loss using VGG features to improve
+
+        discriminator_blocks (int): Number of convolutional blocks in the discriminator network.
+        discriminator_channels (int): Number of filters in each discriminator block.
+
+        decoder_loss (float): Weight of the decoder loss term in the total loss function.
+            Controls the importance of accurate message recovery.
+        encoder_loss (float): Weight of the encoder loss term in the total loss function.
+            Typically regularizes visual similarity between original and encoded images.
+        adversarial_loss (float): Weight of the adversarial loss term in the total loss.
+            Higher values push the encoder to generate more realistic images when
+            a discriminator is used.
+
+        enable_fp16 (bool): If True, enables mixed precision (fp16) training/inference
+            for improved speed and reduced memory usage on compatible hardware (default False).
     """
     H: int
     W: int
@@ -64,7 +73,7 @@ class ARWGANParams:
 
 
 class ARWGANWrapper(BaseAlgorithmWrapper):
-    """Implements an algorithm for applying watermarks to images using the ARWGAN algorithm.
+    """ARWGAN: Attention-Guided Robust Image Watermarking Model Based on GAN - Image Watermarking Algorithm (https://ieeexplore.ieee.org/document/10155247)
     
     Provides an interface for embedding and extracting watermarks using the ARWGAN watermarking algorithm.
     Based on the code from https://github.com/river-huang/ARWGAN.
