@@ -1,3 +1,4 @@
+import pandas as pd
 from pathlib import Path
 from itertools import chain
 from PIL import Image
@@ -10,7 +11,11 @@ from typing_extensions import (
     Optional,
     Any
 )
-from wibench.typing import Range, ImageObject
+from wibench.typing import (
+    Range,
+    ImageObject,
+    PromptObject
+)
 from wibench.registry import RegistryMeta
 
 
@@ -88,3 +93,32 @@ class ImageFolderDataset(RangeBaseDataset):
             for path in self.path_list[self.sample_range[0]: self.sample_range[1] + 1]:
                 img = self.transform(Image.open(path))
                 yield ImageObject(path.name, img)
+
+
+class PromptFolderDataset(RangeBaseDataset):
+
+    def __init__(
+        self,
+        path: Union[Path, str],
+        prompt_ext: List[str] = ["txt", "csv"],
+        sample_range: Optional[Tuple[int, int]] = None
+    ) -> None:
+        self.path = Path(path)
+        path_gen = sorted(
+            chain.from_iterable(self.path.glob(f"*.{ext}") for ext in prompt_ext)
+        )
+        self.path_list = list(path_gen)
+        self.prompts = []
+        for path in self.path_list:
+            with open(path, "r") as f:
+                self.prompts += f.read().split("\n")
+        assert len(self.prompts) != 0, "Empty dataset, check dataset path"
+        dataset_len = len(self.prompts)
+        super().__init__(sample_range, dataset_len)
+
+    def __len__(self) -> int:
+        return self.len
+
+    def generator(self) -> Generator[PromptObject, None, None]:
+        for prompt_id in range(self.sample_range[0], self.sample_range[1] + 1):
+            yield PromptObject(str(prompt_id), self.prompts[prompt_id])
