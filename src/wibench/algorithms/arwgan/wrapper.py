@@ -19,6 +19,33 @@ from wibench.utils import (
 
 @dataclass
 class ARWGANParams:
+    """Configuration parameters of the ARWGAN image watermarking algorithm.
+
+    Parameters
+    ----------
+    H : int
+        Required image size vertically
+    W : int
+        Required image size horizontally
+    wm_length : int
+        Length of the embedded bit sequence
+    encoder_blocks : int
+    encoder_channels : int
+    decoder_blocks : int
+    decoder_channels : int
+    use_discriminator : bool
+    use_vgg : bool
+    discriminator_blocks : int
+    discriminator_channels : int
+    decoder_loss : float
+        Decoder regularization Coefficient
+    encoder_loss : float
+        Encoder regularization coefficient
+    adversarial_loss : float
+        Adversarial regularization coefficient
+    enable_fp16 : bool
+        Use fp16 in watermarking process
+    """
     H: int
     W: int
     wm_length: int
@@ -37,6 +64,17 @@ class ARWGANParams:
 
 
 class ARWGANWrapper(BaseAlgorithmWrapper):
+    """Implements an algorithm for applying watermarks to images using the ARWGAN algorithm.
+    
+    Provides an interface for embedding and extracting watermarks using the ARWGAN watermarking algorithm.
+    Based on the code from https://github.com/river-huang/ARWGAN.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        ARWGAN algorithm configuration parameters
+    """
+
     name = "arwgan"
     
     def __init__(self, params: Dict[str, Any]) -> None:
@@ -86,6 +124,15 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
         self.encoder_decoder.eval()
 
     def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+        """Embed watermark into input image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         resized_normalized_image = normalize_image(resized_image)
         with torch.no_grad():
@@ -95,6 +142,15 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
         return marked_image
     
     def extract(self, image: TorchImg, watermark_data: Any):
+        """Extract watermark from marked image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         resized_normalize_image = normalize_image(resized_image)
         with torch.no_grad():
@@ -102,4 +158,15 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
         return (res.cpu().numpy() > 0.5).astype(int)
     
     def watermark_data_gen(self) -> TorchBitWatermarkData:
+        """Generate watermark payload data for ARWGAN watermarking algorithm.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of (0, message_length)
+
+        Notes
+        -----
+        - Called automatically during embedding
+        """
         return TorchBitWatermarkData.get_random(self.params.wm_length)
