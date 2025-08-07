@@ -186,7 +186,7 @@ class ContextDecoder:
 @dataclass
 class Context:
     """
-    Data class holding all context information for an image being processed.
+    Data class holding all context information for an object being processed.
     """
     object_id: str
     run_id: str
@@ -304,7 +304,7 @@ class Context:
         Yields
         ------
         str
-            Image IDs of found contexts
+            Objects IDs of found contexts
         """
         if dump_type == DumpType.pickle:
             for img_id in context_glob_pkl(context_dir):
@@ -321,7 +321,7 @@ def load_context_pkl(context_dir: Path, object_id: str) -> Context:
         with open(ctx_file, "rb") as f:
             return pickle.load(f)
     else:
-        raise FileNotFoundError(f"No context for image {object_id}")
+        raise FileNotFoundError(f"No context for object {object_id}")
 
 
 def save_context_pkl(context_dir: Path, context: Context):

@@ -16,7 +16,7 @@ class DiffusionDB(RangeBaseDataset):
     ----------
     subset : str
         Dataset subset name (e.g., '2m_first_5k')
-    image_range : Optional[Tuple[int, int]]
+    sample_range : Optional[Tuple[int, int]]
         Optional (start, end) index range to subset the dataset
     cache_dir : Optional[str]
         Directory to cache downloaded dataset files
@@ -54,7 +54,15 @@ class DiffusionDB(RangeBaseDataset):
 
     def generator(
         self,
-    ) -> Generator[Union[ImageObject, PromptObject], None, None]:      
+    ) -> Generator[Union[ImageObject, PromptObject], None, None]:
+        """Yields DiffusionDB images or prompts.
+        
+        Yields
+        ------
+            Union[ImageObject, PromptObject]:
+                images form DiffusionDB as ImageObject or 
+                prompts as PromptObject in case of `self.return_prompt = True`
+        """   
         len_idx = 0
         start_idx = self.sample_range.start - 1
         while (True):

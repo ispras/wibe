@@ -231,6 +231,19 @@ def seed_everything(seed: Optional[int] = None):
 
 
 def object_id_to_seed(object_id: str, bits: int = 32) -> int:
+    """ Converts a string to integer seed by hashing
+    Parameters
+    ----------
+    object_id : str
+        String to convert
+    bits : int
+        Number of bit in resulting integer
+
+    Returns
+    -------
+    int
+        Resulting integer seed
+    """
     hash_bytes = hashlib.sha256(object_id.encode()).digest()[:bits//8]
     return int.from_bytes(hash_bytes, byteorder='little')
 

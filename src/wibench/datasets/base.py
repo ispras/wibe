@@ -17,15 +17,7 @@ from wibench.registry import RegistryMeta
 class BaseDataset(metaclass=RegistryMeta):
     """Abstract base class for all watermarking dataset implementations.
 
-    Provides interface for image dataset loading with automatic registry support.
-    Supports both full datasets and ranged subsets of images.
-
-    Parameters
-    ----------
-    image_range : Optional[Tuple[int, int]]
-        Optional (start, end) index range to subset the dataset
-    len : int
-        Total number of images in the full dataset
+    Provides interface for dataset loading with automatic registry support.
     """
     type = "dataset"
 
@@ -33,7 +25,7 @@ class BaseDataset(metaclass=RegistryMeta):
         raise NotImplementedError
 
     def __len__(self) -> int:
-        """Return number of images in this dataset instance.
+        """Return number of objects in this dataset instance.
         
         Returns
         -------
@@ -43,18 +35,22 @@ class BaseDataset(metaclass=RegistryMeta):
         raise NotImplementedError
 
     def generator(self) -> Generator[Any, None, None]:
-        """Yield images as (id, tensor) pairs (abstract).
-        
-        Yields
-        ------
-        Tuple[str, TorchImg]
-            image_id: Unique identifier string
-            image_tensor: Image data in (C,H,W) [0,1] range
+        """Yield objects to process. 
         """
         raise NotImplementedError
 
 
 class RangeBaseDataset(BaseDataset):
+    """
+    Class for datasets that support range subsets of objects.
+
+    Parameters
+    ----------
+    sample_range : Optional[Tuple[int, int]]
+        Optional (start, end) index range to subset the dataset (including both borders)
+    len : int
+        Total number of images in the full dataset
+    """
     abstract = True
 
     def __init__(self, sample_range: Optional[Tuple[int, int]], dataset_len: int) -> None:
@@ -128,13 +124,11 @@ class ImageFolderDataset(RangeBaseDataset):
         return self.len
 
     def generator(self) -> Generator[ImageObject, None, None]:
-        """Yield images from directory.
+        """Yields images from directory.
         
         Yields
         ------
-        Tuple[str, TorchImg]
-            image_id: Base filename without extension  
-            image_tensor: Loaded image tensor
+            ImageObject: image name as image_id and image tensor
         """
         if len(self.images) > 0:
             for path, img in zip(self.path_list[self.sample_range[0]: self.sample_range[1] + 1], self.images):

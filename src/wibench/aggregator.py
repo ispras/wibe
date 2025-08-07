@@ -55,6 +55,8 @@ class Aggregator(ABC):
             - Core metadata (run_id, image_id, dataset, etc.)
             - Algorithm parameters
             - Metrics from all pipeline stages
+        dry : bool
+            Flag for dry run. Some aggregators should not write records on dry runs.
         """
         raise NotImplementedError
     
@@ -111,6 +113,8 @@ class PandasAggregator(Aggregator):
         ----------
         records : Dict[str, Any]
             Batch of metrics records
+        dry : bool
+            Not used
         """
 
         batch = pd.DataFrame(records)
@@ -152,7 +156,8 @@ class ClickHouseAggregator(Aggregator):
         ----------
         records : Dict[str, Any]
             Batch of metrics records
-
+        dry : bool
+            On dry run records are not sent to ClickHouse
         Notes
         -----
         - Attempts direct database insertion first
@@ -191,6 +196,8 @@ class FanoutAggregator:
         ----------
         records : List[Dict[str, Any]]
             Batch of metrics records
+        dry : bool
+            Dry run flag
         """
         for aggregator in self.aggregators:
             try:

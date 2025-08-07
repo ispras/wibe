@@ -38,26 +38,26 @@ class Stage:
     """Abstract base class for all pipeline processing stages.
 
     Each stage represents a distinct step in the watermarking pipeline workflow.
-    Concrete implementations must override the process_image method.
+    Concrete implementations must override the process_object method.
 
     Methods
     -------
-    process_image(image_context)
-        Process an image through this stage (abstract)
+    process_object(object_context)
+        Process an object through this stage (abstract)
     """
     def process_object(self, object_context: Context) -> None:
-        """Process an image through this pipeline stage.
+        """Process an object through this pipeline stage.
 
         Parameters
         ----------
-        image_context : Context
-            The context object containing all image data and metadata
+        object_context : Context
+            The context containing all object data and metadata
         """
         raise NotImplementedError()
 
 
 class EmbedWatermarkStage(Stage):
-    """Stage for embedding watermarks into images using specified algorithm.
+    """Stage for embedding watermarks into objects using specified algorithm.
 
     Parameters
     ----------
@@ -69,12 +69,12 @@ class EmbedWatermarkStage(Stage):
         self.algorithm_wrapper = algorithm_wrapper
 
     def process_object(self, object_context: Context):
-        """Embed watermark into the source image.
+        """Embed watermark into the source object.
 
         Parameters
         ----------
-        image_context : Context
-            Context object containing the source image
+        object_context : Context
+            Context containing the source object data and metadata
         """
         object_context.dtm = datetime.datetime.now()
         watermark_data = self.algorithm_wrapper.watermark_data_gen()
@@ -103,12 +103,12 @@ class PostEmbedMetricsStage(Stage):
         self.metrics = metrics
 
     def process_object(self, object_context: Context):
-        """Calculate quality metrics between original and watermarked images.
+        """Calculate metrics after watermark embedding (e.g. Image quality metrics between original image and watermarked image).
 
         Parameters
         ----------
-        image_context : Context
-            Context containing both original and marked images
+        object_context : Context
+            Context containing both original and marked object
         """
         watermark_data = object_context.watermark_data
         original_object_data = object_context.object_data
@@ -121,27 +121,27 @@ class PostEmbedMetricsStage(Stage):
 class PostAttackMetricsStage(Stage):
     """Stage for computing quality metrics after attack transformations.
 
-    This stage calculates metrics between the watermarked image and each attacked version,
-    assessing the visual impact and distortion introduced by each attack.
+    This stage calculates metrics between the watermarked object and each attacked version,
+    assessing the perceptive impact and distortion introduced by each attack.
 
     Parameters
     ----------
     metrics : List[PostEmbedMetric]
         List of metric calculators to apply. These should be metrics that compare
-        two images (watermarked vs attacked), such as PSNR or SSIM.
+        two objects (watermarked vs attacked), such as PSNR or SSIM for images.
     """
     def __init__(self, metrics: List[PostEmbedMetric]):
         self.metrics = metrics
 
     def process_object(self, object_context: Context):
-        """Compute metrics between watermarked and attacked images.
+        """Compute metrics between watermarked and attacked object.
 
         Parameters
         ----------
-        image_context : Context
+        object_context : Context
             The context object containing:
-            - marked_image: Original watermarked image
-            - attacked_images: Dictionary of attacked images
+            - marked_object: Watermarked object
+            - attacked_objects: Dictionary of attacked objects
         """
         watermark_data = object_context.watermark_data
         marked_object = object_context.marked_object
@@ -160,7 +160,7 @@ class PostAttackMetricsStage(Stage):
 
 
 class ApplyAttacksStage(Stage):
-    """Stage for applying attacks to watermarked images.
+    """Stage for applying attacks to watermarked objects.
 
     Parameters
     ----------
@@ -171,12 +171,12 @@ class ApplyAttacksStage(Stage):
         self.attacks = attacks
 
     def process_object(self, object_context: Context):
-        """Apply all attacks to the watermarked image.
+        """Apply all attacks to the watermarked object.
 
         Parameters
         ----------
-        image_context : Context
-            Context containing the watermarked image
+        object_context : Context
+            Context containing the watermarked object
         """
         marked_object = object_context.marked_object
         attacked_object_context = object_context.attacked_objects
@@ -189,7 +189,7 @@ class ApplyAttacksStage(Stage):
 
 
 class ExtractWatermarkStage(Stage):
-    """Stage for extracting watermarks from attacked images.
+    """Stage for extracting watermarks from attacked objects.
 
     Parameters
     ----------
@@ -201,12 +201,12 @@ class ExtractWatermarkStage(Stage):
         self.algorithm_wrapper = algorithm_wrapper
 
     def process_object(self, object_context: Context):
-        """Attempt watermark extraction from all attacked images.
+        """Attempt watermark extraction from all attacked objects.
 
         Parameters
         ----------
-        image_context : Context
-            Context containing attacked images
+        object_context : Context
+            Context containing attacked objects
         """
         watermark_data = object_context.watermark_data
         for attack_name, attacked_object in object_context.attacked_objects.items():
@@ -224,14 +224,14 @@ class ExtractWatermarkStage(Stage):
 class PostExtractMetricsStage(Stage):
     """Stage for evaluating watermark extraction quality after attacks.
 
-    This stage computes metrics comparing the original watermark data with the
-    extracted watermark from each attacked image version, measuring the robustness
+    This stage computes metrics comparing the embedded watermark data with the
+    extracted watermark from each attacked object version, measuring the robustness
     of the watermarking algorithm.
 
     Parameters
     ----------
     metrics : List[PostExtractMetric]
-        List of metric calculators that compare original and extracted watermarks.
+        List of metric calculators that compare embedded and extracted watermarks.
     """
     def __init__(self, metrics: List[PostExtractMetric]):
         self.metrics = metrics
@@ -241,7 +241,7 @@ class PostExtractMetricsStage(Stage):
 
         Parameters
         ----------
-        image_context : Context
+        object_context : Context
             The context object containing:
             - watermark_data: Original embedded watermark
             - extraction_result: Dictionary of extracted watermarks by attack
@@ -265,7 +265,7 @@ class PostExtractMetricsStage(Stage):
 
 
 class AggregateMetricsStage(Stage):
-    """Final pipeline stage that collects and aggregates metrics across all processed images.
+    """Final pipeline stage that collects and aggregates metrics across all processed objects.
 
     This stage batches processed results and periodically flushes them to configured
     aggregators (CSV files, databases, etc.). Ensures efficient bulk writing of metrics
@@ -275,6 +275,8 @@ class AggregateMetricsStage(Stage):
     ----------
     pipeline_config : PipeLineConfig
         Complete pipeline configuration 
+    dry_run : bool
+        If True, validate without writing
     """
     def __init__(self, pipeline_config: PipeLineConfig, dry_run: bool = False):
         self.config = pipeline_config
@@ -292,11 +294,11 @@ class AggregateMetricsStage(Stage):
             self.records = []
 
     def process_object(self, object_context: Context):
-        """Add image metrics to aggregation batch and flush if threshold reached.
+        """Add object metrics to aggregation batch and flush if threshold reached.
         
         Parameters
         ----------
-        image_context : Context
+        object_context : Context
             Processed context containing all metrics and metadata
         """
         self.records.append(object_context.form_record())
@@ -334,6 +336,8 @@ class StageRunner:
         Metrics to compute at each stage
     pipeline_config : PipeLineConfig
         Pipeline configuration object
+    dry_run : bool
+        Dry run flag
     """
     def __init__(
         self,
@@ -376,18 +380,13 @@ class StageRunner:
 
         pass
 
-    def run(self, context: Context) -> Context:
-        """Execute all stages on the given image context.
+    def run(self, context: Context):
+        """Execute all stages on the given object context. Context is modified internally.
 
         Parameters
         ----------
         context : Context
-            Image context to process
-
-        Returns
-        -------
-        Context
-            Processed context with all results
+            Object context to process
         """
         for stage_num, stage in enumerate(self.stages):
             seed_everything(
@@ -473,7 +472,7 @@ class Pipeline:
     algorithm_wrapper : Union[BaseAlgorithmWrapper, Iterable[BaseAlgorithmWrapper]]
         One or more watermarking algorithms to evaluate
     datasets : Union[BaseDataset, Iterable[BaseDataset]]
-        One or more image datasets to process
+        One or more datasets to process
     attacks : List[BaseAttack]
         List of attacks to apply
     metrics : Dict[str, List[BaseMetric]]
@@ -500,6 +499,22 @@ class Pipeline:
     def init_context(
         self, run_id: str, dataset_name: str, original_object: Union[Object, Dict[str, Any]]
     ):
+        """Initialize processing context.
+
+        Parameters
+        ----------
+        run_id : str
+            Experiment identifier
+        dataset_name : str
+            Source dataset name
+        original_object : Union[Object, Dict]
+            Input object to process
+
+        Returns
+        -------
+        Context
+            Configured context object
+        """
         if is_dataclass(original_object):
             object_data_field = original_object.get_object_alias()
             object_id = original_object.id
@@ -520,7 +535,19 @@ class Pipeline:
             object_data_field=object_data_field,
         )
 
-    def get_stage_list(self, stages: Optional[List[str]]):
+    def get_stage_list(self, stages: Optional[List[str]]) -> List[str]:
+        """Resolve full stage execution sequence.
+
+        Parameters
+        ----------
+        stages : Optional[List[str]]
+            Requested stages or None for all
+
+        Returns
+        -------
+        List[str]
+            Stage names in execution order
+        """
         if stages is None or "all" in stages:
             stages = list(STAGE_CLASSES.keys())
         start = None
@@ -546,11 +573,13 @@ class Pipeline:
         ----------
         run_id : str
             Unique identifier for this pipeline run
-        stages : Optional[List[str]], optional
+        stages : Optional[List[str]]
             Specific stages to execute (None for all stages)
-        dump_context : bool, optional
+        dump_context : bool
             Whether to save intermediate contexts (default False)
-        process_num : int, optional
+        dry_run : bool
+            Validate pipeline on a few objects to check everything working
+        process_num : int
             Current process number for parallel execution (default 0)
 
          Notes

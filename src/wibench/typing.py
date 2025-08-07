@@ -21,10 +21,32 @@ TorchImgNormalize = NewType("TorchImgNormalize", torch.Tensor)
 
 @dataclass
 class Object:
+    """Base class for pipeline objects, got from dataset. Fields with "alias" are used to be passed to metrics os original dataset data
+    
+    Attributes
+    ----------
+    id : str
+        Unique identifier for the object
+    _alias : Optional[Any]
+        Internal storage for object alias (not initialized directly)
+
+    """
     id: str
     _alias: Optional[Any] = field(default=None, init=False)
 
     def get_object_alias(self) -> Any:
+        """Retrieve the alias name for this object.
+        
+        Returns
+        -------
+        Any
+            The alias name if configured
+            
+        Raises
+        ------
+        ValueError
+            If no alias is found
+        """
 
         if self._alias is not None:
             return self._alias
@@ -38,6 +60,26 @@ class Object:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]):
+        """Construct object from dictionary with alias support.
+        
+        Parameters
+        ----------
+        data : Dict[str, Any]
+            Dictionary containing:
+            - 'id': Unique identifier
+            - 'alias': Optional alias name
+            - Additional object attributes
+            
+        Returns
+        -------
+        Object
+            Initialized instance
+            
+        Notes
+        -----
+        - Preserves all non-special fields from input dict
+        - Handles alias field specially
+        """
         _alias = data.pop("alias", None)
         obj = cls()
         if _alias is not None:
@@ -47,6 +89,15 @@ class Object:
         return obj
 
     def dynamic_asdict(self) -> Dict[str, Any]:
+        """Convert object to dictionary, excluding internal fields.
+        
+        Returns
+        -------
+        Dict[str, Any]  
+            Dictionary representation with:
+            - All public attributes
+            - Excludes 'id' and fields starting with '_'
+        """
         result = {}
         result.update({
             k: v for k, v in vars(self).items()
@@ -57,9 +108,27 @@ class Object:
 
 @dataclass
 class ImageObject(Object):
+    """Object containing an image tensor. Image is passed to metrics as original image via "alias" metadata.
+    
+    Attributes
+    ----------
+    id : str
+        Unique identifier for the image
+    image : TorchImg
+        Image tensor meeting TorchImg specifications
+    """
     image: TorchImg = field(metadata={"alias": "image"})
 
 
 @dataclass
 class PromptObject(Object):
+    """Object containing a text prompt with alias support. Prompt is passed to metrics as original object via "alias" metadata.
+    
+    Attributes
+    ----------
+    id : str
+        Unique identifier for the prompt
+    prompt : str
+        Text description or prompt
+    """
     prompt: str = field(metadata={"alias": "prompt"})

@@ -25,36 +25,12 @@ class BaseAlgorithmWrapper(metaclass=RegistryMeta):
         self.param_hash = md5(str(self.param_dict).encode()).hexdigest()
 
     def embed(self, *args, **kwargs) -> Any:
-        """Embed watermark into input image (abstract).
-        
-        Parameters
-        ----------
-        image : TorchImg
-            Input image tensor (C,H,W) in [0,1] range
-        watermark_data : WatermarkData
-            Watermark payload to embed
-
-        Returns
-        -------
-        TorchImg
-            Watermarked image tensor (C,H,W) in [0,1] range
+        """Embed watermark into input object (abstract).
         """
         raise NotImplementedError
 
     def extract(self, *args, **kwargs) -> Any:
-        """Extract watermark from image (abstract).
-        
-        Parameters
-        ----------
-        image : TorchImg
-            Potentially attacked image tensor (C,H,W) in [0,1] range  
-        watermark_data : WatermarkData
-            Original watermark data for reference
-
-        Returns
-        -------
-        Any
-            Extracted watermark data
+        """Extract watermark from marked object (abstract).
         """
         raise NotImplementedError
 

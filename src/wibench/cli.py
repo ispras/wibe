@@ -105,6 +105,8 @@ def run(
         Path to YAML configuration file
     dump_context : bool
         Whether to save intermediate contexts
+    dry_run: bool
+        Run on a few samples
     stages : Optional[List[str]]
         Pipeline stages to execute. Available stages:
         - embed: Watermark embedding

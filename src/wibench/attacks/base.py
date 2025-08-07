@@ -7,7 +7,7 @@ class BaseAttack(metaclass=RegistryMeta):
     """
     Base class for all attack implementations.
 
-    Attacks modify watermarked images to test robustness.
+    Attacks modify watermarked objects to test robustness.
     All concrete attack classes should implement `__call__` method.
     """
     type = "attack"
@@ -15,23 +15,14 @@ class BaseAttack(metaclass=RegistryMeta):
     def __init__(self, *args, **kwargs) -> None:
         pass
 
-    def __call__(self, image: TorchImg) -> TorchImg:
+    def __call__(self, object: Any) -> Any:
         """
-        Apply attack to an image.
-        
-        Parameters
-        ----------
-        image : TorchImg
-            Input image tensor
-            
-        Returns
-        -------
-        TorchImg
-            Modified image tensor
+        Apply attack to an object.
         """
         raise NotImplementedError
 
 
+# ToDo: implement for any type of objects
 class Identity(BaseAttack):
     """
     Implementation of "no attack" case

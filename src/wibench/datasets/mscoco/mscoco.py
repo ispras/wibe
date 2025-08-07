@@ -15,7 +15,7 @@ class MSCOCO(RangeBaseDataset):
     ----------
     split : str
         Dataset split to load ('train' or 'val')
-    image_range : Optional[Tuple[int, int]]
+    sample_range : Optional[Tuple[int, int]]
         Optional (start, end) index range to subset the dataset
     cache_dir : Optional[str]
         Directory to cache downloaded dataset files
@@ -39,6 +39,13 @@ class MSCOCO(RangeBaseDataset):
     def generator(
         self,
     ) -> Generator[ImageObject, None, None]:
+        """Yields MSCOCO images.
+        
+        Yields
+        ------
+            ImageObject:
+                images form MSCOCO as ImageObject
+        """
         len_idx = -1
         while (True):
             len_idx += 1

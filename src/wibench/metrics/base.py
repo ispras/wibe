@@ -26,12 +26,12 @@ class BaseMetric(metaclass=RegistryMeta):
 class PostEmbedMetric(BaseMetric):
     """Abstract base class for metrics computed after watermark embedding.
 
-    These metrics compare the original and watermarked images to assess:
-    - Visual quality degradation
-    - Watermark visibility
+    These metrics compare the original and watermarked objects to assess:
+    - Quality degradation
+    - Watermark perceptibility
     - Embedding distortion
 
-    May be used on PostAttackMetricsStage between marked and attacked images
+    May be used on PostAttackMetricsStage between marked and attacked objects.
     """
     abstract = True
 
@@ -87,7 +87,7 @@ class SSIM(PostEmbedMetric):
 
     Notes
     -----
-    - 1 indicates perfect similarity
+    - value 1 indicates perfect similarity
     """
 
     def __call__(
