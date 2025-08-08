@@ -53,7 +53,7 @@ class SSLMultiBitParams(SSLParams):
         scheduler : Optional[str]
             Learning rate scheduler to use (default None).
         num_bits : int
-            Length of the watermark message to be embedded (in bits).
+            Length of the watermark message to embed (in bits).
     """
 
     epochs: int = 100
@@ -122,7 +122,7 @@ class SSL0BitParams(SSLParams):
 
 @dataclass
 class WatermarkData:
-    """Base configuration parameters for for Self-Supervised Learning (SSL) watermarking model.
+    """Base configuration parameters for Self-Supervised Learning (SSL) watermarking model.
 
     Attributes
     ----------

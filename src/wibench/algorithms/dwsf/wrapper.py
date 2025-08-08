@@ -35,7 +35,7 @@ class DWSFParams(Params):
         seg_weights_path : Optional[str]
             Path to the segmentation model weights, used for block localization.
         message_length : int
-            Length of the watermark message in bits (default: 30).
+            Length of the binary watermark message to embed (in bits) (default: 30).
         H : int
             Height of image blocks or patch size used during embedding/extraction (default: 128).
         W : int

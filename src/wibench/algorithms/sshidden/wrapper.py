@@ -20,7 +20,37 @@ from wibench.watermark_data import TorchBitWatermarkData
 
 @dataclass
 class SSHiddenParams(Params):
-    """TODO
+    """Configuration parameters for the HiDDeN (Hiding Data in Deep Networks) algorithm from StableSignature.
+
+    These parameters define the image dimensions, watermark length, and the architecture
+    of the encoder and decoder networks used for image watermarking.
+
+    Attributes
+    ----------
+        ckpt_path : Optional[str]
+            Path to pretrained checkpoint (default None)
+        encoder_depth : int
+            Number of convolutional blocks in the encoder network (default 4).
+        encoder_channels : int
+            Base number of channels in encoder convolutional blocks (default 64).
+        decoder_depth : int
+            Number of convolutional blocks in the decoder network (default 8).
+        decoder_channels : int
+            Base number of channels in decoder convolutional blocks (default 64).
+        num_bits : int
+            Length of the watermark message to be embed (in bits) (default 48).
+        attenuation : str
+            Noise modulation strategy for watermark embedding (default 'jnd').
+        scale_channels : bool
+            Whether to use channel-wise scaling in the decoder (default False).
+        scaling_i : float
+            Scaling factor for image reconstruction loss (default 1.0).
+        scaling_w : float
+            Scaling factor for watermark reconstruction loss (default 1.5).
+        H : int
+            Height of the input image (in pixels). Defines the vertical dimension of the input tensor (default 512).
+        W : int
+            Width of the input image (in pixels). Defines the horizontal dimension of the input tensor (default 512).
     """
     ckpt_path: Optional[str] = None
     encoder_depth: int = 4

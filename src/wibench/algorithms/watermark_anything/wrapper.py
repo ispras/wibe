@@ -10,11 +10,31 @@ import os
 
 @dataclass
 class WAParams:
+    """Configuration parameters for the Watermark Anything algorithm
+
+    Attributes
+    ----------
+        wm_length : int
+            Length of the watermark message to be embed (in bits).
+        scaling_w : float
+            Scaling factor for the watermark in the embedder model 
+    """
     wm_length: int
     scaling_w: float
 
 
 class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
+    """Watermark Anything with Localized Messages - Image Watermarking Algorithm (https://arxiv.org/abs/2411.07231)
+    
+    Provides an interface for embedding and extracting watermarks using the Watermark Anything watermarking algorithm.
+    Based on the code from https://github.com/facebookresearch/watermark-anything.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        Watermark Anything algorithm configuration parameters
+    """
+    
     name = "watermark_anything"
 
     def __init__(
@@ -49,6 +69,15 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         self.unnormalize_img = unnormalize_img
 
     def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+        """Embed watermark into input image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         img = self.transform(image).unsqueeze(0).to(self.device)
         wm = watermark_data.watermark.to(self.device)
         with torch.no_grad():
@@ -58,6 +87,15 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         return torch.clamp(res, 0, 1)
 
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+        """Extract watermark from marked image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         img = self.transform(image).unsqueeze(0).to(self.device)
         with torch.no_grad():
             preds = self.wam.detect(img)["preds"].cpu()
@@ -70,4 +108,15 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         return pred_message.squeeze().numpy()
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
+        """Generate watermark payload data for ARWGAN watermarking algorithm.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of (0, message_length)
+
+        Notes
+        -----
+        - Called automatically during embedding
+        """
         return TorchBitWatermarkData.get_random(self.params.wm_length)

@@ -1,7 +1,7 @@
 import numpy as np
 
 from dataclasses import dataclass
-from typing_extensions import Optional, Union
+from typing_extensions import Optional, Union, Any
 from pathlib import Path
 
 from wibench.algorithms.stega_stamp.stega_stamp import StegaStamp
@@ -13,14 +13,40 @@ from wibench.watermark_data import TorchBitWatermarkData
 
 @dataclass
 class StegaStampConfig:
+    """Configuration parameters for the StageStamp model.
+
+    Attributes
+    ----------
+        weights_path : Optional[Union[str, Path]]
+            Path to pretrained StegaStamp model weights (default None).
+        wm_length: int
+            Length of the watermark message to be embed (in bits) (default 100).
+        width : int
+            Width of the input image (in pixels). Defines the horizontal dimension of the input tensor (default 400).
+        height : int
+            Height of the input image (in pixels). Defines the vertical dimension of the input tensor (default 400).
+        alpha : float
+            Weight parameter controlling the trade-off between watermark robustness and image quality during embedding (default 1.0).
+    """
     weights_path: Optional[Union[str, Path]] = None
     wm_length: int = 100
     width: int = 400
     height: int = 400
-    alpha: float = 0.5
+    alpha: float = 1.0
 
 
 class StegaStampWrapper(BaseAlgorithmWrapper):
+    """StegaStamp: Invisible Hyperlinks in Physical Photographs - Image Watermarking Algorithm (https://arxiv.org/abs/1904.05343)
+    
+    Provides an interface for embedding and extracting watermarks using the StegaStamp watermarking algorithm.
+    Based on the code from https://github.com/tancik/StegaStamp.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        StegaStamp algorithm configuration parameters
+    """
+
     name = "stega_stamp"
     
     def __init__(self, params: StegaStampConfig) -> None:
@@ -32,11 +58,40 @@ class StegaStampWrapper(BaseAlgorithmWrapper):
                                       self.params.height,
                                       self.params.alpha)
 
-    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
+        """Embed watermark into input image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         return numpy_bgr2torch_img(self.stega_stamp.encode(torch_img2numpy_bgr(image), watermark_data.watermark.squeeze(0).numpy()))
     
-    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
+        """Extract watermark from marked image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         return self.stega_stamp.decode(torch_img2numpy_bgr(image))
     
     def watermark_data_gen(self) -> TorchBitWatermarkData:
+        """Generate watermark payload data for StegaStamp watermarking algorithm.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of (0, message_length)
+
+        Notes
+        -----
+        - Called automatically during embedding
+        """
         return TorchBitWatermarkData.get_random(self.params.wm_length)

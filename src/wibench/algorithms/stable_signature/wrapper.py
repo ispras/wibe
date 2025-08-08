@@ -14,25 +14,48 @@ from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
 from wibench.typing import TorchImg
 from wibench.utils import numpy_bgr2torch_img, normalize_image
-from wibench.module_importer import ModuleImporter
+from wibench.watermark_data import TorchBitWatermarkData
 
 
 @dataclass
 class StableSignatureParams(Params):
+    """Configuration parameters for StableSignature watermarking model.
+
+    Attributes
+    ----------
+        ldm_config_path : Optional[Union[str, Path]]
+            Path to LDM config file (default None).
+        ldm_checkpoint_path : Optional[Union[str, Path]]
+            Path to pretrained LDM weights (default None).
+        ldm_decoder_path : Optional[Union[str, Path]]
+            Path to custom LDM decoder weights (default None).
+        decoder_path : Optional[Union[str, Path]]
+            Path to watermark decoder model (default None).
+        model : str
+            Base diffusion model identifier from Hugging Face Hub (default 'stabilityai/stable-diffusion-2').
+        secret : Optional[str]
+            Binary secret message to embed (default '111010110101000001010111010011010100010000100111').
+    """
     ldm_config_path: Optional[Union[str, Path]] = None
     ldm_checkpoint_path: Optional[Union[str, Path]] = None
     ldm_decoder_path: Optional[Union[str, Path]] = None
     decoder_path: Optional[Union[str, Path]] = None
     model: str = "stabilityai/stable-diffusion-2"
-    secret: str = "111010110101000001010111010011010100010000100111"
-
-
-@dataclass
-class WatermarkData:
-    watermark: np.ndarray
+    secret: Optional[str] = "111010110101000001010111010011010100010000100111"
 
 
 class StableSignatureWrapper(BaseAlgorithmWrapper):
+    """The Stable Signature: Rooting Watermarks in Latent Diffusion Models - Image Watermarking Algorithm (https://arxiv.org/pdf/2303.15435)
+    
+    Provides an interface for embedding and extracting watermarks in Text2Image task using the StableSignature watermarking algorithm.
+    Based on the code from https://github.com/facebookresearch/stable_signature/tree/main.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        StableSignature algorithm configuration parameters
+    """
+    
     name = "stable_signature"
 
     def __init__(self, params: Dict[str, Any]):
@@ -57,17 +80,46 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
         self.decoder = torch.jit.load(Path(self.params.decoder_path).resolve()).to(self.device)
         self.secret = np.array(list(map(int, self.params.secret)))
 
-    def embed(self, prompt: str, watermark_data: WatermarkData):
+    def embed(self, prompt: str, watermark_data: TorchBitWatermarkData) -> TorchImg:
+        """Embed watermark into input image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         pil_image = self.pipe(prompt).images[0]
         marked_image = numpy_bgr2torch_img(cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR))
         return marked_image
     
-    def extract(self, image: TorchImg, watermark_data: WatermarkData):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+        """Extract watermark from marked image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         normalized_image = normalize_image(image, self.normalize).to(self.device)
         with torch.no_grad():
             extracted_raw = self.decoder(normalized_image)
         extracted = (extracted_raw>0).squeeze().cpu().numpy().astype(int)
         return extracted
     
-    def watermark_data_gen(self):
-        return WatermarkData(self.secret)
+    def watermark_data_gen(self) -> TorchBitWatermarkData:
+        """Get watermark payload data for StableSignature watermarking algorithm from params.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of (0, message_length)
+
+        Notes
+        -----
+        - Called automatically during embedding
+        """
+        return TorchBitWatermarkData(self.secret)
