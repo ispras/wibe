@@ -81,7 +81,7 @@ class SSLMultiBitParams(SSLParams):
 
 @dataclass
 class SSL0BitParams(SSLParams):
-    """Configuration parameters for zero-bit Self-Supervised Learning (SSL) watermarking model
+    """Configuration parameters for zero-bit Self-Supervised Learning (SSL) watermarking algorithm
 
     Attributes
     ----------
@@ -122,7 +122,7 @@ class SSL0BitParams(SSLParams):
 
 @dataclass
 class WatermarkData:
-    """Base configuration parameters for Self-Supervised Learning (SSL) watermarking model.
+    """Base configuration parameters for Self-Supervised Learning (SSL) watermarking algorithm.
 
     Attributes
     ----------
@@ -139,7 +139,7 @@ class WatermarkData:
 
 @dataclass
 class WatermarkMultiBitData(WatermarkData):
-    """Watermark data for Self-Supervised Learning (SSL) watermarking model in multi-bit scenario.
+    """Watermark data for Self-Supervised Learning (SSL) watermarking algorithm in multi-bit scenario.
 
     Attributes
     ----------
@@ -151,7 +151,7 @@ class WatermarkMultiBitData(WatermarkData):
 
 @dataclass
 class Watermark0BitData(WatermarkData):
-    """Watermark data for Self-Supervised Learning (SSL) watermarking model in zero-bit scenario.
+    """Watermark data for Self-Supervised Learning (SSL) watermarking algorithm in zero-bit scenario.
 
     Attributes
     ----------
@@ -239,7 +239,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         image : TorchImg
             Input image tensor in (C, H, W) format
         watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]
-            Watermark data for Self-Supervised Learning (SSL) watermarking model in multi-bit or zero-bit scenario
+            Watermark data for Self-Supervised Learning (SSL) watermarking algorithm in multi-bit or zero-bit scenario
         """
         normalized_image = utils_img.normalize_img(image).to(self.device)
         img_loader = ImgLoader([([normalized_image], None)])
@@ -259,7 +259,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         image : TorchImg
             Input image tensor in (C, H, W) format
         watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]
-            Watermark data for Self-Supervised Learning (SSL) watermarking model in multi-bit or zero-bit scenario
+            Watermark data for Self-Supervised Learning (SSL) watermarking algorithm in multi-bit or zero-bit scenario
         """
         image = torch_img2numpy_bgr(image)
         rgb_marked_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -279,7 +279,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         Returns
         -------
         Union[WatermarkMultiBitData, Watermark0BitData]
-            Watermark data for Self-Supervised Learning (SSL) watermarking model in multi-bit or zero-bit scenario
+            Watermark data for Self-Supervised Learning (SSL) watermarking algorithm in multi-bit or zero-bit scenario
 
         Notes
         -----

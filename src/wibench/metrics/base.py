@@ -114,7 +114,7 @@ class EmbedWatermark(PostEmbedMetric):
                  img1: TorchImg,
                  img2: TorchImg,
                  watermark_data: Any):
-        str_watermark = ''.join(str(x) for x in np.array(watermark_data.watermark).flatten().tolist())
+        str_watermark = ''.join(str(x) for x in np.array(watermark_data.watermark).astype(np.uint8).flatten().tolist())
         return str_watermark
 
 
@@ -210,5 +210,5 @@ class ExtractedWatermark(PostExtractMetric):
                  img2: TorchImg,
                  watermark_data: Any,
                  extraction_result):
-        str_extract_watermark = ''.join(str(x) for x in np.array(extraction_result).flatten().tolist())
+        str_extract_watermark = ''.join(str(x) for x in np.array(extraction_result).astype(np.uint8).flatten().tolist())
         return str_extract_watermark

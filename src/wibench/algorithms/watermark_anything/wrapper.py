@@ -108,7 +108,7 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         return pred_message.squeeze().numpy()
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """Generate watermark payload data for ARWGAN watermarking algorithm.
+        """Generate watermark payload data for Watermark Anything watermarking algorithm.
         
         Returns
         -------

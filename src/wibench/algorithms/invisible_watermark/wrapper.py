@@ -84,7 +84,7 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
         )
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """Generate watermark payload data for CIN watermarking algorithm.
+        """Generate watermark payload data for invisible-watermark algorithm.
         
         Returns
         -------

@@ -136,7 +136,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         return (res.cpu().numpy() > 0.5).astype(int)
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """Generate watermark payload data for ARWGAN watermarking algorithm.
+        """Generate watermark payload data for HiDDeN watermarking algorithm.
         
         Returns
         -------

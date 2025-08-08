@@ -1,4 +1,5 @@
 import ImageReward as RM
+import torch
 
 from typing_extensions import Any
 
@@ -12,8 +13,26 @@ from wibench.metrics.base import PostEmbedMetric
 
 
 class ImageReward(PostEmbedMetric):
+    """ImageReward: Learning and Evaluating Human Preferences for Text-to-Image Generation (https://arxiv.org/abs/2304.05977)
 
-    def __init__(self, device: str = "cuda"):
+    The implementation is taken from (https://github.com/zai-org/ImageReward/tree/main). 
+
+    Initialization Parameters
+    -------------------------
+        device : str
+            Device to run the model on ('cuda', 'cpu').
+
+    Call Parameters
+    ---------------
+        prompt : str
+            Text prompt for comparison.
+        img2 : TorchImg
+            Input image tensor in (C, H, W) format.
+        watermark_data : Any
+            Not used, can be anything.
+    """
+
+    def __init__(self, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
         self.model = RM.load("ImageReward-v1.0", device=device)
 
     def __call__(self,

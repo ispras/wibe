@@ -89,7 +89,7 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
         return result
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """Generate watermark payload data for ARWGAN watermarking algorithm.
+        """Generate watermark payload data for TrustMark watermarking algorithm.
         
         Returns
         -------

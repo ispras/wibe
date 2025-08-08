@@ -85,8 +85,8 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
         
         Parameters
         ----------
-        image : TorchImg
-            Input image tensor in (C, H, W) format
+        prompt : str
+            Input prompt for image generation
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """

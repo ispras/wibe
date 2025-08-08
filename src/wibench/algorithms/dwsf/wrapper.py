@@ -217,7 +217,7 @@ class DWSFWrapper(BaseAlgorithmWrapper):
         return extract_bits
     
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """Generate watermark payload data for CIN watermarking algorithm.
+        """Generate watermark payload data for DWSF watermarking algorithm.
         
         Returns
         -------

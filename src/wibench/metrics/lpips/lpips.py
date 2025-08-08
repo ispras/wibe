@@ -7,6 +7,27 @@ import torch
 
 
 class LPIPS(PostEmbedMetric):
+    """The Unreasonable Effectiveness of Deep Features as a Perceptual Metric (https://arxiv.org/abs/1801.03924)
+
+    The implementation is taken from (https://github.com/richzhang/PerceptualSimilarity). 
+
+    Initialization Parameters
+    -------------------------
+        net : str
+            Type of network architecture (default 'alex')
+        device : str
+            Device to run the model on ('cuda', 'cpu').
+
+    Call Parameters
+    ---------------
+        img1 : TorchImg
+            Input image tensor in (C, H, W) format.
+        img2 : TorchImg
+            Input image tensor in (C, H, W) format.
+        watermark_data : Any
+            Not used, can be anything.
+    """
+    
     def __init__(self, net: str = "alex", device: str = "cuda" if torch.cuda.is_available() else "cpu") -> None:
         self.device = device
         self.loss_fn = lpips.LPIPS(net=net, verbose=False).to(self.device)

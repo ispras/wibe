@@ -158,7 +158,7 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
         return ft > 0
     
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """Generate watermark payload data for CIN watermarking algorithm.
+        """Generate watermark payload data for SSHiDDeN watermarking algorithm.
         
         Returns
         -------
