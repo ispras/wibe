@@ -20,6 +20,8 @@ from wibench.watermark_data import TorchBitWatermarkData
 
 @dataclass
 class SSHiddenParams(Params):
+    """TODO
+    """
     ckpt_path: Optional[str] = None
     encoder_depth: int = 4
     encoder_channels: int = 64
@@ -40,6 +42,15 @@ default_transform = transforms.Compose([NORMALIZE_IMAGENET])
 
 
 class SSHiddenWrapper(BaseAlgorithmWrapper):
+    """HiDDeN watermarking algorithm adapted from the Stable Signature (https://arxiv.org/pdf/2303.15435).
+
+    This implementation extends the original HiDDeN architecture by integrating
+    a Just Noticeable Difference (JND) mask to guide watermark embedding in the
+    latent space of diffusion models. The JND mask modulates embedding strength
+    to minimize perceptual artifacts while maintaining robustness.
+    Based on the code from https://github.com/facebookresearch/stable_signature/tree/main.
+    """
+
     name = "sshidden"
 
     def __init__(self, params: Dict[str, Any]) -> None:
@@ -81,7 +92,16 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
         self.encoder_with_jnd = self.encoder_with_jnd.to(self.device).eval()
         self.decoder = self.decoder.to(self.device).eval()
 
-    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
+        """Embed watermark into input image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         msg = 2 * watermark_data.watermark.type(torch.float) - 1
         resized_image = resize_torch_img(image, [self.params.H, self.params.W])
         normalized_resized_image = normalize_image(resized_image, NORMALIZE_IMAGENET)
@@ -91,7 +111,16 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
         marked_image = overlay_difference(image, resized_image, denormalized_marked_image)
         return marked_image
     
-    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
+        """Extract watermark from marked image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         normalized_image = normalize_image(resized_image, NORMALIZE_IMAGENET)
         with torch.no_grad():
@@ -99,4 +128,15 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
         return ft > 0
     
     def watermark_data_gen(self) -> TorchBitWatermarkData:
+        """Generate watermark payload data for CIN watermarking algorithm.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of (0, message_length)
+
+        Notes
+        -----
+        - Called automatically during embedding
+        """
         return TorchBitWatermarkData.get_random(self.params.num_bits)
