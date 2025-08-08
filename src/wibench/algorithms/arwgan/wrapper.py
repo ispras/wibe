@@ -22,38 +22,44 @@ class ARWGANParams:
     """
     Configuration parameters for the ARWGAN (Attention-Guided Robust Image Watermarking Model Based on GAN) algorithm.
 
-    ARWGAN is an adversarially trained deep learning model for robust image watermarking.
-    It embeds a binary watermark into an image using a CNN-based encoder, and extracts
-    it using a decoder, while optionally leveraging a discriminator and perceptual loss
-    for improved imperceptibility and robustness.
+    Attributes
+    ----------
+        H : int
+            Height of the input image (in pixels). Determines the vertical size of image tensors.
+        W : int
+            Width of the input image (in pixels). Determines the horizontal size of image tensors.
+        wm_length : int
+            Length of the binary watermark message to embed (in bits).
 
-    Attributes:
-        H (int): Height of the input image (in pixels). Determines the vertical size of image tensors.
-        W (int): Width of the input image (in pixels). Determines the horizontal size of image tensors.
-        wm_length (int): Length of the binary watermark message to embed (in bits).
+        encoder_blocks : int
+            Number of convolutional blocks in the encoder network.
+        encoder_channels : int
+            Number of filters (channels) in each encoder block.
 
-        encoder_blocks (int): Number of convolutional blocks in the encoder network.
-        encoder_channels (int): Number of filters (channels) in each encoder block.
+        decoder_blocks : int
+            Number of convolutional blocks in the decoder network.
+        decoder_channels : int
+            Number of filters in each decoder block.
 
-        decoder_blocks (int): Number of convolutional blocks in the decoder network.
-        decoder_channels (int): Number of filters in each decoder block.
+        use_discriminator : bool
+            If True, enables the use of an adversarial discriminator
+        use_vgg : bool
+            If True, adds a perceptual loss using VGG features to improve
 
-        use_discriminator (bool): If True, enables the use of an adversarial discriminator
-        use_vgg (bool): If True, adds a perceptual loss using VGG features to improve
+        discriminator_blocks : int
+            Number of convolutional blocks in the discriminator network.
+        discriminator_channels : int
+            Number of filters in each discriminator block.
 
-        discriminator_blocks (int): Number of convolutional blocks in the discriminator network.
-        discriminator_channels (int): Number of filters in each discriminator block.
+        decoder_loss : float
+            Weight of the decoder loss term in the total loss function. Controls the importance of accurate message recovery.
+        encoder_loss : float
+            Weight of the encoder loss term in the total loss function. Typically regularizes visual similarity between original and encoded images.
+        adversarial_loss : float
+            Weight of the adversarial loss term in the total loss. Higher values push the encoder to generate more realistic images when a discriminator is used.
 
-        decoder_loss (float): Weight of the decoder loss term in the total loss function.
-            Controls the importance of accurate message recovery.
-        encoder_loss (float): Weight of the encoder loss term in the total loss function.
-            Typically regularizes visual similarity between original and encoded images.
-        adversarial_loss (float): Weight of the adversarial loss term in the total loss.
-            Higher values push the encoder to generate more realistic images when
-            a discriminator is used.
-
-        enable_fp16 (bool): If True, enables mixed precision (fp16) training/inference
-            for improved speed and reduced memory usage on compatible hardware (default False).
+        enable_fp16 : bool
+            If True, enables mixed precision (fp16) training/inference for improved speed and reduced memory usage on compatible hardware (default False).
     """
     H: int
     W: int

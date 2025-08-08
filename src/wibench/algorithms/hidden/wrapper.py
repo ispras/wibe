@@ -25,13 +25,22 @@ class HiddenParams:
 
     Attributes
     ----------
-        H (int): Height of the input image (in pixels). Defines the vertical dimension of the input tensor.
-        W (int): Width of the input image (in pixels). Defines the horizontal dimension of the input tensor.
-        wm_length (int): Length of the watermark message to be embedded (in bits).
-        encoder_blocks (int): Number of convolutional blocks in the encoder.
-        encoder_channels (int): Number of channels (filters) per encoder block.
-        decoder_blocks (int): Number of convolutional blocks in the decoder.
-        decoder_channels (int): Number of channels (filters) per decoder block.
+        run_name : str
+            The name of the experiment (crop, cropout, dropout, jpeg, resize, combined-noise)
+        H : int
+            Height of the input image (in pixels). Defines the vertical dimension of the input tensor.
+        W : int
+            Width of the input image (in pixels). Defines the horizontal dimension of the input tensor.
+        wm_length: int
+            Length of the watermark message to be embedded (in bits).
+        encoder_blocks : int
+            Number of convolutional blocks in the encoder.
+        encoder_channels : int
+            Number of channels (filters) per encoder block.
+        decoder_blocks : int
+            Number of convolutional blocks in the decoder.
+        decoder_channels : int
+            Number of channels (filters) per decoder block.
     """
     run_name: str
     H: int
