@@ -187,7 +187,7 @@ class PromptFolderDataset(RangeBaseDataset):
         Returns
         -------
         int
-            Count of discovered prompts (one file may contain a several prompts)
+            Count of discovered prompts (one file may contain several prompts)
         """
         return self.len
 

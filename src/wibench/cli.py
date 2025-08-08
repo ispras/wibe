@@ -133,6 +133,7 @@ def run(
     import_modules("wibench.datasets")
     import_modules("wibench.metrics")
     import_modules("wibench.attacks")
+    import_modules("user_plugins")
 
     run_id = str(uuid.uuid1()) if RUN_ID_ENV_NAME not in os.environ else os.environ[RUN_ID_ENV_NAME]
     os.environ[RUN_ID_ENV_NAME] = run_id
