@@ -25,12 +25,14 @@ def get_file_size(url) -> int:
 
 
 def progress_hook(block_num, block_size, total_size):
+    downloaded = block_num * block_size
     if total_size > 0:
-        downloaded = block_num * block_size
         progress = downloaded / total_size * 100
         end = "\n" if downloaded >= total_size else '\r'
         print(f"Downloaded: {downloaded >> 20}/{total_size >> 20} Mb ({progress:.2f}%)", end=end)
-
+    else:
+        end = "\r"
+        print(f"Downloaded: {downloaded >> 20} Mb", end=end)
 
 try:
     file_size = get_file_size(URL)

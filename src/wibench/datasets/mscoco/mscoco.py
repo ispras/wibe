@@ -33,7 +33,7 @@ class MSCOCO(RangeBaseDataset):
                                     cache_dir=cache_dir)
         super().__init__(sample_range, len(self.dataset))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.len
 
     def generator(

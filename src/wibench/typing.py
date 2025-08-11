@@ -81,7 +81,7 @@ class Object:
         - Handles alias field specially
         """
         _alias = data.pop("alias", None)
-        obj = cls()
+        obj = cls(data.pop("id", None))
         if _alias is not None:
             obj._alias = _alias
         for key, value in data.items():
