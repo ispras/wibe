@@ -16,6 +16,15 @@ class WatermarkData:
 
 
 class DWTSVMWrapper(BaseAlgorithmWrapper):
+    """
+    Custom implementation of image watermarking algorithm described in "SVM-based robust image watermarking technique in LWT domain using different sub-bands" (https://doi.org/10.1007/s00521-018-3647-2).
+
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        Contains value for "threshold" parameter of the algorithm. The higher is the threshold, the watermark is more robust to attacks, but less imperceptible.
+
+    """
     name = "dwt_svm"
 
     def __init__(self, params: dict[str, Any]):
