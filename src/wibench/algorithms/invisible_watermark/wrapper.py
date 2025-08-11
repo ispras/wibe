@@ -53,7 +53,7 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
             Torch bit message with data type torch.int64
         """
         np_img = torch_img2numpy_bgr(image)
-        watermark = watermark_data.watermark.tolist()
+        watermark = watermark_data.watermark.squeeze(0).tolist()
         self.encoder.set_watermark("bits", watermark)
         params: InvisibleWatermarkConfig = self.params
         if self.algorithm == "rivaGan":
