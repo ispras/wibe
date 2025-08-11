@@ -12,7 +12,7 @@ from trustmark import TrustMark
 
 @dataclass
 class TrustMarkParams(Params):
-    """Configuration parameters for the TrustMark algorithm
+    """Configuration parameters for the TrustMark algorithm.
 
     Attributes
     ----------
@@ -32,7 +32,7 @@ class TrustMarkParams(Params):
 
 
 class TrustMarkWrapper(BaseAlgorithmWrapper):
-    """TrustMark: Universal Watermarking for Arbitrary Resolution Images - Image Watermarking Algorithm (https://arxiv.org/abs/2311.18297)
+    """TrustMark: Universal Watermarking for Arbitrary Resolution Images - Image Watermarking Algorithm (https://arxiv.org/abs/2311.18297).
     
     Provides an interface for embedding and extracting watermarks using the TrustMark watermarking algorithm.
     Based on the code from https://github.com/adobe/trustmark.

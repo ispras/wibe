@@ -15,15 +15,15 @@ from wibench.config import Params
 
 @dataclass
 class SSLParams(Params):
-    """Configuration parameters for Self-Supervised Learning (SSL) watermarking model.
+    """Configuration parameters for SSL (Self-Supervised Learning) watermarking algorithm.
 
     Attributes:
         backbone_weights_path : Optional[Union[str, Path]]
-            Path to pretrained backbone weights (default None).
+            Path to pretrained backbone weights (default None)
         normlayer_weights_path : Optional[Union[str, Path]]
-            Path to normalization layer weights (default None).
+            Path to normalization layer weights (default None)
         method : str
-            SSL method type. Determines whether to use multi-bit or zero-bit approach (default multi-bit).
+            SSL method type. Determines whether to use multi-bit or zero-bit approach (default multi-bit)
     """
     backbone_weights_path: Optional[Union[str, Path]] = None
     normlayer_weights_path: Optional[Union[str, Path]] = None
@@ -32,28 +32,28 @@ class SSLParams(Params):
 
 @dataclass
 class SSLMultiBitParams(SSLParams):
-    """Configuration parameters for multi-bit Self-Supervised Learning (SSL) watermarking model
+    """Configuration parameters for multi-bit SLL (Self-Supervised Learning) watermarking algorithm.
 
     Attributes
     ----------
         epochs: int
-            Number of training epochs (default 100).
+            Number of training epochs (default 100)
         optimizer_alg : str
-            Optimization algorithm to use (default 'Adam').
+            Optimization algorithm to use (default 'Adam')
         optimizer_lr : float
-            Learning rate for optimizer (default 0.01).
+            Learning rate for optimizer (default 0.01)
         lambda_w : float
-            Weight for watermark loss component (default 20.0).
+            Weight for watermark loss component (default 20.0)
         lambda_i : float
             Weight for image reconstruction loss component (default 1.0)
         target_psnr : float
-            Target Peak Signal-to-Noise Ratio (PSNR) for image quality (default 42.0).
+            Target Peak Signal-to-Noise Ratio (PSNR) for image quality (default 42.0)
         target_fpr : float
-            Target false positive rate (FPR) for watermark detection (default 1e-6).
+            Target false positive rate (FPR) for watermark detection (default 1e-6)
         scheduler : Optional[str]
-            Learning rate scheduler to use (default None).
+            Learning rate scheduler to use (default None)
         num_bits : int
-            Length of the watermark message to embed (in bits).
+            Length of the watermark message to embed (in bits)
     """
 
     epochs: int = 100
@@ -81,28 +81,28 @@ class SSLMultiBitParams(SSLParams):
 
 @dataclass
 class SSL0BitParams(SSLParams):
-    """Configuration parameters for zero-bit Self-Supervised Learning (SSL) watermarking algorithm
+    """Configuration parameters for zero-bit SLL (Self-Supervised Learning) watermarking algorithm.
 
     Attributes
     ----------
         epochs: int
-            Number of training epochs (default 100).
+            Number of training epochs (default 100)
         optimizer_alg : str
-            Optimization algorithm to use (default 'Adam').
+            Optimization algorithm to use (default 'Adam')
         optimizer_lr : float
-            Learning rate for optimizer (default 0.01).
+            Learning rate for optimizer (default 0.01)
         lambda_w : float
-            Weight for watermark loss component (default 1.0).
+            Weight for watermark loss component (default 1.0)
         lambda_i : float
             Weight for image reconstruction loss component (default 1.0)
         target_psnr : float
-            Target Peak Signal-to-Noise Ratio (PSNR) for image quality (default 42.0).
+            Target Peak Signal-to-Noise Ratio (PSNR) for image quality (default 42.0)
         target_fpr : float
-            Target false positive rate (FPR) for watermark detection (default 1e-6).
+            Target false positive rate (FPR) for watermark detection (default 1e-6)
         scheduler : Optional[str]
-            Learning rate scheduler to use (default None).
+            Learning rate scheduler to use (default None)
         verbose : int
-            Verbosity level (default 0).
+            Verbosity level (default 0)
     """
 
     epochs: int = 100
@@ -122,12 +122,12 @@ class SSL0BitParams(SSLParams):
 
 @dataclass
 class WatermarkData:
-    """Base configuration parameters for Self-Supervised Learning (SSL) watermarking algorithm.
+    """Base configuration parameters for SLL (Self-Supervised Learning) watermarking algorithm.
 
     Attributes
     ----------
         carrier : torch.Tensor
-            Torch tensor with k random orthonormal vectors of size d.
+            Torch tensor with k random orthonormal vectors of size d
 
     Notes
     -----
@@ -139,7 +139,7 @@ class WatermarkData:
 
 @dataclass
 class WatermarkMultiBitData(WatermarkData):
-    """Watermark data for Self-Supervised Learning (SSL) watermarking algorithm in multi-bit scenario.
+    """Watermark data for SSL (Self-Supervised Learning) watermarking algorithm in multi-bit scenario.
 
     Attributes
     ----------
@@ -151,12 +151,12 @@ class WatermarkMultiBitData(WatermarkData):
 
 @dataclass
 class Watermark0BitData(WatermarkData):
-    """Watermark data for Self-Supervised Learning (SSL) watermarking algorithm in zero-bit scenario.
+    """Watermark data for SSL (Self-Supervised Learning) watermarking algorithm in zero-bit scenario.
 
     Attributes
     ----------
         angle: float
-            Links the p-value to the angle of the hyperspace.
+            Links the p-value to the angle of the hyperspace
     """
     angle: float
 
@@ -173,7 +173,7 @@ class ImgLoader:
 
 
 class SSLMarkerWrapper(BaseAlgorithmWrapper):
-    """Watermarking Images in Self-Supervised Latent-Spaces (SSL) - Image Watermarking Algorithm (https://arxiv.org/pdf/2112.09581)
+    """Watermarking Images in Self-Supervised Latent-Spaces (SSL) - Image Watermarking Algorithm (https://arxiv.org/pdf/2112.09581).
     
     Provides an interface for embedding and extracting watermarks using the SSL watermarking algorithm.
     Based on the code from https://github.com/facebookresearch/ssl_watermarking.
@@ -181,7 +181,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        SSL watermarking algorithm configuration parameters
+        SSL algorithm configuration parameters
     """
 
     name = "ssl_watermarking"
@@ -239,7 +239,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         image : TorchImg
             Input image tensor in (C, H, W) format
         watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]
-            Watermark data for Self-Supervised Learning (SSL) watermarking algorithm in multi-bit or zero-bit scenario
+            Watermark data for SSL (Self-Supervised Learning) watermarking algorithm in multi-bit or zero-bit scenario
         """
         normalized_image = utils_img.normalize_img(image).to(self.device)
         img_loader = ImgLoader([([normalized_image], None)])
@@ -259,7 +259,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         image : TorchImg
             Input image tensor in (C, H, W) format
         watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]
-            Watermark data for Self-Supervised Learning (SSL) watermarking algorithm in multi-bit or zero-bit scenario
+            Watermark data for SSL (Self-Supervised Learning) watermarking algorithm in multi-bit or zero-bit scenario
         """
         image = torch_img2numpy_bgr(image)
         rgb_marked_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -274,12 +274,12 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         return result
     
     def watermark_data_gen(self) -> Union[WatermarkMultiBitData, Watermark0BitData]:
-        """Generate watermark payload data for SLL watermarking algorithm in both multi-bit and zero-bit scenarios.
+        """Generate watermark payload data for SLL (Self-Supervised Learning) watermarking algorithm in both multi-bit and zero-bit scenarios.
         
         Returns
         -------
         Union[WatermarkMultiBitData, Watermark0BitData]
-            Watermark data for Self-Supervised Learning (SSL) watermarking algorithm in multi-bit or zero-bit scenario
+            Watermark data for SSL (Self-Supervised Learning) watermarking algorithm in multi-bit or zero-bit scenario
 
         Notes
         -----

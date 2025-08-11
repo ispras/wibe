@@ -30,27 +30,27 @@ class SSHiddenParams(Params):
         ckpt_path : Optional[str]
             Path to pretrained checkpoint (default None)
         encoder_depth : int
-            Number of convolutional blocks in the encoder network (default 4).
+            Number of convolutional blocks in the encoder network (default 4)
         encoder_channels : int
-            Base number of channels in encoder convolutional blocks (default 64).
+            Base number of channels in encoder convolutional blocks (default 64)
         decoder_depth : int
-            Number of convolutional blocks in the decoder network (default 8).
+            Number of convolutional blocks in the decoder network (default 8)
         decoder_channels : int
-            Base number of channels in decoder convolutional blocks (default 64).
+            Base number of channels in decoder convolutional blocks (default 64)
         num_bits : int
-            Length of the watermark message to be embed (in bits) (default 48).
+            Length of the watermark message to be embed (in bits) (default 48)
         attenuation : str
-            Noise modulation strategy for watermark embedding (default 'jnd').
+            Noise modulation strategy for watermark embedding (default 'jnd')
         scale_channels : bool
-            Whether to use channel-wise scaling in the decoder (default False).
+            Whether to use channel-wise scaling in the decoder (default False)
         scaling_i : float
-            Scaling factor for image reconstruction loss (default 1.0).
+            Scaling factor for image reconstruction loss (default 1.0)
         scaling_w : float
-            Scaling factor for watermark reconstruction loss (default 1.5).
+            Scaling factor for watermark reconstruction loss (default 1.5)
         H : int
-            Height of the input image (in pixels). Defines the vertical dimension of the input tensor (default 512).
+            Height of the input image (in pixels). Defines the vertical dimension of the input tensor (default 512)
         W : int
-            Width of the input image (in pixels). Defines the horizontal dimension of the input tensor (default 512).
+            Width of the input image (in pixels). Defines the horizontal dimension of the input tensor (default 512)
     """
     ckpt_path: Optional[str] = None
     encoder_depth: int = 4
@@ -72,13 +72,18 @@ default_transform = transforms.Compose([NORMALIZE_IMAGENET])
 
 
 class SSHiddenWrapper(BaseAlgorithmWrapper):
-    """HiDDeN watermarking algorithm adapted from the Stable Signature (https://arxiv.org/pdf/2303.15435).
+    """HiDDeN watermarking algorithm adapted from the Stable Signature (SSHiDDeN) (https://arxiv.org/pdf/2303.15435).
 
     This implementation extends the original HiDDeN architecture by integrating
     a Just Noticeable Difference (JND) mask to guide watermark embedding in the
     latent space of diffusion models. The JND mask modulates embedding strength
     to minimize perceptual artifacts while maintaining robustness.
     Based on the code from https://github.com/facebookresearch/stable_signature/tree/main.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        SSHiDDeN algorithm configuration parameters
     """
 
     name = "sshidden"

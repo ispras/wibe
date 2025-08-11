@@ -19,22 +19,22 @@ from wibench.watermark_data import TorchBitWatermarkData
 
 @dataclass
 class StableSignatureParams(Params):
-    """Configuration parameters for StableSignature watermarking model.
+    """Configuration parameters for StableSignature watermarking algorithm.
 
     Attributes
     ----------
         ldm_config_path : Optional[Union[str, Path]]
-            Path to LDM config file (default None).
+            Path to LDM config file (default None)
         ldm_checkpoint_path : Optional[Union[str, Path]]
-            Path to pretrained LDM weights (default None).
+            Path to pretrained LDM weights (default None)
         ldm_decoder_path : Optional[Union[str, Path]]
-            Path to custom LDM decoder weights (default None).
+            Path to custom LDM decoder weights (default None)
         decoder_path : Optional[Union[str, Path]]
-            Path to watermark decoder model (default None).
+            Path to watermark decoder model (default None)
         model : str
-            Base diffusion model identifier from Hugging Face Hub (default 'stabilityai/stable-diffusion-2').
+            Base diffusion model identifier from Hugging Face Hub (default 'stabilityai/stable-diffusion-2')
         secret : Optional[str]
-            Binary secret message to embed (default '111010110101000001010111010011010100010000100111').
+            Binary secret message to embed (default '111010110101000001010111010011010100010000100111')
     """
     ldm_config_path: Optional[Union[str, Path]] = None
     ldm_checkpoint_path: Optional[Union[str, Path]] = None
@@ -45,7 +45,7 @@ class StableSignatureParams(Params):
 
 
 class StableSignatureWrapper(BaseAlgorithmWrapper):
-    """The Stable Signature: Rooting Watermarks in Latent Diffusion Models - Image Watermarking Algorithm (https://arxiv.org/pdf/2303.15435)
+    """The Stable Signature: Rooting Watermarks in Latent Diffusion Models - Image Watermarking Algorithm (https://arxiv.org/pdf/2303.15435).
     
     Provides an interface for embedding and extracting watermarks in Text2Image task using the StableSignature watermarking algorithm.
     Based on the code from https://github.com/facebookresearch/stable_signature/tree/main.

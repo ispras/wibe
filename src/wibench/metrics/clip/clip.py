@@ -13,24 +13,29 @@ from wibench.metrics.base import PostEmbedMetric
 
 
 class CLIPScore(PostEmbedMetric):
-    """CLIPScore: A Reference-free Evaluation Metric for Image Captioning (https://arxiv.org/abs/2104.08718)
+    """CLIPScore: A Reference-free Evaluation Metric for Image Captioning (https://arxiv.org/abs/2104.08718).
     
     The implementation is taken from (https://github.com/zai-org/ImageReward). Based on CLIP code base (https://github.com/openai/CLIP).
 
     Initialization Parameters
     -------------------------
         device : str
-            Device to run the model on ('cuda', 'cpu').
+            Device to run the model on ('cuda', 'cpu')
 
     Call Parameters
     ---------------
         prompt : str
-            Text prompt for comparison.
+            Text prompt for comparison
         img2 : TorchImg
-            Input image tensor in (C, H, W) format.
+            Input image tensor in (C, H, W) format
         watermark_data : Any
-            Not used, can be anything.
+            Not used, can be anything
+    
+    Notes
+    -----
+    - The watermark_data field is required for the pipeline to work correctly.
     """
+    
     def __init__(self, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
         self.model = RM.load_score("CLIP", device=device)
 

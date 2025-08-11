@@ -28,19 +28,19 @@ class HiddenParams:
         run_name : str
             The name of the experiment (crop, cropout, dropout, jpeg, resize, combined-noise)
         H : int
-            Height of the input image (in pixels). Defines the vertical dimension of the input tensor.
+            Height of the input image (in pixels). Defines the vertical dimension of the input tensor
         W : int
-            Width of the input image (in pixels). Defines the horizontal dimension of the input tensor.
+            Width of the input image (in pixels). Defines the horizontal dimension of the input tensor
         wm_length: int
-            Length of the watermark message to be embed (in bits).
+            Length of the watermark message to be embed (in bits)
         encoder_blocks : int
-            Number of convolutional blocks in the encoder.
+            Number of convolutional blocks in the encoder
         encoder_channels : int
-            Number of channels (filters) per encoder block.
+            Number of channels (filters) per encoder block
         decoder_blocks : int
-            Number of convolutional blocks in the decoder.
+            Number of convolutional blocks in the decoder
         decoder_channels : int
-            Number of channels (filters) per decoder block.
+            Number of channels (filters) per decoder block
     """
     run_name: str
     H: int
@@ -53,7 +53,7 @@ class HiddenParams:
 
 
 class HiddenWrapper(BaseAlgorithmWrapper):
-    """HiDDeN: Hiding Data in Deep Networks - Image Watermarking Algorithm (https://arxiv.org/abs/1807.09937)
+    """HiDDeN: Hiding Data in Deep Networks - Image Watermarking Algorithm (https://arxiv.org/abs/1807.09937).
     
     Provides an interface for embedding and extracting watermarks using the HiDDeN watermarking algorithm.
     Based on the code from https://github.com/ando-khachatryan/HiDDeN.

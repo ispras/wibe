@@ -20,26 +20,26 @@ from wibench.utils import (
 @dataclass
 class ARWGANParams:
     """
-    Configuration parameters for the ARWGAN (Attention-Guided Robust Image Watermarking Model Based on GAN) algorithm.
+    Configuration parameters for the ARWGAN (Attention-Guided Robust Image Watermarking Model Based on GAN) watermarking algorithm.
 
     Attributes
     ----------
         H : int
-            Height of the input image (in pixels). Determines the vertical size of image tensors.
+            Height of the input image (in pixels). Determines the vertical size of image tensors
         W : int
-            Width of the input image (in pixels). Determines the horizontal size of image tensors.
+            Width of the input image (in pixels). Determines the horizontal size of image tensors
         wm_length : int
-            Length of the binary watermark message to embed (in bits).
+            Length of the binary watermark message to embed (in bits)
 
         encoder_blocks : int
-            Number of convolutional blocks in the encoder network.
+            Number of convolutional blocks in the encoder network
         encoder_channels : int
-            Number of filters (channels) in each encoder block.
+            Number of filters (channels) in each encoder block
 
         decoder_blocks : int
-            Number of convolutional blocks in the decoder network.
+            Number of convolutional blocks in the decoder network
         decoder_channels : int
-            Number of filters in each decoder block.
+            Number of filters in each decoder block
 
         use_discriminator : bool
             If True, enables the use of an adversarial discriminator
@@ -47,19 +47,19 @@ class ARWGANParams:
             If True, adds a perceptual loss using VGG features to improve
 
         discriminator_blocks : int
-            Number of convolutional blocks in the discriminator network.
+            Number of convolutional blocks in the discriminator network
         discriminator_channels : int
-            Number of filters in each discriminator block.
+            Number of filters in each discriminator block
 
         decoder_loss : float
-            Weight of the decoder loss term in the total loss function. Controls the importance of accurate message recovery.
+            Weight of the decoder loss term in the total loss function. Controls the importance of accurate message recovery
         encoder_loss : float
-            Weight of the encoder loss term in the total loss function. Typically regularizes visual similarity between original and encoded images.
+            Weight of the encoder loss term in the total loss function. Typically regularizes visual similarity between original and encoded images
         adversarial_loss : float
-            Weight of the adversarial loss term in the total loss. Higher values push the encoder to generate more realistic images when a discriminator is used.
+            Weight of the adversarial loss term in the total loss. Higher values push the encoder to generate more realistic images when a discriminator is used
 
         enable_fp16 : bool
-            If True, enables mixed precision (fp16) training/inference for improved speed and reduced memory usage on compatible hardware (default False).
+            If True, enables mixed precision (fp16) training/inference for improved speed and reduced memory usage on compatible hardware (default False)
     """
     H: int
     W: int
@@ -79,7 +79,7 @@ class ARWGANParams:
 
 
 class ARWGANWrapper(BaseAlgorithmWrapper):
-    """ARWGAN: Attention-Guided Robust Image Watermarking Model Based on GAN - Image Watermarking Algorithm (https://ieeexplore.ieee.org/document/10155247)
+    """ARWGAN: Attention-Guided Robust Image Watermarking Model Based on GAN - Image Watermarking Algorithm (https://ieeexplore.ieee.org/document/10155247).
     
     Provides an interface for embedding and extracting watermarks using the ARWGAN watermarking algorithm.
     Based on the code from https://github.com/river-huang/ARWGAN.

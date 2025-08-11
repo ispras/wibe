@@ -12,23 +12,27 @@ from wibench.metrics.base import PostEmbedMetric
 
 
 class Aesthetic(PostEmbedMetric):
-    """Aesthetic score predictor based on a simple neural net that takes CLIP embeddings as inputs
+    """Aesthetic score predictor based on a simple neural net that takes CLIP embeddings as inputs.
 
-    The implementation is taken from (https://github.com/zai-org/ImageReward). Based on improved-aesthetic-predictor code base (https://github.com/christophschuhmann/improved-aesthetic-predictor)
+    The implementation is taken from (https://github.com/zai-org/ImageReward). Based on improved-aesthetic-predictor code base (https://github.com/christophschuhmann/improved-aesthetic-predictor).
 
     Initialization Parameters
     -------------------------
         device : str
-            Device to run the model on ('cuda', 'cpu').
+            Device to run the model on ('cuda', 'cpu')
 
     Call Parameters
     ---------------
         img1 : TorchImg
-            Input image tensor in (C, H, W) format.
+            Input image tensor in (C, H, W) format
         img2 : TorchImg
-            Input image tensor in (C, H, W) format.
+            Input image tensor in (C, H, W) format
         watermark_data : Any
-            Not used, can be anything.
+            Not used, can be anything
+    
+    Notes
+    -----
+    - The watermark_data field is required for the pipeline to work correctly
     """
 
     def __init__(self, device: str = "cuda" if torch.cuda.is_available() else "cpu"):

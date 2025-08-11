@@ -6,7 +6,7 @@ import torch
 
 
 class CLIP_IQA(PostEmbedMetric):
-    """Exploring CLIP for Assessing the Look and Feel of Images (https://arxiv.org/abs/2207.12396)
+    """Exploring CLIP for Assessing the Look and Feel of Images (https://arxiv.org/abs/2207.12396).
 
     The implementation is taken from (https://lightning.ai/docs/torchmetrics/stable/multimodal/clip_iqa.html). 
 
@@ -15,16 +15,20 @@ class CLIP_IQA(PostEmbedMetric):
         prompts : Tuple[Union[str, Tuple[str]]]
             List of text prompts for assessing the visual quality of an image (default ("quality",))
         device : str
-            Device to run the model on ('cuda', 'cpu').
+            Device to run the model on ('cuda', 'cpu')
 
     Call Parameters
     ---------------
         img1 : TorchImg
-            Input image tensor in (C, H, W) format.
+            Input image tensor in (C, H, W) format
         img2 : TorchImg
-            Input image tensor in (C, H, W) format.
+            Input image tensor in (C, H, W) format
         watermark_data : Any
-            Not used, can be anything.
+            Not used, can be anything
+    
+    Notes
+    -----
+    - The watermark_data field is required for the pipeline to work correctly.
     """
     
     def __init__(self, prompts: Tuple[Union[str, Tuple[str]]] = ("quality",), device: str = "cuda" if torch.cuda.is_available() else "cpu") -> None:

@@ -41,7 +41,7 @@ class TreeRingParams(Params):
 
 @dataclass
 class TreeRingWatermarkData:
-    """Watermark data for Tree-ring watermarking algorithm
+    """Watermark data for Tree-ring watermarking algorithm.
 
     Attributes
     ----------
@@ -58,7 +58,7 @@ class TreeRingWatermarkData:
 
 
 class TreeRingWrapper(BaseAlgorithmWrapper):
-    """Tree-Ring Watermarks: Fingerprints for Diffusion Images that are Invisible and Robust - Image Watermarking Algorithm (https://arxiv.org/abs/2305.20030)
+    """Tree-Ring Watermarks: Fingerprints for Diffusion Images that are Invisible and Robust - Image Watermarking Algorithm (https://arxiv.org/abs/2305.20030).
     
     Provides an interface for embedding and extracting watermarks in Text2Image task using the Tree-Ring watermarking algorithm.
     Based on the code from https://github.com/YuxinWenRick/tree-ring-watermark.
@@ -106,7 +106,7 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         self.text_embeddings = pipe.get_text_embedding(self.tester_prompt)
 
     def embed(self, prompt: str, watermark_data: TreeRingWatermarkData) -> TorchImg:
-        """Generates a watermarked image based on a text prompt
+        """Generates a watermarked image based on a text prompt.
         
         Parameters
         ----------
@@ -140,7 +140,7 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         
         Notes
         -----
-        - Obtains latent values after DDIM inversion and compares them with a threshold.
+        - Obtains latent values after DDIM inversion and compares them with a threshold
         """
         transformed_img = transform_img(transforms.ToPILImage()(img)).unsqueeze(0).to(self.text_embeddings.dtype).to(self.device)
         image_latents = self.pipe.get_image_latents(transformed_img, sample=False)

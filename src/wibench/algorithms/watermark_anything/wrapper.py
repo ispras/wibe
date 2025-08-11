@@ -10,7 +10,7 @@ import os
 
 @dataclass
 class WAParams:
-    """Configuration parameters for the Watermark Anything algorithm
+    """Configuration parameters for the WA (Watermark Anything) watermarking algorithm.
 
     Attributes
     ----------
@@ -24,7 +24,7 @@ class WAParams:
 
 
 class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
-    """Watermark Anything with Localized Messages - Image Watermarking Algorithm (https://arxiv.org/abs/2411.07231)
+    """Watermark Anything with Localized Messages - Image Watermarking Algorithm (https://arxiv.org/abs/2411.07231).
     
     Provides an interface for embedding and extracting watermarks using the Watermark Anything watermarking algorithm.
     Based on the code from https://github.com/facebookresearch/watermark-anything.

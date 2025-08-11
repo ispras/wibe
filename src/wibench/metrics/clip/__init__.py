@@ -1,1 +1,1 @@
-from .clip import CLIP
+from .clip import CLIPScore

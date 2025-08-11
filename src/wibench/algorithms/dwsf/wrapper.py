@@ -25,34 +25,34 @@ from wibench.watermark_data import TorchBitWatermarkData
 
 @dataclass
 class DWSFParams(Params):
-    """Configuration parameters for the DWSF (Deep Dispersed Watermarking with Synchronization and Fusion) algorithm.
+    """Configuration parameters for the DWSF (Deep Dispersed Watermarking with Synchronization and Fusion) watermarking algorithm.
 
     Attributes:
         encoder_weights_path : Optional[str]
-            Path to the pretrained encoder model weights.
+            Path to the pretrained encoder model weights
         decoder_weights_path : Optional[str]
-            Path to the pretrained decoder model weights.
+            Path to the pretrained decoder model weights
         seg_weights_path : Optional[str]
-            Path to the segmentation model weights, used for block localization.
+            Path to the segmentation model weights, used for block localization
         message_length : int
-            Length of the binary watermark message to embed (in bits) (default: 30).
+            Length of the binary watermark message to embed (in bits) (default: 30)
         H : int
-            Height of image blocks or patch size used during embedding/extraction (default: 128).
+            Height of image blocks or patch size used during embedding/extraction (default: 128)
         W : int
-            Width of image blocks or patch size used during embedding/extraction (default: 128).
+            Width of image blocks or patch size used during embedding/extraction (default: 128)
         split_size : int
-            Block size for splitting images during dispersed embedding (default: 128).
+            Block size for splitting images during dispersed embedding (default: 128)
         default_noise_layer : ClassVar[List[str]]
             Default attack or noise model applied to watermarked images
-            '(Combined([Identity()])' means no attack by default).
+            '(Combined([Identity()])' means no attack by default)
         mean : ClassVar[List[float]]
-            Normalization mean for each image channel (default: [0.5, 0.5, 0.5]).
+            Normalization mean for each image channel (default: [0.5, 0.5, 0.5])
         std : ClassVar[List[float]]
-            Normalization standard deviation per channel (default: [0.5, 0.5, 0.5]).
+            Normalization standard deviation per channel (default: [0.5, 0.5, 0.5])
         psnr : int
-            Required minimal quality of watermarked image in PSNR (Peak Signal-to-Noise Ratio) terms (default: 35).
+            Required minimal quality of watermarked image in PSNR (Peak Signal-to-Noise Ratio) terms (default: 35)
         gt : float
-            Threshold above which the decoded bit is considered as '1' (default: 0.5).
+            Threshold above which the decoded bit is considered as '1' (default: 0.5)
     """
 
     encoder_weights_path: Optional[str] = None
@@ -70,7 +70,7 @@ class DWSFParams(Params):
 
 
 class DWSFWrapper(BaseAlgorithmWrapper):
-    """DWSF: Practical Deep Dispersed Watermarking with Synchronization and Fusion - Image Watermarking Algorithm (https://dl.acm.org/doi/abs/10.1145/3581783.3612015)
+    """DWSF: Practical Deep Dispersed Watermarking with Synchronization and Fusion - Image Watermarking Algorithm (https://dl.acm.org/doi/abs/10.1145/3581783.3612015).
 
     Provides an interface for embedding and extracting watermarks using the DWSF watermarking algorithm.
     Based on the code from https://github.com/bytedance/DWSF.
@@ -118,7 +118,7 @@ class DWSFWrapper(BaseAlgorithmWrapper):
         self.encoder_decoder.decoder.load_state_dict(torch.load(decoder_weights_path))
 
     def encode(self, images, messages, splitSize=128, inputSize=128, h_coor=[], w_coor=[], psnr=35):
-        """Encode image blocks based on random coordinates
+        """Encode image blocks based on random coordinates.
         """
         with torch.no_grad():
             # if isinstance(messages, np.ndarray):
@@ -164,7 +164,7 @@ class DWSFWrapper(BaseAlgorithmWrapper):
             return watermarked_images
 
     def decode(self, noised_images):
-        """Decode images or noised images
+        """Decode images or noised images.
         """
         with torch.no_grad():
             noised_blocks = obtain_wm_blocks(noised_images)

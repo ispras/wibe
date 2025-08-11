@@ -26,6 +26,11 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
     extracting watermarks in images without needing the original image via invisible-watermark framework (https://github.com/ShieldMnt/invisible-watermark).
     Subclasses implement specific watermarking algorithms such as frequency-domain methods
     or deep‑learning models, providing a uniform API.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        Invisible-Watermark algorithm configuration parameters
     """
     
     abstract = True
@@ -103,6 +108,11 @@ class RivaGanWrapper(InvisibleWatermarkWrapper):
 
     Provides an interface for embedding and extracting watermarks using the RivaGAN watermarking algorithm.
     Based on the codes from https://github.com/ShieldMnt/invisible-watermark.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        RivaGAN algorithm configuration parameters
     """
     
     name = "riva_gan"
@@ -119,6 +129,11 @@ class DwtDctWrapper(InvisibleWatermarkWrapper):
 
     Provides an interface for embedding and extracting watermarks using the frequency-domain transforms: DWT + DCT.
     Based on the code from https://github.com/ShieldMnt/invisible-watermark.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        DWT-DCT algorithm configuration parameters
     """
 
     name = "dwt_dct"
@@ -130,6 +145,11 @@ class DwtDctSvdWrapper(InvisibleWatermarkWrapper):
 
     Provides an interface for embedding and extracting watermarks using the frequency-domain with additional SVD processing: DWT + DCT + SVD.
     Based on the code from https://github.com/ShieldMnt/invisible-watermark.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        DWT-DCT-SVD algorithm configuration parameters
     """
     
     name = "dwt_dct_svd"

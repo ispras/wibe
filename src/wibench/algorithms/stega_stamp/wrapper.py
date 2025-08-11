@@ -13,20 +13,20 @@ from wibench.watermark_data import TorchBitWatermarkData
 
 @dataclass
 class StegaStampConfig:
-    """Configuration parameters for the StageStamp model.
+    """Configuration parameters for the StageStamp watermarking algorithm.
 
     Attributes
     ----------
         weights_path : Optional[Union[str, Path]]
-            Path to pretrained StegaStamp model weights (default None).
+            Path to pretrained StegaStamp model weights (default None)
         wm_length: int
-            Length of the watermark message to be embed (in bits) (default 100).
+            Length of the watermark message to be embed (in bits) (default 100)
         width : int
-            Width of the input image (in pixels). Defines the horizontal dimension of the input tensor (default 400).
+            Width of the input image (in pixels). Defines the horizontal dimension of the input tensor (default 400)
         height : int
-            Height of the input image (in pixels). Defines the vertical dimension of the input tensor (default 400).
+            Height of the input image (in pixels). Defines the vertical dimension of the input tensor (default 400)
         alpha : float
-            Weight parameter controlling the trade-off between watermark robustness and image quality during embedding (default 1.0).
+            Weight parameter controlling the trade-off between watermark robustness and image quality during embedding (default 1.0)
     """
     weights_path: Optional[Union[str, Path]] = None
     wm_length: int = 100
@@ -36,7 +36,7 @@ class StegaStampConfig:
 
 
 class StegaStampWrapper(BaseAlgorithmWrapper):
-    """StegaStamp: Invisible Hyperlinks in Physical Photographs - Image Watermarking Algorithm (https://arxiv.org/abs/1904.05343)
+    """StegaStamp: Invisible Hyperlinks in Physical Photographs - Image Watermarking Algorithm (https://arxiv.org/abs/1904.05343).
     
     Provides an interface for embedding and extracting watermarks using the StegaStamp watermarking algorithm.
     Based on the code from https://github.com/tancik/StegaStamp.
