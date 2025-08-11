@@ -1,4 +1,10 @@
 class RegistryMeta(type):
+    """Metaclass for implementing automatic plugin registration systems.
+    
+    This metaclass automatically registers all concrete classes that inherit from
+    a base class using this metaclass. The registration system allows for
+    dynamic discovery and instantiation of plugin implementations.
+    """
     def __init__(cls, name, bases, dct):
         super().__init__(name, bases, dct)
 

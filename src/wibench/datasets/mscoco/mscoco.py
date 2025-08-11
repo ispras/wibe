@@ -6,6 +6,20 @@ from torchvision.transforms.functional import to_tensor
 
 
 class MSCOCO(RangeBaseDataset):
+    """Dataset loader for MS-COCO (Common Objects in Context) images (https://cocodataset.org/).
+
+    Provides access to the COCO 2017 dataset images through HuggingFace Datasets,
+    supporting both validation and training splits with optional caching.
+
+    Parameters
+    ----------
+    split : str
+        Dataset split to load ('train' or 'val')
+    sample_range : Optional[Tuple[int, int]]
+        Optional (start, end) index range to subset the dataset
+    cache_dir : Optional[str]
+        Directory to cache downloaded dataset files
+    """
     dataset_path = "rafaelpadilla/coco2017"
 
     def __init__(
@@ -25,6 +39,13 @@ class MSCOCO(RangeBaseDataset):
     def generator(
         self,
     ) -> Generator[ImageObject, None, None]:
+        """Yields MSCOCO images.
+        
+        Yields
+        ------
+            ImageObject:
+                images form MSCOCO as ImageObject
+        """
         len_idx = -1
         while (True):
             len_idx += 1

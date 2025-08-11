@@ -25,6 +25,36 @@ from wibench.watermark_data import TorchBitWatermarkData
 
 @dataclass
 class DWSFParams(Params):
+    """Configuration parameters for the DWSF (Deep Dispersed Watermarking with Synchronization and Fusion) watermarking algorithm.
+
+    Attributes:
+        encoder_weights_path : Optional[str]
+            Path to the pretrained encoder model weights
+        decoder_weights_path : Optional[str]
+            Path to the pretrained decoder model weights
+        seg_weights_path : Optional[str]
+            Path to the segmentation model weights, used for block localization
+        message_length : int
+            Length of the binary watermark message to embed (in bits) (default: 30)
+        H : int
+            Height of image blocks or patch size used during embedding/extraction (default: 128)
+        W : int
+            Width of image blocks or patch size used during embedding/extraction (default: 128)
+        split_size : int
+            Block size for splitting images during dispersed embedding (default: 128)
+        default_noise_layer : ClassVar[List[str]]
+            Default attack or noise model applied to watermarked images
+            '(Combined([Identity()])' means no attack by default)
+        mean : ClassVar[List[float]]
+            Normalization mean for each image channel (default: [0.5, 0.5, 0.5])
+        std : ClassVar[List[float]]
+            Normalization standard deviation per channel (default: [0.5, 0.5, 0.5])
+        psnr : int
+            Required minimal quality of watermarked image in PSNR (Peak Signal-to-Noise Ratio) terms (default: 35)
+        gt : float
+            Threshold above which the decoded bit is considered as '1' (default: 0.5)
+    """
+
     encoder_weights_path: Optional[str] = None
     decoder_weights_path: Optional[str] = None
     seg_weights_path: Optional[str] = None
@@ -40,6 +70,17 @@ class DWSFParams(Params):
 
 
 class DWSFWrapper(BaseAlgorithmWrapper):
+    """DWSF: Practical Deep Dispersed Watermarking with Synchronization and Fusion - Image Watermarking Algorithm (https://dl.acm.org/doi/abs/10.1145/3581783.3612015).
+
+    Provides an interface for embedding and extracting watermarks using the DWSF watermarking algorithm.
+    Based on the code from https://github.com/bytedance/DWSF.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        DWSF algorithm configuration parameters
+    """
+    
     name = "dwsf"
 
     def __init__(self, params: Dict[str, Any]):
@@ -77,8 +118,7 @@ class DWSFWrapper(BaseAlgorithmWrapper):
         self.encoder_decoder.decoder.load_state_dict(torch.load(decoder_weights_path))
 
     def encode(self, images, messages, splitSize=128, inputSize=128, h_coor=[], w_coor=[], psnr=35):
-        """
-        Encode image blocks based on random coordinates
+        """Encode image blocks based on random coordinates.
         """
         with torch.no_grad():
             # if isinstance(messages, np.ndarray):
@@ -124,8 +164,7 @@ class DWSFWrapper(BaseAlgorithmWrapper):
             return watermarked_images
 
     def decode(self, noised_images):
-        """
-        Decode images or noised images
+        """Decode images or noised images.
         """
         with torch.no_grad():
             noised_blocks = obtain_wm_blocks(noised_images)
@@ -137,6 +176,15 @@ class DWSFWrapper(BaseAlgorithmWrapper):
         return decode_messages
 
     def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> np.ndarray:
+        """Embed watermark into input image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         normalized_image = normalize_image(image, self.normalize).to(self.device)
         h_coor, w_coor, splitSize = generate_random_coor(normalized_image.shape[2],
                                                          normalized_image.shape[3],
@@ -153,6 +201,15 @@ class DWSFWrapper(BaseAlgorithmWrapper):
         return marked_image
     
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> np.ndarray:
+        """Extract watermark from marked image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         normalized_image = normalize_image(image, self.normalize).to(self.device)
         extract_bits_raw = self.decode(normalized_image)
         mean_extract_bits_raw = extract_bits_raw.mean(0)
@@ -160,4 +217,15 @@ class DWSFWrapper(BaseAlgorithmWrapper):
         return extract_bits
     
     def watermark_data_gen(self) -> TorchBitWatermarkData:
+        """Generate watermark payload data for DWSF watermarking algorithm.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of (0, message_length)
+
+        Notes
+        -----
+        - Called automatically during embedding
+        """
         return TorchBitWatermarkData.get_random(self.params.message_length)

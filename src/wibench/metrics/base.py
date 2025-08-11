@@ -12,6 +12,10 @@ from scipy.stats import binom
 
 
 class BaseMetric(metaclass=RegistryMeta):
+    """Abstract base class for all metric calculators in the watermarking pipeline.
+
+    All concrete metrics must implement the __call__ method.
+    """
     type = "metric"
 
     @abstractmethod
@@ -20,6 +24,15 @@ class BaseMetric(metaclass=RegistryMeta):
 
 
 class PostEmbedMetric(BaseMetric):
+    """Abstract base class for metrics computed after watermark embedding.
+
+    These metrics compare the original and watermarked objects to assess:
+    - Quality degradation
+    - Watermark perceptibility
+    - Embedding distortion
+
+    May be used on PostAttackMetricsStage between marked and attacked objects.
+    """
     abstract = True
 
     def __call__(
@@ -31,6 +44,8 @@ class PostEmbedMetric(BaseMetric):
 
 
 class PostExtractMetric(BaseMetric):
+    """Abstract base class for metrics computed after watermark extraction.
+    """
     abstract = True
 
     def __call__(
@@ -42,6 +57,15 @@ class PostExtractMetric(BaseMetric):
 
 
 class PSNR(PostEmbedMetric):
+    """Peak Signal-to-Noise Ratio between original and processed images.
+    
+    Measures pixel-level difference in decibels. Higher values indicate better quality.
+
+    Notes
+    -----  
+    - Range: Typically 20-50 dB for images
+    - Infinite if images are identical
+    """
 
     def __call__(
         self,
@@ -57,6 +81,14 @@ class PSNR(PostEmbedMetric):
 
 
 class SSIM(PostEmbedMetric):
+    """Structural Similarity Index Measure between images.
+    
+    Perceptual metric assessing structural similarity (range 0-1).
+
+    Notes
+    -----
+    - value 1 indicates perfect similarity
+    """
 
     def __call__(
         self,
@@ -72,17 +104,24 @@ class SSIM(PostEmbedMetric):
 
 
 class EmbedWatermark(PostEmbedMetric):
+    """Records the embedded watermark payload for reference.
+    
+    Stores watermark data in metrics output.
+    """
     name = "EmbWm"
 
     def __call__(self,
                  img1: TorchImg,
                  img2: TorchImg,
                  watermark_data: Any):
-        str_watermark = ''.join(str(x) for x in np.array(watermark_data.watermark).flatten().tolist())
+        str_watermark = ''.join(str(x) for x in np.array(watermark_data.watermark).astype(np.uint8).flatten().tolist())
         return str_watermark
 
 
 class Result(PostExtractMetric):
+    """
+    Just pass extraction result to metrics (must be compatible with float).
+    """
     name = "result"
 
     def __call__(
@@ -97,6 +136,10 @@ class Result(PostExtractMetric):
 
 
 class BER(PostExtractMetric):
+    """Bit Error Rate between original and extracted watermarks.
+    
+    Measures fraction of incorrectly recovered bits.
+    """
 
     def __call__(
         self,
@@ -110,6 +153,21 @@ class BER(PostExtractMetric):
 
 
 class TPRxFPR(PostExtractMetric):
+    """True Positive Rate at fixed False Positive Rate threshold.
+    
+    Robustness metric for watermark detection systems.
+
+    Parameters
+    ----------
+    fpr_rate : float
+        Target false positive rate (e.g., 0.01 for 1% FPR)
+
+    Notes
+    -----
+    - Uses binomial distribution for threshold calculation
+    - Caches thresholds for efficiency
+    - Binary classification metric
+    """
     name = "TPR@xFPR"
 
     def __init__(self, fpr_rate: float):
@@ -140,12 +198,17 @@ class TPRxFPR(PostExtractMetric):
 
 
 class ExtractedWatermark(PostExtractMetric):
+    """Records the extracted watermark payload for analysis.
+
+    Stores bit string extraction results in metrics output.
+    """
+
     name = "ExtWm"
-    
+
     def __call__(self,
                  img1: TorchImg,
                  img2: TorchImg,
                  watermark_data: Any,
                  extraction_result):
-        str_extract_watermark = ''.join(str(x) for x in np.array(extraction_result).flatten().tolist())
+        str_extract_watermark = ''.join(str(x) for x in np.array(extraction_result).astype(np.uint8).flatten().tolist())
         return str_extract_watermark

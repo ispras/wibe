@@ -1,7 +1,9 @@
 import pytest
+import sys
 from pathlib import Path
 from typer.testing import CliRunner
 import traceback
+sys.path.append(str(Path(__file__).parent.parent))
 
 
 runner = CliRunner()

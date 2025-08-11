@@ -19,19 +19,42 @@ from wibench.registry import RegistryMeta
 
 
 class BaseDataset(metaclass=RegistryMeta):
+    """Abstract base class for all watermarking dataset implementations.
+
+    Provides interface for dataset loading with automatic registry support.
+    """
     type = "dataset"
 
     def __init__(self, *args, **kwargs) -> None:
         raise NotImplementedError
 
     def __len__(self) -> int:
+        """Return number of objects in this dataset instance.
+        
+        Returns
+        -------
+        int
+            Length of currently active dataset range
+        """
         raise NotImplementedError
 
     def generator(self) -> Generator[Any, None, None]:
+        """Yield objects to process. 
+        """
         raise NotImplementedError
 
 
 class RangeBaseDataset(BaseDataset):
+    """
+    Class for datasets that support range subsets of objects.
+
+    Parameters
+    ----------
+    sample_range : Optional[Tuple[int, int]]
+        Optional (start, end) index range to subset the dataset (including both borders)
+    len : int
+        Total number of images in the full dataset
+    """
     abstract = True
 
     def __init__(self, sample_range: Optional[Tuple[int, int]], dataset_len: int) -> None:
@@ -58,7 +81,21 @@ class RangeBaseDataset(BaseDataset):
 
 
 class ImageFolderDataset(RangeBaseDataset):
+    """Concrete dataset implementation loading images from a directory.
 
+    Supports common image formats with optional preloading.
+
+    Parameters
+    ----------
+    path : Union[Path, str]
+        Directory path containing images
+    preload : bool
+        Whether to load all images into memory upfront
+    img_ext : List[str]
+        Image file extensions to include (default: ['png', 'jpg'])
+    sample_range : Optional[Tuple[int, int]]
+        Optional (start, end) index range to subset the dataset (including both borders)
+    """
     def __init__(
         self,
         path: Union[Path, str],
@@ -80,11 +117,25 @@ class ImageFolderDataset(RangeBaseDataset):
             self.images = [
                 self.transform(Image.open(img_path)) for img_path in self.path_list[self.sample_range[0]: self.sample_range[1] + 1]
             ]
-
+        super().__init__(None, len(self))
+        
     def __len__(self) -> int:
+        """Return number of images in folder.
+        
+        Returns
+        -------
+        int
+            Count of discovered image files
+        """
         return self.len
 
     def generator(self) -> Generator[ImageObject, None, None]:
+        """Yields images from directory.
+        
+        Yields
+        ------
+            ImageObject: image name as image_id and image tensor
+        """
         if len(self.images) > 0:
             for path, img in zip(self.path_list[self.sample_range[0]: self.sample_range[1] + 1], self.images):
                 yield ImageObject(path.name, img)
@@ -95,12 +146,27 @@ class ImageFolderDataset(RangeBaseDataset):
 
 
 class PromptFolderDataset(RangeBaseDataset):
+    """Concrete dataset implementation loading prompts from a directory.
+    Directory should contain a number of ".txt" or ".csv" files with prompts, in one file prompts are separated by `separator`. All prompts are preloaded.
+
+    Parameters
+    ----------
+    path : Union[Path, str]
+        Directory path containing images
+    prompt_ext : List[str]
+        File extensions to include (default: ['txt', 'csv'])
+    sample_range : Optional[Tuple[int, int]]
+        Optional (start, end) index range to subset the dataset (including both borders). Default: None (full dataset)
+    separator : str
+        Separator for prompts in one file, default "\n"
+    """
 
     def __init__(
         self,
         path: Union[Path, str],
         prompt_ext: List[str] = ["txt", "csv"],
-        sample_range: Optional[Tuple[int, int]] = None
+        sample_range: Optional[Tuple[int, int]] = None,
+        separator: str = "\n",
     ) -> None:
         self.path = Path(path)
         path_gen = sorted(
@@ -110,14 +176,27 @@ class PromptFolderDataset(RangeBaseDataset):
         self.prompts = []
         for path in self.path_list:
             with open(path, "r") as f:
-                self.prompts += f.read().split("\n")
+                self.prompts += f.read().split(separator)
         assert len(self.prompts) != 0, "Empty dataset, check dataset path"
         dataset_len = len(self.prompts)
         super().__init__(sample_range, dataset_len)
 
     def __len__(self) -> int:
+        """Return number of prompts in folder.
+        
+        Returns
+        -------
+        int
+            Count of discovered prompts (one file may contain several prompts)
+        """
         return self.len
 
     def generator(self) -> Generator[PromptObject, None, None]:
+        """Yields prompts from directory.
+        
+        Yields
+        ------
+            PromptObject: prompt number as prompt_id and prompt as string
+        """
         for prompt_id in range(self.sample_range[0], self.sample_range[1] + 1):
             yield PromptObject(str(prompt_id), self.prompts[prompt_id])

@@ -27,8 +27,30 @@ def asdict_nonrecursive(obj) -> Dict[str, Any]:
 
 
 class ContextEncoder:
+    """Utility class for encoding Context objects into serializable formats.
+    
+    Provides static methods for handling conversion of Context objects and their
+    components (including torch Tensors, numpy arrays, and datetime objects)
+    into formats suitable for JSON serialization.
+    """
     @staticmethod
     def encode(obj: Any, save_dir: Path, parent_key: str = "") -> Any:
+        """Recursively encode an object for serialization.
+        
+        Parameters
+        ----------
+        obj : Any
+            Object to encode (Context, tensor, dict, etc.)
+        save_dir : Path
+            Directory to save binary data (tensors, arrays)
+        parent_key : str
+            Base key for naming saved files
+            
+        Returns
+        -------
+        Any
+            Serializable representation of the object
+        """
         if isinstance(obj, Context):
             return ContextEncoder.encode(asdict_nonrecursive(obj), save_dir, parent_key)
         elif isinstance(obj, (torch.Tensor, np.ndarray)):
@@ -48,6 +70,24 @@ class ContextEncoder:
 
     @staticmethod
     def _save_tensor(tensor: Union[torch.Tensor, np.ndarray], save_dir: Path, key: str) -> Dict:
+        """Save tensor/array to file and return metadata.
+        
+        Parameters
+        ----------
+        tensor : Union[torch.Tensor, np.ndarray]
+            Tensor data to save
+        save_dir : Path
+            Directory to save the file
+        key : str
+            Base name for the file
+            
+        Returns
+        -------
+        Dict
+            Metadata dict with:
+            - __type__: Data type ('torch_image', 'torch_tensor', 'numpy_array')
+            - path: Relative path to saved file
+        """
         safe_key = re.sub(r'[^\w\-_]', '_', key)
         if isinstance(tensor, torch.Tensor):
             if is_image(tensor):
@@ -67,6 +107,25 @@ class ContextEncoder:
     
     @staticmethod
     def _save_unknown(data: Any, save_dir: Path, key: str) -> Dict:
+        """Serialize arbitrary object via pickle.
+        
+        Parameters
+        ----------
+        data : Any
+            Python object to pickle
+        save_dir : Path
+            Directory to save the file
+        key : str
+            Base name for the file
+            
+        Returns
+        -------
+        Dict
+            Metadata dict with:
+            - __type__: 'pickle'
+            - path: Relative path to saved file
+        """
+
         safe_key = re.sub(r'[^\w\-_]', '_', key)
         data_path = f"{safe_key}.pkl"
         with open(save_dir / data_path, "wb") as f:
@@ -75,8 +134,27 @@ class ContextEncoder:
 
 
 class ContextDecoder:
+    """Utility class for decoding serialized Context objects.
+    
+    Provides static methods for reconstructing Context objects from their
+    serialized representations (JSON + binary files).
+    """
     @staticmethod
     def decode(data: Any, load_dir: Path) -> Any:
+        """Recursively decode serialized data.
+        
+        Parameters
+        ----------
+        data : Any
+            Serialized data structure
+        load_dir : Path
+            Directory containing binary files
+            
+        Returns
+        -------
+        Any
+            Reconstructed Python object
+        """
         if isinstance(data, dict):
             if "__type__" in data and data["__type__"] == "pickle":
                 return ContextDecoder._load_unknown(data["path"], load_dir)
@@ -107,6 +185,9 @@ class ContextDecoder:
 
 @dataclass
 class Context:
+    """
+    Data class holding all context information for an object being processed.
+    """
     object_id: str
     run_id: str
     dataset: str
@@ -135,6 +216,15 @@ class Context:
             return next(iter(self.original_object.values()))
 
     def form_record(self) -> Dict[str, Any]:
+        """Format context data into a metrics record.
+        
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary containing all metrics and metadata
+            suitable for aggregation and storage
+        """
+
         record_attrs = [
             "run_id",
             "object_id",
@@ -153,6 +243,27 @@ class Context:
 
     @classmethod
     def load(cls, context_dir: Path, object_id: str, dump_type: DumpType) -> "Context":
+        """Load context from disk.
+        
+        Parameters
+        ----------
+        context_dir : Path
+            Directory containing saved context
+        object_id : str
+            Identifier of object to load
+        dump_type : DumpType
+            Serialization format used
+            
+        Returns
+        -------
+        Context
+            Loaded context object
+            
+        Raises
+        ------
+        FileNotFoundError
+            If context file doesn't exist
+        """
         if dump_type == DumpType.pickle:
             return load_context_pkl(context_dir, object_id)
         img_context_dir = context_dir / object_id
@@ -161,8 +272,17 @@ class Context:
         return Context(**ContextDecoder.decode(data, img_context_dir))
 
     def dump(self, context_dir: Path, dump_type: DumpType) -> None:
+        """Save context to disk.
+        
+        Parameters
+        ----------
+        context_dir : Path
+            Target directory for saving
+        dump_type : DumpType
+            Serialization format to use
+        """
         if dump_type == DumpType.pickle:
-            return save_context(context_dir, self)
+            return save_context_pkl(context_dir, self)
         img_context_dir = context_dir / self.object_id
         img_context_dir.mkdir(exist_ok=True)
 
@@ -172,8 +292,22 @@ class Context:
 
     @classmethod
     def glob(cls, context_dir: Path, dump_type: DumpType):
+        """Generator for finding saved contexts in directory.
+        
+        Parameters
+        ----------
+        context_dir : Path
+            Directory to scan
+        dump_type : DumpType
+            Serialization format used
+            
+        Yields
+        ------
+        str
+            Objects IDs of found contexts
+        """
         if dump_type == DumpType.pickle:
-            for img_id in context_glob(context_dir):
+            for img_id in context_glob_pkl(context_dir):
                 yield img_id
             return
         for path in sorted(context_dir.glob("*")):
@@ -187,16 +321,16 @@ def load_context_pkl(context_dir: Path, object_id: str) -> Context:
         with open(ctx_file, "rb") as f:
             return pickle.load(f)
     else:
-        raise FileNotFoundError(f"No context for image {object_id}")
+        raise FileNotFoundError(f"No context for object {object_id}")
 
 
-def save_context(context_dir: Path, context: Context):
+def save_context_pkl(context_dir: Path, context: Context):
     object_id = context.object_id
     ctx_file = context_dir / f"{object_id}.pkl"
     with open(ctx_file, "wb") as f:
         pickle.dump(context, f)
 
 
-def context_glob(context_dir: Path):
+def context_glob_pkl(context_dir: Path):
     for pkl_file in sorted(context_dir.glob("*.pkl")):
         yield pkl_file.stem

@@ -97,9 +97,33 @@ def run(
     stages: Optional[List[str]] = typer.Argument(None, help=f"Stages to execute (e.g., embed attack extract), if 'all' or not provided - executes all stages. Available stages are:{list(STAGE_CLASSES.keys())}"),
 
 ):
+    """Run the watermarking evaluation pipeline.
+
+    Parameters
+    ----------
+    config : Path
+        Path to YAML configuration file
+    dump_context : bool
+        Whether to save intermediate contexts
+    dry_run: bool
+        Run on a few samples
+    stages : Optional[List[str]]
+        Pipeline stages to execute. Available stages:
+        - embed: Watermark embedding
+        - post_embed_metrics: Metrics after embedding
+        - attack: Apply attacks  
+        - post_attack_metrics: Metrics after attacks
+        - extract: Watermark extraction
+        - post_extract_metrics: Metrics after extraction
+        - aggregate: Aggregate metrics
+        
+    Notes
+    -----
+    This is the main command line interface for running experiments.
+    It loads configuration, initializes all components, and executes
+    the specified pipeline stages.
     """
-    Run algorithm evaluation pipeline.
-    """
+
     if stages is not None:
         for stage in stages:
             if stage not in STAGE_CLASSES.keys():
@@ -109,6 +133,7 @@ def run(
     import_modules("wibench.datasets")
     import_modules("wibench.metrics")
     import_modules("wibench.attacks")
+    import_modules("user_plugins")
 
     run_id = str(uuid.uuid1()) if RUN_ID_ENV_NAME not in os.environ else os.environ[RUN_ID_ENV_NAME]
     os.environ[RUN_ID_ENV_NAME] = run_id

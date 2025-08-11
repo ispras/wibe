@@ -19,6 +19,19 @@ class TorchBitWatermarkData:
 
     @classmethod
     def get_random(cls, length: int) -> "TorchBitWatermarkData":
+        """Creates random torch bit message with data type torch.int64 and shape (0, length)
+        
+        Parameters
+        ----------
+        length : int
+            Number of bits
+
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch tensor with data type torch.int64 and shape (0, length)
+        
+        """
         return TorchBitWatermarkData(
             watermark=torch.randint(0, 2, size=(1, length))
         )
