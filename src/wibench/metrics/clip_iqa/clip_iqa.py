@@ -28,7 +28,7 @@ class CLIP_IQA(PostEmbedMetric):
     
     Notes
     -----
-    - The watermark_data field is required for the pipeline to work correctly.
+    - The watermark_data field is required for the pipeline to work correctly
     """
     
     def __init__(self, prompts: Tuple[Union[str, Tuple[str]]] = ("quality",), device: str = "cuda" if torch.cuda.is_available() else "cpu") -> None:

@@ -29,7 +29,7 @@ class LPIPS(PostEmbedMetric):
 
     Notes
     -----
-    - The watermark_data field is required for the pipeline to work correctly.
+    - The watermark_data field is required for the pipeline to work correctly
     """
     
     def __init__(self, net: str = "alex", device: str = "cuda" if torch.cuda.is_available() else "cpu") -> None:
