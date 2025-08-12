@@ -19,6 +19,14 @@ class WatermarkData:
 
 
 class DCTMarkerWrapper(BaseAlgorithmWrapper):
+    """
+    Implementation of CAISS watermarking scheme via discrete cosine transform domain ("Correlation-and-Bit-Aware Spread Spectrum Embedding for Data Hiding"). Implementation is based on "Real data performance evaluation of CAISS watermarking scheme".
+
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        dictionary, containing values for `DCTMarkerConfig` dataclass
+    """
     name = "dct_marker"
 
     def __init__(self, params: Optional[Dict] = None):
