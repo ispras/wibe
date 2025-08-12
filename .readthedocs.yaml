@@ -22,3 +22,5 @@ python:
    - requirements: docs/source/requirements.txt
    - method: pip
      path: .
+   - method: script
+     path: docs/install_requirements.sh
