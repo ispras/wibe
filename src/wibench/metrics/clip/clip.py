@@ -2,6 +2,7 @@ import ImageReward as RM
 import torch
 
 from typing_extensions import Any
+from pathlib import Path
 
 from wibench.utils import (
     torch_img2numpy_bgr,
@@ -39,6 +40,7 @@ class CLIPScore(PostEmbedMetric):
     def __init__(self,
                  device: str = "cuda" if torch.cuda.is_available() else "cpu",
                  download_root: str = "./model_files/metrics/aesthetic"):
+        download_root = str(Path(download_root).resolve())
         self.model = RM.load_score("CLIP", device=device, download_root=download_root)
 
     def __call__(self,
