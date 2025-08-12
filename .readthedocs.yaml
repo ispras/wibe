@@ -9,6 +9,9 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.10"
+  jobs:
+    post_install:
+      python install_requirements.py
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
@@ -22,5 +25,3 @@ python:
    - requirements: docs/source/requirements.txt
    - method: pip
      path: .
-   - method: script
-     path: docs/install_requirements.sh
