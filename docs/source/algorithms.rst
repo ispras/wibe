@@ -188,7 +188,7 @@ stable_signature
 StegaStamp
 ~~~~~~~~~~
 
-.. automodule:: wibench.algorithms.stegastamp.wrapper
+.. automodule:: wibench.algorithms.stega_stamp.wrapper
     :members:
 
 TreeRing
