@@ -1,6 +1,7 @@
 import ImageReward as RM
 import torch
 from typing_extensions import Any
+from pathlib import Path
 
 from wibench.utils import (
     torch_img2numpy_bgr,
@@ -35,8 +36,11 @@ class Aesthetic(PostEmbedMetric):
     - The watermark_data field is required for the pipeline to work correctly
     """
 
-    def __init__(self, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
-        self.model = RM.load_score("Aesthetic", device=device)
+    def __init__(self,
+                 device: str = "cuda" if torch.cuda.is_available() else "cpu",
+                 download_root: str = "./model_files/metrics/aesthetic"):
+        download_root = str(Path(download_root).resolve())
+        self.model = RM.load_score("Aesthetic", device=device, download_root=download_root)
 
     def __call__(self,
                  img1: TorchImg,
