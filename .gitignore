@@ -217,11 +217,11 @@ fabric.properties
 init.sh
 
 # models
-model_files
-model_files.zip
+./model_files
+./model_files.zip
 
 # datasets
-datasets
+./datasets
 
 # results
-test_results
+./test_results

@@ -1,11 +1,11 @@
 import torch
-import numpy as np
 import sys
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
 from pathlib import Path
 
+from wibench.watermark_data import TorchBitWatermarkData
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
 from wibench.utils import (
@@ -18,6 +18,30 @@ from wibench.utils import (
 
 @dataclass
 class HiddenParams:
+    """Configuration parameters for the HiDDeN (Hiding Data in Deep Networks) algorithm.
+
+    These parameters define the image dimensions, watermark length, and the architecture
+    of the encoder and decoder networks used for image watermarking.
+
+    Attributes
+    ----------
+        run_name : str
+            The name of the experiment (crop, cropout, dropout, jpeg, resize, combined-noise)
+        H : int
+            Height of the input image (in pixels). Defines the vertical dimension of the input tensor
+        W : int
+            Width of the input image (in pixels). Defines the horizontal dimension of the input tensor
+        wm_length: int
+            Length of the watermark message to be embed (in bits)
+        encoder_blocks : int
+            Number of convolutional blocks in the encoder
+        encoder_channels : int
+            Number of channels (filters) per encoder block
+        decoder_blocks : int
+            Number of convolutional blocks in the decoder
+        decoder_channels : int
+            Number of channels (filters) per decoder block
+    """
     run_name: str
     H: int
     W: int
@@ -28,12 +52,18 @@ class HiddenParams:
     decoder_channels: int
 
 
-@dataclass
-class WatermarkData:
-    watermark: torch.Tensor
-
-
 class HiddenWrapper(BaseAlgorithmWrapper):
+    """`HiDDeN <https://arxiv.org/abs/1807.09937>`_: Hiding Data in Deep Networks --- Image Watermarking Algorithm.
+    
+    Provides an interface for embedding and extracting watermarks using the HiDDeN watermarking algorithm.
+    Based on the code from `here <https://github.com/ando-khachatryan/HiDDeN>`__.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        HiDDeN algorithm configuration parameters
+    """
+
     name = "hidden"
     
     def __init__(self, params: Dict[str, Any]) -> None:
@@ -71,7 +101,16 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         )
         super().__init__(hidden_params)
     
-    def embed(self, image: TorchImg, watermark_data: Any):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+        """Embed watermark into input image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         resized_normalize_image = normalize_image(resized_image)
         with torch.no_grad():
@@ -80,12 +119,32 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         marked_image = overlay_difference(image, resized_image, encoded_tensor)
         return marked_image
     
-    def extract(self, image: TorchImg, watermark_data: Any):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+        """Extract watermark from marked image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         resized_normalize_image = normalize_image(resized_image)
         with torch.no_grad():
             res = self.encoder_decoder.decoder(resized_normalize_image.to(self.device))
         return (res.cpu().numpy() > 0.5).astype(int)
 
-    def watermark_data_gen(self) -> WatermarkData:
-        return WatermarkData(torch.tensor(np.random.randint(0, 2, size=(1, self.params.wm_length))))
+    def watermark_data_gen(self) -> TorchBitWatermarkData:
+        """Generate watermark payload data for HiDDeN watermarking algorithm.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of (0, message_length)
+
+        Notes
+        -----
+        - Called automatically during embedding
+        """
+        return TorchBitWatermarkData.get_random(self.params.wm_length)

@@ -1,10 +1,26 @@
-import typer
+from pathlib import Path
+import sys
+import wibench
 
+
+def clear_sys_path():
+    path_to_remove = Path(wibench.__file__).parent
+    remove_values = []
+    for path in sys.path:
+        if Path(path).resolve() == path_to_remove.resolve():
+            remove_values.append(path)
+    for val in remove_values:
+        sys.path.remove(val)
+
+
+clear_sys_path()
+
+
+import typer
 from typing_extensions import (
     Optional,
     List
 )
-from pathlib import Path
 import uuid
 from wibench.pipeline import Pipeline, STAGE_CLASSES
 from wibench.module_importer import import_modules
@@ -15,17 +31,11 @@ from wibench.config_loader import (
     DATASETS_FIELD,
     ATTACKS_FIELD,
     PIPELINE_FIELD,
-    get_algorithms,
-    get_attacks,
-    get_datasets,
-    get_metrics,
 )
-import wibench
-from wibench.utils import seed_everything
 from wibench.config import PipeLineConfig
 import sys
 import subprocess
-import os 
+import os
 from wibench.aggregator import PandasAggregatorConfig
 
 
@@ -41,20 +51,8 @@ def clear_tables(config: PipeLineConfig):
             params_table_result_path.unlink()
 
 
-def clear_sys_path():
-    path_to_remove = Path(wibench.__file__).parent
-    remove_values = []
-    for path in sys.path:
-        if Path(path).resolve() == path_to_remove.resolve():
-            remove_values.append(path)
-    for val in remove_values:
-        sys.path.remove(val)
-
-
 CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
 RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
-
-clear_sys_path()
 
 
 def set_cuda_devices(environ, device_list: List[int]):
@@ -64,6 +62,11 @@ def set_cuda_devices(environ, device_list: List[int]):
 
 def subprocess_run(pipeline_config: PipeLineConfig):
     args = [sys.executable] + sys.argv
+    
+    # Hack for windows parallel execution via console script wibench.exe
+    if os.name == "nt" and Path(args[1]).with_suffix(".exe").exists():
+        args[1] = str(Path(args[1]).with_suffix(".exe"))
+
     env = os.environ
     procs = []
     for process_num in range(pipeline_config.workers):
@@ -90,21 +93,53 @@ def run(
     dump_context: bool = typer.Option(
         False, "--dump-context", "-d", help="If enabled, execution contexts are saved. Useful for debug or stage-by-stage execution (in case of different environments for algorithms/metrics/attacks)"
     ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Quick run on a few samples to check everything working"),
     stages: Optional[List[str]] = typer.Argument(None, help=f"Stages to execute (e.g., embed attack extract), if 'all' or not provided - executes all stages. Available stages are:{list(STAGE_CLASSES.keys())}"),
 
 ):
+    """Run the watermarking evaluation pipeline.
+
+    Parameters
+    ----------
+    config : Path
+        Path to YAML configuration file
+    dump_context : bool
+        Whether to save intermediate contexts
+    dry_run: bool
+        Run on a few samples
+    stages : Optional[List[str]]
+        Pipeline stages to execute. Available stages:
+        - embed: Watermark embedding
+        - post_embed_metrics: Metrics after embedding
+        - attack: Apply attacks  
+        - post_attack_metrics: Metrics after attacks
+        - extract: Watermark extraction
+        - post_extract_metrics: Metrics after extraction
+        - aggregate: Aggregate metrics
+        
+    Notes
+    -----
+    This is the main command line interface for running experiments.
+    It loads configuration, initializes all components, and executes
+    the specified pipeline stages.
     """
-    Run algorithm evaluation pipeline.
-    """
+
+    if stages is not None:
+        for stage in stages:
+            if stage not in STAGE_CLASSES.keys():
+                raise ValueError(f"Unknown stage: {stage}")
+
     import_modules("wibench.algorithms")
     import_modules("wibench.datasets")
     import_modules("wibench.metrics")
     import_modules("wibench.attacks")
+    import_modules("user_plugins")
 
     run_id = str(uuid.uuid1()) if RUN_ID_ENV_NAME not in os.environ else os.environ[RUN_ID_ENV_NAME]
     os.environ[RUN_ID_ENV_NAME] = run_id
     loaded_config = load_pipeline_config_yaml(config)
-    seed_everything(loaded_config[PIPELINE_FIELD].seed)
+    if dry_run:
+        loaded_config[PIPELINE_FIELD].result_path /= "dry"
     pipeline_config = loaded_config[PIPELINE_FIELD]
     clear_tables(pipeline_config)
 
@@ -113,16 +148,17 @@ def run(
         return
 
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
-    alg_wrappers = get_algorithms(loaded_config[ALGORITHMS_FIELD])
+    alg_wrappers = loaded_config[ALGORITHMS_FIELD]
     metrics = {}
     for metric_field in METRICS_FIELD:
-        metrics[metric_field] = get_metrics(loaded_config[metric_field])
-    datasets = get_datasets(loaded_config[DATASETS_FIELD])
-    attacks = get_attacks(loaded_config[ATTACKS_FIELD])
+        metrics[metric_field] = loaded_config[metric_field]
+    datasets = loaded_config[DATASETS_FIELD]
+    attacks = loaded_config[ATTACKS_FIELD]
+    
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]
     )
-    pipeline.run(run_id, stages, dump_context, process_num=process_num)
+    pipeline.run(run_id, stages, dump_context=dump_context, dry_run=dry_run, process_num=process_num)
 
 
 if __name__ == "__main__":
