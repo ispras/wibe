@@ -59,12 +59,12 @@ epub_show_urls = 'footnote'
 
 # ---------------------
 autodoc_member_order = 'bysource'
-autodoc_special_members = '__init__'
+#autodoc_special_members = '__init__'
 
 # The default options for autodoc directives. They are applied to all autodoc directives automatically. It must be a dictionary which maps option names to the values.
 autodoc_default_options = {
     'member-order': 'bysource',
-    'special-members': '__init__',
+#    'special-members': '__init__',
     'exclude-members': '__weakref__',
     'ignore-module-all': True,
 }

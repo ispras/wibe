@@ -7,9 +7,9 @@ import torch
 
 
 class LPIPS(PostEmbedMetric):
-    """The Unreasonable Effectiveness of Deep Features as a Perceptual Metric (https://arxiv.org/abs/1801.03924).
+    """The Unreasonable Effectiveness of Deep Features as a Perceptual Metric `[paper] <https://arxiv.org/abs/1801.03924>`__.
 
-    The implementation is taken from (https://github.com/richzhang/PerceptualSimilarity). 
+    The implementation is taken from the github `repository <https://github.com/richzhang/PerceptualSimilarity>`__. 
 
     Initialization Parameters
     -------------------------

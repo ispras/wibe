@@ -6,7 +6,7 @@ from torchvision.transforms.functional import to_tensor
 
 
 class MSCOCO(RangeBaseDataset):
-    """Dataset loader for MS-COCO (Common Objects in Context) images (https://cocodataset.org/).
+    """Dataset loader for `MS-COCO <https://cocodataset.org/>`_ (Common Objects in Context) images.
 
     Provides access to the COCO 2017 dataset images through HuggingFace Datasets,
     supporting both validation and training splits with optional caching.

@@ -11,13 +11,15 @@ from wibench.typing import TorchImg
 
 @dataclass
 class WatermarkData:
+    """Watermark data for DWT_SVM watermarking algorithm.
+    """
     watermark: np.ndarray
     key: np.ndarray
 
 
 class DWTSVMWrapper(BaseAlgorithmWrapper):
     """
-    Custom implementation of image watermarking algorithm described in "SVM-based robust image watermarking technique in LWT domain using different sub-bands" (https://doi.org/10.1007/s00521-018-3647-2).
+    Custom implementation of image watermarking algorithm described in the `paper <https://doi.org/10.1007/s00521-018-3647-2>`__.
 
     Parameters
     ----------

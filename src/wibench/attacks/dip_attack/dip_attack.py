@@ -1,3 +1,5 @@
+"""
+"""
 import torch
 from ..base import BaseAttack
 #from torchmetrics import PeakSignalNoiseRatio
@@ -17,9 +19,9 @@ def get_model(dig_cfgs):
 
 class DIPAttack(BaseAttack):
     """
-    DIP-based watermark evasion attack adopted from https://github.com/sun-umn/DIP_Watermark_Evasion_TMLR/
-    NOTE: It uses slightly incorrect (non-randomized) input during DIP training. More correct version is available below.
+    DIP-based watermark evasion attack adopted from the github `repository <https://github.com/sun-umn/DIP_Watermark_Evasion_TMLR/>`__.
 
+    **NOTE**: It uses slightly incorrect (non-randomized) input during DIP training. More correct version is available below.
     """
     name = "DIP"
 
@@ -32,7 +34,7 @@ class DIPAttack(BaseAttack):
         arch: str = "vanila"
     ) -> None:
         """Initialize DIP attack.
-        
+
         Args:
             device: Device to run computations on
             dtype: Data type for computations
@@ -100,15 +102,24 @@ def np_to_torch(img_np):
     return torch.from_numpy(img_np)[None, :]
 
 
-def get_noise(input_depth, method, spatial_size, noise_type='u', var=1./10):
-    """Returns a pytorch.Tensor of size (1 x `input_depth` x `spatial_size[0]` x `spatial_size[1]`) 
+def get_noise(input_depth: int, method: str, spatial_size, noise_type: str ='u', var=1./10):
+    """
+    Returns a pytorch.Tensor of size (1 x `input_depth` x `spatial_size[0]` x `spatial_size[1]`) 
     initialized in a specific way.
+
     Args:
-        input_depth: number of channels in the tensor
+        input_depth (int): number of channels in the tensor
+
         method: `noise` for fillting tensor with noise; `meshgrid` for np.meshgrid
+
         spatial_size: spatial size of the tensor to initialize
+
         noise_type: 'u' for uniform; 'n' for normal
+
         var: a factor, a noise will be multiplicated by. Basically it is standard deviation scaler. 
+
+    Returns:
+        pytorch.Tensor
     """
     if isinstance(spatial_size, int):
         spatial_size = (spatial_size, spatial_size)
@@ -130,9 +141,9 @@ def get_noise(input_depth, method, spatial_size, noise_type='u', var=1./10):
 
 class DIPAttackNoise(BaseAttack):
     """
-    DIP-based watermark evasion attack with correct noise input. 
+    DIP-based watermark evasion attack with correct noise input.
     It follows original DIP model input initialization 
-    from https://github.com/DmitryUlyanov/deep-image-prior/blob/master/utils/common_utils.py
+    from the github `repository <https://github.com/DmitryUlyanov/deep-image-prior/blob/master/utils/common_utils.py>`__.
     """
     name = "DIPNoise"
 

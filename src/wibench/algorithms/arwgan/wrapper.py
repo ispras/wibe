@@ -20,7 +20,7 @@ from wibench.utils import (
 @dataclass
 class ARWGANParams:
     """
-    Configuration parameters for the ARWGAN (Attention-Guided Robust Image Watermarking Model Based on GAN) watermarking algorithm.
+    Configuration parameters for the `ARWGAN <https://ieeexplore.ieee.org/document/10155247>`__ watermarking algorithm.
 
     Attributes
     ----------
@@ -60,6 +60,7 @@ class ARWGANParams:
 
         enable_fp16 : bool
             If True, enables mixed precision (fp16) training/inference for improved speed and reduced memory usage on compatible hardware (default False)
+
     """
     H: int
     W: int
@@ -79,15 +80,17 @@ class ARWGANParams:
 
 
 class ARWGANWrapper(BaseAlgorithmWrapper):
-    """ARWGAN: Attention-Guided Robust Image Watermarking Model Based on GAN - Image Watermarking Algorithm (https://ieeexplore.ieee.org/document/10155247).
+    """
+    `ARWGAN <https://ieeexplore.ieee.org/document/10155247>`__: Attention-Guided Robust Image Watermarking Model Based on GAN --- Image Watermarking Algorithm.
     
     Provides an interface for embedding and extracting watermarks using the ARWGAN watermarking algorithm.
-    Based on the code from https://github.com/river-huang/ARWGAN.
+    Based on the code from `here <https://github.com/river-huang/ARWGAN>`__.
     
     Parameters
     ----------
     params : Dict[str, Any]
         ARWGAN algorithm configuration parameters
+
     """
 
     name = "arwgan"

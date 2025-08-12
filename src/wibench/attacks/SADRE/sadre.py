@@ -9,7 +9,7 @@ from .regen_pipe import ReSDPipeline
 
 class WPWMAttacker(BaseAttack):
     """
-    For more information visit https://github.com/inzamamulDU/SADRE
+    Saliency-Aware Diffusion Reconstruction for Effective Invisible Watermark Removal. For more information visit the following `page <https://github.com/inzamamulDU/SADRE>`__.
     """
     def __init__(self, pipe=None, noise_step=60, saliency_mask=None, device='cuda'):
 
@@ -64,6 +64,7 @@ class WPWMAttacker(BaseAttack):
     def estimate_watermark_strength(self, x_w):
         """
         Estimate watermark strength using entropy of the normalized image.
+
         Args:
             x_w (torch.Tensor): Input watermarked image (C, H, W).
         Returns:
@@ -96,6 +97,7 @@ class WPWMAttacker(BaseAttack):
     def compute_latent_saliency_mask(self, latents):
         """
         Compute a saliency mask using features from a pre-trained VGG network.
+
         Args:
             img (torch.Tensor): Input image tensor (C, H, W).
         Returns:

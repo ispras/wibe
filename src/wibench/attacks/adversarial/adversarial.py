@@ -7,7 +7,7 @@ from .feature_extractors import ClipEmbedding, ResNet18Embedding, VAEEmbedding
 
 
 class AdversarialEmbedding(BaseAttack):
-    """Adversarial embedding attack from WAVES benchmark."""
+    """Adversarial embedding attack from `WAVES <https://github.com/umd-huang-lab/WAVES>`_ benchmark."""
 
     def __init__(self,
                  encoder: str = "resnet18",
@@ -106,7 +106,7 @@ class AdversarialEmbedding(BaseAttack):
 
 
 class AdversarialEmbeddingPSNR(BaseAttack):
-    r"""Modification of adversarial embedding attack that uses PSNR instead of l_\infty norm to measure closeness between images."""
+    r"""Modification of adversarial embedding attack that uses PSNR instead of :math:`\ell_\infty` norm to measure closeness between images."""
 
     def __init__(self,
                  encoder: str = "resnet18",

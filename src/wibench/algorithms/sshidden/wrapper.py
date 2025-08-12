@@ -72,13 +72,13 @@ default_transform = transforms.Compose([NORMALIZE_IMAGENET])
 
 
 class SSHiddenWrapper(BaseAlgorithmWrapper):
-    """HiDDeN watermarking algorithm adapted from the Stable Signature (SSHiDDeN) (https://arxiv.org/pdf/2303.15435).
+    """HiDDeN watermarking algorithm adapted from the Stable Signature (SSHiDDeN) [`paper <https://arxiv.org/pdf/2303.15435>`__].
 
     This implementation extends the original HiDDeN architecture by integrating
     a Just Noticeable Difference (JND) mask to guide watermark embedding in the
     latent space of diffusion models. The JND mask modulates embedding strength
     to minimize perceptual artifacts while maintaining robustness.
-    Based on the code from https://github.com/facebookresearch/stable_signature/tree/main.
+    Based on the code from `here <https://github.com/facebookresearch/stable_signature/tree/main>`__.
     
     Parameters
     ----------

@@ -19,6 +19,10 @@ from wibench.typing import TorchImg, TorchImgNormalize
 
 
 class PreNoisePolicy(str, Enum):
+    """
+    Pre-noise policy types.
+
+    """
     pre_noise_0 = "pre_noise_0"
     pre_noise_1 = "pre_noise_1"
     pre_noise_nsm = "pre_noise_nsm"
@@ -27,7 +31,7 @@ class PreNoisePolicy(str, Enum):
 @dataclass
 class CINParams:
     """
-    Configuration parameters for the CIN (Combining the Invertible and Non-invertible mechanisms) algorithm.
+    Configuration parameters for the CIN algorithm.
     
     Attributes
     ----------
@@ -40,7 +44,8 @@ class CINParams:
     pre_noise_policy : PreNoisePolicy
         A policy that defines the parameters of noise for noise-specific selection module (NSM)
     experiment: str
-        The name of the experiment (default "")
+        The name of the experiment (default is "")
+
     """
     H: int
     W: int
@@ -50,15 +55,16 @@ class CINParams:
 
 
 class CINWrapper(BaseAlgorithmWrapper):
-    """CIN: Towards Blind Watermarking: Combining Invertible and Non-invertible Mechanisms - Image Watermarking Algorithm (https://arxiv.org/abs/2212.12678).
+    """CIN: Towards Blind Watermarking: Combining Invertible and Non-invertible Mechanisms - Image Watermarking Algorithm [`paper <https://arxiv.org/abs/2212.12678>`__].
 
     Provides an interface for embedding and extracting watermarks using the CIN watermarking algorithm.
-    Based on the code from https://github.com/rmpku/CIN/tree/main.
+    Based on the code from `here <https://github.com/rmpku/CIN/tree/main>`__.
     
     Parameters
     ----------
     params : Dict[str, Any]
         CIN algorithm configuration parameters
+
     """
     
     name = "cin"
@@ -110,7 +116,8 @@ class CINWrapper(BaseAlgorithmWrapper):
         super().__init__(params)
 
     def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
-        """Embed watermark into input image.
+        """
+        Embed watermark into input image.
         
         Parameters
         ----------
@@ -118,6 +125,7 @@ class CINWrapper(BaseAlgorithmWrapper):
             Input image tensor in (C, H, W) format
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
+
         """
         resized_image = resize_torch_img(image, [self.params.H, self.params.W])
         resized_normalized_image: TorchImgNormalize
@@ -129,7 +137,8 @@ class CINWrapper(BaseAlgorithmWrapper):
         return marked_image
 
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
-        """Extract watermark from marked image.
+        """
+        Extract watermark from marked image.
         
         Parameters
         ----------
@@ -137,6 +146,7 @@ class CINWrapper(BaseAlgorithmWrapper):
             Input image tensor in (C, H, W) format
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
+
         """
         resized_image = resize_torch_img(image, [self.params.H, self.params.W])
         resized_normalized_image = normalize_image(resized_image)
@@ -151,7 +161,8 @@ class CINWrapper(BaseAlgorithmWrapper):
         return (msg_nsm.cpu().numpy() > 0.5).astype(int)
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """Generate watermark payload data for CIN watermarking algorithm.
+        """
+        Generate watermark payload data for CIN watermarking algorithm.
         
         Returns
         -------
@@ -161,5 +172,6 @@ class CINWrapper(BaseAlgorithmWrapper):
         Notes
         -----
         - Called automatically during embedding
+
         """
         return TorchBitWatermarkData.get_random(self.params.wm_length)

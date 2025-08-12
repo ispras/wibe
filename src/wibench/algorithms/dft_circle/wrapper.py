@@ -7,7 +7,7 @@ from wibench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 
 class DFTMarkerWrapper(BaseAlgorithmWrapper):
     """
-    Implementation of image watermarking algorithm described in "Discrete Fourier transform-based watermarking method with an optimal implementation radius" (https://doi.org/10.1117/1.3609010)
+    Implementation of image watermarking algorithm described in `"Discrete Fourier transform-based watermarking method with an optimal implementation radius" <https://doi.org/10.1117/1.3609010>`_.
 
     Parameters
     ----------

@@ -4,10 +4,9 @@ from wibench.attacks.base import BaseAttack
 
 
 class FluxRegeneration(BaseAttack):
-    """Attack from https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb.
+    """Attack `regeneration` from `here <https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb>`__.
 
-    TODO check if this works with batches
-
+    **TODO**: check if this works with batches.
     """
 
     def __init__(self,
@@ -66,7 +65,7 @@ class FluxRegeneration(BaseAttack):
 
 
 class FluxRinsing(FluxRegeneration):
-    """Attack from https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb."""
+    """Attack `rinse2x` from `here <https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb>`__."""
 
     def __init__(self,
                  rinsing_times: int = 2,

@@ -25,7 +25,7 @@ from wibench.watermark_data import TorchBitWatermarkData
 
 @dataclass
 class DWSFParams(Params):
-    """Configuration parameters for the DWSF (Deep Dispersed Watermarking with Synchronization and Fusion) watermarking algorithm.
+    """Configuration parameters for the DWSF watermarking algorithm.
 
     Attributes:
         encoder_weights_path : Optional[str]
@@ -53,6 +53,7 @@ class DWSFParams(Params):
             Required minimal quality of watermarked image in PSNR (Peak Signal-to-Noise Ratio) terms (default: 35)
         gt : float
             Threshold above which the decoded bit is considered as '1' (default: 0.5)
+
     """
 
     encoder_weights_path: Optional[str] = None
@@ -70,15 +71,16 @@ class DWSFParams(Params):
 
 
 class DWSFWrapper(BaseAlgorithmWrapper):
-    """DWSF: Practical Deep Dispersed Watermarking with Synchronization and Fusion - Image Watermarking Algorithm (https://dl.acm.org/doi/abs/10.1145/3581783.3612015).
+    """`DWSF <https://dl.acm.org/doi/abs/10.1145/3581783.3612015>`_: Practical Deep Dispersed Watermarking with Synchronization and Fusion - Image Watermarking Algorithm.
 
     Provides an interface for embedding and extracting watermarks using the DWSF watermarking algorithm.
-    Based on the code from https://github.com/bytedance/DWSF.
+    Based on the code from `here <https://github.com/bytedance/DWSF>`__.
     
     Parameters
     ----------
     params : Dict[str, Any]
         DWSF algorithm configuration parameters
+
     """
     
     name = "dwsf"

@@ -7,7 +7,7 @@ from packaging import version
 
 
 class DiffusionDB(RangeBaseDataset):
-    """Dataset loader for the DiffusionDB large-scale text-to-image dataset (https://github.com/poloclub/diffusiondb).
+    """Dataset loader for the `DiffusionDB <https://github.com/poloclub/diffusiondb>`_ large-scale text-to-image dataset.
 
     Provides access to generated images and their prompts from DiffusionDB,
     with optional NSFW filtering and prompt-only retrieval modes.

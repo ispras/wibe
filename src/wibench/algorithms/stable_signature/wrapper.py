@@ -45,10 +45,10 @@ class StableSignatureParams(Params):
 
 
 class StableSignatureWrapper(BaseAlgorithmWrapper):
-    """The Stable Signature: Rooting Watermarks in Latent Diffusion Models - Image Watermarking Algorithm (https://arxiv.org/pdf/2303.15435).
+    """The Stable Signature: Rooting Watermarks in Latent Diffusion Models --- Image Watermarking Algorithm [`paper <https://arxiv.org/pdf/2303.15435>`__].
     
     Provides an interface for embedding and extracting watermarks in Text2Image task using the StableSignature watermarking algorithm.
-    Based on the code from https://github.com/facebookresearch/stable_signature/tree/main.
+    Based on the code from `here <https://github.com/facebookresearch/stable_signature/tree/main>`__.
     
     Parameters
     ----------

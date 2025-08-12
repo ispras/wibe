@@ -17,22 +17,24 @@ class WAParams:
         wm_length : int
             Length of the watermark message to be embed (in bits).
         scaling_w : float
-            Scaling factor for the watermark in the embedder model 
+            Scaling factor for the watermark in the embedder model.
+
     """
     wm_length: int
     scaling_w: float
 
 
 class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
-    """Watermark Anything with Localized Messages - Image Watermarking Algorithm (https://arxiv.org/abs/2411.07231).
+    """Watermark Anything with Localized Messages - Image Watermarking Algorithm [`paper <https://arxiv.org/abs/2411.07231>`__].
     
     Provides an interface for embedding and extracting watermarks using the Watermark Anything watermarking algorithm.
-    Based on the code from https://github.com/facebookresearch/watermark-anything.
+    Based on the code from `here <https://github.com/facebookresearch/watermark-anything>`__.
     
     Parameters
     ----------
     params : Dict[str, Any]
         Watermark Anything algorithm configuration parameters
+
     """
     
     name = "watermark_anything"
@@ -77,6 +79,7 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
             Input image tensor in (C, H, W) format
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
+
         """
         img = self.transform(image).unsqueeze(0).to(self.device)
         wm = watermark_data.watermark.to(self.device)
@@ -95,6 +98,7 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
             Input image tensor in (C, H, W) format
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
+
         """
         img = self.transform(image).unsqueeze(0).to(self.device)
         with torch.no_grad():
@@ -118,5 +122,6 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         Notes
         -----
         - Called automatically during embedding
+
         """
         return TorchBitWatermarkData.get_random(self.params.wm_length)

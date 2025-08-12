@@ -15,7 +15,7 @@ from wibench.metrics.base import PostEmbedMetric
 class Aesthetic(PostEmbedMetric):
     """Aesthetic score predictor based on a simple neural net that takes CLIP embeddings as inputs.
 
-    The implementation is taken from (https://github.com/zai-org/ImageReward). Based on improved-aesthetic-predictor code base (https://github.com/christophschuhmann/improved-aesthetic-predictor).
+    The implementation is taken from the github `repository <https://github.com/zai-org/ImageReward>`__. Based on `improved-aesthetic-predictor <https://github.com/christophschuhmann/improved-aesthetic-predictor>`_ code base.
 
     Initialization Parameters
     -------------------------

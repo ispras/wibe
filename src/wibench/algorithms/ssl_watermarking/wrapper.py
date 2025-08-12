@@ -173,10 +173,10 @@ class ImgLoader:
 
 
 class SSLMarkerWrapper(BaseAlgorithmWrapper):
-    """Watermarking Images in Self-Supervised Latent-Spaces (SSL) - Image Watermarking Algorithm (https://arxiv.org/pdf/2112.09581).
+    """Watermarking Images in Self-Supervised Latent-Spaces (SSL) --- Image Watermarking Algorithm [`paper <https://arxiv.org/pdf/2112.09581>`__].
     
     Provides an interface for embedding and extracting watermarks using the SSL watermarking algorithm.
-    Based on the code from https://github.com/facebookresearch/ssl_watermarking.
+    Based on the code from `here <https://github.com/facebookresearch/ssl_watermarking>`__.
     
     Parameters
     ----------
