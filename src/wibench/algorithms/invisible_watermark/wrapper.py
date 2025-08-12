@@ -104,10 +104,10 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
 
 
 class RivaGanWrapper(InvisibleWatermarkWrapper):
-    """Image watermarking via RivaGAN: a deep-learning-based encoder/decoder with attention mechanism (https://github.com/DAI-Lab/RivaGAN).
+    """Image watermarking via RivaGAN: a deep-learning-based encoder/decoder with attention mechanism [`repository <https://github.com/DAI-Lab/RivaGAN>`__].
 
     Provides an interface for embedding and extracting watermarks using the RivaGAN watermarking algorithm.
-    Based on the codes from https://github.com/ShieldMnt/invisible-watermark.
+    Based on the codes from `here <https://github.com/ShieldMnt/invisible-watermark>`__.
     
     Parameters
     ----------
@@ -128,7 +128,7 @@ class DwtDctWrapper(InvisibleWatermarkWrapper):
     """Image watermarking using frequency-domain transforms: DWT + DCT.
 
     Provides an interface for embedding and extracting watermarks using the frequency-domain transforms: DWT + DCT.
-    Based on the code from https://github.com/ShieldMnt/invisible-watermark.
+    Based on the code from `here <https://github.com/ShieldMnt/invisible-watermark>`__.
     
     Parameters
     ----------
@@ -144,7 +144,7 @@ class DwtDctSvdWrapper(InvisibleWatermarkWrapper):
     """Image frequency-domain watermarking with additional SVD processing: DWT + DCT + SVD.
 
     Provides an interface for embedding and extracting watermarks using the frequency-domain with additional SVD processing: DWT + DCT + SVD.
-    Based on the code from https://github.com/ShieldMnt/invisible-watermark.
+    Based on the code from the github `repository <https://github.com/ShieldMnt/invisible-watermark>`__.
     
     Parameters
     ----------

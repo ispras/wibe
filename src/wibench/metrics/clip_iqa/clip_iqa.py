@@ -6,9 +6,9 @@ import torch
 
 
 class CLIP_IQA(PostEmbedMetric):
-    """Exploring CLIP for Assessing the Look and Feel of Images (https://arxiv.org/abs/2207.12396).
+    """Exploring CLIP for Assessing the Look and Feel of Images `[paper] <https://arxiv.org/abs/2207.12396>`__.
 
-    The implementation is taken from (https://lightning.ai/docs/torchmetrics/stable/multimodal/clip_iqa.html). 
+    The implementation is taken from the `repository <https://lightning.ai/docs/torchmetrics/stable/multimodal/clip_iqa.html>`__.
 
     Initialization Parameters
     -------------------------

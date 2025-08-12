@@ -5,7 +5,7 @@ from wibench.typing import TorchImg
 
 
 class DiffusionRegeneration(BaseAttack):
-    """Based on the code from https://github.com/XuandongZhao/WatermarkAttacker/blob/main/wmattacker.py."""
+    """Based on the code from `here <https://github.com/XuandongZhao/WatermarkAttacker/blob/main/wmattacker.py#L155>`__."""
 
     def __init__(self, pipe=None, device="cuda", noise_step=60):
         self.device = device

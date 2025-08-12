@@ -11,7 +11,7 @@ from ..base import BaseAttack
 
 
 class VAERegeneration(BaseAttack):
-    """Based on the code from https://github.com/XuandongZhao/WatermarkAttacker/blob/main/wmattacker.py."""
+    """Based on the code from `here <https://github.com/XuandongZhao/WatermarkAttacker/blob/main/wmattacker.py#L19>`__."""
 
     def __init__(self, model_name="bmshj2018-factorized", quality=1, device="cuda"):
         if model_name == "bmshj2018-factorized":

@@ -13,9 +13,9 @@ from wibench.metrics.base import PostEmbedMetric
 
 
 class CLIPScore(PostEmbedMetric):
-    """CLIPScore: A Reference-free Evaluation Metric for Image Captioning (https://arxiv.org/abs/2104.08718).
+    """`CLIPScore <https://arxiv.org/abs/2104.08718>`_: A Reference-free Evaluation Metric for Image Captioning.
     
-    The implementation is taken from (https://github.com/zai-org/ImageReward). Based on CLIP code base (https://github.com/openai/CLIP).
+    The implementation is taken from the github `repository <https://github.com/zai-org/ImageReward>`__. Based on `CLIP code base <https://github.com/openai/CLIP>`_.
 
     Initialization Parameters
     -------------------------

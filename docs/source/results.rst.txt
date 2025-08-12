@@ -9,3 +9,9 @@ Clickhouse
 
 Visualization
 -------------
+
+Images
+~~~~~~
+
+Charts
+~~~~~~

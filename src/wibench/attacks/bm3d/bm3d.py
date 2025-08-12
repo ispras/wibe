@@ -5,6 +5,10 @@ from bm3d import bm3d_rgb
 
 
 class BM3DDenoising(BaseAttack):
+    """
+    For more information, please refer to the following `page <https://webpages.tuni.fi/foi/GCF-BM3D/>`__.
+    """
+
     name = "bm3d"
 
     def __init__(self) -> None:

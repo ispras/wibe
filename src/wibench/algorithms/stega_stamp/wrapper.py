@@ -36,10 +36,10 @@ class StegaStampConfig:
 
 
 class StegaStampWrapper(BaseAlgorithmWrapper):
-    """StegaStamp: Invisible Hyperlinks in Physical Photographs - Image Watermarking Algorithm (https://arxiv.org/abs/1904.05343).
+    """StegaStamp: Invisible Hyperlinks in Physical Photographs --- Image Watermarking Algorithm [`paper <https://arxiv.org/abs/1904.05343>`__].
     
     Provides an interface for embedding and extracting watermarks using the StegaStamp watermarking algorithm.
-    Based on the code from https://github.com/tancik/StegaStamp.
+    Based on the code from the github `repository <https://github.com/tancik/StegaStamp>`__.
     
     Parameters
     ----------

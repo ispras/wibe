@@ -13,9 +13,9 @@ from wibench.metrics.base import PostEmbedMetric
 
 
 class BLIP(PostEmbedMetric):
-    """BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation (https://arxiv.org/abs/2201.12086).
+    """`BLIP <https://arxiv.org/abs/2201.12086>`_: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation.
 
-    The implementation is taken from (https://github.com/zai-org/ImageReward). Based on BLIP code base (https://github.com/salesforce/BLIP).
+    The implementation is taken from the github `repository <https://github.com/zai-org/ImageReward>`__. Based on `BLIP code base <https://github.com/salesforce/BLIP>`_.
 
     Initialization Parameters
     -------------------------

@@ -11,11 +11,16 @@ from wibench.typing import TorchImg
 
 @dataclass
 class WatermarkData:
+    """Watermark data for DWT_SVM watermarking algorithm.
+    """
     watermark: np.ndarray
     key: np.ndarray
 
 
 class DWTSVMWrapper(BaseAlgorithmWrapper):
+    """Wrapper to run DWT_SVM watermarking algorithm.
+    """
+    
     name = "dwt_svm"
 
     def __init__(self, params: dict[str, Any]):

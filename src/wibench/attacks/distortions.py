@@ -305,9 +305,10 @@ class Brightness(BaseAttack):
     ----------
     factor : float
         Brightness adjustment factor:
-        - 1.0 returns original image
-        - <1.0 darkens image
-        - >1.0 brightens image
+
+        * 1.0 returns original image,
+        * <1.0 darkens image,
+        * >1.0 brightens image
     """
 
     def __init__(self, factor: float):
@@ -336,9 +337,10 @@ class Contrast(BaseAttack):
     ----------
     factor : float
         Contrast adjustment factor:
-        - 1.0 returns original image
-        - <1.0 reduces contrast
-        - >1.0 increases contrast
+
+        * 1.0 returns original image,
+        * <1.0 reduces contrast,
+        * >1.0 increases contrast
     """
 
     def __init__(self, factor: float):

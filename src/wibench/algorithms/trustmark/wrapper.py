@@ -25,6 +25,7 @@ class TrustMarkParams(Params):
             - 'C': (Compact). Uses a ResNet-18 decoder (smaller model size). Slightly lower visual quality.
         wm_strength : float
             Controls visibility/strength of watermark embedding (default 0.75)
+
     """
     wm_length: int = 100
     model_type: Literal['Q', 'B', 'C'] = 'Q'
@@ -32,15 +33,16 @@ class TrustMarkParams(Params):
 
 
 class TrustMarkWrapper(BaseAlgorithmWrapper):
-    """TrustMark: Universal Watermarking for Arbitrary Resolution Images - Image Watermarking Algorithm (https://arxiv.org/abs/2311.18297).
+    """`TrustMark <https://arxiv.org/abs/2311.18297>`_: Universal Watermarking for Arbitrary Resolution Images - Image Watermarking Algorithm.
     
     Provides an interface for embedding and extracting watermarks using the TrustMark watermarking algorithm.
-    Based on the code from https://github.com/adobe/trustmark.
+    Based on the code from `here <https://github.com/adobe/trustmark>`__.
     
     Parameters
     ----------
     params : Dict[str, Any]
         TrustMark algorithm configuration parameters
+
     """
     
     name = "trustmark"
@@ -66,6 +68,7 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
             Input image tensor in (C, H, W) format
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
+
         """
         img_pil = to_pil_image(image)
         wm_str = self._wm_to_str(watermark_data.watermark)
@@ -82,6 +85,7 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
             Input image tensor in (C, H, W) format
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
+
         """
         img_pil = to_pil_image(image)
         decoded = self.tm.decode(img_pil, MODE='binary')
@@ -99,5 +103,6 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
         Notes
         -----
         - Called automatically during embedding
+
         """
         return TorchBitWatermarkData.get_random(self.params.wm_length)

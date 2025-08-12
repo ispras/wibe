@@ -14,6 +14,10 @@ from wibench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 
 @dataclass
 class WatermarkData:
+    """
+    Data for watermark.
+    
+    """
     watermark: np.ndarray
     key: np.ndarray
 
@@ -45,6 +49,3 @@ class DCTMarkerWrapper(BaseAlgorithmWrapper):
         wm = np.random.randint(0, 2, self.params.wm_length)
         key = np.random.randint(0, 2, self.params.block_size)
         return WatermarkData(wm, key)
-
-
-

@@ -13,9 +13,9 @@ from wibench.metrics.base import PostEmbedMetric
 
 
 class ImageReward(PostEmbedMetric):
-    """ImageReward: Learning and Evaluating Human Preferences for Text-to-Image Generation (https://arxiv.org/abs/2304.05977).
+    """`ImageReward <https://arxiv.org/abs/2304.05977>`_: Learning and Evaluating Human Preferences for Text-to-Image Generation.
 
-    The implementation is taken from (https://github.com/zai-org/ImageReward/tree/main). 
+    The implementation is taken from the github `repository <https://github.com/zai-org/ImageReward/tree/main>`__.
 
     Initialization Parameters
     -------------------------

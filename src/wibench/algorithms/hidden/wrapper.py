@@ -53,10 +53,10 @@ class HiddenParams:
 
 
 class HiddenWrapper(BaseAlgorithmWrapper):
-    """HiDDeN: Hiding Data in Deep Networks - Image Watermarking Algorithm (https://arxiv.org/abs/1807.09937).
+    """`HiDDeN <https://arxiv.org/abs/1807.09937>`_: Hiding Data in Deep Networks --- Image Watermarking Algorithm.
     
     Provides an interface for embedding and extracting watermarks using the HiDDeN watermarking algorithm.
-    Based on the code from https://github.com/ando-khachatryan/HiDDeN.
+    Based on the code from `here <https://github.com/ando-khachatryan/HiDDeN>`__.
     
     Parameters
     ----------

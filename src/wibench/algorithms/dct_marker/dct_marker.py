@@ -8,6 +8,10 @@ from scipy import fftpack
 
 
 class IndexDistance(str, Enum):
+    """
+    Norm to evaluate distance.
+
+    """
     l1 = "l1"
     l2 = "l2"
     inf = "inf"
@@ -15,6 +19,10 @@ class IndexDistance(str, Enum):
 
 @dataclass
 class DCTMarkerConfig:
+    """
+    Configuration parameters for the DCT watermarking algorithm.
+
+    """
     width: int = 512
     height: int = 512
     wm_length: int = 800
@@ -26,6 +34,11 @@ class DCTMarkerConfig:
 
 
 class DCTMarker:
+    """
+    DCT watermarking method wrapper.
+    
+    """
+    
     def __init__(self, config: DCTMarkerConfig) -> None:
         self.config = config
         self.ampl2 = self.config.ampl1 / self.config.ampl_ratio
