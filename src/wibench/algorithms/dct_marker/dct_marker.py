@@ -8,9 +8,7 @@ from scipy import fftpack
 
 
 class IndexDistance(str, Enum):
-    """
-    Norm to evaluate distance.
-
+    """Norm to evaluate distance.
     """
     l1 = "l1"
     l2 = "l2"
@@ -20,8 +18,26 @@ class IndexDistance(str, Enum):
 @dataclass
 class DCTMarkerConfig:
     """
-    Configuration parameters for the DCT watermarking algorithm.
+    Configuration for CAISS via DCT watermarking method.
 
+    Attributes
+    ----------
+    width : int
+        Internal image width for watermarking algorithm. Input image is resized, marked and resized back (only difference to save details)
+    height : int
+        Internal image height for watermarking algorithm
+    wm_length : int
+        Number of bits to embed to image via watermark
+    block_size : int
+        Number of DCT coefficients, carrier of one watermark bit. Note: `block_size` * `wm_length` should be less than `width` * `height`
+    ampl1 : float
+        Relative amplitude for watermark embedding (watermark strength)
+    ampl_ratio : float
+        Ratio of amplitudes with and without interference. For more information, refer to CAISS watermarking technique
+    lambda_h : float
+        Coefficient for minimization of interference of carrier and watermark key. For more information, refer to ISS watermarking technique
+    index_distance : IndexDistance
+        2D distance to determine medium frequencies of DCT to embed watermark
     """
     width: int = 512
     height: int = 512
@@ -34,11 +50,9 @@ class DCTMarkerConfig:
 
 
 class DCTMarker:
+    """DCT watermarking method wrapper.
     """
-    DCT watermarking method wrapper.
-    
-    """
-    
+
     def __init__(self, config: DCTMarkerConfig) -> None:
         self.config = config
         self.ampl2 = self.config.ampl1 / self.config.ampl_ratio

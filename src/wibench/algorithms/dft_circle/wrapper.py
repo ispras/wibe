@@ -1,14 +1,22 @@
 import numpy as np
-
+from typing import Any, Dict
 from wibench.algorithms.dft_circle.dft_circle import DFTMarker
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 
 
 class DFTMarkerWrapper(BaseAlgorithmWrapper):
+    """
+    Implementation of image watermarking algorithm described in `"Discrete Fourier transform-based watermarking method with an optimal implementation radius" <https://doi.org/10.1117/1.3609010>`_.
+
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        Contains value for watermark strength "alpha" parameter of the algorithm
+    """
     name = "dft_circle"
 
-    def __init__(self, params: dict):
+    def __init__(self, params: Dict[str, Any]):
         super().__init__(params)
         self.alpha = params["alpha"]
         self.marker = DFTMarker()
