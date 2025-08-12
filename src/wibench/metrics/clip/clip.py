@@ -36,8 +36,10 @@ class CLIPScore(PostEmbedMetric):
     - The watermark_data field is required for the pipeline to work correctly
     """
     
-    def __init__(self, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
-        self.model = RM.load_score("CLIP", device=device)
+    def __init__(self,
+                 device: str = "cuda" if torch.cuda.is_available() else "cpu",
+                 download_root: str = "./model_files/metrics/aesthetic"):
+        self.model = RM.load_score("CLIP", device=device, download_root=download_root)
 
     def __call__(self,
                  prompt: str,
