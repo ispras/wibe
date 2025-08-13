@@ -75,7 +75,7 @@ class MBRS:
     def extract(self, img: TorchImg):
         if not self.model:
             self._load_model(self.models_dir)
-        img_tensor = normalize_image(self.resize(img))
+        img_tensor = normalize_image(self.resize(img)).to(self.device)
         with torch.no_grad():
             model_out = self.model.encoder_decoder.module.decoder(img_tensor)
         return torch.round(model_out).type(torch.int64).cpu()
@@ -101,7 +101,7 @@ class MBRSWrapper(BaseAlgorithmWrapper):
             settings_path = module_path / settings_path_256
             models_dir = module_path / model_dir_256
 
-        self.wa = MBRS(settings_path, models_dir)
+        self.wa = MBRS(settings_path, models_dir, params.strength_factor, device)
 
     def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
         return self.wa.embed(image, watermark_data.watermark)
