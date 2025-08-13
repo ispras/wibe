@@ -67,7 +67,7 @@ class DiffusionDB(RangeBaseDataset):
         start_idx = self.sample_range.start - 1
         while (True):
             start_idx += 1
-            if (len_idx >= self.len) or (start_idx >= self.dataset_len):
+            if (len_idx >= self.len):
                 break
             data = self.dataset[start_idx]
             if self.skip_nsfw and data["image_nsfw"] >= 1:
