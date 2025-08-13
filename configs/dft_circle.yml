@@ -1,0 +1,27 @@
+algorithms:
+  dft_circle:
+    params:
+      alpha: 600
+
+post_embed_metrics:
+  - PSNR
+  - SSIM
+  - LPIPS
+  - CLIP_IQA
+  - Aesthetic
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+- Result
+
+datasets:
+{% include 'common/diffusiondb.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/dft_circle
+  aggregators:
+    - CSV:
+        table_name: table

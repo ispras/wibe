@@ -1,0 +1,27 @@
+algorithms:
+  cin:
+    params:
+      yaml_config_path: ./model_files/cin/opt.yml
+      checkpoint_path: ./model_files/cin/cinNet&nsmNet.pth
+      pre_noise_policy: pre_noise_nsm
+      device: cuda
+      module_path: ./submodules/CIN
+
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
+
+datasets:
+{% include 'common/diffusiondb.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/cin
+  aggregators:
+    - CSV:
+        table_name: table

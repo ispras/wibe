@@ -1,0 +1,29 @@
+algorithms:
+  dct_marker:
+    params:
+      width: 256
+      height: 256
+      wm_length: 100
+      block_size: 256
+      ampl1: 0.01
+      ampl_ratio: 0.7
+      lambda_h: 4
+
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
+
+datasets:
+{% include 'common/diffusiondb.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %} 
+
+pipeline:
+  result_path: ./test_results/dct
+  aggregators:
+    - CSV:
+        table_name: table

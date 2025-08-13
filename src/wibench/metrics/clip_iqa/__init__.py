@@ -1,0 +1,1 @@
+from .clip_iqa import CLIP_IQA

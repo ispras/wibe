@@ -1,0 +1,27 @@
+algorithms:
+  watermark_anything:
+    scaling_w: 1.5
+    wm_length: 32
+    module_path: ./submodules/watermark_anything
+    ckpt_path: ./model_files/watermark_anything/wam_mit.pth
+    params_path: src/wibench/algorithms/watermark_anything/configs/params.json
+    device: cuda
+
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
+
+datasets:
+{% include 'common/diffusiondb.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/watermark_anything
+  aggregators:
+    - CSV:
+        table_name: table
