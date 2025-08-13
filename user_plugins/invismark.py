@@ -19,22 +19,22 @@ class InvisMark:
         self.device = device
         state_dict = torch.load(self.ckpt_path, map_location=self.device)
         cfg = state_dict["config"]
-        self.model = train.Watermark(cfg, device=self.device)
+        self.model = train.Watermark(cfg, device=self.device).to(self.device)
         self.model.load_model(self.ckpt_path)          
 
-    def embed(self, image: np.ndarray, wm: np.ndarray):
+    def embed(self, image: TorchImg, wm: TorchBitWatermarkData) -> TorchImg:
         trans_img = normalize_image(image)
         with torch.no_grad():
-            output, enc_input, enc_ouput = self.model._encode(trans_img, wm.type(torch.float32))
+            output, enc_input, enc_ouput = self.model._encode(trans_img, wm.type(torch.float32).to(self.device))
         # return output
-        return denormalize_image(output)
+        return denormalize_image(output).cpu()
 
     def extract(self, image: TorchImg):
-        trans_img = normalize_image(image)
+        trans_img = normalize_image(image).to(self.device)
         with torch.no_grad():
             dec = self.model._decode(trans_img)
         extracted = torch.round(dec).type(torch.float64)
-        return extracted
+        return extracted.cpu()
 
 
 class InvisMarkWrapper(BaseAlgorithmWrapper):
