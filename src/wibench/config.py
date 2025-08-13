@@ -128,4 +128,6 @@ class PipeLineConfig(BaseModel):
             if isinstance(value, str):
                 numbers = [int(x.strip()) for x in value.split(',')]
                 data["cuda_visible_devices"] = numbers
+            elif isinstance(value, int):
+                data["cuda_visible_devices"] = [value]
         return data
