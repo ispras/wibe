@@ -1,8 +1,5 @@
-from torchvision.transforms import v2
 import torch
-import cv2
 import sys
-import numpy as np
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
