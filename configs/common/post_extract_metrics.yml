@@ -1,26 +1,26 @@
   - ExtWm
   - BER
   - TPR@xFPR:
-      report_name: tpr@10%fpr
+      report_name: tpr@10e-1fpr
       fpr_rate: 0.1
   - TPR@xFPR:
-      report_name: tpr@1%fpr
+      report_name: tpr@10e-2fpr
       fpr_rate: 0.01
   - TPR@xFPR:
-      report_name: tpr@0.1%fpr
+      report_name: tpr@10e-3fpr
       fpr_rate: 0.001
   - TPR@xFPR:
-      report_name: tpr@0.01%fpr
+      report_name: tpr@10e-4fpr
       fpr_rate: 0.0001
   - TPR@xFPR:
-      report_name: tpr@0.001%fpr
+      report_name: tpr@10e-5fpr
       fpr_rate: 0.00001
   - TPR@xFPR:
-      report_name: tpr@0.0001%fpr
+      report_name: tpr@10e-6fpr
       fpr_rate: 0.000001
   - TPR@xFPR:
-      report_name: tpr@0.00001%fpr
+      report_name: tpr@10e-7fpr
       fpr_rate: 0.0000001
   - TPR@xFPR:
-      report_name: tpr@0.000001%fpr
+      report_name: tpr@10e-8fpr
       fpr_rate: 0.00000001
