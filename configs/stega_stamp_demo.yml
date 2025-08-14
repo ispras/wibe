@@ -17,7 +17,7 @@ post_attack_metrics:        # Visual quality of attacked image
 
 post_extract_metrics:       # Extraction effectiveness after attack
   - TPR@xFPR:
-      report_name: tpr@0.1%fpr
+      report_name: tpr@0.001fpr
       fpr_rate: 0.001
 
 datasets:                   # Dataset of images to test on
