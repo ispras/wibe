@@ -20,6 +20,11 @@ class DumpType(str, Enum):
     serialized = "serialized"
 
 
+class DatasetType(str, Enum):
+    coco = "coco"
+    diffusiondb = "ddb"
+
+
 @dataclass
 class Params:
     module_path: Optional[Union[str, Path]] = None
