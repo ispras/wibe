@@ -33,10 +33,8 @@ The extensions implement:
 
    quick_start
    system_requirements
-   code_structure
    pipeline
    algorithms
    attacks
    datasets
    metrics
-   results

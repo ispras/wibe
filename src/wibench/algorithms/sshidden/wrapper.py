@@ -15,10 +15,43 @@ from wibench.utils import (
     overlay_difference
 )
 from wibench.config import Params
+from wibench.watermark_data import TorchBitWatermarkData
 
 
 @dataclass
 class SSHiddenParams(Params):
+    """Configuration parameters for the HiDDeN (Hiding Data in Deep Networks) algorithm from StableSignature.
+
+    These parameters define the image dimensions, watermark length, and the architecture
+    of the encoder and decoder networks used for image watermarking.
+
+    Attributes
+    ----------
+        ckpt_path : Optional[str]
+            Path to pretrained checkpoint (default None)
+        encoder_depth : int
+            Number of convolutional blocks in the encoder network (default 4)
+        encoder_channels : int
+            Base number of channels in encoder convolutional blocks (default 64)
+        decoder_depth : int
+            Number of convolutional blocks in the decoder network (default 8)
+        decoder_channels : int
+            Base number of channels in decoder convolutional blocks (default 64)
+        num_bits : int
+            Length of the watermark message to be embed (in bits) (default 48)
+        attenuation : str
+            Noise modulation strategy for watermark embedding (default 'jnd')
+        scale_channels : bool
+            Whether to use channel-wise scaling in the decoder (default False)
+        scaling_i : float
+            Scaling factor for image reconstruction loss (default 1.0)
+        scaling_w : float
+            Scaling factor for watermark reconstruction loss (default 1.5)
+        H : int
+            Height of the input image (in pixels). Defines the vertical dimension of the input tensor (default 512)
+        W : int
+            Width of the input image (in pixels). Defines the horizontal dimension of the input tensor (default 512)
+    """
     ckpt_path: Optional[str] = None
     encoder_depth: int = 4
     encoder_channels: int = 64
@@ -33,17 +66,26 @@ class SSHiddenParams(Params):
     W: int = 512
 
 
-@dataclass
-class WatermarkData:
-    watermark: torch.Tensor
-
-
 NORMALIZE_IMAGENET = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 UNNORMALIZE_IMAGENET = transforms.Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225], std=[1/0.229, 1/0.224, 1/0.225])
 default_transform = transforms.Compose([NORMALIZE_IMAGENET])
 
 
 class SSHiddenWrapper(BaseAlgorithmWrapper):
+    """HiDDeN watermarking algorithm adapted from the Stable Signature (SSHiDDeN) [`paper <https://arxiv.org/pdf/2303.15435>`__].
+
+    This implementation extends the original HiDDeN architecture by integrating
+    a Just Noticeable Difference (JND) mask to guide watermark embedding in the
+    latent space of diffusion models. The JND mask modulates embedding strength
+    to minimize perceptual artifacts while maintaining robustness.
+    Based on the code from `here <https://github.com/facebookresearch/stable_signature/tree/main>`__.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        SSHiDDeN algorithm configuration parameters
+    """
+
     name = "sshidden"
 
     def __init__(self, params: Dict[str, Any]) -> None:
@@ -85,7 +127,16 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
         self.encoder_with_jnd = self.encoder_with_jnd.to(self.device).eval()
         self.decoder = self.decoder.to(self.device).eval()
 
-    def embed(self, image: TorchImg, watermark_data: WatermarkData):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
+        """Embed watermark into input image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         msg = 2 * watermark_data.watermark.type(torch.float) - 1
         resized_image = resize_torch_img(image, [self.params.H, self.params.W])
         normalized_resized_image = normalize_image(resized_image, NORMALIZE_IMAGENET)
@@ -95,12 +146,32 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
         marked_image = overlay_difference(image, resized_image, denormalized_marked_image)
         return marked_image
     
-    def extract(self, image: TorchImg, watermark_data: WatermarkData):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
+        """Extract watermark from marked image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         resized_image = resize_torch_img(image, (self.params.H, self.params.W))
         normalized_image = normalize_image(resized_image, NORMALIZE_IMAGENET)
         with torch.no_grad():
             ft = self.decoder(normalized_image.to(self.device)).cpu()
         return ft > 0
     
-    def watermark_data_gen(self) -> WatermarkData:
-        return WatermarkData(torch.randint(0, 2, (1, self.params.num_bits)).bool())
+    def watermark_data_gen(self) -> TorchBitWatermarkData:
+        """Generate watermark payload data for SSHiDDeN watermarking algorithm.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of (0, message_length)
+
+        Notes
+        -----
+        - Called automatically during embedding
+        """
+        return TorchBitWatermarkData.get_random(self.params.num_bits)

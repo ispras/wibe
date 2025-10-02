@@ -11,11 +11,22 @@ from wibench.typing import TorchImg
 
 @dataclass
 class WatermarkData:
+    """Watermark data for DWT_SVM watermarking algorithm.
+    """
     watermark: np.ndarray
     key: np.ndarray
 
 
 class DWTSVMWrapper(BaseAlgorithmWrapper):
+    """
+    Custom implementation of image watermarking algorithm described in the `paper <https://doi.org/10.1007/s00521-018-3647-2>`__.
+
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        Contains value for "threshold" parameter of the algorithm. The higher is the threshold, the watermark is more robust to attacks, but less imperceptible.
+
+    """
     name = "dwt_svm"
 
     def __init__(self, params: dict[str, Any]):

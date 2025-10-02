@@ -1,7 +1,7 @@
 from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.watermark_data import TorchBitWatermarkData
 from wibench.typing import TorchImg
 import torch
-import numpy as np
 import torch.nn.functional as F
 from dataclasses import dataclass
 import sys
@@ -10,16 +10,33 @@ import os
 
 @dataclass
 class WAParams:
+    """Configuration parameters for the WA (Watermark Anything) watermarking algorithm.
+
+    Attributes
+    ----------
+        wm_length : int
+            Length of the watermark message to be embed (in bits).
+        scaling_w : float
+            Scaling factor for the watermark in the embedder model.
+
+    """
     wm_length: int
     scaling_w: float
 
 
-@dataclass
-class WatermarkData:
-    watermark: np.ndarray
-
-
 class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
+    """Watermark Anything with Localized Messages - Image Watermarking Algorithm [`paper <https://arxiv.org/abs/2411.07231>`__].
+    
+    Provides an interface for embedding and extracting watermarks using the Watermark Anything watermarking algorithm.
+    Based on the code from `here <https://github.com/facebookresearch/watermark-anything>`__.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        Watermark Anything algorithm configuration parameters
+
+    """
+    
     name = "watermark_anything"
 
     def __init__(
@@ -29,7 +46,7 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         params_path: str,
         wm_length: int,
         scaling_w: float,
-        device: str = "cuda",
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         super().__init__(WAParams(wm_length=wm_length, scaling_w=scaling_w))
         sys.path.append(module_path)
@@ -53,7 +70,17 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         self.msg_predict_inference = msg_predict_inference
         self.unnormalize_img = unnormalize_img
 
-    def embed(self, image: TorchImg, watermark_data: WatermarkData):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+        """Embed watermark into input image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+
+        """
         img = self.transform(image).unsqueeze(0).to(self.device)
         wm = watermark_data.watermark.to(self.device)
         with torch.no_grad():
@@ -62,7 +89,17 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         res = self.unnormalize_img(result.squeeze())
         return torch.clamp(res, 0, 1)
 
-    def extract(self, image: TorchImg, watermark_data: WatermarkData):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+        """Extract watermark from marked image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+
+        """
         img = self.transform(image).unsqueeze(0).to(self.device)
         with torch.no_grad():
             preds = self.wam.detect(img)["preds"].cpu()
@@ -74,9 +111,17 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         ).float()
         return pred_message.squeeze().numpy()
 
-    def watermark_data_gen(self) -> WatermarkData:
-        return WatermarkData(
-            torch.tensor(
-                np.random.randint(0, 2, size=(1, self.params.wm_length))
-            )
-        )
+    def watermark_data_gen(self) -> TorchBitWatermarkData:
+        """Generate watermark payload data for Watermark Anything watermarking algorithm.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of (0, message_length)
+
+        Notes
+        -----
+        - Called automatically during embedding
+
+        """
+        return TorchBitWatermarkData.get_random(self.params.wm_length)

@@ -5,11 +5,18 @@ import sys
 import types
 
 from pathlib import Path
-from typing_extensions import Dict, Any, List, Union
+from typing_extensions import Dict, Union
 
 
 def import_modules(package_name):
-    package = importlib.import_module(package_name)
+    if Path(package_name).exists():
+        sys.path.append(".")
+    try:
+        package = importlib.import_module(package_name)
+    except Exception as e:
+        print(
+            f"Could not import '{package_name}': {e}"
+        )  # Todo: logging
     for _, module_name, _ in pkgutil.iter_modules(package.__path__):
         try:
             importlib.import_module(f"{package_name}.{module_name}")
@@ -20,17 +27,26 @@ def import_modules(package_name):
 
 
 class ModuleImporter:
-    """Registers a project without the ability to install and without the presence of __init__.py files.
-    
-    Parameters
-    ----------
-    module_name (str): Name of importing module
-    
-    module_path (Union[str, Path]): Path to your project
-    
-    Returns
-    -------
-    None
+    """Dynamic module importer that registers Python projects without installation requirements.
+
+    This class enables importing Python modules and packages that:
+    - Don't have proper `__init__.py` files
+    - Aren't installed in the Python environment
+    - Need to be loaded from arbitrary filesystem paths
+    Notes
+    -----
+    - Creates necessary parent modules in sys.modules
+    - Handles both packages and single modules
+    - Supports nested package structures
+    - Performs multiple passes to handle dependencies
+    - Maintains import statistics in `loaded` attribute
+
+    Examples
+    --------
+    >>> importer = ModuleImporter("my_pkg", "/path/to/my_pkg")
+    >>> results = importer.register_module()
+    >>> # Access imported modules
+    >>> from my_pkg import submodule
     """
     def __init__(self, module_name: str, module_path: Union[str, Path]) -> None:
         self.module_name = module_name
@@ -64,11 +80,19 @@ class ModuleImporter:
                 self.remaining[modname] = item
 
     def register_module(self) -> Dict[str, bool]:
-        """Register module
+        """Register all discovered modules in the Python import system.
 
         Returns
         -------
-            Dict[str, bool]: A dictionary with information which .py files have been successfully uploaded
+        Dict[str, bool]
+            Dictionary mapping module names to import success status
+
+        Notes
+        -----
+        - Makes multiple passes to handle dependencies
+        - Creates parent package modules as needed
+        - Sets proper __path__ attributes for packages
+        - Returns final status after all attempts
         """
         for attempt in range(self.max_attempts):
             failed = {}

@@ -1,4 +1,5 @@
 import ImageReward as RM
+import torch
 
 from typing_extensions import Any
 
@@ -12,8 +13,30 @@ from wibench.metrics.base import PostEmbedMetric
 
 
 class BLIP(PostEmbedMetric):
+    """`BLIP <https://arxiv.org/abs/2201.12086>`_: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation.
 
-    def __init__(self, device: str = "cuda"):
+    The implementation is taken from the github `repository <https://github.com/zai-org/ImageReward>`__. Based on `BLIP code base <https://github.com/salesforce/BLIP>`_.
+
+    Initialization Parameters
+    -------------------------
+        device : str
+            Device to run the model on ('cuda', 'cpu')
+
+    Call Parameters
+    ---------------
+        prompt : str
+            Text prompt for comparison
+        img2 : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data : Any
+            Not used, can be anything
+    
+    Notes
+    -----
+    - The watermark_data field is required for the pipeline to work correctly
+    """
+
+    def __init__(self, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
         self.model = RM.load_score("BLIP", device=device)
 
     def __call__(self,

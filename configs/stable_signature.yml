@@ -12,7 +12,7 @@ post_embed_metrics:
   - CLIP_IQA
   - Aesthetic
   - ImageReward
-  - CLIP
+  - CLIPScore
   - BLIP
   - EmbWm
 post_attack_metrics:

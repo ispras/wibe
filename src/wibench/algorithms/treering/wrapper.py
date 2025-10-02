@@ -13,6 +13,10 @@ from wibench.typing import TorchImg
 
 @dataclass
 class TreeRingParams(Params):
+    """
+    Paramenters of Tree-ring watermarking algorithm.
+
+    """
     run_name: str = "test"
     dataset: str = "Gustavosta/Stable-Diffusion-Prompts"
     start: int = 1
@@ -40,13 +44,37 @@ class TreeRingParams(Params):
 
 
 @dataclass
-class WatermarkData:
+class TreeRingWatermarkData:
+    """Watermark data for Tree-ring watermarking algorithm.
+
+    Attributes
+    ----------
+        watermark : torch.Tensor
+            Latent noise with embedded watermark
+        watermarking_mask : torch.Tensor
+            Watermarking noise pattern
+        gt_patch : torch.Tensor
+            Ground-truth patch
+
+    """
     watermark: torch.Tensor
     watermarking_mask: torch.Tensor
     gt_patch: torch.Tensor
 
 
 class TreeRingWrapper(BaseAlgorithmWrapper):
+    """`Tree-Ring Watermarks <https://arxiv.org/abs/2305.20030>`_: Fingerprints for Diffusion Images that are Invisible and Robust - Image Watermarking Algorithm.
+    
+    Provides an interface for embedding and extracting watermarks in Text2Image task using the Tree-Ring watermarking algorithm.
+    Based on the code from `here <https://github.com/YuxinWenRick/tree-ring-watermark>`__.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        Tree-Ring algorithm configuration parameters
+
+    """
+    
     name = "treering"
 
     def __init__(self, params: Dict[str, Any]):
@@ -83,10 +111,17 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         self.tester_prompt = '' # assume at the detection time, the original prompt is unknown
         self.text_embeddings = pipe.get_text_embedding(self.tester_prompt)
 
-    def embed(self, prompt: str, watermark_data: WatermarkData) -> TorchImg:
-        '''
-        Generate image with watermark
-        '''
+    def embed(self, prompt: str, watermark_data: TreeRingWatermarkData) -> TorchImg:
+        """Generates a watermarked image based on a text prompt.
+
+        Parameters
+        ----------
+        prompt : str
+            Input prompt for image generation
+        watermark_data: TreeRingWatermarkData
+            Watermark data for Tree-ring watermarking algorithm
+
+        """
         outputs_w = self.pipe(
                 prompt,
                 num_images_per_prompt=self.params.num_images,
@@ -100,11 +135,21 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
 
         return transforms.ToTensor()(orig_image_w)
         
-    def extract(self, img: TorchImg, watermark_data: WatermarkData) -> bool:
-        '''
-        Get latents after DDIM inversion
-        NOTE we cant get the key message using this watermarking method
-        '''
+    def extract(self, img: TorchImg, watermark_data: TreeRingWatermarkData) -> bool:
+        """Extract watermark from marked image.
+
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TreeRingWatermarkData
+            Watermark data for Tree-ring watermarking algorithm
+
+        Notes
+        -----
+        - Obtains latent values after DDIM inversion and compares them with a threshold
+
+        """
         transformed_img = transform_img(transforms.ToPILImage()(img)).unsqueeze(0).to(self.text_embeddings.dtype).to(self.device)
         image_latents = self.pipe.get_image_latents(transformed_img, sample=False)
 
@@ -119,7 +164,19 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         w_metric = torch.abs(reversed_latents_w_fft[watermark_data.watermarking_mask] - gt_patch[watermark_data.watermarking_mask]).mean().item()
         return w_metric <= self.params.threshold
     
-    def watermark_data_gen(self) -> WatermarkData:
+    def watermark_data_gen(self) -> TreeRingWatermarkData:
+        """Get watermark payload data for Tree-ring watermarking algorithm.
+        
+        Returns
+        -------
+        TreeRingWatermarkData
+            Watermark data for Tree-ring watermarking algorithm
+
+        Notes
+        -----
+        - Called automatically during embedding
+
+        """
         gt_patch = get_watermarking_pattern(self.pipe, self.params, self.device)
         init_latents_w = self.pipe.get_random_latents()
         
@@ -128,5 +185,5 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
 
         # inject watermark
         init_latents_w = inject_watermark(init_latents_w, watermarking_mask, self.ground_truth_patch, self.params)
-        return WatermarkData(init_latents_w,
-                             watermarking_mask, gt_patch.cpu().type(torch.complex64).numpy())
+        return TreeRingWatermarkData(init_latents_w,
+                                     watermarking_mask, gt_patch.cpu().type(torch.complex64).numpy())

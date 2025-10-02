@@ -7,12 +7,13 @@ from wibench.typing import TorchImg
 
 
 class StegastampInversion(BaseAttack):
-    """Attack from https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/stegastamp_attack.ipynb.
+    """Attack from `here <https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/stegastamp_attack.ipynb>`__.
 
-    TODO check that this works the same as notebook
-    TODO run with GPU tensors, see https://github.com/microsoft/onnxruntime-inference-examples/blob/main/python/api/onnxruntime-python-api.py#L66
-    TODO convert from onnx to pytorch?
+    **TODO**:
 
+        * check that this works the same as notebook
+        * run with GPU tensors, see the following `link <https://github.com/microsoft/onnxruntime-inference-examples/blob/main/python/api/onnxruntime-python-api.py#L66>`__
+        * convert from onnx to pytorch?
     """
 
     def __init__(self,
