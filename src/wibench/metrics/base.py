@@ -41,6 +41,19 @@ class PostEmbedMetric(BaseMetric):
         **kwargs,
     ) -> Any:
         raise NotImplementedError
+    
+
+class PostStageMetric(BaseMetric):
+    abstract = True
+
+    def update(self, object: Any) -> None:
+        raise NotImplementedError
+
+    def reset(self) -> None:
+        raise NotImplementedError
+
+    def __call__(self, *args, **kwds) -> Any:
+        raise NotImplementedError
 
 
 class PostExtractMetric(BaseMetric):

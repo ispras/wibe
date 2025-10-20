@@ -68,8 +68,9 @@ class PandasAggregator(Aggregator):
     def __init__(self, config: PandasAggregatorConfig, result_path: Union[Path, str]) -> None:
         super().__init__(config, result_path)
         self.metrics_table_result_path = self.result_path / f"metrics_{self.config.table_name}.csv"
-        self.params_table_result_path = self.result_path / f"params_{self.config.table_name}.csv"
-        self.params_table = pd.DataFrame(columns=["method", "param_hash", "params"])
+        if self.config.create_param_table:
+            self.params_table_result_path = self.result_path / f"params_{self.config.table_name}.csv"
+            self.params_table = pd.DataFrame(columns=["method", "param_hash", "params"])
 
     def safe_append_csv(self, df: pd.DataFrame, path: Path, timeout: float = 0.5):
         """Safely append DataFrame to CSV using file locking.
@@ -119,11 +120,12 @@ class PandasAggregator(Aggregator):
 
         batch = pd.DataFrame(records)
         params_batch = pd.DataFrame(batch[["method", "param_hash", "params"]]).drop_duplicates(subset=["param_hash"])
-        for value in params_batch["param_hash"]:
-            if value not in self.params_table["param_hash"].values.tolist():
-                params_value = params_batch[params_batch["param_hash"] == value]
-                self.params_table = pd.concat([self.params_table, params_value], ignore_index=True)
-                self.safe_append_csv(params_value, self.params_table_result_path)
+        if self.config.create_param_table:
+            for value in params_batch["param_hash"]:
+                if value not in self.params_table["param_hash"].values.tolist():
+                    params_value = params_batch[params_batch["param_hash"] == value]
+                    self.params_table = pd.concat([self.params_table, params_value], ignore_index=True)
+                    self.safe_append_csv(params_value, self.params_table_result_path)
         batch = batch.drop(columns=["params"])
         modify_records = batch.to_dict(orient="records")
         records = [planarize_dict(record) for record in modify_records]
@@ -207,7 +209,7 @@ class FanoutAggregator:
                 traceback.print_exc()
 
 
-def build_fanout_from_config(config: PipeLineConfig, result_path: Union[Path, str]) -> FanoutAggregator:
+def build_fanout_from_config(aggregators: List[AggregatorConfig], result_path: Union[Path, str]) -> FanoutAggregator:
     """Factory function to create configured FanoutAggregator instance.
 
     Parameters
@@ -227,16 +229,16 @@ def build_fanout_from_config(config: PipeLineConfig, result_path: Union[Path, st
     ValueError
         If no valid aggregators are configured
     """
-    aggregators = []
-    for aggr_config in config.aggregators:
+    _aggregators = []
+    for aggr_config in aggregators:
         if isinstance(aggr_config, PandasAggregatorConfig):
             aggregator = PandasAggregator(aggr_config, result_path)
-            aggregators.append(aggregator)
+            _aggregators.append(aggregator)
             print("Loaded: CSV aggregator") # TODO: logging
         if isinstance(aggr_config, ClickHouseAggregatorConfig):
             aggregator = ClickHouseAggregator(aggr_config, result_path)
-            aggregators.append(aggregator)
+            _aggregators.append(aggregator)
             print("Loaded: ClickHouse aggregator")
-    if not len(aggregators):
+    if not len(_aggregators):
         raise ValueError("No aggregators loaded!")
-    return FanoutAggregator(aggregators)
+    return FanoutAggregator(_aggregators)

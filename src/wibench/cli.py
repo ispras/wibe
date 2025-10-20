@@ -32,7 +32,7 @@ from wibench.config_loader import (
     ATTACKS_FIELD,
     PIPELINE_FIELD,
 )
-from wibench.config import PipeLineConfig
+from wibench.config import PipeLineConfig, StageType
 import sys
 import subprocess
 import os
@@ -143,10 +143,6 @@ def run(
     pipeline_config = loaded_config[PIPELINE_FIELD]
     clear_tables(pipeline_config)
 
-    if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
-        subprocess_run(pipeline_config)
-        return
-
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
     alg_wrappers = loaded_config[ALGORITHMS_FIELD]
     metrics = {}
@@ -154,6 +150,20 @@ def run(
         metrics[metric_field] = loaded_config[metric_field]
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
+
+    if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
+        subprocess_run(pipeline_config)
+        # for post_stage_metrics
+        if stages is None or "all" in stages:
+            stages = list(STAGE_CLASSES.keys())
+        post_stages = [stage for stage in stages if ("post_stage" in stage)]
+        config = loaded_config[PIPELINE_FIELD]
+        config.workers = 1
+        pipeline = Pipeline(
+            alg_wrappers, datasets, attacks, metrics, config
+        )
+        pipeline.run(run_id, post_stages, dump_context=dump_context, dry_run=dry_run, process_num=process_num)
+        return
     
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]

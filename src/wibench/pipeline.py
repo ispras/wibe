@@ -2,8 +2,8 @@ from pathlib import Path
 from .datasets.base import BaseDataset
 from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
-from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric
-from .config import PipeLineConfig
+from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric, PostStageMetric
+from .config import PipeLineConfig, AggregatorConfig, StageType
 from .utils import (
     seed_everything,
     object_id_to_seed
@@ -264,6 +264,26 @@ class PostExtractMetricsStage(Stage):
                 ] = res
 
 
+class PostStageMetricsStage(Stage):
+    """"""
+    def __init__(self, metrics: List[PostStageMetric]) -> None:
+        self.metrics = metrics
+        super().__init__()
+
+    def process_object(self, object_context: Context) -> None:
+        current_attack = object_context.current_attack
+        for metric in self.metrics:
+            watermark_object = object_context.attacked_objects[current_attack]
+            metric.update(watermark_object)
+
+    def get_metric(self) -> Dict[str, Any]:
+        results = {}
+        for metric in self.metrics:
+            results[f"{metric.report_name}"] = metric()
+            metric.reset()
+        return results
+
+
 class AggregateMetricsStage(Stage):
     """Final pipeline stage that collects and aggregates metrics across all processed objects.
 
@@ -278,11 +298,11 @@ class AggregateMetricsStage(Stage):
     dry_run : bool
         If True, validate without writing
     """
-    def __init__(self, pipeline_config: PipeLineConfig, dry_run: bool = False):
-        self.config = pipeline_config
+    def __init__(self, aggregators: List[AggregatorConfig], result_path: str, min_batch_size: int, dry_run: bool = False):
         self.records = []
+        self.min_batch_size = min_batch_size
         self.aggregator = build_fanout_from_config(
-            pipeline_config, Path(pipeline_config.result_path)
+            aggregators, Path(result_path)
         )
         self.dry_run = dry_run
 
@@ -302,7 +322,7 @@ class AggregateMetricsStage(Stage):
             Processed context containing all metrics and metadata
         """
         self.records.append(object_context.form_record())
-        if len(self.records) >= self.config.min_batch_size:
+        if len(self.records) >= self.min_batch_size:
             self.flush()
 
     def __del__(self):
@@ -318,6 +338,8 @@ STAGE_CLASSES: Dict[str, Type[Stage]] = {
     "extract": ExtractWatermarkStage,
     "post_extract_metrics": PostExtractMetricsStage,
     "aggregate": AggregateMetricsStage,
+    "post_stage_metrics": PostStageMetricsStage,
+    "post_stage_aggregate": AggregateMetricsStage
 }
 
 
@@ -348,35 +370,33 @@ class StageRunner:
         pipeline_config: PipeLineConfig,
         dry_run: bool = False,
     ):
-        stage_classes = self.get_stages(stages)
         self.stages: List[Stage] = []
+        self.post_stages: List[Stage] = []
         self.seed = pipeline_config.seed
-        for stage_class in stage_classes:
-            if stage_class in [EmbedWatermarkStage, ExtractWatermarkStage]:
-                self.stages.append(
-                    stage_class(get_algorithms([algorithm_wrapper])[0])
-                )
-            elif stage_class is PostEmbedMetricsStage:
-                post_embed_metrics = get_metrics(metrics["post_embed_metrics"])
-                self.stages.append(PostEmbedMetricsStage(post_embed_metrics))
-            elif stage_class is PostAttackMetricsStage:
-                post_attack_metrics = get_metrics(
-                    metrics["post_attack_metrics"]
-                )
 
-                self.stages.append(PostAttackMetricsStage(post_attack_metrics))
-            elif stage_class is ApplyAttacksStage:
-                self.stages.append(ApplyAttacksStage(get_attacks(attacks)))
-            elif stage_class is PostExtractMetricsStage:
-                post_extract_metrics = get_metrics(
-                    metrics["post_extract_metrics"]
-                )
-
-                self.stages.append(
-                    PostExtractMetricsStage(post_extract_metrics)
-                )
-            elif stage_class is AggregateMetricsStage:
-                self.stages.append(AggregateMetricsStage(pipeline_config, dry_run))
+        for stage in stages:
+            stage_class = STAGE_CLASSES.get(stage, None)
+            if stage_class is None:
+                raise ValueError(f"Unknown stage: {stage}")
+            if stage in [StageType.embed, StageType.extract]:
+                self.stages.append(stage_class(get_algorithms([algorithm_wrapper])[0]))
+            elif stage == StageType.post_embed_metrics:
+                post_embed_metrics = get_metrics(metrics[stage])
+                self.stages.append(stage_class(post_embed_metrics))
+            elif stage == StageType.post_attack_metrics:
+                post_attack_metrics = get_metrics(metrics[stage])
+                self.stages.append(stage_class(post_attack_metrics))
+            elif stage == StageType.attack:
+                self.stages.append(stage_class(get_attacks(attacks)))
+            elif stage == StageType.post_extract_metrics:
+                post_extract_metrics = get_metrics(metrics[stage])
+                self.stages.append(stage_class(post_extract_metrics))
+            elif stage == StageType.aggregate:
+                self.stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, dry_run))
+            elif stage == StageType.post_stage_metrics:
+                self.post_stages.append(stage_class(get_metrics(metrics[stage])))
+            elif stage == StageType.post_stage_aggregate:
+                self.post_stages.append(stage_class(pipeline_config.post_aggregators, pipeline_config.result_path, dry_run))
 
         pass
 
@@ -388,21 +408,11 @@ class StageRunner:
         context : Context
             Object context to process
         """
-        for stage_num, stage in enumerate(self.stages):
+        for (stage_num, stage) in enumerate(self.stages):
             seed_everything(
                 None if self.seed is None else object_id_to_seed(context.object_id + str(self.seed) + str(stage_num))
             )
             stage.process_object(context)
-
-    def get_stages(self, stages: List[str]) -> List[Type[Stage]]:
-        stage_list = []
-        for stage in stages:
-            if stage not in STAGE_CLASSES:
-                raise ValueError(f"Unknown stage: {stage}")
-        for stage_type, stage_class in STAGE_CLASSES.items():
-            if stage_type in stages:
-                stage_list.append(stage_class)
-        return stage_list
 
 
 class Progress:
@@ -631,39 +641,63 @@ class Pipeline:
                 dry_run,
             )
             dataset_stop = self.config.workers if dry_run else None
-            if "embed" in stages:
-                context_gen = (
-                    self.init_context(
-                        run_id, dataset.report_name, watermark_object
+            
+            if (len(stage_runner.stages)):
+                if "embed" in stages:
+                    context_gen = (
+                        self.init_context(
+                            run_id, dataset.report_name, watermark_object
+                        )
+                        for dataset in self.datasets
+                        for watermark_object in islice(
+                            dataset.generator(),
+                            process_num,
+                            dataset_stop,
+                            self.config.workers,
+                        )
                     )
-                    for dataset in self.datasets
-                    for watermark_object in islice(
-                        dataset.generator(),
-                        process_num,
-                        dataset_stop,
-                        self.config.workers,
+                else:
+                    context_gen = (
+                        Context.load(context_dir, img_id, self.config.dump_type)
+                        for img_id in islice(
+                            Context.glob(context_dir, self.config.dump_type),
+                            process_num,
+                            dataset_stop,
+                            self.config.workers,
+                        )
                     )
-                )
-            else:
-                context_gen = (
-                    Context.load(context_dir, img_id, self.config.dump_type)
-                    for img_id in islice(
-                        Context.glob(context_dir, self.config.dump_type),
-                        process_num,
-                        dataset_stop,
-                        self.config.workers,
-                    )
-                )
-            for context in context_gen:
-                stage_runner.run(context)
-                if dump_context:
-                    context.dump(context_dir, self.config.dump_type)
-                progress.update()
-                pass
+                
+                for context in context_gen:
+                    stage_runner.run(context)
+                    if dump_context:
+                        context.dump(context_dir, self.config.dump_type)
+                    progress.update()
+                    pass
 
-            for stage in stage_runner.stages:
-                if isinstance(stage, AggregateMetricsStage):
-                    stage.flush()
+                for stage in stage_runner.stages:
+                    if isinstance(stage, AggregateMetricsStage):
+                        stage.flush()
+            elif (len(stage_runner.post_stages)):
+                for (dataset_idx, dataset) in enumerate(self.datasets):
+                    post_context = self.init_context(run_id=run_id, original_object={"id": dataset_idx}, dataset_name=dataset.report_name)
+                    post_context.attacked_object_metrics = {}
+                    for post_stage in stage_runner.post_stages:
+                        if isinstance(post_stage, PostStageMetricsStage):
+                            attacks = [attack.report_name for attack in get_attacks(self.attacks)]
+                            ids = [img_id for img_id in islice(Context.glob(context_dir, self.config.dump_type), process_num, dataset_stop, self.config.workers)]
+                            for attack in attacks:
+                                for img_id in ids:
+                                    context = Context.load(context_dir, img_id, self.config.dump_type)
+                                    if context.dataset != dataset.report_name:
+                                        continue
+                                    post_stage: PostStageMetricsStage
+                                    context.current_attack = attack
+                                    post_stage.process_object(context)
+                                post_context.attacked_object_metrics[attack] = post_stage.get_metric()
+                            post_context.param_hash = context.param_hash
+                            post_context.method = context.method
+                        else:
+                            post_stage.process_object(post_context)
 
         if progress.progress is not None:
             progress.progress.close()
