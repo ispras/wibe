@@ -3,7 +3,7 @@ from .datasets.base import BaseDataset
 from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
 from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric, PostStageMetric
-from .config import PipeLineConfig, AggregatorConfig, StageType
+from .config import PipeLineConfig, AggregatorConfig, StageType, DumpType
 from .utils import (
     seed_everything,
     object_id_to_seed
@@ -265,23 +265,35 @@ class PostExtractMetricsStage(Stage):
 
 
 class PostStageMetricsStage(Stage):
-    """"""
-    def __init__(self, metrics: List[PostStageMetric]) -> None:
+    """
+    """
+    def __init__(self,
+                 metrics: List[PostStageMetric],
+                 attacks: List[Tuple[str, Dict[str, Any]]],
+                 dump_type: DumpType) -> None:
         self.metrics = metrics
+        self.attacks = [attack.report_name for attack in get_attacks(attacks)]
+        self.dump_type = dump_type
         super().__init__()
 
     def process_object(self, object_context: Context) -> None:
-        current_attack = object_context.current_attack
+        object_context.attacked_object_metrics = {}
+        context_dir = object_context.context_dir
+        ids = [img_id for img_id in islice(Context.glob(context_dir, self.dump_type), 0, None, 1)]
         for metric in self.metrics:
-            watermark_object = object_context.attacked_objects[current_attack]
-            metric.update(watermark_object)
-
-    def get_metric(self) -> Dict[str, Any]:
-        results = {}
-        for metric in self.metrics:
-            results[f"{metric.report_name}"] = metric()
-            metric.reset()
-        return results
+            for attack in self.attacks:
+                for img_id in ids:
+                    context = Context.load(context_dir, img_id, self.dump_type)
+                    if context.dataset != object_context.dataset:
+                        continue
+                    attacked_object = context.attacked_objects[attack]
+                    metric.update(attacked_object)
+                object_context.attacked_object_metrics[attack] = {metric.report_name: metric()}
+                metric.reset()
+        object_context.param_hash = context.param_hash
+        object_context.method = context.method
+        object_context.dtm = datetime.datetime.now()
+        return object_context
 
 
 class AggregateMetricsStage(Stage):
@@ -393,9 +405,9 @@ class StageRunner:
                 self.stages.append(stage_class(post_extract_metrics))
             elif stage == StageType.aggregate:
                 self.stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, dry_run))
-            elif stage == StageType.post_stage_metrics:
-                self.post_stages.append(stage_class(get_metrics(metrics[stage])))
-            elif stage == StageType.post_stage_aggregate:
+            elif (stage == StageType.post_stage_metrics) and (pipeline_config.workers == 1):
+                self.post_stages.append(stage_class(get_metrics(metrics[stage]), attacks, pipeline_config.dump_type))
+            elif (stage == StageType.post_stage_aggregate) and (pipeline_config.workers == 1):
                 self.post_stages.append(stage_class(pipeline_config.post_aggregators, pipeline_config.result_path, dry_run))
 
         pass
@@ -507,7 +519,11 @@ class Pipeline:
         self.config.result_path.mkdir(parents=True, exist_ok=True)
 
     def init_context(
-        self, run_id: str, dataset_name: str, original_object: Union[Object, Dict[str, Any]]
+        self,
+        run_id: str,
+        dataset_name: str,
+        original_object: Union[Object, Dict[str, Any]],
+        context_dir: Optional[Union[Path, str]] = None
     ):
         """Initialize processing context.
 
@@ -543,6 +559,7 @@ class Pipeline:
             dataset=dataset_name,
             original_object=original_object,
             object_data_field=object_data_field,
+            context_dir=context_dir
         )
 
     def get_stage_list(self, stages: Optional[List[str]]) -> List[str]:
@@ -677,27 +694,14 @@ class Pipeline:
                 for stage in stage_runner.stages:
                     if isinstance(stage, AggregateMetricsStage):
                         stage.flush()
-            elif (len(stage_runner.post_stages)):
+            if (len(stage_runner.post_stages) and (self.config.workers == 1)):
                 for (dataset_idx, dataset) in enumerate(self.datasets):
-                    post_context = self.init_context(run_id=run_id, original_object={"id": dataset_idx}, dataset_name=dataset.report_name)
-                    post_context.attacked_object_metrics = {}
+                    post_stage_context = self.init_context(run_id=run_id,
+                                                     original_object={"id": dataset_idx},
+                                                     dataset_name=dataset.report_name,
+                                                     context_dir=context_dir)
                     for post_stage in stage_runner.post_stages:
-                        if isinstance(post_stage, PostStageMetricsStage):
-                            attacks = [attack.report_name for attack in get_attacks(self.attacks)]
-                            ids = [img_id for img_id in islice(Context.glob(context_dir, self.config.dump_type), process_num, dataset_stop, self.config.workers)]
-                            for attack in attacks:
-                                for img_id in ids:
-                                    context = Context.load(context_dir, img_id, self.config.dump_type)
-                                    if context.dataset != dataset.report_name:
-                                        continue
-                                    post_stage: PostStageMetricsStage
-                                    context.current_attack = attack
-                                    post_stage.process_object(context)
-                                post_context.attacked_object_metrics[attack] = post_stage.get_metric()
-                            post_context.param_hash = context.param_hash
-                            post_context.method = context.method
-                        else:
-                            post_stage.process_object(post_context)
+                        post_stage.process_object(post_stage_context)
 
         if progress.progress is not None:
             progress.progress.close()
