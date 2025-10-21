@@ -1,3 +1,5 @@
+import torch
+
 from torchmetrics.image.fid import FrechetInceptionDistance
 from wibench.metrics.base import PostStageMetric
 from wibench.config import DatasetType
@@ -16,7 +18,7 @@ class FID(PostStageMetric):
     def __init__(self,
                  dataset_type: str = DatasetType.coco,
                  dataset_args: Dict[str, Any] = {"sample_range": None, "split": "val", "cache_dir": None},
-                 device: str = "cuda",
+                 device: str = ("cuda" if torch.cuda.is_available() else "cpu"),
                  feature: int = 2048,
                  normalize: bool = True) -> None:
         self.device = device

@@ -617,34 +617,10 @@ class Pipeline:
             object_data_field=object_data_field
         )
 
-    def get_stage_list(self, stages: Optional[List[str]]) -> List[str]:
-        """Resolve full stage execution sequence.
-
-        Parameters
-        ----------
-        stages : Optional[List[str]]
-            Requested stages or None for all
-
-        Returns
-        -------
-        List[str]
-            Stage names in execution order
-        """
-        if stages is None or "all" in stages:
-            stages = list(STAGE_CLASSES.keys())
-        start = None
-        stop = None
-        for stage_num, stage in enumerate(STAGE_CLASSES.keys()):
-            if stage in stages:
-                if start is None:
-                    start = stage_num
-                stop = stage_num
-        return list(STAGE_CLASSES.keys())[start : stop + 1]
-
     def run(
         self,
         run_id: str,
-        stages: Optional[List[str]],
+        stages: List[str],
         dump_context: bool = False,
         dry_run: bool = False,
         process_num: int = 0,
@@ -655,8 +631,8 @@ class Pipeline:
         ----------
         run_id : str
             Unique identifier for this pipeline run
-        stages : Optional[List[str]]
-            Specific stages to execute (None for all stages)
+        stages : List[str]
+            Specific stages to execute
         dump_context : bool
             Whether to save intermediate contexts (default False)
         dry_run : bool
@@ -671,7 +647,6 @@ class Pipeline:
         - Flushes aggregators after processing
         - Supports partial stage execution
         """
-        stages: List[str] = self.get_stage_list(stages)
         total_iters = None
         if "embed" in stages:
             dataset_iters = 0
@@ -749,12 +724,12 @@ class Pipeline:
                 for stage in stage_runner.stages:
                     if isinstance(stage, AggregateMetricsStage):
                         stage.flush()
+            
             if (len(stage_runner.post_stages) and (self.config.workers == 1)):
                 for (dataset_idx, dataset) in enumerate(self.datasets):
                     post_stage_context = self.init_context(run_id=run_id,
                                                            original_object={"id": dataset_idx},
                                                            dataset_name=dataset.report_name)
-                    post_stage_context
                     for post_stage in stage_runner.post_stages:
                         if isinstance(post_stage, PostStage):
                             post_stage.set_context_dir(context_dir)

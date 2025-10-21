@@ -82,6 +82,46 @@ def subprocess_run(pipeline_config: PipeLineConfig):
         proc.wait()
 
 
+def parse_stage_expression(expr: str) -> List[str]:
+    registry = list(STAGE_CLASSES.keys())
+    known = set(registry)
+
+    if (expr is None) or (expr.strip().lower() == "all" or expr.strip() == ""):
+        return registry
+
+    parts = [p.strip() for p in expr.split(",") if p.strip()]
+    if not parts:
+        return registry
+
+    wanted = {name: False for name in registry}
+
+    def add_exact(name: str):
+        if name not in known:
+            raise typer.BadParameter(f"Unknown stage '{name}'. Allowed: {registry}")
+        wanted[name] = True
+
+    def add_range(a: str, b: str):
+        if a not in known or b not in known:
+            raise typer.BadParameter(
+                f"Unknown stage in range '{a}-{b}'. Allowed: {registry}"
+            )
+        ia, ib = registry.index(a), registry.index(b)
+        lo, hi = (ia, ib) if ia <= ib else (ib, ia)
+        for n in registry[lo:hi + 1]:
+            wanted[n] = True
+
+    for token in parts:
+        if "-" in token:
+            left, right = [x.strip() for x in token.split("-", 1)]
+            if not left or not right:
+                raise typer.BadParameter(f"Bad range expression '{token}'. Use 'start-end'.")
+            add_range(left, right)
+        else:
+            add_exact(token)
+
+    return [name for name in registry if wanted[name]]
+
+
 app = typer.Typer()
 
 
@@ -94,7 +134,8 @@ def run(
         False, "--dump-context", "-d", help="If enabled, execution contexts are saved. Useful for debug or stage-by-stage execution (in case of different environments for algorithms/metrics/attacks)"
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Quick run on a few samples to check everything working"),
-    stages: Optional[List[str]] = typer.Argument(None, help=f"Stages to execute (e.g., embed attack extract), if 'all' or not provided - executes all stages. Available stages are:{list(STAGE_CLASSES.keys())}"),
+    stages: Optional[str] = typer.Argument(None,
+                                           help=f"Stages to execute (e.g., embed attack extract), if 'all' or not provided - executes all stages. Stages can be specified as intervals (a - b), pointwise (a, c, e) and jointly (a - b, c, e - d). Available stages are:{list(STAGE_CLASSES.keys())}"),
 
 ):
     """Run the watermarking evaluation pipeline.
@@ -107,7 +148,7 @@ def run(
         Whether to save intermediate contexts
     dry_run: bool
         Run on a few samples
-    stages : Optional[List[str]]
+    stages : Optional[str]
         Pipeline stages to execute. Available stages:
         - embed: Watermark embedding
         - post_embed_metrics: Metrics after embedding
@@ -124,10 +165,7 @@ def run(
     the specified pipeline stages.
     """
 
-    if stages is not None:
-        for stage in stages:
-            if stage not in STAGE_CLASSES.keys():
-                raise ValueError(f"Unknown stage: {stage}")
+    stages = parse_stage_expression(stages)
 
     import_modules("wibench.algorithms")
     import_modules("wibench.datasets")
@@ -140,6 +178,7 @@ def run(
     loaded_config = load_pipeline_config_yaml(config)
     if dry_run:
         loaded_config[PIPELINE_FIELD].result_path /= "dry"
+    pipeline_config: PipeLineConfig
     pipeline_config = loaded_config[PIPELINE_FIELD]
     clear_tables(pipeline_config)
 
@@ -153,20 +192,20 @@ def run(
 
     if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
         subprocess_run(pipeline_config)
-        # for post_stage_metrics
+        
+        # for post_stages
         if stages is None or "all" in stages:
             stages = list(STAGE_CLASSES.keys())
         post_stages = [stage for stage in stages if ("post_stage" in stage)]
-        config = loaded_config[PIPELINE_FIELD]
-        config.workers = 1
+        pipeline_config.workers = 1
         pipeline = Pipeline(
-            alg_wrappers, datasets, attacks, metrics, config
+            alg_wrappers, datasets, attacks, metrics, pipeline_config
         )
         pipeline.run(run_id, post_stages, dump_context=dump_context, dry_run=dry_run, process_num=process_num)
         return
     
     pipeline = Pipeline(
-        alg_wrappers, datasets, attacks, metrics, loaded_config[PIPELINE_FIELD]
+        alg_wrappers, datasets, attacks, metrics, pipeline_config
     )
     pipeline.run(run_id, stages, dump_context=dump_context, dry_run=dry_run, process_num=process_num)
 
