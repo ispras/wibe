@@ -207,7 +207,6 @@ class Context:
         field(default_factory=dict)
     )
     extraction_result: Dict[str, Any] = field(default_factory=dict)
-    context_dir: Optional[Union[Path, str]] = None
 
     @property
     def object_data(self):

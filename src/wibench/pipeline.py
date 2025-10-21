@@ -54,6 +54,34 @@ class Stage:
             The context containing all object data and metadata
         """
         raise NotImplementedError()
+    
+
+class PostStage:
+    """Abstract base class for all pipeline processing stages.
+
+    Each stage represents a distinct step in the watermarking pipeline workflow.
+    Concrete implementations must override the process_object method.
+
+    Methods
+    -------
+    process_object(object_context)
+        Process an object through this stage (abstract)
+    """
+    context_dir: Path
+    
+    def process_object(self, object_context: Context) -> None:
+        """Process an object through this pipeline stage.
+
+        Parameters
+        ----------
+        object_context : Context
+            The context containing all object data and metadata
+        """
+        raise NotImplementedError()
+    
+    @classmethod
+    def set_context_dir(self, context_dir: Path) -> None:
+        self.context_dir = context_dir 
 
 
 class EmbedWatermarkStage(Stage):
@@ -264,7 +292,34 @@ class PostExtractMetricsStage(Stage):
                 ] = res
 
 
-class PostStageMetricsStage(Stage):
+class PostStageEmbedMetricsStage(PostStage):
+    """
+    """
+    def __init__(self,
+                 metrics: List[PostStageMetric],
+                 dump_type: DumpType) -> None:
+        self.metrics = metrics
+        self.dump_type = dump_type
+        super().__init__()
+
+    def process_object(self, object_context: Context):
+        ids = [img_id for img_id in islice(Context.glob(self.context_dir, self.dump_type), 0, None, 1)]
+        for metric in self.metrics:
+            for img_id in ids:
+                context = Context.load(self.context_dir, img_id, self.dump_type)
+                if context.dataset != object_context.dataset:
+                    continue
+                marked_object = context.marked_object
+                metric.update(marked_object)
+            object_context.marked_object_metrics = {metric.report_name: metric()}
+            metric.reset()
+        object_context.param_hash = context.param_hash
+        object_context.method = context.method
+        object_context.dtm = datetime.datetime.now()
+        return object_context
+
+
+class PostStageAttackMetricsStage(PostStage):
     """
     """
     def __init__(self,
@@ -278,12 +333,11 @@ class PostStageMetricsStage(Stage):
 
     def process_object(self, object_context: Context) -> None:
         object_context.attacked_object_metrics = {}
-        context_dir = object_context.context_dir
-        ids = [img_id for img_id in islice(Context.glob(context_dir, self.dump_type), 0, None, 1)]
+        ids = [img_id for img_id in islice(Context.glob(self.context_dir, self.dump_type), 0, None, 1)]
         for metric in self.metrics:
             for attack in self.attacks:
                 for img_id in ids:
-                    context = Context.load(context_dir, img_id, self.dump_type)
+                    context = Context.load(self.context_dir, img_id, self.dump_type)
                     if context.dataset != object_context.dataset:
                         continue
                     attacked_object = context.attacked_objects[attack]
@@ -350,7 +404,8 @@ STAGE_CLASSES: Dict[str, Type[Stage]] = {
     "extract": ExtractWatermarkStage,
     "post_extract_metrics": PostExtractMetricsStage,
     "aggregate": AggregateMetricsStage,
-    "post_stage_metrics": PostStageMetricsStage,
+    "post_stage_embed_metrics": PostStageEmbedMetricsStage,
+    "post_stage_attack_metrics": PostStageAttackMetricsStage,
     "post_stage_aggregate": AggregateMetricsStage
 }
 
@@ -405,7 +460,9 @@ class StageRunner:
                 self.stages.append(stage_class(post_extract_metrics))
             elif stage == StageType.aggregate:
                 self.stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, dry_run))
-            elif (stage == StageType.post_stage_metrics) and (pipeline_config.workers == 1):
+            elif (stage == StageType.post_stage_embed_metrics) and (pipeline_config.workers == 1):
+                self.post_stages.append(stage_class(get_metrics(metrics[stage]), pipeline_config.dump_type))
+            elif (stage == StageType.post_stage_attack_metrics) and (pipeline_config.workers == 1):
                 self.post_stages.append(stage_class(get_metrics(metrics[stage]), attacks, pipeline_config.dump_type))
             elif (stage == StageType.post_stage_aggregate) and (pipeline_config.workers == 1):
                 self.post_stages.append(stage_class(pipeline_config.post_aggregators, pipeline_config.result_path, dry_run))
@@ -522,8 +579,7 @@ class Pipeline:
         self,
         run_id: str,
         dataset_name: str,
-        original_object: Union[Object, Dict[str, Any]],
-        context_dir: Optional[Union[Path, str]] = None
+        original_object: Union[Object, Dict[str, Any]]
     ):
         """Initialize processing context.
 
@@ -558,8 +614,7 @@ class Pipeline:
             run_id=run_id,
             dataset=dataset_name,
             original_object=original_object,
-            object_data_field=object_data_field,
-            context_dir=context_dir
+            object_data_field=object_data_field
         )
 
     def get_stage_list(self, stages: Optional[List[str]]) -> List[str]:
@@ -697,10 +752,12 @@ class Pipeline:
             if (len(stage_runner.post_stages) and (self.config.workers == 1)):
                 for (dataset_idx, dataset) in enumerate(self.datasets):
                     post_stage_context = self.init_context(run_id=run_id,
-                                                     original_object={"id": dataset_idx},
-                                                     dataset_name=dataset.report_name,
-                                                     context_dir=context_dir)
+                                                           original_object={"id": dataset_idx},
+                                                           dataset_name=dataset.report_name)
+                    post_stage_context
                     for post_stage in stage_runner.post_stages:
+                        if isinstance(post_stage, PostStage):
+                            post_stage.set_context_dir(context_dir)
                         post_stage.process_object(post_stage_context)
 
         if progress.progress is not None:

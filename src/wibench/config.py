@@ -43,7 +43,8 @@ class StageType(str, Enum):
     extract = "extract"
     post_extract_metrics = "post_extract_metrics"
     aggregate = "aggregate"
-    post_stage_metrics = "post_stage_metrics"
+    post_stage_embed_metrics = "post_stage_embed_metrics"
+    post_stage_attack_metrics = "post_stage_attack_metrics"
     post_stage_aggregate = "post_stage_aggregate"
 
 
