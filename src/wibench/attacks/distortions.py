@@ -392,3 +392,11 @@ class PixelShift(BaseAttack):
         img_attacked = torch.clone(img_shifted)
         img_attacked[..., : self.delta] = image[..., : self.delta]
         return img_attacked
+
+
+class ColorInversion(BaseAttack):
+    """Inverts colors in image.
+
+    """
+    def __call__(self, image: TorchImg) -> TorchImg:
+        return -image + 1
