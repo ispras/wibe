@@ -13,7 +13,7 @@ through a customizable processing pipeline.
 The system architecture consists of a sequence of processing configurable stages.
 
 .. image:: docs/imgs/wibe_schema.png
-   :alt: ``WIBE schema``1
+   :alt: ``WIBE schema``
    :align: center
 
 
