@@ -157,7 +157,7 @@ class ImageEditingInstructPix2Pix(BaseAttack):
         # NOTE must be applied only for one image!
 
         # generate instruction with InternVL
-        pil_image = T.ToPILImage()(image.squeeze(0))
+        pil_image = T.ToPILImage()(image)
         pixel_values = (
             self.load_image(pil_image, max_num=12)
             .to(torch.bfloat16)
@@ -184,4 +184,4 @@ class ImageEditingInstructPix2Pix(BaseAttack):
             image=pil_image,
             image_guidance_scale=self.guidance_scale,
         ).images[0]
-        return T.ToTensor()(attacked_image).unsqueeze(0)
+        return T.ToTensor()(attacked_image)
