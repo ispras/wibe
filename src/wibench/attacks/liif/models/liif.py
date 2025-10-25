@@ -61,7 +61,7 @@ class LIIF(nn.Module):
 
         feat_coord = make_coord(feat.shape[-2:], flatten=False) \
             .permute(2, 0, 1) \
-            .unsqueeze(0).expand(feat.shape[0], 2, *feat.shape[-2:])
+            .unsqueeze(0).expand(feat.shape[0], 2, *feat.shape[-2:]).to(feat.device)
 
         preds = []
         areas = []

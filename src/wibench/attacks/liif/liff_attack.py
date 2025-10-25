@@ -24,7 +24,7 @@ class LIIFAttack(BaseAttack):
     def __init__(
         self,
         device: str = "cuda:0",
-        model_name: str = "./watermark_attacks/attacks/liif/rdn-liif.pth",
+        model_name: str = "./model_files/liif/rdn-liif.pth",
     ) -> None:
         super().__init__()
         self.device = device
@@ -63,4 +63,4 @@ class LIIFAttack(BaseAttack):
             .to(self.device)
         )
 
-        return pred
+        return pred.squeeze(0).cpu()

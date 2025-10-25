@@ -1,12 +1,10 @@
 import os
 import time
 import shutil
-import math
 
 import torch
 import numpy as np
 from torch.optim import SGD, Adam
-from tensorboardX import SummaryWriter
 
 
 class Averager():
@@ -68,13 +66,6 @@ def ensure_path(path, remove=True):
             os.makedirs(path)
     else:
         os.makedirs(path)
-
-
-def set_save_path(save_path, remove=True):
-    ensure_path(save_path, remove=remove)
-    set_log_path(save_path)
-    writer = SummaryWriter(os.path.join(save_path, 'tensorboard'))
-    return log, writer
 
 
 def compute_num_params(model, text=False):
