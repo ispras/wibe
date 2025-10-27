@@ -106,7 +106,7 @@ def resize_torch_img(image: TorchImg, size: List[int], mode: str = 'bilinear', a
     return resized_image
 
 
-def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked_image: TorchImg) -> TorchImg:
+def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked_image: TorchImg, factor: float = 1.) -> TorchImg:
     """Overlay difference between images of one size to image of another size.
     
     Parameters
@@ -117,6 +117,8 @@ def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked
         Resized version of original (should match marked_image size)
     marked_image : TorchImg
         Watermarked or processed image
+    factor : float
+        Factor to enhance difference
         
     Returns
     -------
@@ -130,7 +132,7 @@ def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked
     - Adds difference to original image
     """
     orig_height, orig_width = original_image.shape[1:]
-    diff = marked_image - resized_image
+    diff = (marked_image - resized_image) * factor
     min_val = diff.min()
     diff_resized = resize_torch_img((diff - min_val).squeeze(0), (orig_height, orig_width))
     marked_image = torch.clip(original_image + diff_resized + min_val, 0, 1).squeeze(0)

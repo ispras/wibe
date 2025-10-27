@@ -81,8 +81,10 @@ def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
         ATTACKS_FIELD,
         PIPELINE_FIELD,
     ] + METRICS_FIELD:
-        assert field in config.keys(), f"Missing '{field}' in yaml config file"
-        field_value = config[field]
+        if field not in config:
+            field_value = {}
+        else:
+            field_value = config[field]
         if field == PIPELINE_FIELD:
             result[field] = PipeLineConfig(**field_value)
             continue
