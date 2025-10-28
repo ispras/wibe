@@ -57,15 +57,17 @@ class Stage:
     
 
 class PostPipelineStage:
-    """Abstract base class for all pipeline processing stages.
+    """Abstract base class for all post pipeline processing stages.
 
-    Each stage represents a distinct step in the watermarking pipeline workflow.
+    Each stage represents a distinct step in the watermarking post pipeline workflow.
     Concrete implementations must override the process_object method.
 
     Methods
     -------
     process_object(object_context)
         Process an object through this stage (abstract)
+    set_context_dir(context_dir)
+        Sets the context loading folder (classmethod)
     """
     context_dir: Path
     
@@ -365,10 +367,16 @@ class AggregateMetricsStage(Stage):
 
     Parameters
     ----------
-    pipeline_config : PipeLineConfig
-        Complete pipeline configuration 
+    aggregators : List[AggregatorConfig]
+        List of configs for aggregators
+    result_path: str
+        Full or relative path to store aggregation results
+    min_batch_size: int
+        Minimum number of records to aggregate at once
     dry_run : bool
         If True, validate without writing
+    post_pipeline_run: bool
+        Aggregation of stage results after pipeline execution
     """   
     def __init__(self,
                  aggregators: List[AggregatorConfig],

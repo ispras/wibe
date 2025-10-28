@@ -66,13 +66,16 @@ class PandasAggregatorConfig(BaseModel):
     ----------
     kind : Literal["CSV"]
     table_name : str
-        Base name for output CSV files (will generate metrics_{name}.csv
-        and params_{name}.csv)
+        Base name for metrics table CSV files (will generate {table_name}.csv)
+    params_table_name: str
+        Base name for params table CSV files (will generate {params_table_name}.csv)
+    post_pipeline_table_name: str
+        Name for post pipeline metrics table CSV files (will generate {post_pipeline_table_name}.csv)
     """
     kind: Literal["CSV"]
-    table_name: str
-    params_table_name: str
-    post_pipeline_table_name: str
+    table_name: str = "metrics_table"
+    params_table_name: str = "params_table"
+    post_pipeline_table_name: str = "post_pipeline_metrics_table"
 
 
 class ClickHouseAggregatorConfig(BaseModel):

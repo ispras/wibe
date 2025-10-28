@@ -43,11 +43,11 @@ def clear_tables(config: PipeLineConfig):
     for aggregator_config in config.aggregators:
         if not isinstance(aggregator_config, PandasAggregatorConfig):
             continue
-        metrics_table_result_path = config.result_path / f"{aggregator_config.table_name}.csv"
+        table_result_path = config.result_path / f"{aggregator_config.table_name}.csv"
         params_table_result_path = config.result_path / f"{aggregator_config.params_table_name}.csv"
         post_pipeline_table_result_path = config.result_path / f"{aggregator_config.post_pipeline_table_name}.csv"
-        if metrics_table_result_path.exists():
-            metrics_table_result_path.unlink()
+        if table_result_path.exists():
+            table_result_path.unlink()
         if params_table_result_path.exists():
             params_table_result_path.unlink()
         if post_pipeline_table_result_path.exists():
@@ -160,6 +160,9 @@ def run(
         - extract: Watermark extraction
         - post_extract_metrics: Metrics after extraction
         - aggregate: Aggregate metrics
+        - post_pipeline_embed_metrics: Embed metrics after pipeline
+        - post_pipeline_attack_metrics: Attack metrics after pipeline
+        - post_pipeline_aggregate: Aggregate metrics after pipeline
         
     Notes
     -----
