@@ -1,40 +1,43 @@
 import torch
 
 from torchmetrics.image.fid import FrechetInceptionDistance
-from wibench.metrics.base import PostStageMetric
-from wibench.config import DatasetType
-from wibench.datasets.mscoco import MSCOCO
-from wibench.datasets.diffusiondb import DiffusionDB
+from wibench.metrics.base import PostPipelineMetric
+from wibench.datasets.base import BaseDataset
 from wibench.typing import ImageObject, TorchImg
 from wibench.utils import resize_torch_img
-from typing_extensions import Dict, Any
+from typing_extensions import Dict, Any, Optional
 
 
-class FID(PostStageMetric):
+class FID(PostPipelineMetric):
 
     image_size = (299, 299)
     name = "FID"
 
     def __init__(self,
-                 dataset_type: str = DatasetType.coco,
+                 dataset_type: Optional[str] = None,
                  dataset_args: Dict[str, Any] = {"sample_range": None, "split": "val", "cache_dir": None},
                  device: str = ("cuda" if torch.cuda.is_available() else "cpu"),
                  feature: int = 2048,
                  normalize: bool = True) -> None:
+        self.update_real = False
         self.device = device
-        if dataset_type == DatasetType.coco:
-            self.dataset = MSCOCO(**dataset_args)
-        elif dataset_type == DatasetType.diffusiondb:
-            self.dataset = DiffusionDB(**dataset_args)
-        else:
-            raise NotImplementedError(f"Dataset type {dataset_type} is not exists!")
         self.metric = FrechetInceptionDistance(feature=feature, normalize=normalize, reset_real_features=False).to(self.device)
+        if dataset_type is None:
+            self.metric.reset_real_features = True
+            self.update_real = True
+            return
+        dataset_class = BaseDataset._registry.get(dataset_type, None)
+        if dataset_class is None:
+            raise NotImplementedError("")
+        self.dataset = dataset_class(**dataset_args)
         for image_object in self.dataset.generator():
             image_object: ImageObject
             self.metric.update(resize_torch_img(image_object.image, size=self.image_size).unsqueeze(0).to(self.device), real=True)
 
-    def update(self, image: TorchImg) -> None:
-        self.metric.update(resize_torch_img(image, size=self.image_size).unsqueeze(0).to(self.device), real=False)
+    def update(self, real_image: Dict[str, TorchImg], fake_image: TorchImg) -> None:
+        if self.update_real:
+            self.metric.update(resize_torch_img(real_image['image'], size=self.image_size).unsqueeze(0).to(self.device), real=True)
+        self.metric.update(resize_torch_img(fake_image, size=self.image_size).unsqueeze(0).to(self.device), real=False)
 
     def reset(self) -> None:
         self.metric.reset()

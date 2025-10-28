@@ -32,7 +32,7 @@ from wibench.config_loader import (
     ATTACKS_FIELD,
     PIPELINE_FIELD,
 )
-from wibench.config import PipeLineConfig, StageType
+from wibench.config import PipeLineConfig
 import sys
 import subprocess
 import os
@@ -43,12 +43,15 @@ def clear_tables(config: PipeLineConfig):
     for aggregator_config in config.aggregators:
         if not isinstance(aggregator_config, PandasAggregatorConfig):
             continue
-        metrics_table_result_path = config.result_path / f"metrics_{aggregator_config.table_name}.csv"
-        params_table_result_path = config.result_path / f"params_{aggregator_config.table_name}.csv"
+        metrics_table_result_path = config.result_path / f"{aggregator_config.table_name}.csv"
+        params_table_result_path = config.result_path / f"{aggregator_config.params_table_name}.csv"
+        post_pipeline_table_result_path = config.result_path / f"{aggregator_config.post_pipeline_table_name}.csv"
         if metrics_table_result_path.exists():
             metrics_table_result_path.unlink()
         if params_table_result_path.exists():
             params_table_result_path.unlink()
+        if post_pipeline_table_result_path.exists():
+            post_pipeline_table_result_path.unlink()
 
 
 CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
@@ -196,7 +199,7 @@ def run(
         # for post_stages
         if stages is None or "all" in stages:
             stages = list(STAGE_CLASSES.keys())
-        post_stages = [stage for stage in stages if ("post_stage" in stage)]
+        post_stages = [stage for stage in stages if ("post_pipeline" in stage)]
         pipeline_config.workers = 1
         pipeline = Pipeline(
             alg_wrappers, datasets, attacks, metrics, pipeline_config

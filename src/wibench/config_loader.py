@@ -27,13 +27,13 @@ ALGORITHMS_FIELD = "algorithms"
 POST_EMBED_METRICS_FIELD = "post_embed_metrics"
 POST_ATTACK_METRICS_FIELD = "post_attack_metrics"
 POST_EXTRACT_METRICS_FIELD = "post_extract_metrics"
-POST_STAGE_EMBED_METRICS_FIELD = "post_stage_embed_metrics"
-POST_STAGE_ATTACK_METRICS_FIELD = "post_stage_attack_metrics"
+POST_PIPELINE_EMBED_METRICS_FIELD = "post_pipeline_embed_metrics"
+POST_PIPELINE_ATTACK_METRICS_FIELD = "post_pipeline_attack_metrics"
 METRICS_FIELD = [POST_EMBED_METRICS_FIELD,
                  POST_ATTACK_METRICS_FIELD,
                  POST_EXTRACT_METRICS_FIELD,
-                 POST_STAGE_EMBED_METRICS_FIELD,
-                 POST_STAGE_ATTACK_METRICS_FIELD]
+                 POST_PIPELINE_EMBED_METRICS_FIELD,
+                 POST_PIPELINE_ATTACK_METRICS_FIELD]
 DATASETS_FIELD = "datasets"
 ATTACKS_FIELD = "attacks"
 PIPELINE_FIELD = "pipeline"

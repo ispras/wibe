@@ -43,10 +43,10 @@ class PostEmbedMetric(BaseMetric):
         raise NotImplementedError
     
 
-class PostStageMetric(BaseMetric):
+class PostPipelineMetric(BaseMetric):
     abstract = True
 
-    def update(self, object: Any) -> None:
+    def update(self, object1: Any, object2: Any) -> None:
         raise NotImplementedError
 
     def reset(self) -> None:

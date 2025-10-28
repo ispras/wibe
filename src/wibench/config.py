@@ -30,11 +30,6 @@ class DumpType(str, Enum):
     serialized = "serialized"
 
 
-class DatasetType(str, Enum):
-    coco = "coco"
-    diffusiondb = "ddb"
-
-
 class StageType(str, Enum):
     embed = "embed"
     post_embed_metrics = "post_embed_metrics"
@@ -43,9 +38,9 @@ class StageType(str, Enum):
     extract = "extract"
     post_extract_metrics = "post_extract_metrics"
     aggregate = "aggregate"
-    post_stage_embed_metrics = "post_stage_embed_metrics"
-    post_stage_attack_metrics = "post_stage_attack_metrics"
-    post_stage_aggregate = "post_stage_aggregate"
+    post_pipeline_embed_metrics = "post_pipeline_embed_metrics"
+    post_pipeline_attack_metrics = "post_pipeline_attack_metrics"
+    post_pipeline_aggregate = "post_pipeline_aggregate"
 
 
 @dataclass
@@ -76,7 +71,8 @@ class PandasAggregatorConfig(BaseModel):
     """
     kind: Literal["CSV"]
     table_name: str
-    create_param_table: bool = True
+    params_table_name: str
+    post_pipeline_table_name: str
 
 
 class ClickHouseAggregatorConfig(BaseModel):
@@ -126,7 +122,6 @@ class PipeLineConfig(BaseModel):
 
     result_path: Path
     aggregators: List[AggregatorConfig]
-    post_aggregators: Optional[List[AggregatorConfig]] = None
     min_batch_size: int = 100
     seed: Optional[int] = None
     dump_type: DumpType = DumpType.serialized
