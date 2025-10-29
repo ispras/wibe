@@ -118,7 +118,7 @@ class PandasAggregator(Aggregator):
         dry : bool
             Not used
         post_pipeline_run : bool
-            Aggregate records after the pipeline
+            Aggregation of stage results after pipeline execution
         """
 
         batch = pd.DataFrame(records)
