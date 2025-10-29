@@ -57,6 +57,8 @@ class Aggregator(ABC):
             - Metrics from all pipeline stages
         dry : bool
             Flag for dry run. Some aggregators should not write records on dry runs.
+        post_pipeline_run : bool
+            Aggregation of stage results after pipeline execution
         """
         raise NotImplementedError
     
@@ -115,6 +117,8 @@ class PandasAggregator(Aggregator):
             Batch of metrics records
         dry : bool
             Not used
+        post_pipeline_run : bool
+            Aggregate records after the pipeline
         """
 
         batch = pd.DataFrame(records)
@@ -204,6 +208,8 @@ class FanoutAggregator:
             Batch of metrics records
         dry : bool
             Dry run flag
+        post_pipeline_run : bool
+            Aggregation of stage results after pipeline execution
         """
         for aggregator in self.aggregators:
             try:

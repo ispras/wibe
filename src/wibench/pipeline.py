@@ -458,7 +458,7 @@ class StageRunner:
         dry_run: bool = False,
     ):
         self.stages: List[Stage] = []
-        self.post_pipeline_stages: List[Stage] = []
+        self.post_pipeline_stages: List[Union[Stage, PostPipelineStage]] = []
         self.seed = pipeline_config.seed
 
         for stage in stages:
