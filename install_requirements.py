@@ -32,7 +32,7 @@ for one_requirements in all_requirements:
 
 force_packages = [
     'huggingface_hub',
-    'git+https://gitlab.ispras.ru/discopal/jsons2clickhouse',
+    'git+https://gitlab.ispras.ru/opentools/jsons2clickhouse',
     'plotly',
     ]
 
