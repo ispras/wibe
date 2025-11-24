@@ -32,7 +32,7 @@ class StableSignatureParams(Params):
         decoder_path : Optional[Union[str, Path]]
             Path to watermark decoder model (default None)
         model : str
-            Base diffusion model identifier from Hugging Face Hub (default 'stabilityai/stable-diffusion-2')
+            Base diffusion model identifier from Hugging Face Hub (default 'akaleksandr/stable-diffusion-2')
         secret : Optional[str]
             Binary secret message to embed (default '111010110101000001010111010011010100010000100111')
     """
@@ -40,7 +40,7 @@ class StableSignatureParams(Params):
     ldm_checkpoint_path: Optional[Union[str, Path]] = None
     ldm_decoder_path: Optional[Union[str, Path]] = None
     decoder_path: Optional[Union[str, Path]] = None
-    model: str = "stabilityai/stable-diffusion-2"
+    model: str = "akaleksandr/stable-diffusion-2"
     secret: Optional[str] = "111010110101000001010111010011010100010000100111"
 
 
