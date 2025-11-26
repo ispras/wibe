@@ -41,6 +41,19 @@ class PostEmbedMetric(BaseMetric):
         **kwargs,
     ) -> Any:
         raise NotImplementedError
+    
+
+class PostPipelineMetric(BaseMetric):
+    abstract = True
+
+    def update(self, object1: Any, object2: Any) -> None:
+        raise NotImplementedError
+
+    def reset(self) -> None:
+        raise NotImplementedError
+
+    def __call__(self, *args, **kwds) -> Any:
+        raise NotImplementedError
 
 
 class PostExtractMetric(BaseMetric):

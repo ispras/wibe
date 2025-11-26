@@ -30,6 +30,19 @@ class DumpType(str, Enum):
     serialized = "serialized"
 
 
+class StageType(str, Enum):
+    embed = "embed"
+    post_embed_metrics = "post_embed_metrics"
+    attack = "attack"
+    post_attack_metrics = "post_attack_metrics"
+    extract = "extract"
+    post_extract_metrics = "post_extract_metrics"
+    aggregate = "aggregate"
+    post_pipeline_embed_metrics = "post_pipeline_embed_metrics"
+    post_pipeline_attack_metrics = "post_pipeline_attack_metrics"
+    post_pipeline_aggregate = "post_pipeline_aggregate"
+
+
 @dataclass
 class Params:
     """Base configuration parameters for modules.
@@ -53,11 +66,16 @@ class PandasAggregatorConfig(BaseModel):
     ----------
     kind : Literal["CSV"]
     table_name : str
-        Base name for output CSV files (will generate metrics_{name}.csv
-        and params_{name}.csv)
+        Base name for metrics table CSV files (will generate {table_name}.csv)
+    params_table_name: str
+        Base name for params table CSV files (will generate {params_table_name}.csv)
+    post_pipeline_table_name: str
+        Name for post pipeline metrics table CSV files (will generate {post_pipeline_table_name}.csv)
     """
     kind: Literal["CSV"]
-    table_name: str
+    table_name: str = "metrics_table"
+    params_table_name: str = "params_table"
+    post_pipeline_table_name: str = "post_pipeline_metrics_table"
 
 
 class ClickHouseAggregatorConfig(BaseModel):
@@ -116,13 +134,14 @@ class PipeLineConfig(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _unpack_yaml_style(cls, data: dict):
-        fixed = []
-        for raw in data.get("aggregators", []):
-            if not isinstance(raw, dict) or len(raw) != 1:
-                raise ValueError("Every element in aggregators must be a dict")
-            kind, params = next(iter(raw.items()))
-            fixed.append({"kind": kind, **params})
-        data["aggregators"] = fixed
+        for aggregator in ["aggregators", "post_aggregators"]:
+            fixed = []
+            for raw in data.get(aggregator, []):
+                if not isinstance(raw, dict) or len(raw) != 1:
+                    raise ValueError("Every element in aggregators must be a dict")
+                kind, params = next(iter(raw.items()))
+                fixed.append({"kind": kind, **params})
+            data[aggregator] = fixed
         if "cuda_visible_devices" in data:
             value = data["cuda_visible_devices"]
             if isinstance(value, str):

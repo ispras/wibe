@@ -1,0 +1,53 @@
+# Demo testing config; it is recommended to run as: (venv) python -m wibench -config config/trustmark_demo.yml -d
+algorithms:
+  trustmark:            # Watermarking algorithm and its parameters
+    params:
+      wm_length: 100
+      model_type: Q
+      wm_strength: 0.75
+      device: cuda
+
+post_embed_metrics:         # Watermark impeccability metrics
+  - PSNR
+  - SSIM
+
+post_attack_metrics:        # Visual quality of attacked image
+  - PSNR
+  - SSIM
+
+post_extract_metrics:       # Extraction effectiveness after attack
+  - TPR@xFPR:
+      report_name: tpr@0.001fpr
+      fpr_rate: 0.001
+
+datasets:                   # Dataset of images to test on
+  - DiffusionDB:
+      cache_dir: ./datasets/diffusiondb 
+      subset: 2m_first_5k
+      skip_nsfw: true
+      sample_range: [0, 5]   # Test with 10 images: 0, ..., 9
+
+post_pipeline_embed_metrics:
+  - FID:
+      report_name: fid_mscoco
+      device: cuda
+      dataset_type: mscoco
+      dataset_args:
+        sample_range: [0, 5]
+        cache_dir: ./datasets/mscoco
+        split: val
+  - FID:
+      device: cuda
+
+post_pipeline_attack_metrics:
+  - FID:
+      device: cuda
+
+attacks:                    # Attacks on watermarks
+{% include 'common/distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/trustmark_fid2   # Path to save results, including all images (with -d flag)
+  aggregators:
+    - CSV:                  # Aggregate results in .csv file in result_path folder
+        table_name: table
