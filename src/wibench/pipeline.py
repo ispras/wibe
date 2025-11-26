@@ -460,13 +460,15 @@ class StageRunner:
         self.stages: List[Stage] = []
         self.post_pipeline_stages: List[Union[Stage, PostPipelineStage]] = []
         self.seed = pipeline_config.seed
-
+        wrapper_cache = None
         for stage in stages:
             stage_class = STAGE_CLASSES.get(stage, None)
             if stage_class is None:
                 raise ValueError(f"Unknown stage: {stage}")
             if stage in [StageType.embed, StageType.extract]:
-                self.stages.append(stage_class(get_algorithms([algorithm_wrapper])[0]))
+                if wrapper_cache is None:
+                    wrapper_cache = get_algorithms([algorithm_wrapper])[0]
+                self.stages.append(stage_class(wrapper_cache))
             elif stage == StageType.post_embed_metrics:
                 post_embed_metrics = get_metrics(metrics[stage])
                 self.stages.append(stage_class(post_embed_metrics))
