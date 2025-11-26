@@ -485,9 +485,13 @@ class StageRunner:
             elif (stage == StageType.post_pipeline_aggregate) and (pipeline_config.workers == 1):
                 self.post_pipeline_stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, 0, dry_run, True))
             elif (stage == StageType.post_pipeline_embed_metrics) and (pipeline_config.workers == 1):
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), get_algorithms([algorithm_wrapper])[0], pipeline_config.dump_type))
+                if wrapper_cache is None:
+                    wrapper_cache = get_algorithms([algorithm_wrapper])[0]
+                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), wrapper_cache, pipeline_config.dump_type))
             elif (stage == StageType.post_pipeline_attack_metrics) and (pipeline_config.workers == 1):
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), attacks, get_algorithms([algorithm_wrapper])[0], pipeline_config.dump_type))
+                if wrapper_cache is None:
+                    wrapper_cache = get_algorithms([algorithm_wrapper])[0]
+                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), attacks, wrapper_cache, pipeline_config.dump_type))
 
         pass
 
