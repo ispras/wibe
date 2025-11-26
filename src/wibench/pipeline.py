@@ -314,9 +314,9 @@ class PostPipelineEmbedMetricsStage(PostPipelineStage):
                 if context.dataset != object_context.dataset:
                     continue
                 marked_object = context.marked_object
-                original_object = context.original_object
+                original_object = context.object_data
                 metric.update(original_object, marked_object)
-            object_context.marked_object_metrics = {metric.report_name: metric()}
+            object_context.marked_object_metrics[metric.report_name] = metric()
             metric.reset()
         object_context.method = self.algorithm_wrapper.report_name
         object_context.param_hash = self.algorithm_wrapper.param_hash

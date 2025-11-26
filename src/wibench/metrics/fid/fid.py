@@ -51,12 +51,12 @@ class FID(PostPipelineMetric):
             image_object: ImageObject
             self.metric.update(resize_torch_img(image_object.image, size=self.image_size).unsqueeze(0).to(self.device), real=True)
 
-    def update(self, real_image: Dict[str, TorchImg], fake_image: TorchImg) -> None:
+    def update(self, real_image: TorchImg, fake_image: TorchImg) -> None:
         """Method for adding real and fake images to the FID metric.
         
         Parameters
         ----------
-        real_image: Dict[str, TorchImg]
+        real_image: TorchImg
             Dict with 'image' field which contain image tensor in (C, H, W) format
         fake_image: TorchImg
             Input image tensor in (C, H, W) format
@@ -65,7 +65,7 @@ class FID(PostPipelineMetric):
         - If a dataset was specified in __init__, then updating real images using this method does not occur
         """
         if self.update_real:
-            self.metric.update(resize_torch_img(real_image['image'], size=self.image_size).unsqueeze(0).to(self.device), real=True)
+            self.metric.update(resize_torch_img(real_image, size=self.image_size).unsqueeze(0).to(self.device), real=True)
         self.metric.update(resize_torch_img(fake_image, size=self.image_size).unsqueeze(0).to(self.device), real=False)
 
     def reset(self) -> None:
