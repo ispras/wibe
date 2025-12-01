@@ -138,7 +138,7 @@ def run(
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Quick run on a few samples to check everything working"),
     stages: Optional[str] = typer.Argument(None,
-                                           help=f"Stages to execute (e.g., embed attack extract), if 'all' or not provided - executes all stages. Stages can be specified as intervals (a - b), pointwise (a, c, e) and jointly (a - b, c, e - d). Available stages are:{list(STAGE_CLASSES.keys())}"),
+                                           help=f"Stages to execute (e.g., embed,attack,extract), if 'all' or not provided - executes all stages. Stages can be specified as intervals (embed-extract), pointwise (embed,attack,extract) and jointly (embed-attack,extract,post_pipeline_embed_metrics-post_pipeline_aggregate). Available stages are:{list(STAGE_CLASSES.keys())}"),
 
 ):
     """Run the watermarking evaluation pipeline.
