@@ -45,7 +45,9 @@ class ImageEditingInstructPix2Pix(BaseAttack):
             self.instructpix2pix_path, torch_dtype=torch.float16
         )
         self.pix2pix = self.pix2pix.to(self.device)
-
+        self.pix2pix.safety_checker = None
+        self.pix2pix.requires_safety_checker = False
+        
         self.IMAGENET_MEAN = (0.485, 0.456, 0.406)
         self.IMAGENET_STD = (0.229, 0.224, 0.225)
 
