@@ -29,9 +29,9 @@ class AdversarialEmbedding(BaseAttack):
             embedding_model = ClipEmbedding()
         elif encoder == "klvae8":
             # same vae as used in generator
-            embedding_model = VAEEmbedding("stabilityai/sd-vae-ft-mse")
+            embedding_model = VAEEmbedding("akaleksandr/sd-vae-ft-mse")
         elif encoder == "sdxlvae":
-            embedding_model = VAEEmbedding("stabilityai/sdxl-vae")
+            embedding_model = VAEEmbedding("akaleksandr/sdxl-vae")
         else:
             raise ValueError(f"Unsupported encoder: {encoder}")
         embedding_model = embedding_model.to(device)
@@ -126,9 +126,9 @@ class AdversarialEmbeddingPSNR(BaseAttack):
             embedding_model = ClipEmbedding()
         elif encoder == "klvae8":
             # same vae as used in generator
-            embedding_model = VAEEmbedding("stabilityai/sd-vae-ft-mse")
+            embedding_model = VAEEmbedding("akaleksandr/sd-vae-ft-mse")
         elif encoder == "sdxlvae":
-            embedding_model = VAEEmbedding("stabilityai/sdxl-vae")
+            embedding_model = VAEEmbedding("akaleksandr/sdxl-vae")
         else:
             raise ValueError(f"Unsupported encoder: {encoder}")
         embedding_model = embedding_model.to(device)

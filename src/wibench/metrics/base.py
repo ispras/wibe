@@ -41,6 +41,19 @@ class PostEmbedMetric(BaseMetric):
         **kwargs,
     ) -> Any:
         raise NotImplementedError
+    
+
+class PostPipelineMetric(BaseMetric):
+    abstract = True
+
+    def update(self, object1: Any, object2: Any) -> None:
+        raise NotImplementedError
+
+    def reset(self) -> None:
+        raise NotImplementedError
+
+    def __call__(self, *args, **kwds) -> Any:
+        raise NotImplementedError
 
 
 class PostExtractMetric(BaseMetric):
@@ -188,6 +201,8 @@ class TPRxFPR(PostExtractMetric):
         watermark_data: Any,
         extraction_result: Any,
     ) -> float:
+        if isinstance(extraction_result, float): # zero-bit method returns p-value, fpr rate is considered as decision threshold
+            return int (self.fpr_rate > extraction_result)
         wm = watermark_data.watermark
         if isinstance(wm, torch.Tensor) or isinstance(wm, np.ndarray):
             num_bits = len(wm.flatten())
