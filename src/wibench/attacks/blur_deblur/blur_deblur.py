@@ -24,7 +24,7 @@ def gaussian_kernel(sigma: float = 1., kernel_size: int | None = None, normalize
     return gauss
 
 
-class _GaussianBlur(BaseAttack):
+class _GaussianBlur():
     """Standard Gaussian blur."""
 
     def __init__(self, sigma: float, kernel_size: int | None = None, normalize: bool = True, num_channels: int = 3, device: str = 'cuda:0') -> None:
@@ -94,7 +94,7 @@ class BlurDeblurFPNInception(BaseAttack):
 
     def __init__(self,
                  sigma: float = 3.,
-                 weights_path: str = 'fpn_inception.h5',
+                 weights_path: str = './model_files/blur_deblur/fpn_inception.h5',
                  device: str = 'cuda:0'
                  ) -> None:
         super().__init__()
@@ -107,7 +107,7 @@ class BlurDeblurFPNInception(BaseAttack):
         self.deblur.to(device)
         self.device = device
 
-    def load_deblur_weights(self, weights_path: str = "fpn_inception.h5") -> None:
+    def load_deblur_weights(self, weights_path: str) -> None:
         """Load weights for the deblur model from the original repo."""
         state_dict = torch.load(weights_path)["model"]
         fixed_state_dict = OrderedDict((k.removeprefix("module."), v) for k, v in state_dict.items())
@@ -130,7 +130,7 @@ class DoGBlurDeblurFPNInception(BaseAttack):
                  alpha: float = 0.5,
                  sigma_1: float = 1.,
                  sigma_2: float = 1.6,
-                 weights_path: str = 'fpn_inception.h5',
+                 weights_path: str = './model_files/blur_deblur/fpn_inception.h5',
                  device: str = 'cuda:0'
                  ):
         super().__init__()
@@ -143,7 +143,7 @@ class DoGBlurDeblurFPNInception(BaseAttack):
         self.deblur.to(device)
         self.device = device
 
-    def load_deblur_weights(self, weights_path: str = "fpn_inception.h5") -> None:
+    def load_deblur_weights(self, weights_path: str) -> None:
         """Load weights for the deblur model from the original repo."""
         state_dict = torch.load(weights_path)["model"]
         fixed_state_dict = OrderedDict((k.removeprefix("module."), v) for k, v in state_dict.items())
