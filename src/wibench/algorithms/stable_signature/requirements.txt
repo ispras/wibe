@@ -1,6 +1,6 @@
-diffusers==0.34.0
+diffusers>=0.34.0
 datasets
-huggingface-hub==0.33.4
+huggingface-hub>=0.33.4
 kornia
 pytorch-lightning
 open-clip-torch
