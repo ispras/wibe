@@ -27,12 +27,12 @@ def tensor_to_pil(img_t: torch.Tensor) -> Image.Image:
 
 class SEMAttack(BaseAttack):
     """Attack from \"Black-Box Forgery Attacks on Semantic Watermarks for Diffusion Models\"
-    
+
     code is based on https://github.com/and-mill/semantic-forgery
     """
     def __init__(
         self,
-        modelid_attacker: str = "Manojb/stable-diffusion-2-1-base",
+        modelid_attacker: str = "akaleksandr/stable-diffusion-2-1-base",
         scheduler_attacker: str = "DDIM",
         num_inference_steps_attacker: int = 50,
         lr: float = 1e-2,
