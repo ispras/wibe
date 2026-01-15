@@ -103,7 +103,7 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
             raise FileNotFoundError(f"The yaml config path: '{self.params.ckpt_path}' does not exist!")
         
         self.device = self.params.device
-        state_dict = torch.load(Path(self.params.ckpt_path).resolve(), map_location=self.device)['encoder_decoder']
+        state_dict = torch.load(Path(self.params.ckpt_path).resolve(), map_location=self.device, weights_only=False)['encoder_decoder']
         encoder_decoder_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
         encoder_state_dict = {k.replace('encoder.', ''): v for k, v in encoder_decoder_state_dict.items() if 'encoder' in k}
         decoder_state_dict = {k.replace('decoder.', ''): v for k, v in encoder_decoder_state_dict.items() if 'decoder' in k}

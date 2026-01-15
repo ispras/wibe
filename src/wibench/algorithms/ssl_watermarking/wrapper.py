@@ -210,6 +210,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         if not normlayer_weights_path.exists():
             raise FileNotFoundError(f"The normlayer weight path '{str(normlayer_weights_path)}' does not exist!")
         
+        torch.serialization.add_safe_globals([np.core.multiarray.scalar, np.dtype, np.dtypes.Float64DType])
         backbone = utils.build_backbone(path=str(backbone_weights_path), name="resnet50").to(self.device)
         normlayer = utils.load_normalization_layer(path=str(normlayer_weights_path)).to(self.device)
         model = utils.NormLayerWrapper(backbone, normlayer)

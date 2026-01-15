@@ -101,7 +101,7 @@ def make_windrose() -> int:
     args = parse_args()
     results_dir = args.results_dir
     # TODO: make as argument of the script run
-    metric_name = 'tpr@0.1%fpr'
+    metric_name = 'tpr@10e-4fpr'
     windrose_file = os.path.join(results_dir, "windrose.csv")
 
     df = make_dataframe_for_algorithms(results_dir, metric_name)

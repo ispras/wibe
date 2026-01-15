@@ -29,11 +29,6 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
     
     Provides an interface for embedding and extracting watermarks using the Watermark Anything watermarking algorithm.
     Based on the code from `here <https://github.com/facebookresearch/watermark-anything>`__.
-    
-    Parameters
-    ----------
-    params : Dict[str, Any]
-        Watermark Anything algorithm configuration parameters
 
     """
     

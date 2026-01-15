@@ -83,23 +83,35 @@ class MBRS:
 
 @dataclass
 class MBRSParams:
-    wm_length: int = 256
-    strength_factor: float = 1.
+    wm_length: int
+    strength_factor: float
 
 
 class MBRSWrapper(BaseAlgorithmWrapper):
+    """`MBRS <https://arxiv.org/abs/2108.08211>`_: Enhancing Robustness of DNN-based Watermarking by Mini-Batch of Real and Simulated JPEG Compression
+    
+    Provides an interface for embedding and extracting watermarks using the MBRS watermarking algorithm.
+    Based on the code from `here <https://github.com/jzyustc/MBRS>`__.
+    """
+        
     name = "MBRS"
-    def __init__(self, params: dict, module_path: str, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
-        params = MBRSParams(**params)
+    def __init__(self, 
+                 wm_length: int = 256,
+                 strength_factor: float =1.,
+                 weights_path: str = "./model_files/mbrs",
+                 module_path: str = "./submodules/mbrs", 
+                 device: str = "cuda" if torch.cuda.is_available() else "cpu"):
+        params = MBRSParams(wm_length, strength_factor)
         sys.path.append(module_path)
         module_path = Path(module_path)
+        weights_path = Path(weights_path)
         super().__init__(params)
         if params.wm_length == 30:
-            settings_path = module_path / settings_path_128
-            models_dir = module_path / model_dir_128
+            settings_path = weights_path / settings_path_128
+            models_dir = weights_path / model_dir_128
         elif params.wm_length == 256:
-            settings_path = module_path / settings_path_256
-            models_dir = module_path / model_dir_256
+            settings_path = weights_path / settings_path_256
+            models_dir = weights_path / model_dir_256
 
         self.wa = MBRS(settings_path, models_dir, params.strength_factor, device)
 
@@ -111,4 +123,3 @@ class MBRSWrapper(BaseAlgorithmWrapper):
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
         return TorchBitWatermarkData.get_random(self.params.wm_length)
-        

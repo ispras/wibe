@@ -25,3 +25,9 @@
 [submodule "submodules/tree-ring-watermark"]
 	path = submodules/tree-ring-watermark
 	url = https://github.com/YuxinWenRick/tree-ring-watermark.git
+[submodule "submodules/invismark"]
+	path = submodules/invismark
+	url = https://github.com/microsoft/InvisMark.git
+[submodule "submodules/mbrs"]
+	path = submodules/mbrs
+	url = https://github.com/jzyustc/MBRS.git
