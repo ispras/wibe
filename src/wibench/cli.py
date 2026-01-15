@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 import wibench
+import json
 
 
 def clear_sys_path():
@@ -23,6 +24,7 @@ from typing_extensions import (
 )
 import uuid
 from wibench.pipeline import Pipeline, STAGE_CLASSES
+from wibench.utils import generate_random_seed
 from wibench.module_importer import import_modules
 from wibench.config_loader import (
     load_pipeline_config_yaml,
@@ -33,7 +35,6 @@ from wibench.config_loader import (
     PIPELINE_FIELD,
 )
 from wibench.config import PipeLineConfig
-import sys
 import subprocess
 import os
 from wibench.aggregator import PandasAggregatorConfig
@@ -134,7 +135,7 @@ def run(
         ..., "--config", "-c", help="Path to the .yml configuration file"
     ),
     dump_context: bool = typer.Option(
-        False, "--dump-context", "-d", help="If enabled, execution contexts are saved. Useful for debug or stage-by-stage execution (in case of different environments for algorithms/metrics/attacks)"
+        False, "--dump-context", "-d", help="If enabled, execution contexts and pipeline config are saved. Useful for debug or stage-by-stage execution (in case of different environments for algorithms/metrics/attacks)"
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Quick run on a few samples to check everything working"),
     stages: Optional[str] = typer.Argument(None,
@@ -182,10 +183,15 @@ def run(
     run_id = str(uuid.uuid1()) if RUN_ID_ENV_NAME not in os.environ else os.environ[RUN_ID_ENV_NAME]
     os.environ[RUN_ID_ENV_NAME] = run_id
     loaded_config = load_pipeline_config_yaml(config)
-    if dry_run:
-        loaded_config[PIPELINE_FIELD].result_path /= "dry"
     pipeline_config: PipeLineConfig
     pipeline_config = loaded_config[PIPELINE_FIELD]
+    if dry_run:
+        pipeline_config.result_path /= "dry"
+    if pipeline_config.seed is None:
+        pipeline_config.seed = generate_random_seed()
+    if dump_context:
+        with open(pipeline_config.result_path / "pipeline_config.json", "w") as f:
+            json.dump(pipeline_config.model_dump(mode="json"), f)
     clear_tables(pipeline_config)
 
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
