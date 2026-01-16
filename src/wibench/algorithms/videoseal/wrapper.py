@@ -65,7 +65,7 @@ class PixelSeal(VideosealWrapper):
         super().__init__(strength_factor, model_card, module_path, device)
         
         
-class PixelSeal(VideosealWrapper):
+class ChunkySeal(VideosealWrapper):
     name = "chunkyseal"
 
     def __init__(
