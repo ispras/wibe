@@ -17,7 +17,7 @@ class ImageEditingFLuxContext(BaseAttack):
         device_flux: str = "cuda:1",
         internvl_path: str = "OpenGVLab/InternVL2_5-8B",
         fluxcontext_path: str = "black-forest-labs/FLUX.1-Kontext-dev",
-        prompts_path: str = "./attack_resources/flux_prompts.json",
+        prompts_path: str = "./resources/flux_prompts.json",
         guidance_scale: float = 7.5,
         num_inference_steps: int = 28,
         is_prompts: bool = True,

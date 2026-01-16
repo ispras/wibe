@@ -14,7 +14,7 @@ class ImageEditingInstructPix2Pix(BaseAttack):
         device: str = "cuda",
         internvl_path: str = "OpenGVLab/InternVL2_5-8B",
         instructpix2pix_path: str = "timbrooks/instruct-pix2pix",
-        prompts_path: str = "./attack_resources/prompts_internvl.json",
+        prompts_path: str = "./resources/prompts_internvl.json",
         guidance_scale: float = 2.0,
         is_prompts: bool = True,
         mode: str = "base",
