@@ -7,6 +7,12 @@ from wibench.watermark_data import TorchBitWatermarkData
 
 
 class VideosealWrapper(BaseAlgorithmWrapper):
+    """`Video Seal <https://arxiv.org/abs/2412.09492>`_: Open and Efficient Video Watermarking
+    
+    Provides an interface for embedding and extracting watermarks using the VideoSeal watermarking algorithm.
+    Based on the code from `here <https://github.com/facebookresearch/videoseal>`__.
+    """
+    
     name = "videoseal"
 
     def __init__(
@@ -53,6 +59,12 @@ class VideosealWrapper(BaseAlgorithmWrapper):
 
 
 class PixelSeal(VideosealWrapper):
+    """`Pixel Seal <https://arxiv.org/abs/2512.16874>`_: Adversarial-only training for invisible image and video watermarking
+    
+    Provides an interface for embedding and extracting watermarks using the PixelSeal watermarking algorithm.
+    Based on the code from `here <https://github.com/facebookresearch/videoseal>`__.
+    """
+    
     name = "pixelseal"
 
     def __init__(
@@ -66,6 +78,14 @@ class PixelSeal(VideosealWrapper):
         
         
 class ChunkySeal(VideosealWrapper):
+    """`We Can Hide More Bits <https://arxiv.org/abs/2510.12812>`_: The Unused Watermarking Capacity in Theory and in Practice
+    
+    Provides an interface for embedding and extracting watermarks using the ChunkySeal watermarking algorithm.
+    Based on the code from `here <https://github.com/facebookresearch/videoseal>`__.
+    
+    `Note:` Model weights are not provided by `download_models.py` script. You may get them from original `link <https://dl.fbaipublicfiles.com/videoseal/chunkyseal/checkpoint.pth>`__.
+    """
+
     name = "chunkyseal"
 
     def __init__(
