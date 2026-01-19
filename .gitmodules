@@ -31,3 +31,6 @@
 [submodule "submodules/mbrs"]
 	path = submodules/mbrs
 	url = https://github.com/jzyustc/MBRS.git
+[submodule "submodules/videoseal"]
+	path = submodules/videoseal
+	url = https://github.com/facebookresearch/videoseal.git
