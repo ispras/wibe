@@ -3,7 +3,7 @@ import numpy as np
 from dataclasses import dataclass
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
-from wibench.utils import numpy_bgr2torch_img, torch_img2numpy_bgr
+from wibench.utils import numpy_bgr2torch_img, torch_img2numpy_bgr, resize_torch_img
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 from imwatermark import WatermarkEncoder, WatermarkDecoder
@@ -52,7 +52,9 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """
-        np_img = torch_img2numpy_bgr(image)
+        _, h, w = image.shape
+        resized_image = resize_torch_img(image, [max(h, 256), max(w, 256)])
+        np_img = torch_img2numpy_bgr(resized_image)
         watermark = watermark_data.watermark.squeeze(0).tolist()
         self.encoder.set_watermark("bits", watermark)
         params: InvisibleWatermarkConfig = self.params
