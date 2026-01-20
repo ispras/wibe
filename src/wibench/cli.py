@@ -189,9 +189,6 @@ def run(
         pipeline_config.result_path /= "dry"
     if pipeline_config.seed is None:
         pipeline_config.seed = generate_random_seed()
-    if dump_context:
-        with open(pipeline_config.result_path / "pipeline_config.json", "w") as f:
-            json.dump(pipeline_config.model_dump(mode="json"), f)
     clear_tables(pipeline_config)
 
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
@@ -219,6 +216,9 @@ def run(
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, pipeline_config
     )
+    if dump_context:
+        with open(pipeline.config.result_path / "pipeline_config.json", "w") as f:
+            json.dump(pipeline.config.model_dump(mode="json"), f)
     pipeline.run(run_id, stages, dump_context=dump_context, dry_run=dry_run, process_num=process_num)
 
 
