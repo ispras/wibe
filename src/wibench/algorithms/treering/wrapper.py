@@ -101,8 +101,7 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         pipe = InversableStableDiffusionPipeline.from_pretrained(
             self.model_id,
             scheduler=self.scheduler,
-            torch_dtype=torch.float16,
-            revision='fp16'
+            torch_dtype=torch.float16
         )
         self.pipe = pipe.to(self.device)
 
