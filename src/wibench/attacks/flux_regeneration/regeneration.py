@@ -4,7 +4,7 @@ from wibench.attacks.base import BaseAttack
 
 
 class FluxRegeneration(BaseAttack):
-    """Attack `regeneration` from `here <https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb>`__.
+    """Attack `regeneration` from `here <https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb>`__. Image regeneration attack using FLUX image-to-image diffusion model. Applies a single-step FLUX diffusion transformation to subtly alter an input image while maintaining its overall structure.
 
     **TODO**: check if this works with batches.
     """
@@ -65,7 +65,7 @@ class FluxRegeneration(BaseAttack):
 
 
 class FluxRinsing(FluxRegeneration):
-    """Attack `rinse2x` from `here <https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb>`__."""
+    """Attack `rinse2x` from `here <https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb>`__. Multi-step image purification using repeated FLUX regeneration."""
 
     def __init__(self,
                  rinsing_times: int = 2,

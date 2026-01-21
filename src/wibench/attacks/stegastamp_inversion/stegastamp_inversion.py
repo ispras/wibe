@@ -7,17 +7,27 @@ from wibench.typing import TorchImg
 
 
 class StegastampInversion(BaseAttack):
-    """Attack from `here <https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/stegastamp_attack.ipynb>`__.
+    """
+    Adversarial attack that inverts watermarks encoded by Stegastamp from `here <https://github.com/leiluk1/erasing-the-invisible-beige-box/tree/main>`__.
+    This attack decodes the hidden watermark from a watermarked image,
+    inverts it (1 - watermark), and re-encodes the inverted watermark
+    back into the image. The process is designed to disrupt Stegastamp's
+    watermark decoding while maintaining visual similarity to the original.
 
+    Parameters
+    ----------
+    stegastamp_model_path: str
+        path to StegaStamp onnx model
+    device_id: int
+        ID of cuda device to run Stegastamp on
+        
     **TODO**:
-
-        * check that this works the same as notebook
         * run with GPU tensors, see the following `link <https://github.com/microsoft/onnxruntime-inference-examples/blob/main/python/api/onnxruntime-python-api.py#L66>`__
         * convert from onnx to pytorch?
     """
 
     def __init__(self,
-                 stegastamp_model_path: str,
+                 stegastamp_model_path: str = "./model_files/stega_stamp/stega_stamp.onnx",
                  device_id: int = 0,
                  ) -> None:
         super().__init__()

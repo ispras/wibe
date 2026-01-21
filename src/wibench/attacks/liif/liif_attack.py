@@ -21,6 +21,13 @@ def batched_predict(model, inp, coord, cell, bsize):
 
 
 class LIIFAttack(BaseAttack):
+    """
+    Attack using Local Implicit Image Function (`LIIF <https://github.com/yinboc/liif>`__) for image super-resolution.
+
+    Reconstructs images through an implicit neural representation that learns continuous
+    image functions. The attack queries the LIIF model at specific coordinates to generate
+    a modified version of the input image, effectively applying learned upsampling/denoising.
+    """
     def __init__(
         self,
         device: str = "cuda:0",

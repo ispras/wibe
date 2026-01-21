@@ -90,7 +90,7 @@ class DoGBlur(BaseAttack):
 
 
 class BlurDeblurFPNInception(BaseAttack):
-    """Attack that blurs the image and then restores it using deblurring architecture from DeblurGAN-v2 paper."""
+    """Attack that blurs the image and then restores it using deblurring architecture from `DeblurGAN-v2 paper <https://arxiv.org/abs/1908.03826>`__."""
 
     def __init__(self,
                  sigma: float = 3.,
@@ -124,7 +124,7 @@ class BlurDeblurFPNInception(BaseAttack):
 
 
 class DoGBlurDeblurFPNInception(BaseAttack):
-    """Attack that blurs the image with DoG blur and then restores it using deblurring architecture from DeblurGAN-v2 paper."""
+    """Attack that blurs the image with DoG blur and then restores it using deblurring architecture from `DeblurGAN-v2 paper <https://arxiv.org/abs/1908.03826>`__."""
 
     def __init__(self,
                  alpha: float = 0.5,
