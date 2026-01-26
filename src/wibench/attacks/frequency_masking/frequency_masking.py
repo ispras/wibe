@@ -60,7 +60,7 @@ class LatentFrequencyMasking(BaseAttack):
         else:
             # the same VAE as in treering
             self.vae = diffusers.AutoencoderKL.from_pretrained(
-                "akaleksandr/stable-diffusion-2-1-base",
+                "WIBE-HuggingFace/stable-diffusion-2-1-base",
                 subfolder="vae",
                 # revision="fp16",
                 torch_dtype=torch.float16,

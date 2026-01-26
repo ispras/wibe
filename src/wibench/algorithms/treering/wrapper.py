@@ -22,7 +22,7 @@ class TreeRingParams(Params):
     start: int = 1
     end: int = 10
     image_length: int = 512
-    model_id: str = "akaleksandr/stable-diffusion-2-1-base"
+    model_id: str = "WIBE-HuggingFace/stable-diffusion-2-1-base"
     with_tracking: str = "store_true"
     num_images: int = 1
     guidance_scale: float = 7.5
