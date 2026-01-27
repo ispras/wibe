@@ -1,0 +1,5 @@
+torch
+accelerate
+compressai
+numpy
+kornia
