@@ -34,3 +34,6 @@
 [submodule "submodules/videoseal"]
 	path = submodules/videoseal
 	url = https://github.com/facebookresearch/videoseal.git
+[submodule "submodules/MaskWM"]
+	path = submodules/MaskWM
+	url = https://github.com/hurunyi/MaskWM.git

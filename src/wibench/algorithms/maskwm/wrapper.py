@@ -77,14 +77,14 @@ class MaskWMWrapper(BaseAlgorithmWrapper):
         watermark_image = overlay_difference(image,
                                              resized_image,
                                              denormalize_image(watermark_image_raw.cpu(), self.denormalize))
-        return watermark_image
+        return watermark_image.detach()
     
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
         image_size = self.params.image_size
         resized_image = resize_torch_img(image, [image_size, image_size])
         normalized_image = normalize_image(resized_image, self.normalize)
-        extracted_watermark, _ = self.encoder_decoder.decoder(normalized_image)
-        return extracted_watermark
+        extracted_watermark, _ = self.encoder_decoder.decoder(normalized_image.to(self.device))
+        return extracted_watermark.detach().cpu().gt(0.5).type(torch.int64)
     
     def watermark_data_gen(self) -> TorchBitWatermarkData:
         return TorchBitWatermarkData.get_random(self.params.wm_enc_config.message_length)
