@@ -67,7 +67,9 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
                 scales=[0, params.scale, 0],
                 block=params.block_size,
             )
-        return numpy_bgr2torch_img(np_res)
+        torch_res = numpy_bgr2torch_img(np_res)
+        resized_torch_res = resize_torch_img(torch_res, h, w)
+        return resized_torch_res
 
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
         """Extract watermark from marked image.
@@ -79,7 +81,9 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """
-        np_image = torch_img2numpy_bgr(image)
+        _, h, w = image.shape
+        resized_image = resize_torch_img(image, [max(h, 256), max(w, 256)])
+        np_image = torch_img2numpy_bgr(resized_image)
         params: InvisibleWatermarkConfig = self.params
         if self.algorithm == "rivaGan":
             return self.decoder.decode(np_image, self.algorithm)
