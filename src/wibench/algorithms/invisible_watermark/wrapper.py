@@ -68,7 +68,7 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
                 block=params.block_size,
             )
         torch_res = numpy_bgr2torch_img(np_res)
-        resized_torch_res = resize_torch_img(torch_res, h, w)
+        resized_torch_res = resize_torch_img(torch_res, [h, w])
         return resized_torch_res
 
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
