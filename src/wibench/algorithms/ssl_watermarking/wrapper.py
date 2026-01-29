@@ -1,16 +1,52 @@
 import torch
-import numpy as np
 import cv2
-import sys
+from torch import nn
+from torchvision import models
 
 from dataclasses import dataclass
 from typing_extensions import Optional, Dict, Any, Union
 from pathlib import Path
 
+from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.utils import torch_img2numpy_bgr
 from wibench.typing import TorchImg
 from wibench.config import Params
+
+
+def build_backbone(path, name, device):
+    """ Build a pretrained torchvision backbone from its name.
+
+    Args:
+        path: path to the checkpoint, can be an URL
+        name: name of the architecture from torchvision (see https://pytorch.org/vision/stable/models.html) 
+        or timm (see https://rwightman.github.io/pytorch-image-models/models/). 
+        We highly recommand to use Resnet50 architecture as available in torchvision. 
+        Using other architectures (such as non-convolutional ones) might need changes in the implementation.
+    """
+    if hasattr(models, name):
+        model = getattr(models, name)(pretrained=True)
+    else:
+        import timm
+        if name in timm.list_models():
+            model = timm.models.create_model(name, num_classes=0)
+        else:
+            raise NotImplementedError('Model %s does not exist in torchvision'%name)
+    model.head = nn.Identity()
+    model.fc = nn.Identity()
+    if path is not None:
+        if path.startswith("http"):
+            checkpoint = torch.hub.load_state_dict_from_url(path, progress=False, map_location=device)
+        else:
+            checkpoint = torch.load(path, map_location=device, weights_only=False)
+        state_dict = checkpoint
+        for ckpt_key in ['state_dict', 'model_state_dict', 'teacher']:
+            if ckpt_key in checkpoint:
+                state_dict = checkpoint[ckpt_key]
+        state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+        state_dict = {k.replace("backbone.", ""): v for k, v in state_dict.items()}
+        msg = model.load_state_dict(state_dict, strict=False)
+    return model.to(device, non_blocking=True)
 
 
 @dataclass
@@ -187,42 +223,42 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
     name = "ssl_watermarking"
 
     def __init__(self, params: Dict[str, Any]):
-        sys.path.append(str(Path(params["module_path"]).resolve()))
-        import utils
-        import utils_img
-        import data_augmentation
-        import encode
-        import decode
-        global utils, utils_img, data_augmentation, encode, decode
+        with ModuleImporter("SSL", str(Path(params["module_path"]))):
+            global normalize_img, unnormalize_img, generate_carriers, generate_messages, pvalue_angle
+            from SSL.utils import load_normalization_layer, NormLayerWrapper, generate_carriers, generate_messages, pvalue_angle
+            from SSL.utils_img import normalize_img, unnormalize_img 
+            from SSL.data_augmentation import All
+            global encode, decode
+            import SSL.encode as encode
+            import SSL.decode as decode
         
-        self._init_method(params)
-        super().__init__(self.params_method(**params))
-        self.device = self.params.device
+            self._init_method(params)
+            super().__init__(self.params_method(**params))
+            self.device = self.params.device
 
-        backbone_weights_path = self.params.backbone_weights_path
-        normlayer_weights_path = self.params.normlayer_weights_path
+            backbone_weights_path = self.params.backbone_weights_path
+            normlayer_weights_path = self.params.normlayer_weights_path
 
-        backbone_weights_path = Path(self.params.backbone_weights_path).resolve()
-        normlayer_weights_path = Path(self.params.normlayer_weights_path).resolve()
+            backbone_weights_path = Path(self.params.backbone_weights_path).resolve()
+            normlayer_weights_path = Path(self.params.normlayer_weights_path).resolve()
 
-        if not backbone_weights_path.exists():
-            raise FileNotFoundError(f"The backbone weights path '{str(backbone_weights_path)}' does not exist!")
-        if not normlayer_weights_path.exists():
-            raise FileNotFoundError(f"The normlayer weight path '{str(normlayer_weights_path)}' does not exist!")
-        
-        torch.serialization.add_safe_globals([np.core.multiarray.scalar, np.dtype, np.dtypes.Float64DType])
-        backbone = utils.build_backbone(path=str(backbone_weights_path), name="resnet50").to(self.device)
-        normlayer = utils.load_normalization_layer(path=str(normlayer_weights_path)).to(self.device)
-        model = utils.NormLayerWrapper(backbone, normlayer)
-        model.backbone = model.backbone.to(self.device)
-        model.head = model.head.to(self.device)
-        for p in model.parameters():
-            p.requires_grad = False
-        model.eval()
-        self.model = model
-        self.D = self.model(torch.zeros((1,3,224,224)).to(self.device)).size(-1)
-        self.K = 1 if isinstance(self.params, SSL0BitParams) else self.params.num_bits
-        self.data_aug = data_augmentation.All()
+            if not backbone_weights_path.exists():
+                raise FileNotFoundError(f"The backbone weights path '{str(backbone_weights_path)}' does not exist!")
+            if not normlayer_weights_path.exists():
+                raise FileNotFoundError(f"The normlayer weight path '{str(normlayer_weights_path)}' does not exist!")
+            
+            backbone = build_backbone(path=str(backbone_weights_path), name="resnet50", device=self.device).to(self.device)
+            normlayer = load_normalization_layer(path=str(normlayer_weights_path)).to(self.device)
+            model = NormLayerWrapper(backbone, normlayer)
+            model.backbone = model.backbone.to(self.device)
+            model.head = model.head.to(self.device)
+            for p in model.parameters():
+                p.requires_grad = False
+            model.eval()
+            self.model = model
+            self.D = self.model(torch.zeros((1,3,224,224)).to(self.device)).size(-1)
+            self.K = 1 if isinstance(self.params, SSL0BitParams) else self.params.num_bits
+            self.data_aug = All()
 
     def _init_method(self, params: Dict[str, Any]):        
         self.method = params.get("method")
@@ -242,14 +278,14 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]
             Watermark data for SSL (Self-Supervised Learning) watermarking algorithm in multi-bit or zero-bit scenario
         """
-        normalized_image = utils_img.normalize_img(image).to(self.device)
+        normalized_image = normalize_img(image).to(self.device)
         img_loader = ImgLoader([([normalized_image], None)])
         args = (img_loader, watermark_data.watermark, watermark_data.carrier, self.model, self.data_aug, self.params) \
             if isinstance(self.params, SSLMultiBitParams) \
                 else (img_loader, watermark_data.carrier, watermark_data.angle, self.model, self.data_aug, self.params)
         pt_imgs_out = self.encode_func(*args)
         # unnorm_img = np.clip(np.round(utils_img.unnormalize_img(pt_imgs_out[0]).squeeze(0).cpu().numpy().transpose(1,2,0) * 255), 0, 255).astype(np.uint8)
-        unnormalize_image = utils_img.unnormalize_img(pt_imgs_out[0]).squeeze(0).cpu()
+        unnormalize_image = unnormalize_img(pt_imgs_out[0]).squeeze(0).cpu()
         return unnormalize_image
         
     def extract(self, image: TorchImg, watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]) -> Any:
@@ -286,10 +322,10 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         -----
         - Called automatically during embedding
         """
-        carrier = utils.generate_carriers(self.K, self.D, output_fpath=None)
+        carrier = generate_carriers(self.K, self.D, output_fpath=None)
         carrier = carrier.to(self.device, non_blocking=True)
         if isinstance(self.params, SSLMultiBitParams):
-            msgs = utils.generate_messages(1, self.K)
+            msgs = generate_messages(1, self.K)
             return self.watermark_data(carrier, msgs)
-        angle = utils.pvalue_angle(dim=self.D, k=1, proba=self.params.target_fpr)
+        angle = pvalue_angle(dim=self.D, k=1, proba=self.params.target_fpr)
         return self.watermark_data(carrier, angle)

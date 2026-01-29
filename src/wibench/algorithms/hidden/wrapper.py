@@ -5,6 +5,7 @@ from typing_extensions import Any, Dict
 from dataclasses import dataclass
 from pathlib import Path
 
+from wibench.module_importer import ModuleImporter
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
@@ -68,21 +69,21 @@ class HiddenWrapper(BaseAlgorithmWrapper):
     
     def __init__(self, params: Dict[str, Any]) -> None:
         # Load module from HiDDeN submodule
-        sys.path.append(str(Path(params["module_path"]).resolve()))
-        from utils import (
-            load_options,
-            load_last_checkpoint
-        )
-        from model.encoder_decoder import EncoderDecoder
+        with ModuleImporter("HIDDEN", str(Path(params["module_path"]).resolve())):
+            from HIDDEN.utils import (
+                load_options,
+                load_last_checkpoint
+            )
+            from HIDDEN.model.encoder_decoder import EncoderDecoder
 
-        self.device = params['device']
-        run_name = params['run_name']
-        runs_root = Path(params['runs_root']).resolve()
-        current_run = runs_root / run_name
-        options_file_path = current_run / 'options-and-config.pickle'
-        checkpoint_file_path = current_run / 'checkpoints'
-        _, hidden_config, _ = load_options(options_file_path)
-        checkpoint, _ = load_last_checkpoint(checkpoint_file_path)
+            self.device = params['device']
+            run_name = params['run_name']
+            runs_root = Path(params['runs_root']).resolve()
+            current_run = runs_root / run_name
+            options_file_path = current_run / 'options-and-config.pickle'
+            checkpoint_file_path = current_run / 'checkpoints'
+            _, hidden_config, _ = load_options(options_file_path)
+            checkpoint, _ = load_last_checkpoint(checkpoint_file_path)
 
         self.encoder_decoder = EncoderDecoder(hidden_config, None)
         self.encoder_decoder.load_state_dict(checkpoint['enc-dec-model'])

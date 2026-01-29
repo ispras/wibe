@@ -87,11 +87,11 @@ class DWSFWrapper(BaseAlgorithmWrapper):
 
     def __init__(self, params: Dict[str, Any]):
         super().__init__(DWSFParams(**params))
-        ModuleImporter("DWSF", params["module_path"]).register_module()
-        from DWSF.utils.util import generate_random_coor
-        from DWSF.networks.models.EncoderDecoder import EncoderDecoder
-        from DWSF.utils.img import psnr_clip
-        from DWSF.utils.seg import obtain_wm_blocks, init
+        with ModuleImporter("DWSF", params["module_path"]):
+            from DWSF.utils.util import generate_random_coor
+            from DWSF.networks.models.EncoderDecoder import EncoderDecoder
+            from DWSF.utils.img import psnr_clip
+            from DWSF.utils.seg import obtain_wm_blocks, init
         global generate_random_coor, obtain_wm_blocks, psnr_clip
         init(self.params.seg_weights_path)
         self.normalize = torchvision.transforms.Normalize(mean=self.params.mean, std=self.params.std)
