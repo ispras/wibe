@@ -1,0 +1,25 @@
+algorithms:
+  maskwm:
+    params:
+      checkpoint_path: ./model_files/maskwm/D_32bits.pth
+      module_path: ./submodules/MaskWM
+      device: cuda
+
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
+
+datasets:
+{% include 'common/mscoco.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/maskwm
+  aggregators:
+    - CSV:
+        table_name: table
