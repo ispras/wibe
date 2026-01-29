@@ -68,16 +68,17 @@ class MaskWMWrapper(BaseAlgorithmWrapper):
     def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
         image_size = self.params.image_size
         resized_image = resize_torch_img(image, [image_size, image_size])
-        normalized_image = normalize_image(resized_image, self.normalize)
-        watermark_image_raw = self.encoder_decoder.encoder(normalized_image.to(self.device),
+        normalized_image = normalize_image(resized_image, self.normalize).to(self.device)
+        watermark_image_raw = self.encoder_decoder.encoder(normalized_image,
                                                            watermark_data.watermark.type(torch.float32).to(self.device),
                                                            use_jnd=self.params.use_jnd,
                                                            jnd_factor=self.params.jnd_factor,
                                                            blue=self.params.blue)
         watermark_image = overlay_difference(image,
                                              resized_image,
-                                             denormalize_image(watermark_image_raw.cpu(), self.denormalize))
-        return watermark_image.detach()
+                                             denormalize_image(watermark_image_raw.cpu(),
+                                                               self.denormalize)).detach().cpu()
+        return watermark_image
     
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
         image_size = self.params.image_size
