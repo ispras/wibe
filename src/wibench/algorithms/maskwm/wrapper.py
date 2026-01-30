@@ -44,7 +44,7 @@ class MaskWMParams(Params):
 
 
 class MaskWMWrapper(BaseAlgorithmWrapper):
-    """`Mask Image Watermarking <https://arxiv.org/pdf/2504.12739>`_: Open and Efficient Video Watermarking
+    """Mask Image Watermarking --- Image Watermarking Algorithm [`paper <https://arxiv.org/pdf/2504.12739>`__].
     
     Provides an interface for embedding and extracting watermarks using the MaskWM algorithm.
     Based on the code from `here <https://github.com/hurunyi/MaskWM>`__.
