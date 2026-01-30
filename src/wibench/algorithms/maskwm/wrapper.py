@@ -44,6 +44,11 @@ class MaskWMParams(Params):
 
 
 class MaskWMWrapper(BaseAlgorithmWrapper):
+    """`Mask Image Watermarking <https://arxiv.org/pdf/2504.12739>`_: Open and Efficient Video Watermarking
+    
+    Provides an interface for embedding and extracting watermarks using the MaskWM algorithm.
+    Based on the code from `here <https://github.com/hurunyi/MaskWM>`__.
+    """
 
     name = "maskwm"
 
@@ -66,6 +71,16 @@ class MaskWMWrapper(BaseAlgorithmWrapper):
             transforms.Normalize(mean=[-x for x in mean], std=[1.,1.,1.])
         ])
     def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
+        """Embed watermark into input image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+
+        """
         image_size = self.params.image_size
         resized_image = resize_torch_img(image, [image_size, image_size])
         normalized_image = normalize_image(resized_image, self.normalize).to(self.device)
@@ -81,6 +96,16 @@ class MaskWMWrapper(BaseAlgorithmWrapper):
         return watermark_image
     
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
+        """Extract watermark from marked image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+
+        """
         image_size = self.params.image_size
         resized_image = resize_torch_img(image, [image_size, image_size])
         normalized_image = normalize_image(resized_image, self.normalize)
@@ -88,4 +113,16 @@ class MaskWMWrapper(BaseAlgorithmWrapper):
         return extracted_watermark.detach().cpu().gt(0.5).type(torch.int64)
     
     def watermark_data_gen(self) -> TorchBitWatermarkData:
+        """Generate watermark payload data for TrustMark watermarking algorithm.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of (0, message_length)
+
+        Notes
+        -----
+        - Called automatically during embedding
+
+        """
         return TorchBitWatermarkData.get_random(self.params.wm_enc_config.message_length)
