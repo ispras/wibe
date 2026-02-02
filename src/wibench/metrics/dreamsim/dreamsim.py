@@ -32,11 +32,20 @@ class DreamSim(PostEmbedMetric):
     """
 
     def __init__(
-        self, device: str = "cuda" if torch.cuda.is_available() else "cpu"
+        self,
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
+        cache_dir: str = "./dreamsim_cache",
+        normalize_embeds: bool = True,
+        dreamsim_type: str = "ensemble",
+        use_patch_model: bool = False
     ) -> None:
         self.device = device
-        self.model, _ = dreamsim(pretrained=True, device=self.device)
-
+        self.model, _ = dreamsim(pretrained=True,
+                                 device=self.device,
+                                 cache_dir=cache_dir,
+                                 normalize_embeds=normalize_embeds,
+                                 dreamsim_type=dreamsim_type,
+                                 use_patch_model=use_patch_model)
     def __call__(
         self, img1: TorchImg, img2: TorchImg, watermark_data: Any
     ) -> float:
