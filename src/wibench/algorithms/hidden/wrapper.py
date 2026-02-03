@@ -18,7 +18,7 @@ from wibench.utils import (
 
 @dataclass
 class HiddenParams:
-    """Configuration parameters for the HiDDeN (Hiding Data in Deep Networks) algorithm.
+    """Configuration parameters for the `HiDDeN (Hiding Data in Deep Networks) algorithm.
 
     These parameters define the image dimensions, watermark length, and the architecture
     of the encoder and decoder networks used for image watermarking.

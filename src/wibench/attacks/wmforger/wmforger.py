@@ -13,9 +13,7 @@ from .models import build_extractor
 class WMForger(BaseAttack):
     """Attack from Transferable Black-Box One-Shot Forging of Watermarks via Image Preference Models.
 
-    code is based on https://github.com/facebookresearch/videoseal/blob/main/wmforger/optimize_image.py
-
-    weights can be downloaded from https://dl.fbaipublicfiles.com/wmforger/convnext_pref_model.pth
+    code is based on https://github.com/facebookresearch/videoseal/blob/main/wmforger
     """
 
     def __init__(

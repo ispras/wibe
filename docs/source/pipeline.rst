@@ -26,6 +26,10 @@ The YAML configuration file provides all necessary components of the benchmarkin
       ...
     post_extract_metrics:
       ...
+    post_pipeline_embed_metrics:
+      ...
+    post_pipeline_attack_metrics:
+      ...
     pipeline:
       ...
 
@@ -175,8 +179,29 @@ Supports redefining `report_name`. All parameters are passed to the metric class
       - ExtWm
       - BER
       - TPR@xFPR:
-          report_name: tpr@0.1%fpr
+          report_name: tpr@0.001fpr
           fpr_rate: 0.001
+
+Post-pipeline embed metrics
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Metrics evaluated after pipeline execution. Can be used to compare set of original objects (e.g. set of not marked images) with set marked objects. Refer to ``configs/trustmark_fid_demo.yml`` for example
+
+.. code-block:: yaml
+
+    post_pipeline_embed_metrics:
+      - FID:
+          report_name: fid_mscoco
+          device: cuda
+          dataset_type: mscoco # You can calculate FID in comparison with any supported dataset of images
+          dataset_args:
+            cache_dir: ./datasets/mscoco
+            split: val
+      - FID: # Comparison of marked images and not marked original images
+          device: cuda
+
+Post-pipeline attack metrics
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You may use the same metrics as in **post_pipeline_embed_metrics** to compare set of marked objects and set of attacked objects.
 
 Pipeline
 ~~~~~~~~
@@ -200,7 +225,7 @@ Parameters for the pipeline, including multiprocessing and results aggregation:
 
 Description of parameters:
 
-* `result_path` — path to save intermediate results (if the `-d` flag is provided)
+* `result_path` — path to save intermediate results
 
 * `aggregators` — list of result aggregators
 

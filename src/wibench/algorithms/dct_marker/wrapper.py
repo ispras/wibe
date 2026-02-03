@@ -24,7 +24,7 @@ class WatermarkData:
 
 class DCTMarkerWrapper(BaseAlgorithmWrapper):
     """
-    Implementation of CAISS watermarking scheme via discrete cosine transform domain ("Correlation-and-Bit-Aware Spread Spectrum Embedding for Data Hiding"). Implementation is based on "Real data performance evaluation of CAISS watermarking scheme".
+    Implementation of CAISS watermarking scheme via discrete cosine transform domain (`"Correlation-and-Bit-Aware Spread Spectrum Embedding for Data Hiding" <https://people.ece.ubc.ca/amirv/Correlation%20and%20bit%20aware%20-%20journal.pdf>`__). Implementation is based on `"Real data performance evaluation of CAISS watermarking scheme" <https://link.springer.com/article/10.1007/s11042-013-1544-3>`__.
 
     Parameters
     ----------
