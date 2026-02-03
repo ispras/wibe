@@ -11,6 +11,15 @@ from wibench.attacks.base import BaseAttack
 
 
 class ImageEditingFLuxContext(BaseAttack):
+    """
+    Adversarial attack that edits images using instruction-guided generation.
+    
+    Combines InternVL2 for natural language understanding and FLUX.1-Kontext
+    for instruction-guided image editing. Generates textual instructions
+    describing the input image, then uses them to guide image-to-image 
+    transformations that create adversarial outputs.
+    """
+    
     def __init__(
         self,
         device_vl: str = "cuda:0",

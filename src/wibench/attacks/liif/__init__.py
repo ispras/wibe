@@ -1,1 +1,1 @@
-from .liff_attack import LIIFAttack
+from .liif_attack import LIIFAttack

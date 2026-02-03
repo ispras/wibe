@@ -271,7 +271,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         if isinstance(self.params, SSLMultiBitParams):
             result = result["msg"]
         if isinstance(self.params, SSL0BitParams):
-            result = result["R"] > 0
+            result = 10 ** result["log10_pvalue"]
         return result
     
     def watermark_data_gen(self) -> Union[WatermarkMultiBitData, Watermark0BitData]:

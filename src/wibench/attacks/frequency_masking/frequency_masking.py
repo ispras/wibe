@@ -6,6 +6,10 @@ import diffusers
 
 
 class FrequencyMasking(BaseAttack):
+    """
+    Image-domain frequency masking attack that suppresses low-frequency components.
+    Applies a circular mask to the Fourier spectrum of an image to remove central low-frequency information.
+    """
     def __init__(self, normalize=True):
         super().__init__()
         self.normalize = normalize
@@ -43,6 +47,11 @@ class FrequencyMasking(BaseAttack):
     
 
 class LatentFrequencyMasking(BaseAttack):
+    """Latent-space frequency masking attack for diffusion model representations.
+    Projects images into a VAE's latent space, applies frequency masking in the 
+    Fourier domain, and reconstructs modified images. Supports various masking 
+    modes (zero, random, mean) for controlled perturbations. 
+    """
     def __init__(
         self,
         beta: float = 0.,
@@ -60,7 +69,7 @@ class LatentFrequencyMasking(BaseAttack):
         else:
             # the same VAE as in treering
             self.vae = diffusers.AutoencoderKL.from_pretrained(
-                "akaleksandr/stable-diffusion-2-1-base",
+                "WIBE-HuggingFace/stable-diffusion-2-1-base",
                 subfolder="vae",
                 # revision="fp16",
                 torch_dtype=torch.float16,

@@ -388,10 +388,8 @@ class PixelShift(BaseAttack):
         TorchImg
             Pixel-shifted image tensor
         """
-        img_shifted = torch.roll(image, shifts=self.delta, dims=3)
-        img_attacked = torch.clone(img_shifted)
-        img_attacked[..., : self.delta] = image[..., : self.delta]
-        return img_attacked
+        img_shifted = torch.roll(image, shifts=self.delta, dims=-1)
+        return img_shifted
 
 
 class ColorInversion(BaseAttack):
