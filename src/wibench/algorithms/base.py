@@ -22,7 +22,7 @@ class BaseAlgorithmWrapper(metaclass=RegistryMeta):
     def __init__(self, params: Any) -> None:
         self.params = params
         self.param_dict = self.params2dict(self.params)
-        self.param_hash = md5(str(self.param_dict).encode()).hexdigest()
+        self.param_hash = md5((self.name + str(self.param_dict)).encode()).hexdigest()
 
     def embed(self, *args, **kwargs) -> Any:
         """Embed watermark into input object (abstract).
