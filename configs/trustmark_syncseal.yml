@@ -24,10 +24,7 @@ attacks:
 {% include 'common/distortions.yml' %}
 
 pipeline:
-  result_path: ./test_results/trustmark_syncseal_2
-  min_batch_size: 1
-  cuda_visible_devices: [0,1,2,3]
-  seed: 0
+  result_path: ./test_results/trustmark_syncseal
   aggregators:
     - CSV:
         table_name: table
