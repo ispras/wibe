@@ -66,7 +66,17 @@ class SyncSealParams(Params):
 
 
 class SyncSeal(BaseAlgorithmWrapper):
+    """GEOMETRIC IMAGE SYNCHRONIZATION WITH DEEP WATERMARKING --- Image Synchronization Algorithm [`paper <https://arxiv.org/abs/2509.15208>`__].
     
+    Provides an interface for embedding and extracting watermarks using the SyncSeal synchronization algorithm with selected image watermarking algorithm.
+    Based on the code from the github `repository <https://github.com/facebookresearch/wmar/tree/main/syncseal>`__.
+    
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        SyncSeal algorithm configuration parameters
+    """
+
     name = "syncseal"
 
     def __init__(self, params: Dict[str, Any]) -> None:
@@ -111,16 +121,45 @@ class SyncSeal(BaseAlgorithmWrapper):
         return sync_model.to(self.device)
 
     def embed(self, image: TorchImg, watermark_data: WatermarkData) -> TorchImg:
+        """Embed both watermarking, marking methods and synchronization.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         watermark_image = self.method_wrapper.embed(image, watermark_data)
         with torch.no_grad():
             sync_data = self.sync_model.embed(watermark_image.unsqueeze(0).to(self.device))
         return sync_data["imgs_w"].detach().cpu().squeeze(0)
     
     def extract(self, image: TorchImg, watermark_data: WatermarkData) -> torch.Tensor:
+        """Unwarp and extract watermark from marked image.
+        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         with torch.no_grad():
             pred_pts = self.sync_model.detect(image.unsqueeze(0).to(self.device))["preds_pts"]
             unwarp_image = self.sync_model.unwarp(image.unsqueeze(0).to(self.device), pred_pts, original_size=image.shape[-2:])
         return self.method_wrapper.extract(unwarp_image.squeeze(0), watermark_data)
     
     def watermark_data_gen(self) -> Any:
+        """Generate watermark payload data for selected watermarking algorithm.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of (0, message_length)
+
+        Notes
+        -----
+        - Called automatically during embedding
+        """
         return self.method_wrapper.watermark_data_gen()
