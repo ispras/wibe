@@ -1,0 +1,33 @@
+algorithms:
+  syncseal:
+    params:
+      module_path: ./submodules/WMAR/syncseal/syncseal
+      checkpoint_path: ./model_files/syncseal/syncmodel.jit.pt
+      method: trustmark
+      method_params:
+        wm_length: 100
+        model_type: Q
+        wm_strength: 0.75
+      device: cpu
+
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
+
+datasets:
+{% include 'common/diffusiondb.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/trustmark_syncseal_2
+  min_batch_size: 1
+  cuda_visible_devices: [0,1,2,3]
+  seed: 0
+  aggregators:
+    - CSV:
+        table_name: table
