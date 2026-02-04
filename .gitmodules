@@ -34,3 +34,6 @@
 [submodule "submodules/videoseal"]
 	path = submodules/videoseal
 	url = https://github.com/facebookresearch/videoseal.git
+[submodule "submodules/GaussianShading"]
+	path = submodules/GaussianShading
+	url = https://github.com/bsmhmmlf/Gaussian-Shading.git
