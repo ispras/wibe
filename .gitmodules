@@ -37,3 +37,6 @@
 [submodule "submodules/GaussianShading"]
 	path = submodules/GaussianShading
 	url = https://github.com/bsmhmmlf/Gaussian-Shading.git
+[submodule "submodules/RingID"]
+	path = submodules/RingID
+	url = https://github.com/showlab/RingID.git
