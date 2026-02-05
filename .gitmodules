@@ -40,3 +40,6 @@
 [submodule "submodules/RingID"]
 	path = submodules/RingID
 	url = https://github.com/showlab/RingID.git
+[submodule "submodules/MaXsive"]
+	path = submodules/MaXsive
+	url = https://github.com/Mao718/MaXsive.git
