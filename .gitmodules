@@ -43,3 +43,6 @@
 [submodule "submodules/MaXsive"]
 	path = submodules/MaXsive
 	url = https://github.com/Mao718/MaXsive.git
+[submodule "submodules/METR"]
+	path = submodules/METR
+	url = https://github.com/deepvk/metr.git
