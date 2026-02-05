@@ -1,0 +1,26 @@
+algorithms:
+  - invismark
+  
+post_embed_metrics:
+{% include 'mycommon/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'mycommon/post_attack_metrics.yml' %} 
+post_extract_metrics:
+{% include 'mycommon/post_extract_metrics.yml' %} 
+
+
+datasets:
+  - MSCOCO:
+      cache_dir: ./datasets/mscoco
+      split: val
+      sample_range: [0, 5]
+
+attacks:
+{% include 'mycommon/jpeg_vars.yml' %}
+
+pipeline:
+  result_path: test_results/p1
+  seed: 42
+  aggregators:
+    - CSV:
+        table_name: table

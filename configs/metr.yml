@@ -1,0 +1,25 @@
+algorithms:
+  metr:
+    params:
+      device: cuda
+
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+ - BER
+
+datasets:
+{% include 'common/diffusiondb.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/metr
+  seed: 0
+  min_batch_size: 1
+  aggregators:
+    - CSV:
+        table_name: table

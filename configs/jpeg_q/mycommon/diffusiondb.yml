@@ -1,0 +1,5 @@
+  - DiffusionDB:
+      cache_dir: ./datasets/diffusiondb
+      sample_range: [0, 1000]
+      subset: 2m_first_5k
+      skip_nsfw: true
