@@ -34,3 +34,6 @@
 [submodule "submodules/videoseal"]
 	path = submodules/videoseal
 	url = https://github.com/facebookresearch/videoseal.git
+[submodule "submodules/FIN"]
+	path = submodules/FIN
+	url = https://github.com/QQiuyp/FIN.git
