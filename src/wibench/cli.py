@@ -129,6 +129,35 @@ def parse_stage_expression(expr: str) -> List[str]:
     return [name for name in registry if wanted[name]]
 
 
+def compatible_exec(alg_wrappers, metrics, datasets, attacks) -> Path:
+
+    def module_paths(names, registry_class):
+        paths = set()
+        for n in names:
+            p = Path(sys.modules[registry_class._registry[n.lower()].__module__].__file__).parent / "requirements.txt"
+            if p.exists():
+                paths.add(p)
+        return paths
+
+    current_req_paths = (
+        module_paths({n for n, _ in alg_wrappers}, BaseAlgorithmWrapper)
+        | module_paths({n for m in metrics.values() for n, _ in m}, BaseMetric)
+        | module_paths({n for n, _ in datasets}, BaseDataset)
+        | module_paths({n for n, _ in attacks}, BaseAttack)
+    )
+
+    venvs_dir = Path("./venvs").resolve()
+    group_paths = list(venvs_dir.glob("*.txt"))
+    python_candidates = []
+    for group_path in group_paths:
+        with open(group_path, mode="r") as fp:
+            group_req_paths = {Path(line) for line in fp.read().splitlines()}
+            if current_req_paths.issubset(group_req_paths):
+                python_candidates.append(group_path.with_suffix("") / "bin" / "python")
+
+    return sys.executable if sys.executable in python_candidates else next(iter(python_candidates))
+
+
 app = typer.Typer(pretty_exceptions_enable=False)
 
 
@@ -200,33 +229,7 @@ def run(
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
 
-    def module_paths(names, registry_class):
-        paths = set()
-        for n in names:
-            p = Path(sys.modules[registry_class._registry[n.lower()].__module__].__file__).parent / "requirements.txt"
-            if p.exists():
-                paths.add(p)
-        return paths
-
-    current_req_paths = (
-        module_paths({n for n, _ in alg_wrappers}, BaseAlgorithmWrapper)
-        | module_paths({n for m in metrics.values() for n, _ in m}, BaseMetric)
-        | module_paths({n for n, _ in datasets}, BaseDataset)
-        | module_paths({n for n, _ in attacks}, BaseAttack)
-    )
-
-    # print(current_req_paths)
-
-    venvs_dir = Path("./venvs").resolve()
-    group_paths = list(venvs_dir.glob("*.txt"))
-    python_path = None
-    for group_path in group_paths:
-        with open(group_path, mode="r") as fp:
-            group_req_paths = {Path(line) for line in fp.read().splitlines()}
-            if current_req_paths.issubset(group_req_paths):
-                python_path = group_path.with_suffix("") / "bin" / "python"
-                print(python_path)
-                break
+    python_exec = compatible_exec(alg_wrappers, metrics, datasets, attacks)
 
     if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
         subprocess_run(pipeline_config)
