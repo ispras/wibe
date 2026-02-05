@@ -46,3 +46,6 @@
 [submodule "submodules/METR"]
 	path = submodules/METR
 	url = https://github.com/deepvk/metr.git
+[submodule "submodules/RobustWide"]
+	path = submodules/RobustWide
+	url = https://github.com/hurunyi/Robust-Wide.git
