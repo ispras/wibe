@@ -1,3 +1,0 @@
-  - MSCOCO:
-      cache_dir: ./datasets/mscoco
-      split: val

@@ -1,4 +1,0 @@
-  - MSCOCO:
-      cache_dir: ./datasets/mscoco
-      split: val
-      sample_range: [0, 1000]
