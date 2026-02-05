@@ -37,6 +37,10 @@ import sys
 import subprocess
 import os
 from wibench.aggregator import PandasAggregatorConfig
+from wibench.datasets.base import BaseDataset
+from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.attacks.base import BaseAttack
+from wibench.metrics.base import BaseMetric
 
 
 def clear_tables(config: PipeLineConfig):
@@ -195,6 +199,34 @@ def run(
         metrics[metric_field] = loaded_config[metric_field]
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
+
+    def module_paths(names, registry_class):
+        paths = set()
+        for n in names:
+            p = Path(sys.modules[registry_class._registry[n.lower()].__module__].__file__).parent / "requirements.txt"
+            if p.exists():
+                paths.add(p)
+        return paths
+
+    current_req_paths = (
+        module_paths({n for n, _ in alg_wrappers}, BaseAlgorithmWrapper)
+        | module_paths({n for m in metrics.values() for n, _ in m}, BaseMetric)
+        | module_paths({n for n, _ in datasets}, BaseDataset)
+        | module_paths({n for n, _ in attacks}, BaseAttack)
+    )
+
+    # print(current_req_paths)
+
+    venvs_dir = Path("./venvs").resolve()
+    group_paths = list(venvs_dir.glob("*.txt"))
+    python_path = None
+    for group_path in group_paths:
+        with open(group_path, mode="r") as fp:
+            group_req_paths = {Path(line) for line in fp.read().splitlines()}
+            if current_req_paths.issubset(group_req_paths):
+                python_path = group_path.with_suffix("") / "bin" / "python"
+                print(python_path)
+                break
 
     if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
         subprocess_run(pipeline_config)
