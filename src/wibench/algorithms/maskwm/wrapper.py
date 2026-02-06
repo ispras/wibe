@@ -1,15 +1,17 @@
 import sys
+from typing import Dict, Any, Optional
+from dataclasses import dataclass, asdict, field
+from pathlib import Path
+
 import torch
+from torchvision import transforms
 
 from wibench.utils import normalize_image, overlay_difference, resize_torch_img, denormalize_image
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
-from torchvision import transforms
-from typing_extensions import Dict, Any, Optional
-from dataclasses import dataclass, asdict, field
-from pathlib import Path
+from wibench.module_importer import ModuleImporter
 
 
 @dataclass
@@ -34,7 +36,7 @@ class WmDecoderConfig:
 
 @dataclass
 class MaskWMParams(Params):
-    checkpoint_path: Optional[str] = None
+    checkpoint_path: str = "./model_files/maskwm/D_32bits.pth"
     use_jnd: bool = True
     jnd_factor: float = 1.3
     blue: bool = True
@@ -52,16 +54,17 @@ class MaskWMWrapper(BaseAlgorithmWrapper):
 
     name = "maskwm"
 
-    def __init__(self, params: Dict[str, Any]):
-        sys.path.append(str(Path(params["module_path"]).resolve()))
+    def __init__(self, params: Dict[str, Any] = {}):
+        module_path = str(Path(params.pop("module_path", "./submodules/MaskWM")).resolve())
         super().__init__(MaskWMParams(**params))
         self.params: MaskWMParams
         self.device = self.params.device
-        from models.Mask_Model import WatermarkModel
-        self.encoder_decoder = WatermarkModel(wm_enc_config=asdict(self.params.wm_enc_config),
-                                              wm_dec_config=asdict(self.params.wm_dec_config))
-        self.encoder_decoder.load_state_dict(torch.load(Path(self.params.checkpoint_path).resolve(), map_location="cpu"), strict=True)
-        self.encoder_decoder = self.encoder_decoder.to(self.device)
+        with ModuleImporter("MaskWM", module_path):
+            from MaskWM.models.Mask_Model import WatermarkModel
+            encoder_decoder = WatermarkModel(wm_enc_config=asdict(self.params.wm_enc_config),
+                                                wm_dec_config=asdict(self.params.wm_dec_config))
+            encoder_decoder.load_state_dict(torch.load(Path(self.params.checkpoint_path).resolve(), map_location="cpu"), strict=True)
+            self.encoder_decoder = encoder_decoder.to(self.device)
         mean = [0.5, 0.5, 0.5]
         std = [0.5, 0.5, 0.5]
         self.normalize = transforms.Normalize(mean=mean,

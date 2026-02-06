@@ -1,9 +1,5 @@
 algorithms:
-  maskwm:
-    params:
-      checkpoint_path: ./model_files/maskwm/D_32bits.pth
-      module_path: ./submodules/MaskWM
-      device: cuda
+  - maskwm
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 
@@ -13,7 +9,7 @@ post_extract_metrics:
 {% include 'common/post_extract_metrics.yml' %} 
 
 datasets:
-{% include 'common/mscoco.yml' %}
+{% include 'common/diffusiondb.yml' %}
 
 attacks:
 {% include 'common/distortions.yml' %}
