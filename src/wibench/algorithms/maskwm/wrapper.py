@@ -45,6 +45,9 @@ class MaskWMParams(Params):
     wm_dec_config: WmDecoderConfig = field(default_factory=WmDecoderConfig)
 
 
+DEFAULT_SUBMODULE_PATH: str = "./submodules/MaskWM"
+
+
 class MaskWMWrapper(BaseAlgorithmWrapper):
     """Mask Image Watermarking --- Image Watermarking Algorithm [`paper <https://arxiv.org/pdf/2504.12739>`__].
     
@@ -55,7 +58,7 @@ class MaskWMWrapper(BaseAlgorithmWrapper):
     name = "maskwm"
 
     def __init__(self, params: Dict[str, Any] = {}):
-        module_path = str(Path(params.pop("module_path", "./submodules/MaskWM")).resolve())
+        module_path = str(Path(params.pop("module_path", DEFAULT_SUBMODULE_PATH)).resolve())
         super().__init__(MaskWMParams(**params))
         self.params: MaskWMParams
         self.device = self.params.device
