@@ -1,0 +1,25 @@
+algorithms:
+  pimog:
+    params:
+      checkpoint_path: ./model_files/pimog/Encoder_Decoder_Model_mask_99.pth
+      module_path: ./submodules/PIMoG
+      device: cuda
+
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
+
+datasets:
+{% include 'common/diffusiondb.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/pimog
+  aggregators:
+    - CSV:
+        table_name: table
