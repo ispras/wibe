@@ -40,7 +40,6 @@ force_packages = [
 try:
     subprocess.check_call(python_m_pip_install + all_requirements_args)
     subprocess.check_call(python_m_pip_install + ['-e', '.'])
-    subprocess.check_call(python_m_pip_install + ['-e', './submodules/trustmark/python'])
     subprocess.check_call(python_m_pip_install + force_packages)
 except Exception as e:
     print(f'Exception={str(e)}')

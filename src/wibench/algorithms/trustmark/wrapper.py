@@ -23,12 +23,13 @@ class TrustMarkParams(Params):
             - 'Q': (Quality) Trade-off between robustness and imperceptibility. Uses ResNet-50 decoder.
             - 'B': (Beta) Very similar to Q, included mainly for reproducing the paper. Uses ResNet-50 decoder.
             - 'C': (Compact). Uses a ResNet-18 decoder (smaller model size). Slightly lower visual quality.
+            - 'P': (Perceptual). Very high visual quality and good robustness. ResNet-50 decoder trained with much higher weight on perceptual loss (see paper).
         wm_strength : float
             Controls visibility/strength of watermark embedding (default 0.75)
 
     """
     wm_length: int = 100
-    model_type: Literal['Q', 'B', 'C'] = 'Q'
+    model_type: Literal['Q', 'B', 'C', 'P'] = 'Q'
     wm_strength: float = 0.75
 
 
