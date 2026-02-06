@@ -72,6 +72,7 @@ def main():
         venv_path = lock_path.with_suffix("")
         subprocess.run(["uv", "venv", str(venv_path)])
         subprocess.run(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)])
+        subprocess.run(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-e", "."])
 
 
 if __name__ == "__main__":

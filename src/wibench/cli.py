@@ -67,8 +67,8 @@ def set_cuda_devices(environ, device_list: List[int]):
     environ["CUDA_VISIBLE_DEVICES"]=",".join(str(num) for num in device_list)
 
 
-def subprocess_run(pipeline_config: PipeLineConfig):
-    args = [sys.executable] + sys.argv
+def subprocess_run(pipeline_config: PipeLineConfig, python_exec = sys.executable):
+    args = [str(python_exec)] + sys.argv
     
     # Hack for windows parallel execution via console script wibench.exe
     if os.name == "nt" and Path(args[1]).with_suffix(".exe").exists():
@@ -129,7 +129,7 @@ def parse_stage_expression(expr: str) -> List[str]:
     return [name for name in registry if wanted[name]]
 
 
-def compatible_exec(alg_wrappers, metrics, datasets, attacks) -> Path:
+def compatible_execs(alg_wrappers, metrics, datasets, attacks) -> list[Path]:
 
     def module_paths(names, registry_class):
         paths = set()
@@ -148,14 +148,13 @@ def compatible_exec(alg_wrappers, metrics, datasets, attacks) -> Path:
 
     venvs_dir = Path("./venvs").resolve()
     group_paths = list(venvs_dir.glob("*.txt"))
-    python_candidates = []
+    exec_candidates = []
     for group_path in group_paths:
         with open(group_path, mode="r") as fp:
             group_req_paths = {Path(line) for line in fp.read().splitlines()}
             if current_req_paths.issubset(group_req_paths):
-                python_candidates.append(group_path.with_suffix("") / "bin" / "python")
-
-    return sys.executable if sys.executable in python_candidates else next(iter(python_candidates))
+                exec_candidates.append(group_path.with_suffix("") / "bin" / "python")
+    return exec_candidates
 
 
 app = typer.Typer(pretty_exceptions_enable=False)
@@ -229,10 +228,10 @@ def run(
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
 
-    python_exec = compatible_exec(alg_wrappers, metrics, datasets, attacks)
+    exec_candidates = compatible_execs(alg_wrappers, metrics, datasets, attacks)
 
-    if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
-        subprocess_run(pipeline_config)
+    if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices) or Path(sys.executable) not in exec_candidates):
+        subprocess_run(pipeline_config, python_exec=next(iter(exec_candidates)))
         
         # for post_stages
         if stages is None or "all" in stages:
