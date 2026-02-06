@@ -54,15 +54,20 @@ class ExtractorConfig:
 
 @dataclass
 class SyncSealParams(Params):
-    checkpoint_path: Optional[str] = None
+    checkpoint_path: str = "./model_files/syncseal/syncmodel.jit.pt"
     img_size_proc: int = 256
     scaling_i: float = 1.0
     scaling_w: float = 0.2
     embedder_config: EmbedderConfig = field(default_factory=EmbedderConfig)
     extractor_config: ExtractorConfig = field(default_factory=ExtractorConfig)
     jnd_config: JNDConfig = field(default_factory=JNDConfig)
-    method: Optional[str] = None
-    method_params: Dict[str, Any] = field(default_factory=dict)
+    method: str = "trustmark"
+    method_params: Dict[str, Any] = field(default_factory=lambda: {"wm_length": 100,
+                                                                   "model_type": "Q",
+                                                                   "wm_strength": 0.75})
+
+
+DEFAULT_SUBMODULE_PATH: str = "./submodules/WMAR/syncseal/syncseal"
 
 
 class SyncSeal(BaseAlgorithmWrapper):
@@ -79,7 +84,9 @@ class SyncSeal(BaseAlgorithmWrapper):
 
     name = "syncseal"
 
-    def __init__(self, params: Dict[str, Any]) -> None:
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        self.
+        = str(Path(params.pop("module_path", DEFAULT_SUBMODULE_PATH)).resolve())
         super().__init__(SyncSealParams(**params))
         self.params: SyncSealParams
         self.device = self.params.device
@@ -88,7 +95,7 @@ class SyncSeal(BaseAlgorithmWrapper):
         self.method_wrapper = self._registry.get(self.params.method)(self.params.method_params)
     
     def _bulid_from_config(self) -> nn.Module:
-        with ModuleImporter("syncseal", str(Path(self.params.module_path).resolve())):
+        with ModuleImporter("syncseal", self.module_path):
             from syncseal.models import build_embedder, build_extractor, SyncModel
             from syncseal.modules.jnd import JND
             state_dict = torch.load(self.params.checkpoint_path, map_location="cpu", weights_only=True)

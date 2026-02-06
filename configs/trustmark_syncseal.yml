@@ -1,14 +1,5 @@
 algorithms:
-  syncseal:
-    params:
-      module_path: ./submodules/WMAR/syncseal/syncseal
-      checkpoint_path: ./model_files/syncseal/syncmodel.jit.pt
-      method: trustmark
-      method_params:
-        wm_length: 100
-        model_type: Q
-        wm_strength: 0.75
-      device: cpu
+  - syncseal
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 
