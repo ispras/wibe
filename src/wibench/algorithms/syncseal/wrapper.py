@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
 
@@ -10,6 +10,10 @@ from wibench.module_importer import ModuleImporter
 from wibench.typing import TorchImg
 from wibench.config import Params
 from wibench.watermark_data import WatermarkData
+
+
+DEFAULT_SUBMODULE_PATH: str = "./submodules/WMAR/syncseal/syncseal"
+DEFAULT_CHECKPOINT_PATH: str = "./model_files/syncseal/syncmodel.jit.pt"
 
 
 @dataclass
@@ -54,7 +58,7 @@ class ExtractorConfig:
 
 @dataclass
 class SyncSealParams(Params):
-    checkpoint_path: str = "./model_files/syncseal/syncmodel.jit.pt"
+    checkpoint_path: str = DEFAULT_CHECKPOINT_PATH
     img_size_proc: int = 256
     scaling_i: float = 1.0
     scaling_w: float = 0.2
@@ -66,8 +70,6 @@ class SyncSealParams(Params):
                                                                    "model_type": "Q",
                                                                    "wm_strength": 0.75})
 
-
-DEFAULT_SUBMODULE_PATH: str = "./submodules/WMAR/syncseal/syncseal"
 
 
 class SyncSeal(BaseAlgorithmWrapper):
@@ -85,20 +87,21 @@ class SyncSeal(BaseAlgorithmWrapper):
     name = "syncseal"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
-        self.
-        = str(Path(params.pop("module_path", DEFAULT_SUBMODULE_PATH)).resolve())
+        self.module_path = str(Path(params.pop("module_path", DEFAULT_SUBMODULE_PATH)).resolve())
         super().__init__(SyncSealParams(**params))
         self.params: SyncSealParams
         self.device = self.params.device
-        self.sync_model = torch.jit.load(str(Path(self.params.checkpoint_path).resolve())).to(self.device).eval()
+        sync_model_loader = torch.jit.load if "jit" in self.params.checkpoint_path else self._bulid_from_config
+        self.sync_model = sync_model_loader(str(Path(self.params.checkpoint_path).resolve())).to(self.device).eval()
         self.params.method_params["device"] = self.device
         self.method_wrapper = self._registry.get(self.params.method)(self.params.method_params)
     
-    def _bulid_from_config(self) -> nn.Module:
+    def _bulid_from_config(self, checkpoint_path: str) -> nn.Module:
         with ModuleImporter("syncseal", self.module_path):
-            from syncseal.models import build_embedder, build_extractor, SyncModel
+            from syncseal.models import build_embedder, build_extractor
+            from syncseal.models.scripted import SyncModelJIT
             from syncseal.modules.jnd import JND
-            state_dict = torch.load(self.params.checkpoint_path, map_location="cpu", weights_only=True)
+            state_dict = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
 
             # Load sub-model configurations
             embedder_cfg = self.params.embedder_config
@@ -115,17 +118,14 @@ class SyncSeal(BaseAlgorithmWrapper):
             attenuation_cfg = asdict(self.params.jnd_config)
             attenuation = JND(**attenuation_cfg)
 
-            sync_model = SyncModel(embedder,
-                                   extractor, 
-                                   None,
-                                   None, 
-                                   attenuation,
-                                   self.params.scaling_w,
-                                   self.params.scaling_i,
-                                   img_size=self.params.img_size_proc)
-            sync_model = sync_model.eval()
+            sync_model = SyncModelJIT(embedder,
+                                      extractor,
+                                      attenuation,
+                                      self.params.scaling_w,
+                                      self.params.scaling_i,
+                                      self.params.img_size_proc)
             sync_model.load_state_dict(state_dict["model"])
-        return sync_model.to(self.device)
+        return sync_model
 
     def embed(self, image: TorchImg, watermark_data: WatermarkData) -> TorchImg:
         """Embed both watermarking, marking methods and synchronization.
