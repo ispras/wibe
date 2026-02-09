@@ -6,6 +6,7 @@ from typing_extensions import Any, Dict
 from dataclasses import dataclass
 from pathlib import Path
 
+from wibench.module_importer import ModuleImporter
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
@@ -96,22 +97,22 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
     name = "arwgan"
     
     def __init__(self, params: Dict[str, Any]) -> None:
-        sys.path.append(params["module_path"])
-        from utils import load_options
-        from model.encoder_decoder import EncoderDecoder
-        from noise_layers.noiser import Noiser
+        with ModuleImporter("ARWGAN", params["module_path"]):
+            from ARWGAN.utils import load_options
+            from ARWGAN.model.encoder_decoder import EncoderDecoder
+            from ARWGAN.noise_layers.noiser import Noiser
 
-        options_file_path = params["options_file_path"]
-        checkpoint_file_path = params["checkpoint_file_path"]
+            options_file_path = params["options_file_path"]
+            checkpoint_file_path = params["checkpoint_file_path"]
 
-        if options_file_path is None:
-            raise FileNotFoundError(f"The options file path: '{options_file_path}' does not exist!")
-        if checkpoint_file_path is None:
-            raise FileNotFoundError(f"The yaml config path: '{checkpoint_file_path}' does not exist!")
+            if options_file_path is None:
+                raise FileNotFoundError(f"The options file path: '{options_file_path}' does not exist!")
+            if checkpoint_file_path is None:
+                raise FileNotFoundError(f"The yaml config path: '{checkpoint_file_path}' does not exist!")
 
-        options_file_path = Path(options_file_path).resolve()
-        checkpoint_file_path = Path(checkpoint_file_path).resolve()
-        train_options, config, noise_config = load_options(options_file_path)
+            options_file_path = Path(options_file_path).resolve()
+            checkpoint_file_path = Path(checkpoint_file_path).resolve()
+            train_options, config, noise_config = load_options(options_file_path)
         
         self.device = params["device"]
         checkpoint = torch.load(checkpoint_file_path, map_location=self.device)
