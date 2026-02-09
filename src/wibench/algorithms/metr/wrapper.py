@@ -21,9 +21,6 @@ from metr.optim_utils import (
 from metr.stable_sig.utils_model import change_pipe_vae_decoder
 
 
-DEFAULT_MODULE_PATH: str = ""
-
-
 @dataclass
 class METRParams(Params):
     """
