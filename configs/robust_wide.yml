@@ -1,9 +1,5 @@
 algorithms:
-  robust_wide:
-    params:
-      checkpoint_path: ./model_files/robust_wide/wm_model.ckpt
-      module_path: ./submodules/RobustWide
-      device: cuda
+  - robust_wide
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 

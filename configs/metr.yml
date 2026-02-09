@@ -1,7 +1,5 @@
 algorithms:
-  metr:
-    params:
-      device: cuda
+  - metr
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 

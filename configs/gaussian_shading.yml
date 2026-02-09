@@ -1,8 +1,5 @@
 algorithms:
-  gaussian_shading:
-    params:
-      module_path: ./submodules/GaussianShading/
-      device: cuda
+  - gaussian_shading
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 
@@ -19,8 +16,6 @@ attacks:
 
 pipeline:
   result_path: ./test_results/gaussian_shading
-  seed: 0
-  min_batch_size: 1
   aggregators:
     - CSV:
         table_name: table

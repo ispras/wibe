@@ -14,6 +14,9 @@ from wibench.typing import TorchImg
 from wibench.module_importer import ModuleImporter
 
 
+DEFAULT_MODULE_PATH: str = "./submodules/RingID"
+
+
 @dataclass
 class RingIDParams(Params):
     """
@@ -76,10 +79,11 @@ class RingIDWrapper(BaseAlgorithmWrapper):
     
     name = "ringid"
 
-    def __init__(self, params: Dict[str, Any]):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        self.module_path = str(Path(params.pop("module_path", DEFAULT_MODULE_PATH)).resolve())
         super().__init__(RingIDParams(**params))
         self.params: RingIDParams
-        with ModuleImporter("RingID", str(Path(params["module_path"]).resolve())):
+        with ModuleImporter("RingID", self.module_path):
             from RingID.inverse_stable_diffusion import InversableStableDiffusionPipeline
             from diffusers import DPMSolverMultistepScheduler
             from RingID.optim_utils import transform_img, get_watermarking_pattern

@@ -11,6 +11,10 @@ from wibench.typing import TorchImg
 from wibench.module_importer import ModuleImporter
 
 
+DEFAULT_MODULE_PATH: str = "./submodules/MaXsive/"
+DEFAULT_TPR_FILE: str = "./submodules/MaXsive/threshold/MaXsive-cos.pt"
+
+
 @dataclass
 class MaXsiveParams(Params):
     """
@@ -28,7 +32,7 @@ class MaXsiveParams(Params):
     template_c: int = 3
     distant_func: str = "corr"
     diffusion_bit: int = 16
-    tpr_file: Optional[str] = None 
+    tpr_file: str = DEFAULT_TPR_FILE 
 
 
 @dataclass
@@ -65,11 +69,12 @@ class MaXsiveWrapper(BaseAlgorithmWrapper):
     
     name = "maxsive"
 
-    def __init__(self, params: Dict[str, Any]):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        self.module_path = str(Path(params.pop("module_path", DEFAULT_MODULE_PATH)).resolve())
         super().__init__(MaXsiveParams(**params))
         self.params: MaXsiveParams
         self.device = self.params.device
-        with ModuleImporter("Maxsive", str(Path(params["module_path"]).resolve())):
+        with ModuleImporter("Maxsive", self.module_path):
             from Maxsive.inverse_stable_diffusion import InversableStableDiffusionPipeline
             from Maxsive.models import MaXsive
             from Maxsive.image_utils import transform_img
@@ -89,6 +94,8 @@ class MaXsiveWrapper(BaseAlgorithmWrapper):
             pipe.safety_checker = None
             self.pipe = pipe.to(self.device)
             self.watermark_model = MaXsive(self.params)
+            if self.params.num_inversion_steps is None:
+                self.params.num_inversion_steps = self.params.num_inference_steps
 
         tester_prompt = ''
         self.text_embeddings = self.pipe.get_text_embedding(tester_prompt)
@@ -131,7 +138,7 @@ class MaXsiveWrapper(BaseAlgorithmWrapper):
             latents=image_latents_w,
             text_embeddings=self.text_embeddings,
             guidance_scale=1,
-            num_inference_steps=50,
+            num_inference_steps=num_inversion_steps,
         )
         return self.watermark_model.detection(reversed_latents_w, watermark_data.data)
     

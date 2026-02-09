@@ -1,9 +1,5 @@
 algorithms:
-  pimog:
-    params:
-      checkpoint_path: ./model_files/pimog/Encoder_Decoder_Model_mask_99.pth
-      module_path: ./submodules/PIMoG
-      device: cuda
+  - pimog
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 

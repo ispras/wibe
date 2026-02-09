@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from typing import Optional, Union, Any
+from typing import Any, Dict
 from pathlib import Path
 import copy
 
 import torch
+import numpy as np
 
 from wibench.utils import resize_torch_img, normalize_image, denormalize_image, overlay_difference
 from wibench.algorithms.base import BaseAlgorithmWrapper
@@ -13,20 +14,24 @@ from wibench.module_importer import ModuleImporter
 from wibench.config import Params
 
 
+DEFAULT_MODULE_PATH: str = "./submodules/PIMoG"
+DEFAULT_CHECKPOINT_PATH: str = "./model_files/pimog/Encoder_Decoder_Model_mask_99.pth"
+
+
 @dataclass
 class PIMoGParams(Params):
-    """Configuration parameters for the PIMoG watermarking algorithm.
+    f"""Configuration parameters for the PIMoG watermarking algorithm.
 
     Attributes
     ----------
-        checkpoint_path : Optional[Union[str, Path]]
-            Path to pretrained PIMoG model weights (default None)
+        checkpoint_path : str
+            Path to pretrained PIMoG model weights (default {DEFAULT_CHECKPOINT_PATH})
         image_size: int
             Size of the input image (in pixels) (default 128)
         wm_length : int
             Length of the watermark message to be embed (in bits) (default 30)
     """
-    checkpoint_path: Optional[Union[str, Path]] = None
+    checkpoint_path: str = DEFAULT_CHECKPOINT_PATH
     image_size: int = 128
     wm_length: int = 30
 
@@ -45,11 +50,12 @@ class PIMoGWrapper(BaseAlgorithmWrapper):
 
     name = "pimog"
     
-    def __init__(self, params: PIMoGParams) -> None:
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        self.module_path = str(Path(params.pop("module_path", DEFAULT_MODULE_PATH)).resolve())
         super().__init__(PIMoGParams(**params))
         self.params: PIMoGParams
         self.device = self.params.device
-        with ModuleImporter("PIMoG", str(Path(self.params.module_path).resolve())):
+        with ModuleImporter("PIMoG", self.module_path):
             from PIMoG.model import Encoder_Decoder
             model = torch.nn.DataParallel(Encoder_Decoder("Idnetity()"))
             model.load_state_dict(torch.load(str(Path(self.params.checkpoint_path).resolve()), map_location="cpu"))
@@ -76,7 +82,7 @@ class PIMoGWrapper(BaseAlgorithmWrapper):
         marked_image = overlay_difference(image, copy_image, watermark_image)
         return marked_image
     
-    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> np.ndarray:
         """Extract watermark from marked image.
         
         Parameters

@@ -1,9 +1,5 @@
 algorithms:
-  maxsive:
-    params:
-      module_path: ./submodules/MaXsive/
-      tpr_file: submodules/MaXsive/threshold/MaXsive-cos.pt
-      device: cuda
+  - maxsive
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 

@@ -1,5 +1,6 @@
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
+from pathlib import Path
 
 import torch
 from torchvision import transforms
@@ -18,6 +19,9 @@ from metr.optim_utils import (
     transform_img
 )
 from metr.stable_sig.utils_model import change_pipe_vae_decoder
+
+
+DEFAULT_MODULE_PATH: str = ""
 
 
 @dataclass
@@ -90,7 +94,7 @@ class METRWrapper(BaseAlgorithmWrapper):
     
     name = "metr"
 
-    def __init__(self, params: Dict[str, Any]):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
         super().__init__(METRParams(**params))
         self.params: METRParams
         self.device = self.params.device

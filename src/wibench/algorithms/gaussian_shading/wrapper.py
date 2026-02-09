@@ -17,6 +17,9 @@ from wibench.config import Params
 from wibench.typing import TorchImg
 
 
+DEFAULT_MODULE_PATH: str = "./submodules/GaussianShading/"
+
+
 @dataclass
 class GaussianShadingParams(Params):
     """
@@ -94,11 +97,12 @@ class GaussianShadingWrapper(BaseAlgorithmWrapper):
     
     name = "gaussian_shading"
 
-    def __init__(self, params: Dict[str, Any]):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        self.module_path = str(Path(params.pop("module_path", DEFAULT_MODULE_PATH)).resolve())
         super().__init__(GaussianShadingParams(**params))
         self.params: GaussianShadingParams
         self.device = self.params.device
-        with ModuleImporter("GaussianShading", str(Path(params["module_path"]).resolve())):
+        with ModuleImporter("GaussianShading", self.module_path):
             from GaussianShading.inverse_stable_diffusion import InversableStableDiffusionPipeline
             from GaussianShading.image_utils import transform_img
             scheduler = DPMSolverMultistepScheduler.from_pretrained(self.params.model_name, subfolder='scheduler')

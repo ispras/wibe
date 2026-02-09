@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, asdict
-from typing import Optional, Union, Any
+from typing import Optional, Union, Any, Dict
 from pathlib import Path
 
 import torch
@@ -10,6 +10,10 @@ from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.module_importer import ModuleImporter
 from wibench.config import Params
+
+
+DEFAULT_MODULE_PATH: str = "./submodules/RobustWide"
+DEFAULT_CHECKPOINT_PATH: str = "./model_files/robust_wide/wm_model.ckpt"
 
 
 @dataclass
@@ -38,16 +42,16 @@ class RobustWideWmModelParams:
 
 @dataclass
 class RobustWideParams(Params):
-    """Configuration parameters for the Robust-Wide watermarking algorithm.
+    f"""Configuration parameters for the Robust-Wide watermarking algorithm.
 
     Attributes
     ----------
-        checkpoint_path : Optional[Union[str, Path]]
-            Path to pretrained Robust-Wide model weights (default None)
+        checkpoint_path : str
+            Path to pretrained Robust-Wide model weights (default {DEFAULT_CHECKPOINT_PATH})
         wm_model_config: RobustWideWmModelParams
             Parameters for encoder-decoder network (default RobustWideWmModelParams)
     """
-    checkpoint_path: Optional[Union[str, Path]] = None
+    checkpoint_path: str = DEFAULT_CHECKPOINT_PATH
     wm_model_config: RobustWideWmModelParams = field(default_factory=RobustWideWmModelParams)
 
 
@@ -65,11 +69,12 @@ class RobustWideWrapper(BaseAlgorithmWrapper):
 
     name = "robust_wide"
     
-    def __init__(self, params: RobustWideParams) -> None:
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        self.module_path = str(Path(params.pop("module_path", DEFAULT_MODULE_PATH)).resolve())
         super().__init__(RobustWideParams(**params))
         self.params: RobustWideParams
         self.device = self.params.device
-        with ModuleImporter("RobustWide", str(Path(self.params.module_path).resolve())):
+        with ModuleImporter("RobustWide", self.module_path):
             from RobustWide.model import WatermarkModel
             model = WatermarkModel(**asdict(self.params.wm_model_config))
             model_ckpt = torch.load(Path(self.params.checkpoint_path).resolve(), map_location="cpu")
