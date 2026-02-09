@@ -1,6 +1,5 @@
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
-from pathlib import Path
 
 import torch
 from torchvision import transforms
@@ -11,8 +10,8 @@ from wibench.typing import TorchImg
 from wibench.module_importer import ModuleImporter
 
 
-DEFAULT_MODULE_PATH: str = "./submodules/MaXsive/"
-DEFAULT_TPR_FILE: str = "./submodules/MaXsive/threshold/MaXsive-cos.pt"
+DEFAULT_MODULE_PATH = "./submodules/MaXsive/"
+DEFAULT_TPR_FILE = "./submodules/MaXsive/threshold/MaXsive-cos.pt"
 
 
 @dataclass
@@ -63,14 +62,14 @@ class MaXsiveWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        MaXsive algorithm configuration parameters
+        MaXsive algorithm configuration parameters (default: EmptyDict)
 
     """
     
     name = "maxsive"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
-        self.module_path = str(Path(params.pop("module_path", DEFAULT_MODULE_PATH)).resolve())
+        self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(MaXsiveParams(**params))
         self.params: MaXsiveParams
         self.device = self.params.device

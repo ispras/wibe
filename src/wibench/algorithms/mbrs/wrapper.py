@@ -12,14 +12,15 @@ from wibench.watermark_data import TorchBitWatermarkData
 from wibench.utils import normalize_image, denormalize_image, overlay_difference
 
 
-
 MBRSModel: TypeAlias
 
+DEFAULT_WEIGHT_PATH = "./model_files/mbrs"
+DEFAULT_MODULE_PATH = "./submodules/mbrs"
 
-settings_path_128 = f'results/MBRS_Diffusion_128_m30/test_Crop(0.19,0.19)_s1_params.json'
-settings_path_256 = f'results/MBRS_256_m256/test_JpegTest(50)_s1_params.json'
-model_dir_128 = f'results/MBRS_Diffusion_128_m30/models'
-model_dir_256 = f'results/MBRS_256_m256/models'
+SETTINGS_PATH_128 = f'results/MBRS_Diffusion_128_m30/test_Crop(0.19,0.19)_s1_params.json'
+SETTINGS_PATH_256 = f'results/MBRS_256_m256/test_JpegTest(50)_s1_params.json'
+MODEL_DIR_128 = f'results/MBRS_Diffusion_128_m30/models'
+MODEL_DIR_256 = f'results/MBRS_256_m256/models'
 
 
 class MBRS:
@@ -102,8 +103,8 @@ class MBRSWrapper(BaseAlgorithmWrapper):
     def __init__(self, 
                  wm_length: int = 256,
                  strength_factor: float =1.,
-                 weights_path: str = "./model_files/mbrs",
-                 module_path: str = "./submodules/mbrs", 
+                 weights_path: str = DEFAULT_WEIGHT_PATH,
+                 module_path: str = DEFAULT_MODULE_PATH, 
                  device: str = "cuda" if torch.cuda.is_available() else "cpu"):
         params = MBRSParams(wm_length, strength_factor)
         with ModuleImporter("mbrs_module", module_path):
@@ -113,11 +114,11 @@ class MBRSWrapper(BaseAlgorithmWrapper):
         weights_path = Path(weights_path)
         super().__init__(params)
         if params.wm_length == 30:
-            settings_path = weights_path / settings_path_128
-            models_dir = weights_path / model_dir_128
+            settings_path = weights_path / SETTINGS_PATH_128
+            models_dir = weights_path / MODEL_DIR_128
         elif params.wm_length == 256:
-            settings_path = weights_path / settings_path_256
-            models_dir = weights_path / model_dir_256
+            settings_path = weights_path / SETTINGS_PATH_256
+            models_dir = weights_path / MODEL_DIR_256
 
         self.wa = MBRS(settings_path, models_dir, params.strength_factor, device)
 

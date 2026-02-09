@@ -2,9 +2,8 @@ import torch
 import torchvision
 import numpy as np
 import cv2
-import sys
 
-from typing_extensions import Dict, Any, Optional, Union
+from typing_extensions import Dict, Any
 from omegaconf import OmegaConf 
 from diffusers import StableDiffusionPipeline 
 from dataclasses import dataclass
@@ -15,33 +14,41 @@ from wibench.config import Params
 from wibench.typing import TorchImg
 from wibench.utils import numpy_bgr2torch_img, normalize_image
 from wibench.watermark_data import TorchBitWatermarkData
+from wibench.module_importer import ModuleImporter
+
+
+DEFAULT_MODULE_PATH = "./submodules/stable_signature"
+DEFAULT_LDM_CONFIG_PATH = "./submodules/stable_signature/v2-inference.yaml"
+DEFAULT_LDM_CHECKPOINT_PATH = "./model_files/stable_signature/v2-1_512-ema-pruned.ckpt"
+DEFAULT_LDM_DECODER_PATH = "./model_files/stable_signature/sd2_decoder.pth"
+DEFAULT_DECODER_PATH = "./model_files/stable_signature/dec_48b_whit.torchscript.pt"
 
 
 @dataclass
 class StableSignatureParams(Params):
-    """Configuration parameters for StableSignature watermarking algorithm.
+    f"""Configuration parameters for StableSignature watermarking algorithm.
 
     Attributes
     ----------
-        ldm_config_path : Optional[Union[str, Path]]
-            Path to LDM config file (default None)
-        ldm_checkpoint_path : Optional[Union[str, Path]]
-            Path to pretrained LDM weights (default None)
-        ldm_decoder_path : Optional[Union[str, Path]]
-            Path to custom LDM decoder weights (default None)
-        decoder_path : Optional[Union[str, Path]]
-            Path to watermark decoder model (default None)
+        ldm_config_path : str
+            Path to LDM config file (default {DEFAULT_LDM_CONFIG_PATH})
+        ldm_checkpoint_path : str
+            Path to pretrained LDM weights (default {DEFAULT_LDM_CHECKPOINT_PATH})
+        ldm_decoder_path : str
+            Path to custom LDM decoder weights (default {DEFAULT_LDM_DECODER_PATH})
+        decoder_path : str
+            Path to watermark decoder model (default {DEFAULT_DECODER_PATH})
         model : str
             Base diffusion model identifier from Hugging Face Hub (default 'WIBE-HuggingFace/stable-diffusion-2')
-        secret : Optional[str]
+        secret : str
             Binary secret message to embed (default '111010110101000001010111010011010100010000100111')
     """
-    ldm_config_path: Optional[Union[str, Path]] = None
-    ldm_checkpoint_path: Optional[Union[str, Path]] = None
-    ldm_decoder_path: Optional[Union[str, Path]] = None
-    decoder_path: Optional[Union[str, Path]] = None
+    ldm_config_path: str = DEFAULT_LDM_CONFIG_PATH
+    ldm_checkpoint_path: str = DEFAULT_LDM_CHECKPOINT_PATH
+    ldm_decoder_path: str = DEFAULT_LDM_DECODER_PATH
+    decoder_path: str = DEFAULT_DECODER_PATH
     model: str = "WIBE-HuggingFace/stable-diffusion-2"
-    secret: Optional[str] = "111010110101000001010111010011010100010000100111"
+    secret: str = "111010110101000001010111010011010100010000100111"
 
 
 class StableSignatureWrapper(BaseAlgorithmWrapper):
@@ -53,30 +60,29 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        StableSignature algorithm configuration parameters
+        StableSignature algorithm configuration parameters (default: EmptyDict)
     """
     
     name = "stable_signature"
 
-    def __init__(self, params: Dict[str, Any]):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(StableSignatureParams(**params))
-        module_path = Path(params["module_path"]).resolve()
-        sys.path.append(str(module_path))
-        sys.path.append(str(module_path / "src"))
-        from utils_model import load_model_from_config
-        config = OmegaConf.load(f"{str(Path(self.params.ldm_config_path).resolve())}")
-        ldm_ae = load_model_from_config(config, str(Path(self.params.ldm_checkpoint_path).resolve()))
-        ldm_aef = ldm_ae.first_stage_model
-        ldm_aef.eval()
-
+        self.params: StableSignatureParams
         self.device = self.params.device
-        self.normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
+        with ModuleImporter("StableSignature", self.module_path):
+            from StableSignature.utils_model import load_model_from_config
+            config = OmegaConf.load(f"{str(Path(self.params.ldm_config_path).resolve())}")
+            ldm_ae = load_model_from_config(config, str(Path(self.params.ldm_checkpoint_path).resolve()))
+            ldm_aef = ldm_ae.first_stage_model
+            ldm_aef.eval()
+            # loading the fine-tuned decoder weights
+            state_dict = torch.load(Path(self.params.ldm_decoder_path).resolve(), weights_only=False)
+            ldm_aef.load_state_dict(state_dict, strict=False)
+            self.pipe = StableDiffusionPipeline.from_pretrained(self.params.model).to(self.device)
+            self.pipe.vae.decode = (lambda x,  *args, **kwargs: ldm_aef.decode(x).unsqueeze(0))
 
-        # loading the fine-tuned decoder weights
-        state_dict = torch.load(Path(self.params.ldm_decoder_path).resolve(), weights_only=False)
-        ldm_aef.load_state_dict(state_dict, strict=False)
-        self.pipe = StableDiffusionPipeline.from_pretrained(self.params.model).to(self.device)
-        self.pipe.vae.decode = (lambda x,  *args, **kwargs: ldm_aef.decode(x).unsqueeze(0))
+        self.normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
         self.decoder = torch.jit.load(Path(self.params.decoder_path).resolve()).to(self.device)
         self.secret = np.array(list(map(int, self.params.secret)))
 

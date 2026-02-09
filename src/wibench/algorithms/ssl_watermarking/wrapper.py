@@ -14,6 +14,11 @@ from wibench.typing import TorchImg
 from wibench.config import Params
 
 
+DEFAULT_MODULE_PATH = "./submodules/ssl_watermarking"
+DEFAULT_BACKBONE_PATH = "./model_files/ssl_watermarking/dino_r50_plus.pth"
+DEFAULT_NORMLAYER_PATH = "./model_files/ssl_watermarking/out2048_yfcc_orig.pth"
+
+
 def build_backbone(path, name, device):
     """ Build a pretrained torchvision backbone from its name.
 
@@ -51,18 +56,18 @@ def build_backbone(path, name, device):
 
 @dataclass
 class SSLParams(Params):
-    """Configuration parameters for SSL (Self-Supervised Learning) watermarking algorithm.
+    f"""Configuration parameters for SSL (Self-Supervised Learning) watermarking algorithm.
 
     Attributes:
-        backbone_weights_path : Optional[Union[str, Path]]
-            Path to pretrained backbone weights (default None)
-        normlayer_weights_path : Optional[Union[str, Path]]
-            Path to normalization layer weights (default None)
+        backbone_weights_path : str
+            Path to pretrained backbone weights (default {DEFAULT_BACKBONE_PATH})
+        normlayer_weights_path : str
+            Path to normalization layer weights (default {DEFAULT_NORMLAYER_PATH})
         method : str
             SSL method type. Determines whether to use multi-bit or zero-bit approach (default multi-bit)
     """
-    backbone_weights_path: Optional[Union[str, Path]] = None
-    normlayer_weights_path: Optional[Union[str, Path]] = None
+    backbone_weights_path: str = DEFAULT_BACKBONE_PATH
+    normlayer_weights_path: str = DEFAULT_NORMLAYER_PATH
     method: str = "multi-bit"
 
 
@@ -116,7 +121,7 @@ class SSLMultiBitParams(SSLParams):
 
 
 @dataclass
-class SSL0BitParams(SSLParams):
+class SSLZeroBitParams(SSLParams):
     """Configuration parameters for zero-bit SLL (Self-Supervised Learning) watermarking algorithm.
 
     Attributes
@@ -217,13 +222,14 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        SSL algorithm configuration parameters
+        SSL algorithm configuration parameters (default: EmptyDict)
     """
 
     name = "ssl_watermarking"
 
-    def __init__(self, params: Dict[str, Any]):
-        with ModuleImporter("SSL", str(Path(params["module_path"]))):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
+        with ModuleImporter("SSL", self.module_path):
             global normalize_img, unnormalize_img, generate_carriers, generate_messages, pvalue_angle
             from SSL.utils import load_normalization_layer, NormLayerWrapper, generate_carriers, generate_messages, pvalue_angle
             from SSL.utils_img import normalize_img, unnormalize_img 
@@ -234,6 +240,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         
             self._init_method(params)
             super().__init__(self.params_method(**params))
+            self.params: Union[SSLZeroBitParams, SSLMultiBitParams]
             self.device = self.params.device
 
             backbone_weights_path = self.params.backbone_weights_path
@@ -257,16 +264,14 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
             model.eval()
             self.model = model
             self.D = self.model(torch.zeros((1,3,224,224)).to(self.device)).size(-1)
-            self.K = 1 if isinstance(self.params, SSL0BitParams) else self.params.num_bits
+            self.K = 1 if isinstance(self.params, SSLZeroBitParams) else self.params.num_bits
             self.data_aug = All()
 
     def _init_method(self, params: Dict[str, Any]):        
         self.method = params.get("method")
-        if self.method is None:
-            raise NotImplementedError("Method must be specified!")
         self.params_method, self.watermark_data, self.encode_func, self.decode_func = \
-            (SSLMultiBitParams, WatermarkMultiBitData, encode.watermark_multibit, decode.decode_multibit) if self.method == "multibit" else \
-            (SSL0BitParams, Watermark0BitData, encode.watermark_0bit, decode.decode_0bit)
+            (SSLMultiBitParams, WatermarkMultiBitData, encode.watermark_multibit, decode.decode_multibit) if self.method == "multi-bit" else \
+            (SSLZeroBitParams, Watermark0BitData, encode.watermark_0bit, decode.decode_0bit)
     
     def embed(self, image: TorchImg, watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]) -> TorchImg:
         """Embed watermark into input image.
@@ -288,7 +293,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         unnormalize_image = unnormalize_img(pt_imgs_out[0]).squeeze(0).cpu()
         return unnormalize_image
         
-    def extract(self, image: TorchImg, watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]) -> Any:
+    def extract(self, image: TorchImg, watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]) -> Union[torch.Tensor, float]:
         """Extract watermark from marked image.
         
         Parameters
@@ -306,7 +311,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         result = self.decode_func(*args)[0]
         if isinstance(self.params, SSLMultiBitParams):
             result = result["msg"]
-        if isinstance(self.params, SSL0BitParams):
+        if isinstance(self.params, SSLZeroBitParams):
             result = 10 ** result["log10_pvalue"]
         return result
     

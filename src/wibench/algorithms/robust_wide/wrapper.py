@@ -12,8 +12,8 @@ from wibench.module_importer import ModuleImporter
 from wibench.config import Params
 
 
-DEFAULT_MODULE_PATH: str = "./submodules/RobustWide"
-DEFAULT_CHECKPOINT_PATH: str = "./model_files/robust_wide/wm_model.ckpt"
+DEFAULT_MODULE_PATH = "./submodules/RobustWide"
+DEFAULT_CHECKPOINT_PATH = "./model_files/robust_wide/wm_model.ckpt"
 
 
 @dataclass
@@ -64,13 +64,13 @@ class RobustWideWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        Robust-Wide algorithm configuration parameters
+        Robust-Wide algorithm configuration parameters (default: EmptyDict)
     """
 
     name = "robust_wide"
     
     def __init__(self, params: Dict[str, Any] = {}) -> None:
-        self.module_path = str(Path(params.pop("module_path", DEFAULT_MODULE_PATH)).resolve())
+        self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(RobustWideParams(**params))
         self.params: RobustWideParams
         self.device = self.params.device

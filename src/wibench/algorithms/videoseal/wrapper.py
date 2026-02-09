@@ -1,10 +1,15 @@
 import torch
-import sys
 from pathlib import Path
 from wibench.typing import TorchImg
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.module_importer import ModuleImporter
+
+
+DEFAULT_VIDEOSEAL_SUBMODULE_PATH = "./submodules/videoseal"
+DEFAULT_VIDEOSEAL_MODEL_CARD_PATH = "resources/videoseal/videoseal_1.0.yaml"
+DEFAULT_PIXELSEAL_MODEL_CARD_PATH = "resources/videoseal/pixelseal.yaml"
+DEFAULT_CHUNKYSEAL_MODEL_CARD_PATH = "resources/videoseal/chunkyseal.yaml"
 
 
 class VideosealWrapper(BaseAlgorithmWrapper):
@@ -19,13 +24,12 @@ class VideosealWrapper(BaseAlgorithmWrapper):
     def __init__(
         self,
         strength_factor: float = 1.,
-        model_card: str = "resources/videoseal/videoseal_1.0.yaml",
-        module_path: str = "./submodules/videoseal",
+        model_card: str = DEFAULT_VIDEOSEAL_MODEL_CARD_PATH,
+        module_path: str = DEFAULT_VIDEOSEAL_SUBMODULE_PATH,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         with ModuleImporter("VIDEOSEAL", module_path):
             from VIDEOSEAL.videoseal.utils.cfg import setup_model_from_model_card
-
             self.model = setup_model_from_model_card(Path(model_card))
         self.model.eval()
         self.model.compile()
@@ -71,8 +75,8 @@ class PixelSeal(VideosealWrapper):
     def __init__(
         self,
         strength_factor: float = 1.,
-        model_card:str = "resources/videoseal/pixelseal.yaml",
-        module_path: str = "./submodules/videoseal",
+        model_card:str = DEFAULT_PIXELSEAL_MODEL_CARD_PATH,
+        module_path: str = DEFAULT_VIDEOSEAL_SUBMODULE_PATH,
         device: str ="cuda" if torch.cuda.is_available() else "cpu",
     ):
         super().__init__(strength_factor, model_card, module_path, device)
@@ -92,8 +96,8 @@ class ChunkySeal(VideosealWrapper):
     def __init__(
         self,
         strength_factor: float = 1.,
-        model_card:str = "resources/videoseal/chunkyseal.yaml",
-        module_path: str = "./submodules/videoseal",
+        model_card:str = DEFAULT_CHUNKYSEAL_MODEL_CARD_PATH,
+        module_path: str = DEFAULT_VIDEOSEAL_SUBMODULE_PATH,
         device: str ="cuda" if torch.cuda.is_available() else "cpu",
     ):
         super().__init__(strength_factor, model_card, module_path, device)

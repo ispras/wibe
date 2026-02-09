@@ -14,7 +14,7 @@ from wibench.typing import TorchImg
 from wibench.module_importer import ModuleImporter
 
 
-DEFAULT_MODULE_PATH: str = "./submodules/RingID"
+DEFAULT_MODULE_PATH = "./submodules/RingID"
 
 
 @dataclass
@@ -73,14 +73,14 @@ class RingIDWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        RingID algorithm configuration parameters
+        RingID algorithm configuration parameters (default: EmptyDict)
 
     """
     
     name = "ringid"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
-        self.module_path = str(Path(params.pop("module_path", DEFAULT_MODULE_PATH)).resolve())
+        self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(RingIDParams(**params))
         self.params: RingIDParams
         with ModuleImporter("RingID", self.module_path):

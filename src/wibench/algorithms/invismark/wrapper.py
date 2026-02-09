@@ -1,5 +1,4 @@
 import torch
-import sys
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
@@ -8,14 +7,18 @@ from wibench.module_importer import ModuleImporter
 from pathlib import Path
 
 
+DEFAULT_MODULE_PATH = "./submodules/invismark"
+DEFAULT_CHECKPOINT_PATH = "./model_files/invismark/invismark.ckpt"
+
+
 class InvisMark:
     def __init__(self, ckpt_path: Path, module_path: Path, device: str):
-        with ModuleImporter("INVISMARK", module_path):
+        with ModuleImporter("INVISMARK", module_path.resolve()):
             import INVISMARK.train
 
             self.ckpt_path = ckpt_path
             self.device = device
-            state_dict = torch.load(self.ckpt_path, map_location=self.device, weights_only=False)
+            state_dict = torch.load(self.ckpt_path.resolve(), map_location=self.device, weights_only=False)
             cfg = state_dict["config"]
             self.model = INVISMARK.train.Watermark(cfg, device=self.device).to(self.device)
             self.load_model(state_dict)
@@ -60,8 +63,8 @@ class InvisMarkWrapper(BaseAlgorithmWrapper):
     def __init__(
         self,
         wm_length: int = 100,
-        ckpt_path: str = "./model_files/invismark/invismark.ckpt",
-        module_path: str = "./submodules/invismark",
+        ckpt_path: str = DEFAULT_CHECKPOINT_PATH,
+        module_path: str = DEFAULT_MODULE_PATH,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         super().__init__({"wm_length": wm_length})

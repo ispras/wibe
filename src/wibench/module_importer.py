@@ -6,7 +6,7 @@ import builtins
 import os
 
 from pathlib import Path
-from typing_extensions import Union
+from typing_extensions import Union, Dict, Any
 
 
 def import_modules(package_name):
@@ -45,6 +45,10 @@ class ModuleImporter():
         self.currently_importing = module_name
         self.nested_modules = {}
         
+    @staticmethod
+    def pop_resolve_module_path(params: Dict[str, Any], default_module_path: str) -> str:
+        return str(Path(params.pop("module_path", default_module_path)).resolve())
+
     def _create_spec_from_path(self, fullname, path):
         if os.path.isfile(path):
             origin = path

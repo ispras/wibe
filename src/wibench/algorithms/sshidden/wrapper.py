@@ -1,9 +1,8 @@
 import torch
-import sys
 
 from dataclasses import dataclass
 from torchvision import transforms
-from typing_extensions import Dict, Any, Optional
+from typing_extensions import Dict, Any
 from pathlib import Path
 
 from wibench.module_importer import ModuleImporter
@@ -19,17 +18,21 @@ from wibench.config import Params
 from wibench.watermark_data import TorchBitWatermarkData
 
 
+DEFAULT_MODULE_PATH = "./submodules/stable_signature/hidden"
+DEFAULT_CHECKPOINT_PATH = "./submodules/stable_signature/hidden/ckpts/hidden_replicate.pth"
+
+
 @dataclass
 class SSHiddenParams(Params):
-    """Configuration parameters for the HiDDeN (Hiding Data in Deep Networks) algorithm from StableSignature.
+    f"""Configuration parameters for the HiDDeN (Hiding Data in Deep Networks) algorithm from StableSignature.
 
     These parameters define the image dimensions, watermark length, and the architecture
     of the encoder and decoder networks used for image watermarking.
 
     Attributes
     ----------
-        ckpt_path : Optional[str]
-            Path to pretrained checkpoint (default None)
+        ckpt_path : str
+            Path to pretrained checkpoint (default {DEFAULT_CHECKPOINT_PATH})
         encoder_depth : int
             Number of convolutional blocks in the encoder network (default 4)
         encoder_channels : int
@@ -53,7 +56,7 @@ class SSHiddenParams(Params):
         W : int
             Width of the input image (in pixels). Defines the horizontal dimension of the input tensor (default 512)
     """
-    ckpt_path: Optional[str] = None
+    ckpt_path: str = DEFAULT_CHECKPOINT_PATH
     encoder_depth: int = 4
     encoder_channels: int = 64
     decoder_depth: int = 8
@@ -84,13 +87,14 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        SSHiDDeN algorithm configuration parameters
+        SSHiDDeN algorithm configuration parameters (default: EmptyDict)
     """
 
     name = "sshidden"
 
-    def __init__(self, params: Dict[str, Any]) -> None:
-        with ModuleImporter("SSHIDDEN", str(Path(params["module_path"]).resolve())):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
+        with ModuleImporter("SSHIDDEN", self.module_path):
             from SSHIDDEN.models import (
                 HiddenEncoder,
                 HiddenDecoder,
@@ -99,34 +103,31 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
             from SSHIDDEN.attenuations import JND
 
             super().__init__(SSHiddenParams(**params))
-            
-            if self.params.ckpt_path is None:
-                raise FileNotFoundError(f"The yaml config path: '{self.params.ckpt_path}' does not exist!")
-            
+            self.params: SSHiddenParams
             self.device = self.params.device
             state_dict = torch.load(Path(self.params.ckpt_path).resolve(), map_location=self.device, weights_only=False)['encoder_decoder']
-        encoder_decoder_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
-        encoder_state_dict = {k.replace('encoder.', ''): v for k, v in encoder_decoder_state_dict.items() if 'encoder' in k}
-        decoder_state_dict = {k.replace('decoder.', ''): v for k, v in encoder_decoder_state_dict.items() if 'decoder' in k}
+            encoder_decoder_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
+            encoder_state_dict = {k.replace('encoder.', ''): v for k, v in encoder_decoder_state_dict.items() if 'encoder' in k}
+            decoder_state_dict = {k.replace('decoder.', ''): v for k, v in encoder_decoder_state_dict.items() if 'decoder' in k}
 
-        self.decoder = HiddenDecoder(
-            num_blocks=self.params.decoder_depth, 
-            num_bits=self.params.num_bits, 
-            channels=self.params.decoder_channels
-        )
-        encoder = HiddenEncoder(
-            num_blocks=self.params.encoder_depth, 
-            num_bits=self.params.num_bits, 
-            channels=self.params.encoder_channels
-        )
-        attenuation = JND(preprocess=UNNORMALIZE_IMAGENET) if self.params.attenuation == "jnd" else None
-        self.encoder_with_jnd = EncoderWithJND(
-            encoder, attenuation, self.params.scale_channels, self.params.scaling_i, self.params.scaling_w,
-        )
-        encoder.load_state_dict(encoder_state_dict)
-        self.decoder.load_state_dict(decoder_state_dict)
-        self.encoder_with_jnd = self.encoder_with_jnd.to(self.device).eval()
-        self.decoder = self.decoder.to(self.device).eval()
+            self.decoder = HiddenDecoder(
+                num_blocks=self.params.decoder_depth, 
+                num_bits=self.params.num_bits, 
+                channels=self.params.decoder_channels
+            )
+            encoder = HiddenEncoder(
+                num_blocks=self.params.encoder_depth, 
+                num_bits=self.params.num_bits, 
+                channels=self.params.encoder_channels
+            )
+            attenuation = JND(preprocess=UNNORMALIZE_IMAGENET) if self.params.attenuation == "jnd" else None
+            self.encoder_with_jnd = EncoderWithJND(
+                encoder, attenuation, self.params.scale_channels, self.params.scaling_i, self.params.scaling_w,
+            )
+            encoder.load_state_dict(encoder_state_dict)
+            self.decoder.load_state_dict(decoder_state_dict)
+            self.encoder_with_jnd = self.encoder_with_jnd.to(self.device).eval()
+            self.decoder = self.decoder.to(self.device).eval()
 
     def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
         """Embed watermark into input image.

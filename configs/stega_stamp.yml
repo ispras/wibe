@@ -1,11 +1,5 @@
 algorithms:
-  stega_stamp:
-    params:
-      weights_path: ./model_files/stega_stamp/stega_stamp.onnx
-      wm_length: 100
-      width: 400
-      height: 400
-      alpha: 1
+  - stega_stamp
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 

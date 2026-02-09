@@ -85,7 +85,7 @@ class METRWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        METR algorithm configuration parameters
+        METR algorithm configuration parameters (default: EmptyDict)
 
     """
     
@@ -112,7 +112,6 @@ class METRWrapper(BaseAlgorithmWrapper):
 
         if self.params.num_inversion_steps is None:
             self.params.num_inversion_steps = self.params.num_inference_steps
-
 
     def embed(self, prompt: str, watermark_data: METRWatermarkData) -> TorchImg:
         """Generates a watermarked image based on a text prompt.

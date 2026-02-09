@@ -16,9 +16,9 @@ class DFTMarkerWrapper(BaseAlgorithmWrapper):
     """
     name = "dft_circle"
 
-    def __init__(self, params: Dict[str, Any]):
+    def __init__(self, params: Dict[str, Any] = {}):
         super().__init__(params)
-        self.alpha = params["alpha"]
+        self.alpha = params.get("alpha", 600)
         self.marker = DFTMarker()
 
     def embed(self, image, watermark_data):

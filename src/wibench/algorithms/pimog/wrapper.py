@@ -14,8 +14,8 @@ from wibench.module_importer import ModuleImporter
 from wibench.config import Params
 
 
-DEFAULT_MODULE_PATH: str = "./submodules/PIMoG"
-DEFAULT_CHECKPOINT_PATH: str = "./model_files/pimog/Encoder_Decoder_Model_mask_99.pth"
+DEFAULT_MODULE_PATH = "./submodules/PIMoG"
+DEFAULT_CHECKPOINT_PATH = "./model_files/pimog/Encoder_Decoder_Model_mask_99.pth"
 
 
 @dataclass
@@ -45,13 +45,13 @@ class PIMoGWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        PIMoG algorithm configuration parameters
+        PIMoG algorithm configuration parameters (default: EmptyDict)
     """
 
     name = "pimog"
     
     def __init__(self, params: Dict[str, Any] = {}) -> None:
-        self.module_path = str(Path(params.pop("module_path", DEFAULT_MODULE_PATH)).resolve())
+        self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(PIMoGParams(**params))
         self.params: PIMoGParams
         self.device = self.params.device

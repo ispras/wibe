@@ -17,7 +17,7 @@ from wibench.config import Params
 from wibench.typing import TorchImg
 
 
-DEFAULT_MODULE_PATH: str = "./submodules/GaussianShading/"
+DEFAULT_MODULE_PATH = "./submodules/GaussianShading/"
 
 
 @dataclass
@@ -91,14 +91,14 @@ class GaussianShadingWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        Gaussian Shading algorithm configuration parameters
+        Gaussian Shading algorithm configuration parameters (default: EmptyDict)
 
     """
     
     name = "gaussian_shading"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
-        self.module_path = str(Path(params.pop("module_path", DEFAULT_MODULE_PATH)).resolve())
+        self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(GaussianShadingParams(**params))
         self.params: GaussianShadingParams
         self.device = self.params.device

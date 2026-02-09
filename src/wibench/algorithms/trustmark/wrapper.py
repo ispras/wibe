@@ -1,6 +1,5 @@
-import numpy as np
 import torch
-from typing_extensions import Literal
+from typing import Literal, Dict, Any 
 from dataclasses import dataclass
 from torchvision.transforms.functional import to_pil_image, to_tensor
 from wibench.algorithms.base import BaseAlgorithmWrapper
@@ -42,14 +41,15 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        TrustMark algorithm configuration parameters
+        TrustMark algorithm configuration parameters (default: EmptyDict)
 
     """
     
     name = "trustmark"
 
-    def __init__(self, params: TrustMarkParams) -> None:
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
         super().__init__(TrustMarkParams(**params))
+        self.params: TrustMarkParams
         self.device = self.params.device
         self.tm = TrustMark(use_ECC=False, device=self.device,
                             model_type=self.params.model_type)

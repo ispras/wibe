@@ -1,8 +1,5 @@
 algorithms:
-  treering:
-    params:
-      module_path: ./submodules/tree-ring-watermark
-      device: cuda
+  - treering
 
 post_embed_metrics:
   - CLIP_IQA
