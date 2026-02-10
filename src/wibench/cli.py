@@ -216,9 +216,8 @@ def run(
     pipeline = Pipeline(
         alg_wrappers, datasets, attacks, metrics, pipeline_config
     )
-    if dump_context:
-        with open(pipeline.config.result_path / "pipeline_config.json", "w") as f:
-            json.dump(pipeline.config.model_dump(mode="json"), f)
+    with open(pipeline.config.result_path / "pipeline_config.json", "w") as f:
+        json.dump(pipeline.config.model_dump(mode="json"), f)
     pipeline.run(run_id, stages, dump_context=dump_context, dry_run=dry_run, process_num=process_num)
 
 
