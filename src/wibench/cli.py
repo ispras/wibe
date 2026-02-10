@@ -126,7 +126,7 @@ def parse_stage_expression(expr: str) -> List[str]:
     return [name for name in registry if wanted[name]]
 
 
-app = typer.Typer()
+app = typer.Typer(pretty_exceptions_enable=False)
 
 
 @app.command()

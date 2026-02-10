@@ -1,12 +1,11 @@
 import torch
-import numpy as np
-import sys
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
 from pathlib import Path
 from enum import Enum
 
+from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.utils import (
     normalize_image,
@@ -70,10 +69,9 @@ class CINWrapper(BaseAlgorithmWrapper):
     name = "cin"
 
     def __init__(self, params: Dict[str, Any]) -> None:
-        sys.path.append(params["module_path"])
-        sys.path.append(str((Path(params["module_path"]) / "codes").resolve()))
-        from codes.utils.yml import parse_yml, dict_to_nonedict
-        from codes.models.CIN import CIN
+        with ModuleImporter("CIN_codes", str((Path(params["module_path"]) / "codes").resolve())):
+            from CIN_codes.utils.yml import parse_yml, dict_to_nonedict
+            from CIN_codes.models.CIN import CIN
         
         self.device = torch.device(params["device"])
 

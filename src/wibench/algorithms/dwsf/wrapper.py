@@ -87,11 +87,11 @@ class DWSFWrapper(BaseAlgorithmWrapper):
 
     def __init__(self, params: Dict[str, Any]):
         super().__init__(DWSFParams(**params))
-        ModuleImporter("DWSF", params["module_path"]).register_module()
-        from DWSF.utils.util import generate_random_coor
-        from DWSF.networks.models.EncoderDecoder import EncoderDecoder
-        from DWSF.utils.img import psnr_clip
-        from DWSF.utils.seg import obtain_wm_blocks, init
+        with ModuleImporter("DWSF", params["module_path"]):
+            from DWSF.utils.util import generate_random_coor
+            from DWSF.networks.models.EncoderDecoder import EncoderDecoder
+            from DWSF.utils.img import psnr_clip
+            from DWSF.utils.seg import obtain_wm_blocks, init
         global generate_random_coor, obtain_wm_blocks, psnr_clip
         init(self.params.seg_weights_path)
         self.normalize = torchvision.transforms.Normalize(mean=self.params.mean, std=self.params.std)
@@ -105,8 +105,6 @@ class DWSFWrapper(BaseAlgorithmWrapper):
                                               W=self.params.W,
                                               message_length=self.params.message_length,
                                               noise_layers=[*self.params.default_noise_layer])
-        self.encoder_decoder.encoder = self.encoder_decoder.encoder.to(self.device)
-        self.encoder_decoder.decoder = self.encoder_decoder.decoder.to(self.device)
         
         encoder_weights_path = Path(self.params.encoder_weights_path).resolve()
         decoder_weights_path = Path(self.params.decoder_weights_path).resolve()
@@ -118,6 +116,10 @@ class DWSFWrapper(BaseAlgorithmWrapper):
 
         self.encoder_decoder.encoder.load_state_dict(torch.load(encoder_weights_path))
         self.encoder_decoder.decoder.load_state_dict(torch.load(decoder_weights_path))
+        self.encoder_decoder.encoder = self.encoder_decoder.encoder.to(self.device)
+        self.encoder_decoder.decoder = self.encoder_decoder.decoder.to(self.device)
+        self.encoder_decoder.encoder.eval()
+        self.encoder_decoder.decoder.eval()
 
     def encode(self, images, messages, splitSize=128, inputSize=128, h_coor=[], w_coor=[], psnr=35):
         """Encode image blocks based on random coordinates.

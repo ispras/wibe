@@ -9,12 +9,19 @@ from wibench.typing import TorchImg
 
 
 class ImageEditingInstructPix2Pix(BaseAttack):
+    """
+    Adversarial attack using instruction-guided image-to-image editing.
+    
+    Combines InternVL2 for instruction generation with InstructPix2Pix
+    for semantic image editing. Generates text instructions describing
+    desired modifications, then applies them via diffusion-based editing.
+    """
     def __init__(
         self,
         device: str = "cuda",
         internvl_path: str = "OpenGVLab/InternVL2_5-8B",
         instructpix2pix_path: str = "timbrooks/instruct-pix2pix",
-        prompts_path: str = "./attack_resources/prompts_internvl.json",
+        prompts_path: str = "./resources/prompts_internvl.json",
         guidance_scale: float = 2.0,
         is_prompts: bool = True,
         mode: str = "base",

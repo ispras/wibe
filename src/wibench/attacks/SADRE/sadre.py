@@ -14,7 +14,7 @@ class WPWMAttacker(BaseAttack):
     def __init__(self, pipe=None, noise_step=60, saliency_mask=None, device='cuda'):
 
         if pipe is None:
-            pipe = ReSDPipeline.from_pretrained("akaleksandr/stable-diffusion-2-1", torch_dtype=torch.float16)
+            pipe = ReSDPipeline.from_pretrained("WIBE-HuggingFace/stable-diffusion-2-1", torch_dtype=torch.float16)
             pipe.set_progress_bar_config(disable=True)
             pipe.to(device)
             print('Finished loading model')

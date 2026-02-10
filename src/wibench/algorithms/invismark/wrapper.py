@@ -4,20 +4,32 @@ from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.utils import normalize_image, denormalize_image
+from wibench.module_importer import ModuleImporter
 from pathlib import Path
 
 
 class InvisMark:
     def __init__(self, ckpt_path: Path, module_path: Path, device: str):
-        sys.path.append(str(module_path))
-        import train
+        with ModuleImporter("INVISMARK", module_path):
+            import INVISMARK.train
 
-        self.ckpt_path = ckpt_path
-        self.device = device
-        state_dict = torch.load(self.ckpt_path, map_location=self.device)
-        cfg = state_dict["config"]
-        self.model = train.Watermark(cfg, device=self.device).to(self.device)
-        self.model.load_model(self.ckpt_path)          
+            self.ckpt_path = ckpt_path
+            self.device = device
+            state_dict = torch.load(self.ckpt_path, map_location=self.device, weights_only=False)
+            cfg = state_dict["config"]
+            self.model = INVISMARK.train.Watermark(cfg, device=self.device).to(self.device)
+            self.load_model(state_dict)
+
+    def load_model(self, state_dict):
+        self.model.encoder.load_state_dict(state_dict['encoder_state_dict'])
+        self.model.encoder.eval()
+        self.model.decoder.load_state_dict(state_dict['decoder_state_dict'])
+        self.model.decoder.eval()
+        self.model.discriminator.load_state_dict(state_dict['discriminator_state_dict'])
+        self.model.discriminator.eval()
+        self.model.cur_epoch = state_dict['cur_epoch']
+        self.model.cur_step = state_dict['cur_step']
+        self.model.config = state_dict['config']        
 
     def embed(self, image: TorchImg, wm: TorchBitWatermarkData) -> TorchImg:
         trans_img = normalize_image(image)
@@ -35,6 +47,14 @@ class InvisMark:
 
 
 class InvisMarkWrapper(BaseAlgorithmWrapper):
+    """`InvisMark <https://arxiv.org/pdf/2411.07795>`_: Invisible and Robust Watermarking for AI-generated Image Provenance
+    
+    Provides an interface for embedding and extracting watermarks using the InvisMark watermarking algorithm.
+    Based on the code from `here <https://github.com/microsoft/InvisMark>`__.
+
+    Note: real capacity of InvisMark is 94 message bits (reffer to watermark_data_gen for more information)
+    """
+        
     name = "invismark"
 
     def __init__(

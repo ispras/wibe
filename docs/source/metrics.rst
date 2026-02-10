@@ -134,3 +134,8 @@ ImageReward
 ~~~~~~~~~~~
 
 .. autoclass:: wibench.metrics.image_reward.image_reward.ImageReward
+
+FID
+~~~
+
+.. autoclass:: wibench.metrics.fid.fid.FID

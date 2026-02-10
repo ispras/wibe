@@ -1,14 +1,19 @@
 from pathlib import Path
-import sys
+from typing import TypeAlias
 import torch
 from torchvision import transforms
 from dataclasses import dataclass
 import json
 from pathlib import Path
+from wibench.module_importer import ModuleImporter
 from wibench.typing import TorchImg
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.utils import normalize_image, denormalize_image, overlay_difference
+
+
+
+MBRSModel: TypeAlias
 
 
 settings_path_128 = f'results/MBRS_Diffusion_128_m30/test_Crop(0.19,0.19)_s1_params.json'
@@ -19,8 +24,7 @@ model_dir_256 = f'results/MBRS_256_m256/models'
 
 class MBRS:
     def __init__(self, settings_path, models_dir, strength_factor: float = 1.0, device = "cpu"):
-        from network.Network import Network
-        self.network_class = Network
+        self.network_class = MBRSModel
         if not Path(settings_path).exists():
             raise FileExistsError(f'File {settings_path} does not exist')
         if not Path(models_dir).is_dir():
@@ -30,7 +34,7 @@ class MBRS:
         self.strength_factor = strength_factor
         self.message_len = self.settings['message_length']
         self.models_dir = models_dir
-        self.model: None | Network = None
+        self.model = None
         self.device = torch.device(
             device)
         self.resize = transforms.Resize(
@@ -83,23 +87,37 @@ class MBRS:
 
 @dataclass
 class MBRSParams:
-    wm_length: int = 256
-    strength_factor: float = 1.
+    wm_length: int
+    strength_factor: float
 
 
 class MBRSWrapper(BaseAlgorithmWrapper):
+    """`MBRS <https://arxiv.org/abs/2108.08211>`_: Enhancing Robustness of DNN-based Watermarking by Mini-Batch of Real and Simulated JPEG Compression
+    
+    Provides an interface for embedding and extracting watermarks using the MBRS watermarking algorithm.
+    Based on the code from `here <https://github.com/jzyustc/MBRS>`__.
+    """
+        
     name = "MBRS"
-    def __init__(self, params: dict, module_path: str, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
-        params = MBRSParams(**params)
-        sys.path.append(module_path)
-        module_path = Path(module_path)
+    def __init__(self, 
+                 wm_length: int = 256,
+                 strength_factor: float =1.,
+                 weights_path: str = "./model_files/mbrs",
+                 module_path: str = "./submodules/mbrs", 
+                 device: str = "cuda" if torch.cuda.is_available() else "cpu"):
+        params = MBRSParams(wm_length, strength_factor)
+        with ModuleImporter("mbrs_module", module_path):
+            global MBRSModel
+            from mbrs_module.network.Network import Network as MBRSModel
+        
+        weights_path = Path(weights_path)
         super().__init__(params)
         if params.wm_length == 30:
-            settings_path = module_path / settings_path_128
-            models_dir = module_path / model_dir_128
+            settings_path = weights_path / settings_path_128
+            models_dir = weights_path / model_dir_128
         elif params.wm_length == 256:
-            settings_path = module_path / settings_path_256
-            models_dir = module_path / model_dir_256
+            settings_path = weights_path / settings_path_256
+            models_dir = weights_path / model_dir_256
 
         self.wa = MBRS(settings_path, models_dir, params.strength_factor, device)
 
@@ -111,4 +129,3 @@ class MBRSWrapper(BaseAlgorithmWrapper):
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
         return TorchBitWatermarkData.get_random(self.params.wm_length)
-        

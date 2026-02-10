@@ -5,4 +5,4 @@ augly
 scikit-image
 pandas
 matplotlib
-torch<2.6
+torch
