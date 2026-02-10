@@ -66,7 +66,7 @@ class InvisMarkWrapper(BaseAlgorithmWrapper):
         ckpt_path: str = DEFAULT_CHECKPOINT_PATH,
         module_path: str = DEFAULT_MODULE_PATH,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
-    ):
+    ) -> None:
         super().__init__({"wm_length": wm_length})
         self.wm_length = wm_length
 

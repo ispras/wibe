@@ -64,7 +64,7 @@ class RobustWideWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        Robust-Wide algorithm configuration parameters (default: EmptyDict)
+        Robust-Wide algorithm configuration parameters (default EmptyDict)
     """
 
     name = "robust_wide"
@@ -103,9 +103,9 @@ class RobustWideWrapper(BaseAlgorithmWrapper):
         """
         transform_image = self.transform_and_normalize(image).unsqueeze(0).to(self.device)
         watermark_image = self.model.encoder(transform_image, watermark_data.watermark.type(transform_image.dtype).to(self.device))
-        return torch.clip(self.denormalize(watermark_image), 0, 1).squeeze(0)
+        return torch.clip(self.denormalize(watermark_image.detach().cpu()), 0, 1).squeeze(0)
     
-    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> torch.Tensor:
         """Extract watermark from marked image.
         
         Parameters

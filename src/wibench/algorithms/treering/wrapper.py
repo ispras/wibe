@@ -75,7 +75,7 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        Tree-Ring algorithm configuration parameters (default: EmptyDict)
+        Tree-Ring algorithm configuration parameters (default EmptyDict)
 
     """
     

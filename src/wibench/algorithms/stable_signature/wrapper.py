@@ -60,20 +60,24 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        StableSignature algorithm configuration parameters (default: EmptyDict)
+        StableSignature algorithm configuration parameters (default EmptyDict)
     """
     
     name = "stable_signature"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
-        self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
+        module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(StableSignatureParams(**params))
         self.params: StableSignatureParams
         self.device = self.params.device
-        with ModuleImporter("StableSignature", self.module_path):
+        with ModuleImporter("StableSignature", Path(module_path)):
+            # from StableSignature.ldm.models.diffusion.ddpm import LatentDiffusion
             from StableSignature.utils_model import load_model_from_config
-            config = OmegaConf.load(f"{str(Path(self.params.ldm_config_path).resolve())}")
-            ldm_ae = load_model_from_config(config, str(Path(self.params.ldm_checkpoint_path).resolve()))
+            config_path = str(Path(self.params.ldm_config_path).resolve())
+            checkpoint_path = str(Path(self.params.ldm_checkpoint_path).resolve())
+            config = OmegaConf.load(config_path)
+            with ModuleImporter("ldm", Path(module_path) / "src" / "ldm"):
+                ldm_ae = load_model_from_config(config, checkpoint_path)
             ldm_aef = ldm_ae.first_stage_model
             ldm_aef.eval()
             # loading the fine-tuned decoder weights

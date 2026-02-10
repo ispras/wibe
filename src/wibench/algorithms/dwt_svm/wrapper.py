@@ -24,7 +24,7 @@ class DWTSVMWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        Contains value for "threshold" parameter of the algorithm. The higher is the threshold, the watermark is more robust to attacks, but less imperceptible (default: EmptyDict)
+        Contains value for "threshold" parameter of the algorithm. The higher is the threshold, the watermark is more robust to attacks, but less imperceptible (default EmptyDict)
 
     """
     name = "dwt_svm"
@@ -45,7 +45,7 @@ class DWTSVMWrapper(BaseAlgorithmWrapper):
         extracted = self.marker.extract(torch_img2numpy_bgr(image), key)
         return extracted
 
-    def watermark_data_gen(self):
+    def watermark_data_gen(self) -> WatermarkData:
         wm = np.random.randint(0, 2, 512)
         key = np.random.randint(0, 2, 512)
         return WatermarkData(wm, key)

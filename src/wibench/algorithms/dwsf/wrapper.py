@@ -24,7 +24,7 @@ from wibench.watermark_data import TorchBitWatermarkData
 
 DEFAULT_MODULE_PATH = "./submodules/DWSF"
 DEFAULT_ENCODER_WEIGHT_PATH = "./model_files/dwsf/encoder_best.pth"
-DEFAULT_DECODER_WEIGHT_PATH = "/model_files/dwsf/decoder_best.pth"
+DEFAULT_DECODER_WEIGHT_PATH = "./model_files/dwsf/decoder_best.pth"
 DEFAULT_SEG_WEIGHT_PATH = "./model_files/dwsf/seg.pth"
 
 
@@ -68,9 +68,9 @@ class DWSFParams(Params):
     H: int = 128
     W: int = 128
     split_size: int = 128
-    default_noise_layer: List[str] = field(default_factory=lambda x: ["Combined([Identity()])"])
-    mean: List[float] = field(default_factory=lambda x: [0.5, 0.5, 0.5])
-    std: List[float] = field(default_factory=lambda x: [0.5, 0.5, 0.5])
+    default_noise_layer: List[str] = field(default_factory=lambda: ["Combined([Identity()])"])
+    mean: List[float] = field(default_factory=lambda: [0.5, 0.5, 0.5])
+    std: List[float] = field(default_factory=lambda: [0.5, 0.5, 0.5])
     psnr: int = 35
     gt: float = 0.5
 
@@ -84,7 +84,7 @@ class DWSFWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        DWSF algorithm configuration parameters (default: EmptyDict)
+        DWSF algorithm configuration parameters (default EmptyDict)
 
     """
     

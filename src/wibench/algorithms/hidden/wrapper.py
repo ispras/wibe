@@ -1,5 +1,5 @@
 import torch
-import sys
+import numpy as np
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
@@ -66,7 +66,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        HiDDeN algorithm configuration parameters (default: EmptyDict)
+        HiDDeN algorithm configuration parameters (default EmptyDict)
     """
 
     name = "hidden"
@@ -107,7 +107,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         )
         super().__init__(hidden_params)
     
-    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
         """Embed watermark into input image.
         
         Parameters
@@ -125,7 +125,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         marked_image = overlay_difference(image, resized_image, encoded_tensor)
         return marked_image
     
-    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> np.ndarray:
         """Extract watermark from marked image.
         
         Parameters

@@ -45,7 +45,7 @@ class StegaStampWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        StegaStamp algorithm configuration parameters (default: EmptyDict)
+        StegaStamp algorithm configuration parameters (default EmptyDict)
     """
 
     name = "stega_stamp"

@@ -94,7 +94,7 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        ARWGAN algorithm configuration parameters (default: EmptyDict)
+        ARWGAN algorithm configuration parameters (default EmptyDict)
 
     """
 

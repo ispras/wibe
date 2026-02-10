@@ -68,7 +68,7 @@ class CINWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        CIN algorithm configuration parameters (default: EmptyDict)
+        CIN algorithm configuration parameters (default EmptyDict)
 
     """
     
@@ -87,6 +87,11 @@ class CINWrapper(BaseAlgorithmWrapper):
 
         yaml_config_path = Path(yaml_config_path).resolve()
         checkpoint_path = Path(checkpoint_path).resolve()
+
+        if not yaml_config_path.exists():
+            raise FileNotFoundError(f"The config path: '{str(yaml_config_path)}' does not exist!")
+        if not checkpoint_path.exists():
+            raise FileNotFoundError(f"The checkpoint path: '{str(checkpoint_path)}' does not exist!")
 
         option_yml = parse_yml(yaml_config_path)
         config = dict_to_nonedict(option_yml)

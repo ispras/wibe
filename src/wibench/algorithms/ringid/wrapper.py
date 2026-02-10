@@ -73,7 +73,7 @@ class RingIDWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        RingID algorithm configuration parameters (default: EmptyDict)
+        RingID algorithm configuration parameters (default EmptyDict)
 
     """
     

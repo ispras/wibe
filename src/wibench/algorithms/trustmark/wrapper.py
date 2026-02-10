@@ -41,7 +41,7 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        TrustMark algorithm configuration parameters (default: EmptyDict)
+        TrustMark algorithm configuration parameters (default EmptyDict)
 
     """
     

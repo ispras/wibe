@@ -28,7 +28,7 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        Invisible-Watermark algorithm configuration parameters (default: EmptyDict)
+        Invisible-Watermark algorithm configuration parameters (default EmptyDict)
     """
     
     abstract = True

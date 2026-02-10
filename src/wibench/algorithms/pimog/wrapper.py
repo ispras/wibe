@@ -45,7 +45,7 @@ class PIMoGWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        PIMoG algorithm configuration parameters (default: EmptyDict)
+        PIMoG algorithm configuration parameters (default EmptyDict)
     """
 
     name = "pimog"

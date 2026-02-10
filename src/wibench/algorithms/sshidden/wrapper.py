@@ -87,7 +87,7 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        SSHiDDeN algorithm configuration parameters (default: EmptyDict)
+        SSHiDDeN algorithm configuration parameters (default EmptyDict)
     """
 
     name = "sshidden"

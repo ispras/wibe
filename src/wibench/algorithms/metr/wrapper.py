@@ -80,12 +80,12 @@ class METRWrapper(BaseAlgorithmWrapper):
     """`METR <https://arxiv.org/abs/2507.21195>`_: Image Watermarking with Large Number of Unique Messages.
     
     Provides an interface for embedding and extracting watermarks in Text2Image task using the METR watermarking algorithm.
-    Based on the code from `here <https://github.com/Mao718/MaXsive>`__.
+    Based on the code from `here <https://github.com/deepvk/metr>`__.
     
     Parameters
     ----------
     params : Dict[str, Any]
-        METR algorithm configuration parameters (default: EmptyDict)
+        METR algorithm configuration parameters (default EmptyDict)
 
     """
     

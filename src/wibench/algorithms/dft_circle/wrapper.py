@@ -12,7 +12,7 @@ class DFTMarkerWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        Contains value for watermark strength "alpha" parameter of the algorithm
+        Contains value for watermark strength "alpha" parameter of the algorithm (default EmptyDict)
     """
     name = "dft_circle"
 

@@ -191,7 +191,7 @@ class WatermarkMultiBitData(WatermarkData):
 
 
 @dataclass
-class Watermark0BitData(WatermarkData):
+class WatermarkZeroBitData(WatermarkData):
     """Watermark data for SSL (Self-Supervised Learning) watermarking algorithm in zero-bit scenario.
 
     Attributes
@@ -222,7 +222,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        SSL algorithm configuration parameters (default: EmptyDict)
+        SSL algorithm configuration parameters (default EmptyDict)
     """
 
     name = "ssl_watermarking"
@@ -268,12 +268,12 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
             self.data_aug = All()
 
     def _init_method(self, params: Dict[str, Any]):        
-        self.method = params.get("method")
+        self.method = params.get("method", "multi-bit")
         self.params_method, self.watermark_data, self.encode_func, self.decode_func = \
             (SSLMultiBitParams, WatermarkMultiBitData, encode.watermark_multibit, decode.decode_multibit) if self.method == "multi-bit" else \
-            (SSLZeroBitParams, Watermark0BitData, encode.watermark_0bit, decode.decode_0bit)
+            (SSLZeroBitParams, WatermarkZeroBitData, encode.watermark_0bit, decode.decode_0bit)
     
-    def embed(self, image: TorchImg, watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]) -> TorchImg:
+    def embed(self, image: TorchImg, watermark_data: Union[WatermarkZeroBitData, WatermarkMultiBitData]) -> TorchImg:
         """Embed watermark into input image.
         
         Parameters
@@ -293,7 +293,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         unnormalize_image = unnormalize_img(pt_imgs_out[0]).squeeze(0).cpu()
         return unnormalize_image
         
-    def extract(self, image: TorchImg, watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]) -> Union[torch.Tensor, float]:
+    def extract(self, image: TorchImg, watermark_data: Union[WatermarkZeroBitData, WatermarkMultiBitData]) -> Union[torch.Tensor, float]:
         """Extract watermark from marked image.
         
         Parameters
@@ -315,7 +315,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
             result = 10 ** result["log10_pvalue"]
         return result
     
-    def watermark_data_gen(self) -> Union[WatermarkMultiBitData, Watermark0BitData]:
+    def watermark_data_gen(self) -> Union[WatermarkMultiBitData, WatermarkZeroBitData]:
         """Generate watermark payload data for SLL (Self-Supervised Learning) watermarking algorithm in both multi-bit and zero-bit scenarios.
         
         Returns

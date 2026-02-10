@@ -29,7 +29,7 @@ class DCTMarkerWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        dictionary, containing values for `DCTMarkerConfig` dataclass (default: EmptyDict)
+        dictionary, containing values for `DCTMarkerConfig` dataclass (default EmptyDict)
     """
     name = "dct_marker"
 

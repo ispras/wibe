@@ -62,7 +62,7 @@ class MaXsiveWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        MaXsive algorithm configuration parameters (default: EmptyDict)
+        MaXsive algorithm configuration parameters (default EmptyDict)
 
     """
     
