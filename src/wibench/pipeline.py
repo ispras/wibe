@@ -504,9 +504,7 @@ class StageRunner:
             Object context to process
         """
         for (stage_num, stage) in enumerate(self.stages):
-            seed_everything(
-                None if self.seed is None else object_id_to_seed(context.object_id + str(self.seed) + str(stage_num))
-            )
+            seed_everything(object_id_to_seed(context.object_id + str(self.seed) + str(stage_num)))
             stage.process_object(context)
 
 

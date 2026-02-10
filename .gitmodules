@@ -49,3 +49,9 @@
 [submodule "submodules/PIMoG"]
 	path = submodules/PIMoG
 	url = https://github.com/FangHanNUS/PIMoG-An-Effective-Screen-shooting-Noise-Layer-Simulation-for-Deep-Learning-Based-Watermarking-Netw.git
+[submodule "submodules/WMAR"]
+	path = submodules/WMAR
+	url = https://github.com/facebookresearch/wmar.git
+[submodule "submodules/MaskWM"]
+	path = submodules/MaskWM
+	url = https://github.com/hurunyi/MaskWM.git
