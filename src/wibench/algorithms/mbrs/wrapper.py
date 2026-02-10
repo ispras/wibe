@@ -1,14 +1,19 @@
 from pathlib import Path
-import sys
+from typing import TypeAlias
 import torch
 from torchvision import transforms
 from dataclasses import dataclass
 import json
 from pathlib import Path
+from wibench.module_importer import ModuleImporter
 from wibench.typing import TorchImg
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.utils import normalize_image, denormalize_image, overlay_difference
+
+
+
+MBRSModel: TypeAlias
 
 
 settings_path_128 = f'results/MBRS_Diffusion_128_m30/test_Crop(0.19,0.19)_s1_params.json'
@@ -19,8 +24,7 @@ model_dir_256 = f'results/MBRS_256_m256/models'
 
 class MBRS:
     def __init__(self, settings_path, models_dir, strength_factor: float = 1.0, device = "cpu"):
-        from network.Network import Network
-        self.network_class = Network
+        self.network_class = MBRSModel
         if not Path(settings_path).exists():
             raise FileExistsError(f'File {settings_path} does not exist')
         if not Path(models_dir).is_dir():
@@ -30,7 +34,7 @@ class MBRS:
         self.strength_factor = strength_factor
         self.message_len = self.settings['message_length']
         self.models_dir = models_dir
-        self.model: None | Network = None
+        self.model = None
         self.device = torch.device(
             device)
         self.resize = transforms.Resize(
@@ -102,8 +106,10 @@ class MBRSWrapper(BaseAlgorithmWrapper):
                  module_path: str = "./submodules/mbrs", 
                  device: str = "cuda" if torch.cuda.is_available() else "cpu"):
         params = MBRSParams(wm_length, strength_factor)
-        sys.path.append(module_path)
-        module_path = Path(module_path)
+        with ModuleImporter("mbrs_module", module_path):
+            global MBRSModel
+            from mbrs_module.network.Network import Network as MBRSModel
+        
         weights_path = Path(weights_path)
         super().__init__(params)
         if params.wm_length == 30:

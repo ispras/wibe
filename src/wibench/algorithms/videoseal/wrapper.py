@@ -4,6 +4,7 @@ from pathlib import Path
 from wibench.typing import TorchImg
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
+from wibench.module_importer import ModuleImporter
 
 
 class VideosealWrapper(BaseAlgorithmWrapper):
@@ -22,10 +23,10 @@ class VideosealWrapper(BaseAlgorithmWrapper):
         module_path: str = "./submodules/videoseal",
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
     ):
-        sys.path.append(module_path)
-        from videoseal.utils.cfg import setup_model_from_model_card
+        with ModuleImporter("VIDEOSEAL", module_path):
+            from VIDEOSEAL.videoseal.utils.cfg import setup_model_from_model_card
 
-        self.model = setup_model_from_model_card(Path(model_card))
+            self.model = setup_model_from_model_card(Path(model_card))
         self.model.eval()
         self.model.compile()
         self.model.blender.scaling_w *= strength_factor

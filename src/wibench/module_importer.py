@@ -2,10 +2,11 @@ import importlib
 import importlib.util
 import pkgutil
 import sys
-import types
+import builtins
+import os
 
 from pathlib import Path
-from typing_extensions import Dict, Union
+from typing_extensions import Union
 
 
 def import_modules(package_name):
@@ -24,98 +25,189 @@ def import_modules(package_name):
             print(
                 f"Could not import '{module_name}' from '{package_name}': {e}"
             )  # Todo: logging
+  
 
-
-class ModuleImporter:
-    """Dynamic module importer that registers Python projects without installation requirements.
-
-    This class enables importing Python modules and packages that:
-    - Don't have proper `__init__.py` files
-    - Aren't installed in the Python environment
-    - Need to be loaded from arbitrary filesystem paths
-    Notes
-    -----
-    - Creates necessary parent modules in sys.modules
-    - Handles both packages and single modules
-    - Supports nested package structures
-    - Performs multiple passes to handle dependencies
-    - Maintains import statistics in `loaded` attribute
-
-    Examples
-    --------
-    >>> importer = ModuleImporter("my_pkg", "/path/to/my_pkg")
-    >>> results = importer.register_module()
-    >>> # Access imported modules
-    >>> from my_pkg import submodule
-    """
+class ModuleImporter():
     def __init__(self, module_name: str, module_path: Union[str, Path]) -> None:
+        self.module_path = str(module_path)
         self.module_name = module_name
-        self.module_path = (module_path if isinstance(module_path, Path) else Path(module_path)).resolve()
-        self.loaded = {}
-        self.remaining = {}
-        self.max_attempts = 0
-        self._collect_modules(self.module_path, self.module_name)
-
-    def _register_alias(self, full_name: str) -> None:
-        if self.module_name and full_name.startswith(self.module_name + "."):
-            full_alias = full_name[len(self.module_name) + 1:]
-            alias_parts = full_alias.split(".")
-            for alias in [full_alias] + alias_parts:
-                if alias not in sys.modules:
-                    sys.modules[alias] = sys.modules[full_name]
-
-    def _collect_modules(self, current_path: Path, current_base: str) -> None:
-        if current_base not in sys.modules:
-            pkg = types.ModuleType(current_base)
-            pkg.__path__ = [str(current_path)]
-            sys.modules[current_base] = pkg
-            self._register_alias(current_base)
-
-        for item in current_path.iterdir():
-            if item.is_dir():
-                self._collect_modules(item, current_base + "." + item.name)
-            elif (item.suffix == ".py") and (item.stem not in ["__pycache__", "setup", "__init__"]):
-                self.max_attempts += 1
-                modname = current_base + "." + item.stem
-                self.remaining[modname] = item
-
-    def register_module(self) -> Dict[str, bool]:
-        """Register all discovered modules in the Python import system.
-
-        Returns
-        -------
-        Dict[str, bool]
-            Dictionary mapping module names to import success status
-
-        Notes
-        -----
-        - Makes multiple passes to handle dependencies
-        - Creates parent package modules as needed
-        - Sets proper __path__ attributes for packages
-        - Returns final status after all attempts
-        """
-        for attempt in range(self.max_attempts):
-            failed = {}
-            for module_name, file_path in self.remaining.items():
-                try:
-                    spec = importlib.util.spec_from_file_location(module_name, file_path)
-                    module = importlib.util.module_from_spec(spec)
-                    sys.modules[module_name] = module
-                    spec.loader.exec_module(module)
-                    self.loaded[module_name] = (True, None, None)
-                    self._register_alias(module_name)
-                except Exception as e:
-                    failed[module_name] = file_path
-                    self.loaded[module_name] = (False, file_path, e)
-    
-            if not failed:
-                break
-            self.remaining = failed
+        self.original_import = builtins.__import__
         
-        for module in self.loaded.keys():
-            status, file_path, exs = self.loaded[module]
-            if status:
-                print(f"Successfully registered module: {module}")
+        spec = self._create_spec_from_path(module_name, self.module_path)
+        if spec is None:
+            raise ImportError(f"Cannot create spec for {module_name} from {self.module_path}")
+        
+        self.module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = self.module
+        
+        self.loader = spec.loader
+        
+        self.currently_importing = module_name
+        self.nested_modules = {}
+        
+    def _create_spec_from_path(self, fullname, path):
+        if os.path.isfile(path):
+            origin = path
+            is_package = False
+            loader = importlib.machinery.SourceFileLoader(fullname, path)
+        elif os.path.isdir(path):
+            init_path = os.path.join(path, '__init__.py')
+            if not os.path.exists(init_path):
+                origin = None
+                is_package = True
+                loader = importlib.machinery.SourceFileLoader(fullname, init_path)
             else:
-                print(f"Failed to register module: {module}. Problem: {exs}")
-        return self.loaded
+                origin = init_path
+                is_package = True
+                loader = importlib.machinery.SourceFileLoader(fullname, init_path)
+        else:
+            if not path.endswith('.py'):
+                py_path = path + '.py'
+                if os.path.exists(py_path):
+                    path = py_path
+                    origin = path
+                    is_package = False
+                    loader = importlib.machinery.SourceFileLoader(fullname, path)
+                else:
+                    return None
+            else:
+                if os.path.exists(path):
+                    origin = path
+                    is_package = False
+                    loader = importlib.machinery.SourceFileLoader(fullname, path)
+                else:
+                    return None
+
+        spec = importlib.util.spec_from_loader(
+            fullname,
+            loader,
+            origin=origin,
+            is_package=is_package
+        )
+        
+        if spec and is_package and os.path.isdir(path):
+            spec.submodule_search_locations = [path]
+        
+        return spec
+
+    def _import_interceptor(self, name, globals=None, locals=None, fromlist=(), level=0):
+        if globals and '__name__' in globals:
+            importer_name = globals['__name__']
+        else:
+            importer_name = '__main__'
+        
+        if (importer_name == self.module_name or 
+            importer_name.startswith(self.module_name + '.')):
+            
+            if level == 0:
+                result = self._try_import_from_module_path(name, importer_name, fromlist)
+                if result is not None:
+                    return result
+            
+            elif level > 0:
+                result = self._handle_relative_import(name, importer_name, level, fromlist)
+                if result is not None:
+                    return result
+
+        return self.original_import(name, globals, locals, fromlist, level)
+
+    def _try_import_from_module_path(self, name, importer_name, fromlist):
+        if name.startswith(self.module_name + '.'):
+            rel_name = name[len(self.module_name) + 1:]
+
+            rel_path = rel_name.replace('.', '/')
+
+            py_file = os.path.join(self.module_path, rel_path + '.py')
+            if os.path.exists(py_file):
+                return self._load_nested_module(name, py_file)
+            
+            package_dir = os.path.join(self.module_path, rel_path)
+            init_file = os.path.join(package_dir, '__init__.py')
+            if os.path.exists(init_file):
+                return self._load_nested_module(name, package_dir)
+        
+        elif importer_name.startswith(self.module_name):
+            importer_dir = self.module_path
+            py_file = os.path.join(importer_dir, name.replace('.', '/') + '.py')
+            if os.path.exists(py_file):
+                full_name = f"{importer_name.split('.', 1)[0]}.{name}" if '.' in importer_name else f"{self.module_name}.{name}"
+                curr_module = self._load_nested_module(full_name, py_file, add_alias=True)
+                if fromlist is not None and len(fromlist) > 0:
+                    return curr_module
+
+                num_iters = full_name.count(".") - 1
+                for _ in range(num_iters):
+                    full_name = full_name.rsplit(".", 1)[0]
+                    py_file = str(Path(py_file).parent)
+                    prev_module = curr_module
+                    curr_module = self._load_nested_module(full_name, py_file)
+                    if curr_module is None:
+                        return prev_module
+                
+                return curr_module
+            
+            package_dir = os.path.join(importer_dir, name.replace('.', '/'))
+            init_file = os.path.join(package_dir, '__init__.py')
+            if os.path.exists(init_file):
+                full_name = f"{importer_name.split('.', 1)[0]}.{name}" if '.' in importer_name else f"{self.module_name}.{name}"
+                return self._load_nested_module(full_name, package_dir)
+        
+        return None
+
+    def _handle_relative_import(self, name, importer_name, level, fromlist):
+        if not importer_name.startswith(self.module_name):
+            return None
+        
+        if level == 0:
+            absolute_name = name
+        else:
+            if '.' in importer_name:
+                package_parts = importer_name.split('.')
+                if level > len(package_parts):
+                    return None
+                absolute_name = '.'.join(package_parts[:-level] + [name])
+            else:
+                if level > 1:
+                    return None
+                absolute_name = name
+        
+        if not absolute_name.startswith(self.module_name):
+            absolute_name = f"{self.module_name}.{absolute_name}"
+
+        return self._try_import_from_module_path(absolute_name, importer_name, fromlist)
+
+    def _load_nested_module(self, fullname, path, add_alias=False):
+        if fullname in self.nested_modules:
+            return self.nested_modules[fullname]
+        rel_name = fullname.split(".", maxsplit=1)[1]
+        spec = self._create_spec_from_path(fullname, path)
+        if spec is None:
+            return None
+        
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[fullname] = module
+        if add_alias:
+            sys.modules[rel_name] = module
+        
+        try:
+            spec.loader.exec_module(module)
+        except Exception as e:
+            del sys.modules[fullname]
+            print(f"Failed to load nested module {fullname}: {e}")
+            return None
+            raise ImportError(f"Failed to load nested module {fullname}: {e}")
+        
+        self.nested_modules[fullname] = module
+        if add_alias:
+            self.nested_modules[rel_name] = module
+        return module
+
+    def __enter__(self):
+        builtins.__import__ = self._import_interceptor
+        return self.module
+
+    def __exit__(self, exc_type, exc, exc_tb):
+        builtins.__import__ = self.original_import
+
+        for name in list(self.nested_modules.keys()):
+            sys.modules.pop(name, None)

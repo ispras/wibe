@@ -1,10 +1,10 @@
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.typing import TorchImg
+from wibench.module_importer import ModuleImporter
 import torch
 import torch.nn.functional as F
 from dataclasses import dataclass
-import sys
 import os
 
 
@@ -44,13 +44,13 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         super().__init__(WAParams(wm_length=wm_length, scaling_w=scaling_w))
-        sys.path.append(module_path)
-        from notebooks.inference_utils import (
-            load_model_from_checkpoint,
-            normalize_img,
-            unnormalize_img,
-        )
-        from watermark_anything.data.metrics import msg_predict_inference
+        with ModuleImporter("WAM", module_path):
+            from WAM.notebooks.inference_utils import (
+                load_model_from_checkpoint,
+                normalize_img,
+                unnormalize_img,
+            )
+            from WAM.watermark_anything.data.metrics import msg_predict_inference
 
         self.ckpt_path = ckpt_path
         self.params_path = params_path

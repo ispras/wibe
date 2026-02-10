@@ -1,5 +1,6 @@
 import torch
 import sys
+import scipy
 
 from typing_extensions import Dict, Any, Optional
 from dataclasses import dataclass
@@ -133,6 +134,19 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         orig_image_w = outputs_w.images[0]
 
         return transforms.ToTensor()(orig_image_w)
+    
+    def _get_p_value(self, reversed_latents_w, watermarking_mask, gt_patch):
+        reversed_latents_w_fft = torch.fft.fftshift(torch.fft.fft2(reversed_latents_w), dim=(-1, -2))[watermarking_mask].flatten()
+        target_patch = gt_patch[watermarking_mask].flatten()
+        target_patch = torch.concatenate([target_patch.real, target_patch.imag])
+        
+        reversed_latents_w_fft = torch.concatenate([reversed_latents_w_fft.real, reversed_latents_w_fft.imag])
+        sigma_w = reversed_latents_w_fft.std()
+        lambda_w = (target_patch ** 2 / sigma_w ** 2).sum().item()
+        x_w = (((reversed_latents_w_fft - target_patch) / sigma_w) ** 2).sum().item()
+        p_w = scipy.stats.ncx2.cdf(x=x_w, df=len(target_patch), nc=lambda_w)
+
+        return p_w
         
     def extract(self, img: TorchImg, watermark_data: TreeRingWatermarkData) -> bool:
         """Extract watermark from marked image.
@@ -159,9 +173,7 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
             num_inference_steps=self.params.test_num_inference_steps,
         )
         gt_patch = torch.from_numpy(watermark_data.gt_patch).type(torch.complex32).to(self.device)
-        reversed_latents_w_fft = torch.fft.fftshift(torch.fft.fft2(reversed_latents), dim=(-1, -2))
-        w_metric = torch.abs(reversed_latents_w_fft[watermark_data.watermarking_mask] - gt_patch[watermark_data.watermarking_mask]).mean().item()
-        return w_metric <= self.params.threshold
+        return self._get_p_value(reversed_latents, watermark_data.watermarking_mask, gt_patch)
     
     def watermark_data_gen(self) -> TreeRingWatermarkData:
         """Get watermark payload data for Tree-ring watermarking algorithm.
