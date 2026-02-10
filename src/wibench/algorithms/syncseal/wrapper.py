@@ -92,7 +92,7 @@ class SyncSeal(BaseAlgorithmWrapper):
         sync_model_loader = torch.jit.load if "jit" in self.params.checkpoint_path else self._bulid_from_config
         self.sync_model = sync_model_loader(str(Path(self.params.checkpoint_path).resolve())).to(self.device).eval()
         self.params.method_params["device"] = self.device
-        self.method_wrapper = self._registry.get(self.params.method)(self.params.method_params)
+        self.method_wrapper = self._registry.get(self.params.method)(**self.params.method_params)
     
     def _bulid_from_config(self, checkpoint_path: str) -> nn.Module:
         with ModuleImporter("syncseal", self.module_path):
