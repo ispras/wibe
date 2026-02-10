@@ -34,7 +34,7 @@ class DreamSim(PostEmbedMetric):
     def __init__(
         self,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
-        cache_dir: str = "./dreamsim_cache",
+        cache_dir: str = "./model_files/dreamsim",
         normalize_embeds: bool = True,
         dreamsim_type: str = "ensemble",
         use_patch_model: bool = False
