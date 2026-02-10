@@ -4,12 +4,8 @@ algorithms:
       module_path: ./submodules/tree-ring-watermark
       device: cuda
 
-post_embed_metrics:
-  - EmbWm
-post_attack_metrics:
-  - PSNR
 post_extract_metrics:
-  - Result
+{% include 'common/tpr_fpr.yml' %} 
 
 datasets:
   DiffusionDB:
