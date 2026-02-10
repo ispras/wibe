@@ -209,8 +209,38 @@ class TPRxFPR(PostExtractMetric):
         else:
             num_bits = len(wm)
         threshold = self.bits_threshold(num_bits)
-        return int((np.array(wm) == np.array(extraction_result)).sum() >= threshold)
+        return int((np.array(wm).flatten() == np.array(extraction_result).flatten()).sum() >= threshold)
+    
 
+class PValue(PostExtractMetric):
+    """P-value of extraction result. P-value denotes probability to observe the same result as in case of extraction from not watermarked object. 
+    
+    Notes
+    -----
+    - For zero-bit methods we assume that extraction function returns p-value itself.
+    - For multi-bit methods p-value is calculated as probability to get the same number of mismatched bits or less than observed in case of a random message with unified i.i.d. bit values.
+    - Lower p-value stands for more confident "content is watermarked" decision.
+       
+    """
+    name = "p-value"
+    
+    def __call__(
+        self,
+        img1: TorchImg,
+        img2: TorchImg,
+        watermark_data: Any,
+        extraction_result: Any,
+    ) -> float:
+        wm = watermark_data.watermark
+        if isinstance(extraction_result, float): # zero-bit method returns p-value
+            return extraction_result
+        matched_bits = int((np.array(wm).flatten() == np.array(extraction_result).flatten()).sum())
+        if isinstance(wm, torch.Tensor) or isinstance(wm, np.ndarray):
+            num_bits = len(wm.flatten())
+        else:
+            num_bits = len(wm)
+        
+        return 1 - binom.cdf(matched_bits - 1, num_bits, 0.5)
 
 class ExtractedWatermark(PostExtractMetric):
     """Records the extracted watermark payload for analysis.
