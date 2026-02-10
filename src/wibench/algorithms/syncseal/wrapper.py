@@ -66,9 +66,7 @@ class SyncSealParams(Params):
     extractor_config: ExtractorConfig = field(default_factory=ExtractorConfig)
     jnd_config: JNDConfig = field(default_factory=JNDConfig)
     method: str = "trustmark"
-    method_params: Dict[str, Any] = field(default_factory=lambda: {"wm_length": 100,
-                                                                   "model_type": "Q",
-                                                                   "wm_strength": 0.75})
+    method_params: Dict[str, Any] = field(default_factory=dict)
 
 
 
@@ -81,7 +79,7 @@ class SyncSeal(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        SyncSeal algorithm configuration parameters
+        SyncSeal algorithm configuration parameters (default EmptyDict)
     """
 
     name = "syncseal"
@@ -94,7 +92,7 @@ class SyncSeal(BaseAlgorithmWrapper):
         sync_model_loader = torch.jit.load if "jit" in self.params.checkpoint_path else self._bulid_from_config
         self.sync_model = sync_model_loader(str(Path(self.params.checkpoint_path).resolve())).to(self.device).eval()
         self.params.method_params["device"] = self.device
-        self.method_wrapper = self._registry.get(self.params.method)(self.params.method_params)
+        self.method_wrapper = self._registry.get(self.params.method)(**self.params.method_params)
     
     def _bulid_from_config(self, checkpoint_path: str) -> nn.Module:
         with ModuleImporter("syncseal", self.module_path):
