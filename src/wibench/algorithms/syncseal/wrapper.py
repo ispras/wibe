@@ -66,9 +66,7 @@ class SyncSealParams(Params):
     extractor_config: ExtractorConfig = field(default_factory=ExtractorConfig)
     jnd_config: JNDConfig = field(default_factory=JNDConfig)
     method: str = "trustmark"
-    method_params: Dict[str, Any] = field(default_factory=lambda: {"wm_length": 100,
-                                                                   "model_type": "Q",
-                                                                   "wm_strength": 0.75})
+    method_params: Dict[str, Any] = field(default_factory=dict)
 
 
 
@@ -81,7 +79,7 @@ class SyncSeal(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        SyncSeal algorithm configuration parameters
+        SyncSeal algorithm configuration parameters (default EmptyDict)
     """
 
     name = "syncseal"
