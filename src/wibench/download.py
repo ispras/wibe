@@ -4,20 +4,23 @@ import requests
 import zipfile
 
 
-DEFAULT_MODELS_PATH = "./model_files"
-DEFAULT_CACHE_PATH = "./wibe_cache"
+DOWNLOAD_MODELS_PATH = "./model_files"
+DOWNLOAD_CACHE_PATH = "./wibe_cache"
 
 
 def check_files_in_folder(folder_path: str, required_files: List[str]) -> bool:
     return all((Path(folder_path) / f).exists() for f in required_files)
 
 
-def download_folder(url: str, object_name: str, path_to_save: str, download_cache: str) -> None:
+def download_folder(url: str, object_name: str) -> None:
     
-    Path(download_cache).mkdir(exist_ok=True, parents=True)
+    download_cache = Path(DOWNLOAD_CACHE_PATH)
+    download_models = Path(DOWNLOAD_MODELS_PATH)
+    download_cache.mkdir(exist_ok=True, parents=True)
+    download_models.mkdir(parents=True, exist_ok=True)
 
     download_url = url + "/download"
-    download_name = str(Path(download_cache) / object_name) + ".zip"
+    download_name = str(download_cache / object_name) + ".zip"
     print(f"Download data for {object_name}...")
     with requests.get(download_url, stream=True) as r:
         r.raise_for_status()
@@ -35,22 +38,17 @@ def download_folder(url: str, object_name: str, path_to_save: str, download_cach
                 else:
                     print(f"\rDownloaded: {downloaded / 1024:.1f} KB", end='')
 
-    Path(path_to_save).mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(download_name, "r") as zip_ref:
-        zip_ref.extractall(str(path_to_save))
+        zip_ref.extractall(str(download_models))
 
 
-def requires_download_files(url: str,
-                            folder_path: str,
-                            required_files: List[str],
-                            path_to_save: str = DEFAULT_MODELS_PATH,
-                            download_cache: str = DEFAULT_CACHE_PATH):
+def requires_download(url: str, model_name: str, required_files: List[str]):
     def decorator(cls):
         original_init = cls.__init__
 
         def new_init(self, *args, **kwargs):
-            if not check_files_in_folder(folder_path, required_files):
-                download_folder(url, Path(folder_path).name, path_to_save, download_cache)
+            if not check_files_in_folder(str(Path(DOWNLOAD_MODELS_PATH) / model_name), required_files):
+                download_folder(url, model_name)
             original_init(self, *args, **kwargs)
 
         cls.__init__ = new_init
