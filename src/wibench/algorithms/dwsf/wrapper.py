@@ -21,6 +21,10 @@ from wibench.typing import TorchImg
 from wibench.utils import normalize_image, denormalize_image
 from wibench.config import Params
 from wibench.watermark_data import TorchBitWatermarkData
+from wibench.download import requires_download_files, DEFAULT_MODELS_PATH
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/F39nKXowAEpZyMy"
 
 
 @dataclass
@@ -70,6 +74,7 @@ class DWSFParams(Params):
     gt: float = 0.5
 
 
+@requires_download_files(URL, str(Path(DEFAULT_MODELS_PATH) / "dwsf"), ["seg.pth", "encoder_best.pth", "decoder_best.pth"])
 class DWSFWrapper(BaseAlgorithmWrapper):
     """`DWSF <https://dl.acm.org/doi/abs/10.1145/3581783.3612015>`_: Practical Deep Dispersed Watermarking with Synchronization and Fusion - Image Watermarking Algorithm.
 
