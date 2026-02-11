@@ -2,11 +2,21 @@ import os
 import os.path
 import subprocess
 import sys
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--mode', default='', help='Mode of operation: "extra" for requirements (treering, ringID, maxsive and gaussian shading)')
+args = parser.parse_args()
 
 
 dir_to_walk = './src/wibench/'
 requirements_txt = 'requirements.txt'
 all_requirements = []
+
+if args.mode == 'extra':
+    requirements_txt = 'extra_requirements.txt'
+
 python_m_pip_install = f'{sys.executable} -m pip install'.split()
 
 try:

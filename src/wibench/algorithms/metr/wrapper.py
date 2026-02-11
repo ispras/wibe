@@ -4,21 +4,11 @@ from pathlib import Path
 
 import torch
 from torchvision import transforms
-from diffusers import DPMSolverMultistepScheduler
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
-from metr.inverse_stable_diffusion import InversableStableDiffusionPipeline
-from metr.optim_utils import (
-    detect_msg,
-    get_watermarking_mask,
-    get_watermarking_pattern,
-    inject_watermark,
-    transform_img
-)
-from metr.stable_sig.utils_model import change_pipe_vae_decoder
 
 
 @dataclass
@@ -94,6 +84,24 @@ class METRWrapper(BaseAlgorithmWrapper):
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         super().__init__(METRParams(**params))
         self.params: METRParams
+        
+        from diffusers import DPMSolverMultistepScheduler
+        
+        from metr.inverse_stable_diffusion import InversableStableDiffusionPipeline
+        from metr.optim_utils import (
+            detect_msg,
+            get_watermarking_mask,
+            get_watermarking_pattern,
+            inject_watermark,
+            transform_img 
+        )
+        from metr.stable_sig.utils_model import change_pipe_vae_decoder
+        self.detect_msg = detect_msg
+        self.get_watermarking_mask = get_watermarking_mask
+        self.get_watermarking_pattern = get_watermarking_pattern
+        self.inject_watermark = inject_watermark
+        self.transform_img = transform_img
+        
         self.device = self.params.device
         scheduler = DPMSolverMultistepScheduler.from_pretrained(self.params.model_id, subfolder='scheduler')  
         pipe = InversableStableDiffusionPipeline.from_pretrained(
@@ -147,7 +155,7 @@ class METRWrapper(BaseAlgorithmWrapper):
             Watermark data for METR watermarking algorithm
 
         """
-        transformed_img = transform_img(transforms.ToPILImage()(img)).unsqueeze(0).to(self.text_embeddings.dtype).to(self.device)
+        transformed_img = self.transform_img(transforms.ToPILImage()(img)).unsqueeze(0).to(self.text_embeddings.dtype).to(self.device)
         image_latents_w = self.pipe.get_image_latents(transformed_img, sample=False)
         reversed_latents_w = self.pipe.forward_diffusion(
             latents=image_latents_w,
@@ -155,7 +163,7 @@ class METRWrapper(BaseAlgorithmWrapper):
             guidance_scale=1,
             num_inference_steps=self.params.num_inversion_steps,
         )
-        watermark = detect_msg(reversed_latents_w, self.params)
+        watermark = self.detect_msg(reversed_latents_w, self.params)
         return watermark
     
     def watermark_data_gen(self) -> METRWatermarkData:
@@ -174,8 +182,8 @@ class METRWrapper(BaseAlgorithmWrapper):
         watermark = TorchBitWatermarkData.get_random(self.params.w_radius).watermark
         msg_str = "".join([str(int(ii)) for ii in watermark.tolist()[0]])
         self.params.msg = msg_str
-        gt_patch = get_watermarking_pattern(self.pipe, self.params, self.device, message=msg_str)
+        gt_patch = self.get_watermarking_pattern(self.pipe, self.params, self.device, message=msg_str)
         init_latents_no_w = self.pipe.get_random_latents()
-        watermarking_mask = get_watermarking_mask(init_latents_no_w, self.params, self.device)
-        init_latents_w = inject_watermark(init_latents_no_w, watermarking_mask, gt_patch, self.params)
+        watermarking_mask = self.get_watermarking_mask(init_latents_no_w, self.params, self.device)
+        init_latents_w = self.inject_watermark(init_latents_no_w, watermarking_mask, gt_patch, self.params)
         return METRWatermarkData(watermark, watermarking_mask, init_latents_w)

@@ -137,7 +137,7 @@ class MaXsiveWrapper(BaseAlgorithmWrapper):
             latents=image_latents_w,
             text_embeddings=self.text_embeddings,
             guidance_scale=1,
-            num_inference_steps=num_inversion_steps,
+            num_inference_steps=self.params.num_inversion_steps,
         )
         return self.watermark_model.detection(reversed_latents_w, watermark_data.data)
     

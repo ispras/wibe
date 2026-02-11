@@ -2,22 +2,35 @@ algorithms:
   - metr
 
 post_embed_metrics:
-{% include 'common/post_embed_metrics.yml' %} 
+  - CLIP_IQA
+  - Aesthetic
+  - ImageReward
+  - CLIPScore
+  - BLIP
+
 post_attack_metrics:
-{% include 'common/post_attack_metrics.yml' %} 
+{% include 'common/post_attack_metrics.yml' %}
+
 post_extract_metrics:
- - BER
+  - BER
+  - TPR@xFPR:
+      report_name: tpr@10e-1fpr
+      fpr_rate: 0.1
+  - TPR@xFPR:
+      report_name: tpr@10e-2fpr
+      fpr_rate: 0.01
+  - TPR@xFPR:
+      report_name: tpr@10e-3fpr
+      fpr_rate: 0.001
 
 datasets:
-{% include 'common/diffusiondb.yml' %}
+{% include 'common/diffusiondb_prompts.yml' %}
 
 attacks:
 {% include 'common/distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/metr
-  seed: 0
-  min_batch_size: 1
   aggregators:
     - CSV:
         table_name: table
