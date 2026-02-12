@@ -1,4 +1,4 @@
-checkpoint_path: chunkyseal_checkpoint.pth
+checkpoint_path: model_files/chunkyseal/chunkyseal_checkpoint.pth
 
 args:
   attenuation_config: resources/videoseal/attenuation.yaml

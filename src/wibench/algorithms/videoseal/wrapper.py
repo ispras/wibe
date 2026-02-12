@@ -14,9 +14,9 @@ REQUIRED_FILES_VIDEOSEAL = ["y_256b_img.pth"]
 URL_PIXELSEAL = "https://nextcloud.ispras.ru/index.php/s/N9xpnMQ7Q2rLB9q"
 NAME_PIXELSEAL = "pixelseal"
 REQUIRED_FILES_PIXELSEAL = ["pixel_seal_checkpoint.pth"]
-URL_CHUNKYSEAL = ""
-NAME_CHUNKYSEAL = ""
-REQUIRED_FILES_CHUNKYSEAL = [""]
+URL_CHUNKYSEAL = "https://nextcloud.ispras.ru/index.php/s/W3rNFtiYqDyEPrb"
+NAME_CHUNKYSEAL = "chunkyseal"
+REQUIRED_FILES_CHUNKYSEAL = ["checkpoint.pth"]
 
 
 @requires_download(URL_VIDEOSEAL, NAME_VIDEOSEAL, REQUIRED_FILES_VIDEOSEAL)
