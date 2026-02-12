@@ -63,7 +63,7 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
         StableSignature algorithm configuration parameters
     """
     
-    name = "stable_signature"
+    name = NAME
 
     def __init__(self, params: Dict[str, Any]):
         super().__init__(StableSignatureParams(**params))

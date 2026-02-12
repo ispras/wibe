@@ -1,5 +1,3 @@
-import numpy as np
-
 from dataclasses import dataclass
 from typing_extensions import Optional, Union, Any
 from pathlib import Path
@@ -54,7 +52,7 @@ class StegaStampWrapper(BaseAlgorithmWrapper):
         StegaStamp algorithm configuration parameters
     """
 
-    name = "stega_stamp"
+    name = NAME
     
     def __init__(self, params: StegaStampConfig) -> None:
         super().__init__(StegaStampConfig(**params))

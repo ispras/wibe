@@ -27,7 +27,7 @@ class VideosealWrapper(BaseAlgorithmWrapper):
     Based on the code from `here <https://github.com/facebookresearch/videoseal>`__.
     """
     
-    name = "videoseal"
+    name = NAME_VIDEOSEAL
 
     def __init__(
         self,
@@ -80,7 +80,7 @@ class PixelSeal(VideosealWrapper):
     Based on the code from `here <https://github.com/facebookresearch/videoseal>`__.
     """
     
-    name = "pixelseal"
+    name = NAME_PIXELSEAL
 
     def __init__(
         self,
@@ -102,7 +102,7 @@ class ChunkySeal(VideosealWrapper):
     `Note:` Model weights are not provided by `download_models.py` script. You may get them from original `link <https://dl.fbaipublicfiles.com/videoseal/chunkyseal/checkpoint.pth>`__.
     """
 
-    name = "chunkyseal"
+    name = NAME_CHUNKYSEAL
 
     def __init__(
         self,

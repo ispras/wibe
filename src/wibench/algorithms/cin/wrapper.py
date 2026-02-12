@@ -73,7 +73,7 @@ class CINWrapper(BaseAlgorithmWrapper):
 
     """
     
-    name = "cin"
+    name = NAME
 
     def __init__(self, params: Dict[str, Any]) -> None:
         with ModuleImporter("CIN_codes", str((Path(params["module_path"]) / "codes").resolve())):

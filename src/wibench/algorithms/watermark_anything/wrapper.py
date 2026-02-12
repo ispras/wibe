@@ -39,7 +39,7 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
 
     """
     
-    name = "watermark_anything"
+    name = NAME
 
     def __init__(
         self,

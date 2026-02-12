@@ -1,5 +1,4 @@
-import sys
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from dataclasses import dataclass, asdict, field
 from pathlib import Path
 
@@ -19,7 +18,8 @@ URL = "https://nextcloud.ispras.ru/index.php/s/MbxydymDFe2pgjp"
 NAME = "maskwm"
 REQUIRED_FILES = ["D_32bits.pth", "D_64bits.pth", "D_128bits.pth"]
 
-DEFAULT_SUBMODULE_PATH: str = "./submodules/MaskWM"
+DEFAULT_SUBMODULE_PATH = "./submodules/MaskWM"
+DEFAULT_CHECKPOINT_PATH = "./model_files/maskwm/D_32bits.pth" 
 
 
 @dataclass
@@ -44,7 +44,7 @@ class WmDecoderConfig:
 
 @dataclass
 class MaskWMParams(Params):
-    checkpoint_path: str = "./model_files/maskwm/D_32bits.pth"
+    checkpoint_path: str = DEFAULT_CHECKPOINT_PATH
     use_jnd: bool = True
     jnd_factor: float = 1.3
     blue: bool = True
@@ -61,7 +61,7 @@ class MaskWMWrapper(BaseAlgorithmWrapper):
     Based on the code from `here <https://github.com/hurunyi/MaskWM>`__.
     """
 
-    name = "maskwm"
+    name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}):
         module_path = str(Path(params.pop("module_path", DEFAULT_SUBMODULE_PATH)).resolve())

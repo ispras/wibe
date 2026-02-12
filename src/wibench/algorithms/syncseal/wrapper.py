@@ -17,8 +17,8 @@ URL = "https://nextcloud.ispras.ru/index.php/s/A6MWxxoXPmHDYK3"
 NAME = "syncseal"
 REQUIRED_FILES = ["checkpoint.pth", "syncmodel.jit.pt"]
 
-DEFAULT_SUBMODULE_PATH: str = "./submodules/WMAR/syncseal/syncseal"
-DEFAULT_CHECKPOINT_PATH: str = "./model_files/syncseal/syncmodel.jit.pt"
+DEFAULT_SUBMODULE_PATH = "./submodules/WMAR/syncseal/syncseal"
+DEFAULT_CHECKPOINT_PATH = "./model_files/syncseal/syncmodel.jit.pt"
 
 
 @dataclass
