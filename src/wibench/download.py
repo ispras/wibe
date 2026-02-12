@@ -3,8 +3,6 @@ from pathlib import Path
 import requests
 import zipfile
 
-from wibench.registry import RegistryMeta
-
 
 DOWNLOAD_MODELS_PATH = "./model_files"
 DOWNLOAD_CACHE_PATH = "./wibe_downloads"
