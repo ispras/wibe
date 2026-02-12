@@ -36,23 +36,10 @@ class FINWrapper(BaseAlgorithmWrapper):
         with ModuleImporter("FIN", str(Path(params["module_path"]).resolve())):
             from FIN.models.encoder_decoder import FED, INL
             from FIN.utils.utils import load
-            # from FIN.utils.jpeg import JpegTest
+            
         self.params: FINParams
         self.device = self.params.device
-        # self.noise_type = params.get("noise_type", "JPEG")
-        
-        # self.image_size = 128
-        # self.wm_length = 64
-
-        # fin_params = FINParams(
-        #     H=self.image_size,
-        #     W=self.image_size,
-        #     wm_length=self.wm_length,
-        #     noise_type=self.noise_type
-        # )
-
-        # super().__init__(fin_params)
-
+       
         fed_ckpt = Path(params["fed_checkpoint"]).resolve()
         if not fed_ckpt.exists():
             raise FileNotFoundError(f"FED checkpoint not found: {fed_ckpt}")
@@ -60,19 +47,6 @@ class FINWrapper(BaseAlgorithmWrapper):
         self.fed = FED().to(self.device)
         load(str(fed_ckpt), self.fed)
         self.fed.eval()
-
-        # self.jpeg = None
-        # if self.params.noise_type == "JPEG":
-        #     self.jpeg = JpegTest(50)
-
-        # self.inl = None
-        # if self.params.noise_type == "HEAVY":
-        #     inl_ckpt = Path(params["inl_checkpoint"]).resolve()
-        #     if not inl_ckpt.exists():
-        #         raise FileNotFoundError(f"INL checkpoint not found: {inl_ckpt}")
-        #     self.inl = INL().to(self.device)
-        #     load(str(inl_ckpt), self.inl)
-        #     self.inl.eval()
 
     def _bits_to_fin_message(self, bits: torch.Tensor) -> torch.Tensor:
         return bits.float() - 0.5
@@ -122,9 +96,6 @@ class FINWrapper(BaseAlgorithmWrapper):
         with torch.no_grad():
             img = norm_img.to(self.device)
 
-            # if self.params.noise_type == "HEAVY" and self.inl is not None:
-            #     img = self.inl(img, rev=True)
-            
             _, extracted = self.fed(
                 [img, dummy_message],
                 rev=True
