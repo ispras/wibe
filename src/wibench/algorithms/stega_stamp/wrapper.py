@@ -7,6 +7,12 @@ from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
 from wibench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 from wibench.watermark_data import TorchBitWatermarkData
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/K6wrA6KweXZ2DGL"
+NAME = "stega_stamp"
+REQUIRED_FILES = ["stega_stamp.onnx"]
 
 
 DEFAULT_WEIGHT_PATH = "./model_files/stega_stamp/stega_stamp.onnx"
@@ -36,6 +42,7 @@ class StegaStampParams:
     alpha: float = 1.0
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class StegaStampWrapper(BaseAlgorithmWrapper):
     """StegaStamp: Invisible Hyperlinks in Physical Photographs --- Image Watermarking Algorithm [`paper <https://arxiv.org/abs/1904.05343>`__].
     
@@ -48,7 +55,7 @@ class StegaStampWrapper(BaseAlgorithmWrapper):
         StegaStamp algorithm configuration parameters (default EmptyDict)
     """
 
-    name = "stega_stamp"
+    name = NAME
     
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         super().__init__(StegaStampParams(**params))

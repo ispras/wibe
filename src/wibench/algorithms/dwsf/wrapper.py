@@ -20,6 +20,12 @@ from wibench.typing import TorchImg
 from wibench.utils import normalize_image, denormalize_image
 from wibench.config import Params
 from wibench.watermark_data import TorchBitWatermarkData
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/F39nKXowAEpZyMy"
+NAME = "dwsf"
+REQUIRED_FILES = ["seg.pth", "encoder_best.pth", "decoder_best.pth"]
 
 
 DEFAULT_MODULE_PATH = "./submodules/DWSF"
@@ -75,6 +81,7 @@ class DWSFParams(Params):
     gt: float = 0.5
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class DWSFWrapper(BaseAlgorithmWrapper):
     """`DWSF <https://dl.acm.org/doi/abs/10.1145/3581783.3612015>`_: Practical Deep Dispersed Watermarking with Synchronization and Fusion - Image Watermarking Algorithm.
 
@@ -88,7 +95,7 @@ class DWSFWrapper(BaseAlgorithmWrapper):
 
     """
     
-    name = "dwsf"
+    name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         super().__init__(DWSFParams(**params))
