@@ -17,7 +17,6 @@ MBRSModel: TypeAlias
 
 DEFAULT_WEIGHT_PATH = "./model_files/mbrs"
 DEFAULT_MODULE_PATH = "./submodules/mbrs"
-
 SETTINGS_PATH_128 = f'results/MBRS_Diffusion_128_m30/test_Crop(0.19,0.19)_s1_params.json'
 SETTINGS_PATH_256 = f'results/MBRS_256_m256/test_JpegTest(50)_s1_params.json'
 MODEL_DIR_128 = f'results/MBRS_Diffusion_128_m30/models'

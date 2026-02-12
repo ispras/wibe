@@ -56,7 +56,7 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
             weight_path = Path(models_cache) / Path(weight_path).name 
         return old_func(trustmark, str(config_path), str(weight_path), *args, **kwargs)
 
-    def __init__(self, params: TrustMarkParams, models_cache: str = "./model_files/trustmark") -> None:
+    def __init__(self, params: Dict[str, Any] = {}, models_cache: str = "./model_files/trustmark") -> None:
         super().__init__(TrustMarkParams(**params))
         self.params: TrustMarkParams
         self.device = self.params.device
