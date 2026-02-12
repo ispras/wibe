@@ -37,6 +37,11 @@ def download_folder(url: str, object_name: str) -> None:
                 downloaded += len(chunk)
                 if total_size != 0:
                     percent = downloaded / total_size * 100
+                    print(
+                        f"\rDownloaded: {downloaded / (1024 * 1024):.2f} / {total_size / (1024 * 1024):.2f} MB"
+                        f"({percent:.2f}%)",
+                        end=''
+                    )
                     print(f"\rDownloaded: {percent:.2f}%", end='')
                 else:
                     print(f"\rDownloaded: {downloaded / (1024 * 1024):.1f} MB", end='')
