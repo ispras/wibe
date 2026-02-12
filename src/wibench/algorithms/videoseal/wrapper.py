@@ -5,8 +5,21 @@ from wibench.typing import TorchImg
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.module_importer import ModuleImporter
+from wibench.download import requires_download
 
 
+URL_VIDEOSEAL = "https://nextcloud.ispras.ru/index.php/s/MCByorfQ4C8bJHx"
+NAME_VIDEOSEAL = "videoseal"
+REQUIRED_FILES_VIDEOSEAL = ["y_256b_img.pth"]
+URL_PIXELSEAL = "https://nextcloud.ispras.ru/index.php/s/N9xpnMQ7Q2rLB9q"
+NAME_PIXELSEAL = "pixelseal"
+REQUIRED_FILES_PIXELSEAL = ["pixel_seal_checkpoint.pth"]
+URL_CHUNKYSEAL = ""
+NAME_CHUNKYSEAL = ""
+REQUIRED_FILES_CHUNKYSEAL = [""]
+
+
+@requires_download(URL_VIDEOSEAL, NAME_VIDEOSEAL, REQUIRED_FILES_VIDEOSEAL)
 class VideosealWrapper(BaseAlgorithmWrapper):
     """`Video Seal <https://arxiv.org/abs/2412.09492>`_: Open and Efficient Video Watermarking
     
@@ -59,6 +72,7 @@ class VideosealWrapper(BaseAlgorithmWrapper):
         )
 
 
+@requires_download(URL_PIXELSEAL, NAME_PIXELSEAL, REQUIRED_FILES_PIXELSEAL)
 class PixelSeal(VideosealWrapper):
     """`Pixel Seal <https://arxiv.org/abs/2512.16874>`_: Adversarial-only training for invisible image and video watermarking
     
@@ -77,7 +91,8 @@ class PixelSeal(VideosealWrapper):
     ):
         super().__init__(strength_factor, model_card, module_path, device)
         
-        
+
+@requires_download(URL_CHUNKYSEAL, NAME_CHUNKYSEAL, REQUIRED_FILES_CHUNKYSEAL)
 class ChunkySeal(VideosealWrapper):
     """`We Can Hide More Bits <https://arxiv.org/abs/2510.12812>`_: The Unused Watermarking Capacity in Theory and in Practice
     

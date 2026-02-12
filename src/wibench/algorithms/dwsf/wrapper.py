@@ -26,7 +26,7 @@ from wibench.download import requires_download
 
 URL = "https://nextcloud.ispras.ru/index.php/s/F39nKXowAEpZyMy"
 NAME = "dwsf"
-REQUIRED_MODELS = ["seg.pth", "encoder_best.pth", "decoder_best.pth"]
+REQUIRED_FILES = ["seg.pth", "encoder_best.pth", "decoder_best.pth"]
 
 
 @dataclass
@@ -76,7 +76,7 @@ class DWSFParams(Params):
     gt: float = 0.5
 
 
-@requires_download(URL, NAME, REQUIRED_MODELS)
+@requires_download(URL, NAME, REQUIRED_FILES)
 class DWSFWrapper(BaseAlgorithmWrapper):
     """`DWSF <https://dl.acm.org/doi/abs/10.1145/3581783.3612015>`_: Practical Deep Dispersed Watermarking with Synchronization and Fusion - Image Watermarking Algorithm.
 

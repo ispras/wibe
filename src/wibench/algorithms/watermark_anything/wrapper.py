@@ -6,6 +6,12 @@ import torch
 import torch.nn.functional as F
 from dataclasses import dataclass
 import os
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/mkAqMgy4PY6yaMK"
+NAME = "watermark_anything"
+REQUIRED_FILES = ["wam_mit.pth"]
 
 
 @dataclass
@@ -24,6 +30,7 @@ class WAParams:
     scaling_w: float
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
     """Watermark Anything with Localized Messages - Image Watermarking Algorithm [`paper <https://arxiv.org/abs/2411.07231>`__].
     

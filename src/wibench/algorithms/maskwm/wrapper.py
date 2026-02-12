@@ -12,6 +12,14 @@ from wibench.watermark_data import TorchBitWatermarkData
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
 from wibench.module_importer import ModuleImporter
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/MbxydymDFe2pgjp"
+NAME = "maskwm"
+REQUIRED_FILES = ["D_32bits.pth", "D_64bits.pth", "D_128bits.pth"]
+
+DEFAULT_SUBMODULE_PATH: str = "./submodules/MaskWM"
 
 
 @dataclass
@@ -45,9 +53,7 @@ class MaskWMParams(Params):
     wm_dec_config: WmDecoderConfig = field(default_factory=WmDecoderConfig)
 
 
-DEFAULT_SUBMODULE_PATH: str = "./submodules/MaskWM"
-
-
+@requires_download(URL, NAME, REQUIRED_FILES)
 class MaskWMWrapper(BaseAlgorithmWrapper):
     """Mask Image Watermarking --- Image Watermarking Algorithm [`paper <https://arxiv.org/pdf/2504.12739>`__].
     

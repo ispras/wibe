@@ -10,7 +10,12 @@ from wibench.module_importer import ModuleImporter
 from wibench.typing import TorchImg
 from wibench.config import Params
 from wibench.watermark_data import WatermarkData
+from wibench.download import requires_download
 
+
+URL = "https://nextcloud.ispras.ru/index.php/s/A6MWxxoXPmHDYK3"
+NAME = "syncseal"
+REQUIRED_FILES = ["checkpoint.pth", "syncmodel.jit.pt"]
 
 DEFAULT_SUBMODULE_PATH: str = "./submodules/WMAR/syncseal/syncseal"
 DEFAULT_CHECKPOINT_PATH: str = "./model_files/syncseal/syncmodel.jit.pt"
@@ -72,6 +77,7 @@ class SyncSealParams(Params):
 
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class SyncSeal(BaseAlgorithmWrapper):
     """GEOMETRIC IMAGE SYNCHRONIZATION WITH DEEP WATERMARKING --- Image Synchronization Algorithm [`paper <https://arxiv.org/abs/2509.15208>`__].
     

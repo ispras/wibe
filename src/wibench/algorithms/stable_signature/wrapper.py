@@ -15,6 +15,12 @@ from wibench.config import Params
 from wibench.typing import TorchImg
 from wibench.utils import numpy_bgr2torch_img, normalize_image
 from wibench.watermark_data import TorchBitWatermarkData
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/DF8C2Ag9WsPKL6q"
+NAME = "stable_signature"
+REQUIRED_FILES = ["sd2_decoder.pth", "dec_48b_whit.torchscript.pt", "v2-1_512-ema-pruned.ckpt"]
 
 
 @dataclass
@@ -44,6 +50,7 @@ class StableSignatureParams(Params):
     secret: Optional[str] = "111010110101000001010111010011010100010000100111"
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class StableSignatureWrapper(BaseAlgorithmWrapper):
     """The Stable Signature: Rooting Watermarks in Latent Diffusion Models --- Image Watermarking Algorithm [`paper <https://arxiv.org/pdf/2303.15435>`__].
     

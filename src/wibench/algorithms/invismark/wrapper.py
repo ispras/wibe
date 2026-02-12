@@ -6,6 +6,12 @@ from wibench.watermark_data import TorchBitWatermarkData
 from wibench.utils import normalize_image, denormalize_image
 from wibench.module_importer import ModuleImporter
 from pathlib import Path
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/bDJ9Z7foz9HoJEY"
+NAME = "invismark"
+REQUIRED_FILES = ["invismark.ckpt"]
 
 
 class InvisMark:
@@ -46,6 +52,7 @@ class InvisMark:
         return extracted.cpu()
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class InvisMarkWrapper(BaseAlgorithmWrapper):
     """`InvisMark <https://arxiv.org/pdf/2411.07795>`_: Invisible and Robust Watermarking for AI-generated Image Provenance
     
@@ -55,7 +62,7 @@ class InvisMarkWrapper(BaseAlgorithmWrapper):
     Note: real capacity of InvisMark is 94 message bits (reffer to watermark_data_gen for more information)
     """
         
-    name = "invismark"
+    name = NAME
 
     def __init__(
         self,
