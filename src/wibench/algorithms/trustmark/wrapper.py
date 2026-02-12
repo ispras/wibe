@@ -8,6 +8,8 @@ from wibench.typing import TorchImg
 from wibench.config import Params
 from wibench.watermark_data import TorchBitWatermarkData
 from trustmark import TrustMark
+from pathlib import Path
+from functools import partialmethod
 
 
 @dataclass
@@ -48,9 +50,19 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
     
     name = "trustmark"
 
-    def __init__(self, params: TrustMarkParams) -> None:
+    @staticmethod
+    def patched_load_model(trustmark, config_path, weight_path, *args, models_cache, old_func, **kwargs):
+        if models_cache:
+            config_path = Path(models_cache) / Path(config_path).name 
+            weight_path = Path(models_cache) / Path(weight_path).name 
+        return old_func(trustmark, str(config_path), str(weight_path), *args, **kwargs)
+
+    def __init__(self, params: TrustMarkParams, models_cache: str = "./model_files/trustmark") -> None:
         super().__init__(TrustMarkParams(**params))
         self.device = self.params.device
+        self.models_cache = Path(models_cache)
+        TrustMark.load_model = partialmethod(self.patched_load_model, models_cache=models_cache, old_func=TrustMark.load_model)
+    
         self.tm = TrustMark(use_ECC=False, device=self.device,
                             model_type=self.params.model_type)
 
