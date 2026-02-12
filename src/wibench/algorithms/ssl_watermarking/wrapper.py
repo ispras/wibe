@@ -12,6 +12,12 @@ from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.utils import torch_img2numpy_bgr
 from wibench.typing import TorchImg
 from wibench.config import Params
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/445DkfofgoSSQgg"
+NAME = "ssl_watermarking"
+REQUIRED_FILES = ["dino_r50_plus.pth", "out2048_yfcc_orig.pth"]
 
 
 DEFAULT_MODULE_PATH = "./submodules/ssl_watermarking"
@@ -213,6 +219,7 @@ class ImgLoader:
         return len(self.dataset)
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class SSLMarkerWrapper(BaseAlgorithmWrapper):
     """Watermarking Images in Self-Supervised Latent-Spaces (SSL) --- Image Watermarking Algorithm [`paper <https://arxiv.org/pdf/2112.09581>`__].
     
@@ -225,7 +232,7 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         SSL algorithm configuration parameters (default EmptyDict)
     """
 
-    name = "ssl_watermarking"
+    name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)

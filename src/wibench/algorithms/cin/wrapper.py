@@ -16,6 +16,12 @@ from wibench.utils import (
 )
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.typing import TorchImg, TorchImgNormalize
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/gJsYmLnAfsctaeo"
+NAME = "cin"
+REQUIRED_FILES = ["opt.yml", "cinNet&nsmNet.pth"]
 
 
 DEFAULT_MODULE_PATH = "./submodules/CIN"
@@ -59,6 +65,7 @@ class CINParams:
     experiment: str = ""
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class CINWrapper(BaseAlgorithmWrapper):
     """CIN: Towards Blind Watermarking: Combining Invertible and Non-invertible Mechanisms - Image Watermarking Algorithm [`paper <https://arxiv.org/abs/2212.12678>`__].
 
@@ -72,7 +79,7 @@ class CINWrapper(BaseAlgorithmWrapper):
 
     """
     
-    name = "cin"
+    name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         module_path = ModuleImporter.pop_resolve_module_path(params, str(Path(DEFAULT_MODULE_PATH) / "codes"))

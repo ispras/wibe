@@ -15,6 +15,12 @@ from wibench.utils import (
     normalize_image,
     denormalize_image
 )
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/4THrnJDdjF6xGMc"
+NAME = "arwgan"
+REQUIRED_FILES = ["checkpoints", "options-and-config.pickle"]
 
 
 DEFAULT_MODULE_PATH = "./submodules/ARWGAN"
@@ -84,6 +90,7 @@ class ARWGANParams:
     enable_fp16: bool = False
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class ARWGANWrapper(BaseAlgorithmWrapper):
     """
     `ARWGAN <https://ieeexplore.ieee.org/document/10155247>`__: Attention-Guided Robust Image Watermarking Model Based on GAN --- Image Watermarking Algorithm.
@@ -98,7 +105,7 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
 
     """
 
-    name = "arwgan"
+    name = NAME
     
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)

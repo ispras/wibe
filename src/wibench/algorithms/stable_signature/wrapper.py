@@ -15,6 +15,8 @@ from wibench.typing import TorchImg
 from wibench.utils import numpy_bgr2torch_img, normalize_image
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.module_importer import ModuleImporter
+from wibench.download import requires_download
+
 
 
 DEFAULT_MODULE_PATH = "./submodules/stable_signature"
@@ -22,6 +24,10 @@ DEFAULT_LDM_CONFIG_PATH = "./submodules/stable_signature/v2-inference.yaml"
 DEFAULT_LDM_CHECKPOINT_PATH = "./model_files/stable_signature/v2-1_512-ema-pruned.ckpt"
 DEFAULT_LDM_DECODER_PATH = "./model_files/stable_signature/sd2_decoder.pth"
 DEFAULT_DECODER_PATH = "./model_files/stable_signature/dec_48b_whit.torchscript.pt"
+
+URL = "https://nextcloud.ispras.ru/index.php/s/DF8C2Ag9WsPKL6q"
+NAME = "stable_signature"
+REQUIRED_FILES = ["sd2_decoder.pth", "dec_48b_whit.torchscript.pt", "v2-1_512-ema-pruned.ckpt"]
 
 
 @dataclass
@@ -51,6 +57,7 @@ class StableSignatureParams(Params):
     secret: str = "111010110101000001010111010011010100010000100111"
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class StableSignatureWrapper(BaseAlgorithmWrapper):
     """The Stable Signature: Rooting Watermarks in Latent Diffusion Models --- Image Watermarking Algorithm [`paper <https://arxiv.org/pdf/2303.15435>`__].
     
@@ -63,7 +70,7 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
         StableSignature algorithm configuration parameters (default EmptyDict)
     """
     
-    name = "stable_signature"
+    name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)

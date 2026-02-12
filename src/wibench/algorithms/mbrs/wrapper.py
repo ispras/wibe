@@ -10,17 +10,25 @@ from wibench.typing import TorchImg
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.utils import normalize_image, denormalize_image, overlay_difference
+from wibench.download import requires_download
 
 
 MBRSModel: TypeAlias
 
 DEFAULT_WEIGHT_PATH = "./model_files/mbrs"
 DEFAULT_MODULE_PATH = "./submodules/mbrs"
-
 SETTINGS_PATH_128 = f'results/MBRS_Diffusion_128_m30/test_Crop(0.19,0.19)_s1_params.json'
 SETTINGS_PATH_256 = f'results/MBRS_256_m256/test_JpegTest(50)_s1_params.json'
 MODEL_DIR_128 = f'results/MBRS_Diffusion_128_m30/models'
 MODEL_DIR_256 = f'results/MBRS_256_m256/models'
+URL = "https://nextcloud.ispras.ru/index.php/s/p8ARyDcHKYxodLB"
+NAME = "mbrs"
+REQUIRED_FILES = ["results"]
+
+settings_path_128 = f'results/MBRS_Diffusion_128_m30/test_Crop(0.19,0.19)_s1_params.json'
+settings_path_256 = f'results/MBRS_256_m256/test_JpegTest(50)_s1_params.json'
+model_dir_128 = f'results/MBRS_Diffusion_128_m30/models'
+model_dir_256 = f'results/MBRS_256_m256/models'
 
 
 class MBRS:
@@ -92,6 +100,7 @@ class MBRSParams:
     strength_factor: float
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class MBRSWrapper(BaseAlgorithmWrapper):
     """`MBRS <https://arxiv.org/abs/2108.08211>`_: Enhancing Robustness of DNN-based Watermarking by Mini-Batch of Real and Simulated JPEG Compression
     
