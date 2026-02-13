@@ -52,3 +52,7 @@
 [submodule "submodules/MaskWM"]
 	path = submodules/MaskWM
 	url = https://github.com/hurunyi/MaskWM.git
+[submodule "submodules/METR"]
+	path = submodules/METR
+	url = https://github.com/deepvk/metr.git
+
