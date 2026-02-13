@@ -1,8 +1,9 @@
-import torch
-import numpy as np
 from pathlib import Path
 from typing import Any, Dict
 from dataclasses import dataclass
+
+import torch
+import numpy as np
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
@@ -15,25 +16,29 @@ from wibench.utils import (
     overlay_difference
 )
 from wibench.config import Params
+from wibench.download import requires_download
 
 
+URL = "https://nextcloud.ispras.ru/index.php/s/aoGSgR5XzF5e5wM"
+NAME = "fin"
+REQUIRED_FILES = ["heavy", "jpeg"]
 
 DEFAULT_MODULE_PATH = "./submodules/FIN"
-DEFAULT_CHECKPOINT_PATH = "./model_files/fin/FED.pt"
+DEFAULT_CHECKPOINT_PATH = "./model_files/fin/jpeg/FED.pt"
 
 
 @dataclass
 class FINParams(Params):
-    """Configuration parameters for FIN watermarking algorithm.
+    f"""Configuration parameters for FIN watermarking algorithm.
     
     H : int
-            Height of the input image (in pixels). Determines the vertical size of image tensors
+            Height of the input image (in pixels). Determines the vertical size of image tensors (default 128)
     W : int
-            Width of the input image (in pixels). Determines the horizontal size of image tensors
+            Width of the input image (in pixels). Determines the horizontal size of image tensors (default 128)
     wm_length : int
-            Length of the watermark message to embed (in bits)
+            Length of the watermark message to embed (in bits) (default 64)
     fed_checkpoint : str
-            Path to the pretrained FED (Feature-based Encoder-Decoder) model checkpoint
+            Path to the pretrained FED (Feature-based Encoder-Decoder) model checkpoint (default {DEFAULT_CHECKPOINT_PATH})
     """
     H: int = 128
     W: int = 128
@@ -41,16 +46,21 @@ class FINParams(Params):
     fed_checkpoint: str = DEFAULT_CHECKPOINT_PATH
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class FINWrapper(BaseAlgorithmWrapper):
     """
-    FIN: Flow-Based Robust Watermarking with Invertible Noise Layer for Black-Box Distortions  --- Image Watermarking Algorithm [`paper <https://ojs.aaai.org/index.php/AAAI/article/view/25633>`__].
-    Based on the code from here https://github.com/QQiuyp/FIN
+    FIN: Flow-Based Robust Watermarking with Invertible Noise Layer for Black-Box Distortions --- Image Watermarking Algorithm [`paper <https://ojs.aaai.org/index.php/AAAI/article/view/25633>`__].
+    
+    Provides an interface for embedding and extracting watermarks using the FIN watermarking algorithm.
+    Based on the code from here `here <https://github.com/QQiuyp/FIN>`__.
+    
     Parameters
     ----------
     params : Dict[str, Any]
         FIN algorithm configuration parameters (default EmptyDict)
     """
-    name = "fin"
+    
+    name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         module_path = params.pop("module_path", DEFAULT_MODULE_PATH)
@@ -78,7 +88,7 @@ class FINWrapper(BaseAlgorithmWrapper):
         """Convert FIN output back to {0,1} bits."""
         return (msg > 0).long()
 
-    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
         """Embed watermark into input image.
         
         Parameters
@@ -88,7 +98,6 @@ class FINWrapper(BaseAlgorithmWrapper):
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """
-    
         resized = resize_torch_img(image, (self.params.H, self.params.W))
         norm_img = normalize_image(resized)
         
@@ -114,7 +123,6 @@ class FINWrapper(BaseAlgorithmWrapper):
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """
-        
         resized = resize_torch_img(image, (self.params.H, self.params.W))
         norm_img = normalize_image(resized)
         
@@ -135,7 +143,7 @@ class FINWrapper(BaseAlgorithmWrapper):
         return bits.squeeze(0).cpu().numpy()
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """Generate watermark payload data for ARWGAN watermarking algorithm.
+        """Generate watermark payload data for FIN watermarking algorithm.
         
         Returns
         -------

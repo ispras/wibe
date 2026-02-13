@@ -15,7 +15,6 @@ attacks:
 
 pipeline:
   result_path: ./test_results/fin
-  min_batch_size: 1
   aggregators:
     - CSV:
         table_name: table
