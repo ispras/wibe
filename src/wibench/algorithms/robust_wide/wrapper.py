@@ -107,9 +107,9 @@ class RobustWideWrapper(BaseAlgorithmWrapper):
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """
-        transform_image = self.transform_and_normalize(image).unsqueeze(0).to(self.device)
-        watermark_image = self.model.encoder(transform_image, watermark_data.watermark.type(transform_image.dtype).to(self.device))
-        return torch.clip(self.denormalize(watermark_image.detach().cpu(), self.denormalize), 0, 1).squeeze(0)
+        transform_image = self.transform_and_normalize(image).unsqueeze(0).clamp(-1, 1).to(self.device)
+        watermark_image = self.model.encoder(transform_image, watermark_data.watermark.float().to(self.device))
+        return self.denormalize(watermark_image.detach().cpu()).squeeze(0).clamp(0, 1)
     
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> torch.Tensor:
         """Extract watermark from marked image.
@@ -121,7 +121,7 @@ class RobustWideWrapper(BaseAlgorithmWrapper):
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """
-        transform_image = self.transform_and_normalize(image).unsqueeze(0).to(self.device)
+        transform_image = self.transform_and_normalize(image).unsqueeze(0).clamp(-1, 1).to(self.device)
         extracted_bits = self.model.decoder(transform_image)
         return extracted_bits.detach().cpu().gt(0.5).type(watermark_data.watermark.dtype)
     
