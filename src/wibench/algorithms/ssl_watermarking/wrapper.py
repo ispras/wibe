@@ -1,32 +1,79 @@
 import torch
-import numpy as np
 import cv2
-import sys
+from torch import nn
+from torchvision import models
 
 from dataclasses import dataclass
 from typing_extensions import Optional, Dict, Any, Union
 from pathlib import Path
 
+from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.utils import torch_img2numpy_bgr
 from wibench.typing import TorchImg
 from wibench.config import Params
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/445DkfofgoSSQgg"
+NAME = "ssl_watermarking"
+REQUIRED_FILES = ["dino_r50_plus.pth", "out2048_yfcc_orig.pth"]
+
+
+DEFAULT_MODULE_PATH = "./submodules/ssl_watermarking"
+DEFAULT_BACKBONE_PATH = "./model_files/ssl_watermarking/dino_r50_plus.pth"
+DEFAULT_NORMLAYER_PATH = "./model_files/ssl_watermarking/out2048_yfcc_orig.pth"
+
+
+def build_backbone(path, name, device):
+    """ Build a pretrained torchvision backbone from its name.
+
+    Args:
+        path: path to the checkpoint, can be an URL
+        name: name of the architecture from torchvision (see https://pytorch.org/vision/stable/models.html) 
+        or timm (see https://rwightman.github.io/pytorch-image-models/models/). 
+        We highly recommand to use Resnet50 architecture as available in torchvision. 
+        Using other architectures (such as non-convolutional ones) might need changes in the implementation.
+    """
+    if hasattr(models, name):
+        model = getattr(models, name)(pretrained=True)
+    else:
+        import timm
+        if name in timm.list_models():
+            model = timm.models.create_model(name, num_classes=0)
+        else:
+            raise NotImplementedError('Model %s does not exist in torchvision'%name)
+    model.head = nn.Identity()
+    model.fc = nn.Identity()
+    if path is not None:
+        if path.startswith("http"):
+            checkpoint = torch.hub.load_state_dict_from_url(path, progress=False, map_location=device)
+        else:
+            checkpoint = torch.load(path, map_location=device, weights_only=False)
+        state_dict = checkpoint
+        for ckpt_key in ['state_dict', 'model_state_dict', 'teacher']:
+            if ckpt_key in checkpoint:
+                state_dict = checkpoint[ckpt_key]
+        state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+        state_dict = {k.replace("backbone.", ""): v for k, v in state_dict.items()}
+        msg = model.load_state_dict(state_dict, strict=False)
+    return model.to(device, non_blocking=True)
 
 
 @dataclass
 class SSLParams(Params):
-    """Configuration parameters for SSL (Self-Supervised Learning) watermarking algorithm.
+    f"""Configuration parameters for SSL (Self-Supervised Learning) watermarking algorithm.
 
     Attributes:
-        backbone_weights_path : Optional[Union[str, Path]]
-            Path to pretrained backbone weights (default None)
-        normlayer_weights_path : Optional[Union[str, Path]]
-            Path to normalization layer weights (default None)
+        backbone_weights_path : str
+            Path to pretrained backbone weights (default {DEFAULT_BACKBONE_PATH})
+        normlayer_weights_path : str
+            Path to normalization layer weights (default {DEFAULT_NORMLAYER_PATH})
         method : str
             SSL method type. Determines whether to use multi-bit or zero-bit approach (default multi-bit)
     """
-    backbone_weights_path: Optional[Union[str, Path]] = None
-    normlayer_weights_path: Optional[Union[str, Path]] = None
+    backbone_weights_path: str = DEFAULT_BACKBONE_PATH
+    normlayer_weights_path: str = DEFAULT_NORMLAYER_PATH
     method: str = "multi-bit"
 
 
@@ -80,7 +127,7 @@ class SSLMultiBitParams(SSLParams):
 
 
 @dataclass
-class SSL0BitParams(SSLParams):
+class SSLZeroBitParams(SSLParams):
     """Configuration parameters for zero-bit SLL (Self-Supervised Learning) watermarking algorithm.
 
     Attributes
@@ -150,7 +197,7 @@ class WatermarkMultiBitData(WatermarkData):
 
 
 @dataclass
-class Watermark0BitData(WatermarkData):
+class WatermarkZeroBitData(WatermarkData):
     """Watermark data for SSL (Self-Supervised Learning) watermarking algorithm in zero-bit scenario.
 
     Attributes
@@ -172,6 +219,7 @@ class ImgLoader:
         return len(self.dataset)
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class SSLMarkerWrapper(BaseAlgorithmWrapper):
     """Watermarking Images in Self-Supervised Latent-Spaces (SSL) --- Image Watermarking Algorithm [`paper <https://arxiv.org/pdf/2112.09581>`__].
     
@@ -181,57 +229,58 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        SSL algorithm configuration parameters
+        SSL algorithm configuration parameters (default EmptyDict)
     """
 
-    name = "ssl_watermarking"
+    name = NAME
 
-    def __init__(self, params: Dict[str, Any]):
-        sys.path.append(str(Path(params["module_path"]).resolve()))
-        import utils
-        import utils_img
-        import data_augmentation
-        import encode
-        import decode
-        global utils, utils_img, data_augmentation, encode, decode
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
+        with ModuleImporter("SSL", self.module_path):
+            global normalize_img, unnormalize_img, generate_carriers, generate_messages, pvalue_angle
+            from SSL.utils import load_normalization_layer, NormLayerWrapper, generate_carriers, generate_messages, pvalue_angle
+            from SSL.utils_img import normalize_img, unnormalize_img 
+            from SSL.data_augmentation import All
+            global encode, decode
+            import SSL.encode as encode
+            import SSL.decode as decode
         
-        self._init_method(params)
-        super().__init__(self.params_method(**params))
-        self.device = self.params.device
+            self._init_method(params)
+            super().__init__(self.params_method(**params))
+            self.params: Union[SSLZeroBitParams, SSLMultiBitParams]
+            self.device = self.params.device
 
-        backbone_weights_path = self.params.backbone_weights_path
-        normlayer_weights_path = self.params.normlayer_weights_path
+            backbone_weights_path = self.params.backbone_weights_path
+            normlayer_weights_path = self.params.normlayer_weights_path
 
-        backbone_weights_path = Path(self.params.backbone_weights_path).resolve()
-        normlayer_weights_path = Path(self.params.normlayer_weights_path).resolve()
+            backbone_weights_path = Path(self.params.backbone_weights_path).resolve()
+            normlayer_weights_path = Path(self.params.normlayer_weights_path).resolve()
 
-        if not backbone_weights_path.exists():
-            raise FileNotFoundError(f"The backbone weights path '{str(backbone_weights_path)}' does not exist!")
-        if not normlayer_weights_path.exists():
-            raise FileNotFoundError(f"The normlayer weight path '{str(normlayer_weights_path)}' does not exist!")
-        
-        backbone = utils.build_backbone(path=str(backbone_weights_path), name="resnet50").to(self.device)
-        normlayer = utils.load_normalization_layer(path=str(normlayer_weights_path)).to(self.device)
-        model = utils.NormLayerWrapper(backbone, normlayer)
-        model.backbone = model.backbone.to(self.device)
-        model.head = model.head.to(self.device)
-        for p in model.parameters():
-            p.requires_grad = False
-        model.eval()
-        self.model = model
-        self.D = self.model(torch.zeros((1,3,224,224)).to(self.device)).size(-1)
-        self.K = 1 if isinstance(self.params, SSL0BitParams) else self.params.num_bits
-        self.data_aug = data_augmentation.All()
+            if not backbone_weights_path.exists():
+                raise FileNotFoundError(f"The backbone weights path '{str(backbone_weights_path)}' does not exist!")
+            if not normlayer_weights_path.exists():
+                raise FileNotFoundError(f"The normlayer weight path '{str(normlayer_weights_path)}' does not exist!")
+            
+            backbone = build_backbone(path=str(backbone_weights_path), name="resnet50", device=self.device).to(self.device)
+            normlayer = load_normalization_layer(path=str(normlayer_weights_path)).to(self.device)
+            model = NormLayerWrapper(backbone, normlayer)
+            model.backbone = model.backbone.to(self.device)
+            model.head = model.head.to(self.device)
+            for p in model.parameters():
+                p.requires_grad = False
+            model.eval()
+            self.model = model
+            self.D = self.model(torch.zeros((1,3,224,224)).to(self.device)).size(-1)
+            self.K = 1 if isinstance(self.params, SSLZeroBitParams) else self.params.num_bits
+            self.data_aug = All()
 
     def _init_method(self, params: Dict[str, Any]):        
-        self.method = params.get("method")
-        if self.method is None:
-            raise NotImplementedError("Method must be specified!")
+        self.method = params.get("method", "multi-bit")
         self.params_method, self.watermark_data, self.encode_func, self.decode_func = \
-            (SSLMultiBitParams, WatermarkMultiBitData, encode.watermark_multibit, decode.decode_multibit) if self.method == "multibit" else \
-            (SSL0BitParams, Watermark0BitData, encode.watermark_0bit, decode.decode_0bit)
+            (SSLMultiBitParams, WatermarkMultiBitData, encode.watermark_multibit, decode.decode_multibit) if self.method == "multi-bit" else \
+            (SSLZeroBitParams, WatermarkZeroBitData, encode.watermark_0bit, decode.decode_0bit)
     
-    def embed(self, image: TorchImg, watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]) -> TorchImg:
+    def embed(self, image: TorchImg, watermark_data: Union[WatermarkZeroBitData, WatermarkMultiBitData]) -> TorchImg:
         """Embed watermark into input image.
         
         Parameters
@@ -241,17 +290,17 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]
             Watermark data for SSL (Self-Supervised Learning) watermarking algorithm in multi-bit or zero-bit scenario
         """
-        normalized_image = utils_img.normalize_img(image).to(self.device)
+        normalized_image = normalize_img(image).to(self.device)
         img_loader = ImgLoader([([normalized_image], None)])
         args = (img_loader, watermark_data.watermark, watermark_data.carrier, self.model, self.data_aug, self.params) \
             if isinstance(self.params, SSLMultiBitParams) \
                 else (img_loader, watermark_data.carrier, watermark_data.angle, self.model, self.data_aug, self.params)
         pt_imgs_out = self.encode_func(*args)
         # unnorm_img = np.clip(np.round(utils_img.unnormalize_img(pt_imgs_out[0]).squeeze(0).cpu().numpy().transpose(1,2,0) * 255), 0, 255).astype(np.uint8)
-        unnormalize_image = utils_img.unnormalize_img(pt_imgs_out[0]).squeeze(0).cpu()
+        unnormalize_image = unnormalize_img(pt_imgs_out[0]).squeeze(0).cpu()
         return unnormalize_image
         
-    def extract(self, image: TorchImg, watermark_data: Union[Watermark0BitData, WatermarkMultiBitData]) -> Any:
+    def extract(self, image: TorchImg, watermark_data: Union[WatermarkZeroBitData, WatermarkMultiBitData]) -> Union[torch.Tensor, float]:
         """Extract watermark from marked image.
         
         Parameters
@@ -269,11 +318,11 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         result = self.decode_func(*args)[0]
         if isinstance(self.params, SSLMultiBitParams):
             result = result["msg"]
-        if isinstance(self.params, SSL0BitParams):
-            result = result["R"] > 0
+        if isinstance(self.params, SSLZeroBitParams):
+            result = 10 ** result["log10_pvalue"]
         return result
     
-    def watermark_data_gen(self) -> Union[WatermarkMultiBitData, Watermark0BitData]:
+    def watermark_data_gen(self) -> Union[WatermarkMultiBitData, WatermarkZeroBitData]:
         """Generate watermark payload data for SLL (Self-Supervised Learning) watermarking algorithm in both multi-bit and zero-bit scenarios.
         
         Returns
@@ -285,10 +334,10 @@ class SSLMarkerWrapper(BaseAlgorithmWrapper):
         -----
         - Called automatically during embedding
         """
-        carrier = utils.generate_carriers(self.K, self.D, output_fpath=None)
+        carrier = generate_carriers(self.K, self.D, output_fpath=None)
         carrier = carrier.to(self.device, non_blocking=True)
         if isinstance(self.params, SSLMultiBitParams):
-            msgs = utils.generate_messages(1, self.K)
+            msgs = generate_messages(1, self.K)
             return self.watermark_data(carrier, msgs)
-        angle = utils.pvalue_angle(dim=self.D, k=1, proba=self.params.target_fpr)
+        angle = pvalue_angle(dim=self.D, k=1, proba=self.params.target_fpr)
         return self.watermark_data(carrier, angle)

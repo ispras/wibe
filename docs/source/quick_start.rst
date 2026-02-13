@@ -45,6 +45,8 @@ To assess implemented watermarking algorithms and attacks on watermarks, follow 
 
     (venv) python -m wibench --config configs/trustmark_demo.yml -d
 
+You can find some predifined configurations in the ``config`` directory.
+
 8. Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking algorithms, attacks, and computed performance metrics.
 To explore interactive wind rose chart with average ``TPR@0.1%FPR`` for all algorithms and attacks evaluated so far, run the following command:
 

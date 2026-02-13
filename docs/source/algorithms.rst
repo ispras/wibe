@@ -119,13 +119,13 @@ CIN
 .. automodule:: wibench.algorithms.cin.wrapper
     :members:
 
-DCT_Marker
+DCT
 ~~~~~~~~~~
 
 .. automodule:: wibench.algorithms.dct_marker.wrapper
     :members:
 
-DFT_Circle
+DFT Circle
 ~~~~~~~~~~
 
 .. automodule:: wibench.algorithms.dft_circle.wrapper
@@ -137,19 +137,19 @@ DWSF
 .. automodule:: wibench.algorithms.dwsf.wrapper
     :members:
 
-DWT_SVM
+DWT SVM
 ~~~~~~~
 
 .. automodule:: wibench.algorithms.dwt_svm.wrapper
     :members:
 
-DWT_DCT
+DWT DCT
 ~~~~~~~
 
 .. autoclass:: wibench.algorithms.invisible_watermark.wrapper.DwtDctWrapper
     :members:
 
-DWT_DCT_SVD
+DWT DCT SVD
 ~~~~~~~~~~~
 
 .. autoclass:: wibench.algorithms.invisible_watermark.wrapper.DwtDctSvdWrapper
@@ -159,6 +159,18 @@ HiDDeN
 ~~~~~~
 
 .. automodule:: wibench.algorithms.hidden.wrapper
+    :members:
+
+InvisMark
+~~~~~~~~~
+
+.. automodule:: wibench.algorithms.invismark.wrapper.InvisMarkWrapper
+    :members:
+
+MBRS
+~~~~
+
+.. automodule:: wibench.algorithms.mbrs.wrapper.MBRSWrapper
     :members:
 
 SSHiDDeN
@@ -173,13 +185,13 @@ RivaGAN
 .. autoclass:: wibench.algorithms.invisible_watermark.wrapper.RivaGanWrapper
     :members:
 
-ssl_watermarking
+SSL watermarking
 ~~~~~~~~~~~~~~~~
 
 .. autoclass:: wibench.algorithms.ssl_watermarking.wrapper.SSLMarkerWrapper
     :members:
 
-stable_signature
+Stable Signature
 ~~~~~~~~~~~~~~~~
 
 .. automodule:: wibench.algorithms.stable_signature.wrapper
@@ -203,8 +215,68 @@ TrustMark
 .. automodule:: wibench.algorithms.trustmark.wrapper
     :members:
 
+VideoSeal, PixelSeal, ChunkySeal
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: wibench.algorithms.videoseal.wrapper
+    :members:
+
 Watermark Anything
 ~~~~~~~~~~~~~~~~~~
 
 .. automodule:: wibench.algorithms.watermark_anything.wrapper
+    :members:
+
+MaskWM
+~~~~~~
+
+.. automodule:: wibench.algorithms.maskwm.wrapper
+    :members:
+
+SyncSeal
+~~~~~~~~
+
+.. automodule:: wibench.algorithms.syncseal.wrapper
+    :members:
+
+Gaussian Shading
+~~~~~~~~~~~~~~~~
+
+.. automodule:: wibench.algorithms.gaussian_shading.wrapper
+    :members:
+
+Ring-ID
+~~~~~~~
+
+.. automodule:: wibench.algorithms.ringid.wrapper
+    :members:
+
+MaXsive
+~~~~~~~
+
+.. automodule:: wibench.algorithms.maxsive.wrapper
+    :members:
+
+METR
+~~~~
+
+.. automodule:: wibench.algorithms.metr.wrapper
+    :members:
+
+PIMoG
+~~~~~
+
+.. automodule:: wibench.algorithms.pimog.wrapper
+    :members:
+
+Robust-Wide
+~~~~~~~~~~~
+
+.. automodule:: wibench.algorithms.robust_wide.wrapper
+    :members:
+
+FIN
+~~~
+
+.. automodule:: wibench.algorithms.fin.wrapper
     :members:

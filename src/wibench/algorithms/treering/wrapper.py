@@ -1,14 +1,18 @@
-import torch
-import sys
-
 from typing_extensions import Dict, Any, Optional
 from dataclasses import dataclass
+
+import torch
+import scipy
 from torchvision import transforms
-from pathlib import Path
+from diffusers import DPMSolverMultistepScheduler
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
 from wibench.typing import TorchImg
+from wibench.module_importer import ModuleImporter
+
+
+DEFAULT_MODULE_PATH = "./submodules/tree-ring-watermark"
 
 
 @dataclass
@@ -22,7 +26,7 @@ class TreeRingParams(Params):
     start: int = 1
     end: int = 10
     image_length: int = 512
-    model_id: str = "stabilityai/stable-diffusion-2-1-base"
+    model_id: str = "WIBE-HuggingFace/stable-diffusion-2-1-base"
     with_tracking: str = "store_true"
     num_images: int = 1
     guidance_scale: float = 7.5
@@ -71,25 +75,26 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        Tree-Ring algorithm configuration parameters
+        Tree-Ring algorithm configuration parameters (default EmptyDict)
 
     """
     
     name = "treering"
 
-    def __init__(self, params: Dict[str, Any]):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(TreeRingParams(**params))
-        sys.path.append(str(Path(params["module_path"]).resolve()))
-        from inverse_stable_diffusion import InversableStableDiffusionPipeline
-        from diffusers import DPMSolverMultistepScheduler
-        from optim_utils import (eval_watermark,
-                                 get_watermarking_mask,
-                                 get_watermarking_pattern,
-                                 inject_watermark,
-                                 set_random_seed,
-                                 transform_img,
-                                 eval_watermark)
-        global eval_watermark, get_watermarking_mask, get_watermarking_pattern, inject_watermark, set_random_seed, transform_img
+        self.params: TreeRingParams
+        with ModuleImporter("TreeRing", self.module_path):
+            from TreeRing.inverse_stable_diffusion import InversableStableDiffusionPipeline
+            from TreeRing.optim_utils import (eval_watermark,
+                                    get_watermarking_mask,
+                                    get_watermarking_pattern,
+                                    inject_watermark,
+                                    set_random_seed,
+                                    transform_img,
+                                    eval_watermark)
+            global eval_watermark, get_watermarking_mask, get_watermarking_pattern, inject_watermark, set_random_seed, transform_img
         set_random_seed(self.params.gen_seed)
         if self.params.test_num_inference_steps is None:
             self.params.test_num_inference_steps = self.params.num_inference_steps
@@ -101,8 +106,7 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         pipe = InversableStableDiffusionPipeline.from_pretrained(
             self.model_id,
             scheduler=self.scheduler,
-            torch_dtype=torch.float16,
-            revision='fp16'
+            torch_dtype=torch.float16
         )
         self.pipe = pipe.to(self.device)
 
@@ -134,6 +138,19 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         orig_image_w = outputs_w.images[0]
 
         return transforms.ToTensor()(orig_image_w)
+    
+    def _get_p_value(self, reversed_latents_w: torch.Tensor, watermarking_mask: torch.Tensor, gt_patch: torch.Tensor) -> float:
+        reversed_latents_w_fft = torch.fft.fftshift(torch.fft.fft2(reversed_latents_w), dim=(-1, -2))[watermarking_mask].flatten()
+        target_patch = gt_patch[watermarking_mask].flatten()
+        target_patch = torch.concatenate([target_patch.real, target_patch.imag])
+        
+        reversed_latents_w_fft = torch.concatenate([reversed_latents_w_fft.real, reversed_latents_w_fft.imag])
+        sigma_w = reversed_latents_w_fft.std()
+        lambda_w = (target_patch ** 2 / sigma_w ** 2).sum().item()
+        x_w = (((reversed_latents_w_fft - target_patch) / sigma_w) ** 2).sum().item()
+        p_w = scipy.stats.ncx2.cdf(x=x_w, df=len(target_patch), nc=lambda_w)
+
+        return p_w
         
     def extract(self, img: TorchImg, watermark_data: TreeRingWatermarkData) -> bool:
         """Extract watermark from marked image.
@@ -160,9 +177,7 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
             num_inference_steps=self.params.test_num_inference_steps,
         )
         gt_patch = torch.from_numpy(watermark_data.gt_patch).type(torch.complex32).to(self.device)
-        reversed_latents_w_fft = torch.fft.fftshift(torch.fft.fft2(reversed_latents), dim=(-1, -2))
-        w_metric = torch.abs(reversed_latents_w_fft[watermark_data.watermarking_mask] - gt_patch[watermark_data.watermarking_mask]).mean().item()
-        return w_metric <= self.params.threshold
+        return self._get_p_value(reversed_latents, watermark_data.watermarking_mask, gt_patch)
     
     def watermark_data_gen(self) -> TreeRingWatermarkData:
         """Get watermark payload data for Tree-ring watermarking algorithm.

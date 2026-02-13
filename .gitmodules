@@ -1,6 +1,3 @@
-[submodule "submodules/trustmark"]
-	path = submodules/trustmark
-	url = https://github.com/adobe/trustmark.git
 [submodule "submodules/HiDDeN"]
 	path = submodules/HiDDeN
 	url = https://github.com/ando-khachatryan/HiDDeN.git
@@ -25,3 +22,39 @@
 [submodule "submodules/tree-ring-watermark"]
 	path = submodules/tree-ring-watermark
 	url = https://github.com/YuxinWenRick/tree-ring-watermark.git
+[submodule "submodules/invismark"]
+	path = submodules/invismark
+	url = https://github.com/microsoft/InvisMark.git
+[submodule "submodules/mbrs"]
+	path = submodules/mbrs
+	url = https://github.com/jzyustc/MBRS.git
+[submodule "submodules/videoseal"]
+	path = submodules/videoseal
+	url = https://github.com/facebookresearch/videoseal.git
+[submodule "submodules/FIN"]
+	path = submodules/FIN
+	url = https://github.com/QQiuyp/FIN.git
+[submodule "submodules/GaussianShading"]
+	path = submodules/GaussianShading
+	url = https://github.com/bsmhmmlf/Gaussian-Shading.git
+[submodule "submodules/RingID"]
+	path = submodules/RingID
+	url = https://github.com/showlab/RingID.git
+[submodule "submodules/MaXsive"]
+	path = submodules/MaXsive
+	url = https://github.com/Mao718/MaXsive.git
+[submodule "submodules/RobustWide"]
+	path = submodules/RobustWide
+	url = https://github.com/hurunyi/Robust-Wide.git
+[submodule "submodules/PIMoG"]
+	path = submodules/PIMoG
+	url = https://github.com/FangHanNUS/PIMoG-An-Effective-Screen-shooting-Noise-Layer-Simulation-for-Deep-Learning-Based-Watermarking-Netw.git
+[submodule "submodules/WMAR"]
+	path = submodules/WMAR
+	url = https://github.com/facebookresearch/wmar.git
+[submodule "submodules/MaskWM"]
+	path = submodules/MaskWM
+	url = https://github.com/hurunyi/MaskWM.git
+[submodule "submodules/METR"]
+	path = submodules/METR
+	url = https://github.com/deepvk/metr.git

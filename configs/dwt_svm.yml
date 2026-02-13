@@ -1,7 +1,5 @@
 algorithms:
-  dwt_svm:
-    params:
-      threshold: 56
+  - dwt_svm
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 

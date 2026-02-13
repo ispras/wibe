@@ -10,8 +10,17 @@ from wibench.utils import (
 )
 from wibench.typing import TorchImg
 from wibench.metrics.base import PostEmbedMetric
+from wibench.download import requires_download
 
 
+URL = "https://nextcloud.ispras.ru/index.php/s/izpDkNQ3XntYiGo"
+NAME = "metrics"
+REQUIRED_FILES = ["aesthetic"]
+
+DEFAULT_DOWNLOAD_ROOT = "./model_files/metrics/aesthetic"
+
+
+@requires_download(URL, NAME, REQUIRED_FILES)
 class Aesthetic(PostEmbedMetric):
     """Aesthetic score predictor based on a simple neural net that takes CLIP embeddings as inputs.
 
@@ -38,7 +47,7 @@ class Aesthetic(PostEmbedMetric):
 
     def __init__(self,
                  device: str = "cuda" if torch.cuda.is_available() else "cpu",
-                 download_root: str = "./model_files/metrics/aesthetic"):
+                 download_root: str = DEFAULT_DOWNLOAD_ROOT):
         download_root = str(Path(download_root).resolve())
         self.model = RM.load_score("Aesthetic", device=device, download_root=download_root)
 

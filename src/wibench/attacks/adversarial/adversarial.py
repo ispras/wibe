@@ -11,7 +11,7 @@ class AdversarialEmbedding(BaseAttack):
 
     def __init__(self,
                  encoder: str = "resnet18",
-                 device: torch.device | str = "cuda",
+                 device: torch.device | str = "cuda" if torch.cuda.is_available() else "cpu",
                  loss_type: str = "l2",  # metric between attacked and non-attacked embeddings
                  strength: int = 2,  # 2,4,6,8
                  eps_factor: float = 1 / 255,
@@ -29,9 +29,9 @@ class AdversarialEmbedding(BaseAttack):
             embedding_model = ClipEmbedding()
         elif encoder == "klvae8":
             # same vae as used in generator
-            embedding_model = VAEEmbedding("stabilityai/sd-vae-ft-mse")
+            embedding_model = VAEEmbedding("WIBE-HuggingFace/sd-vae-ft-mse")
         elif encoder == "sdxlvae":
-            embedding_model = VAEEmbedding("stabilityai/sdxl-vae")
+            embedding_model = VAEEmbedding("WIBE-HuggingFace/sdxl-vae")
         else:
             raise ValueError(f"Unsupported encoder: {encoder}")
         embedding_model = embedding_model.to(device)
@@ -110,7 +110,7 @@ class AdversarialEmbeddingPSNR(BaseAttack):
 
     def __init__(self,
                  encoder: str = "resnet18",
-                 device: torch.device | str = "cuda",
+                 device: torch.device | str = "cuda" if torch.cuda.is_available() else "cpu",
                  psnr: float = 40,
                  loss_type: str = "l2",  # metric between attacked and non-attacked embeddings
                  alpha: float = 10.,
@@ -126,9 +126,9 @@ class AdversarialEmbeddingPSNR(BaseAttack):
             embedding_model = ClipEmbedding()
         elif encoder == "klvae8":
             # same vae as used in generator
-            embedding_model = VAEEmbedding("stabilityai/sd-vae-ft-mse")
+            embedding_model = VAEEmbedding("WIBE-HuggingFace/sd-vae-ft-mse")
         elif encoder == "sdxlvae":
-            embedding_model = VAEEmbedding("stabilityai/sdxl-vae")
+            embedding_model = VAEEmbedding("WIBE-HuggingFace/sdxl-vae")
         else:
             raise ValueError(f"Unsupported encoder: {encoder}")
         embedding_model = embedding_model.to(device)

@@ -1,9 +1,7 @@
-import numpy as np
-
 from dataclasses import dataclass
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
-from wibench.utils import numpy_bgr2torch_img, torch_img2numpy_bgr
+from wibench.utils import numpy_bgr2torch_img, torch_img2numpy_bgr, resize_torch_img
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 from imwatermark import WatermarkEncoder, WatermarkDecoder
@@ -30,7 +28,7 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        Invisible-Watermark algorithm configuration parameters
+        Invisible-Watermark algorithm configuration parameters (default EmptyDict)
     """
     
     abstract = True
@@ -52,7 +50,9 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """
-        np_img = torch_img2numpy_bgr(image)
+        _, h, w = image.shape
+        resized_image = resize_torch_img(image, [max(h, 256), max(w, 256)])
+        np_img = torch_img2numpy_bgr(resized_image)
         watermark = watermark_data.watermark.squeeze(0).tolist()
         self.encoder.set_watermark("bits", watermark)
         params: InvisibleWatermarkConfig = self.params
@@ -65,7 +65,9 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
                 scales=[0, params.scale, 0],
                 block=params.block_size,
             )
-        return numpy_bgr2torch_img(np_res)
+        torch_res = numpy_bgr2torch_img(np_res)
+        resized_torch_res = resize_torch_img(torch_res, [h, w])
+        return resized_torch_res
 
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
         """Extract watermark from marked image.
@@ -77,7 +79,9 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """
-        np_image = torch_img2numpy_bgr(image)
+        _, h, w = image.shape
+        resized_image = resize_torch_img(image, [max(h, 256), max(w, 256)])
+        np_image = torch_img2numpy_bgr(resized_image)
         params: InvisibleWatermarkConfig = self.params
         if self.algorithm == "rivaGan":
             return self.decoder.decode(np_image, self.algorithm)
@@ -118,7 +122,7 @@ class RivaGanWrapper(InvisibleWatermarkWrapper):
     name = "riva_gan"
     algorithm = "rivaGan"
 
-    def __init__(self, params={}):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
         super().__init__(params)
         self.encoder.loadModel()
         self.decoder.loadModel()

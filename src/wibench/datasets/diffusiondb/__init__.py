@@ -1,1 +1,1 @@
-from . import diffusiondb
+from .diffusiondb import DiffusionDB

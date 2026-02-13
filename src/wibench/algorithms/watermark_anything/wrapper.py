@@ -1,11 +1,17 @@
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.typing import TorchImg
+from wibench.module_importer import ModuleImporter
 import torch
 import torch.nn.functional as F
 from dataclasses import dataclass
-import sys
 import os
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/mkAqMgy4PY6yaMK"
+NAME = "watermark_anything"
+REQUIRED_FILES = ["wam_mit.pth"]
 
 
 @dataclass
@@ -24,20 +30,16 @@ class WAParams:
     scaling_w: float
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
     """Watermark Anything with Localized Messages - Image Watermarking Algorithm [`paper <https://arxiv.org/abs/2411.07231>`__].
     
     Provides an interface for embedding and extracting watermarks using the Watermark Anything watermarking algorithm.
     Based on the code from `here <https://github.com/facebookresearch/watermark-anything>`__.
-    
-    Parameters
-    ----------
-    params : Dict[str, Any]
-        Watermark Anything algorithm configuration parameters
 
     """
     
-    name = "watermark_anything"
+    name = NAME
 
     def __init__(
         self,
@@ -49,13 +51,13 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         super().__init__(WAParams(wm_length=wm_length, scaling_w=scaling_w))
-        sys.path.append(module_path)
-        from notebooks.inference_utils import (
-            load_model_from_checkpoint,
-            normalize_img,
-            unnormalize_img,
-        )
-        from watermark_anything.data.metrics import msg_predict_inference
+        with ModuleImporter("WAM", module_path):
+            from WAM.notebooks.inference_utils import (
+                load_model_from_checkpoint,
+                normalize_img,
+                unnormalize_img,
+            )
+            from WAM.watermark_anything.data.metrics import msg_predict_inference
 
         self.ckpt_path = ckpt_path
         self.params_path = params_path

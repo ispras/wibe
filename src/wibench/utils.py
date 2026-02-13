@@ -7,6 +7,7 @@ import cv2
 import tempfile
 import os
 import hashlib
+import secrets
 from typing_extensions import Dict, Any, List, Optional
 
 
@@ -106,7 +107,7 @@ def resize_torch_img(image: TorchImg, size: List[int], mode: str = 'bilinear', a
     return resized_image
 
 
-def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked_image: TorchImg) -> TorchImg:
+def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked_image: TorchImg, factor: float = 1.) -> TorchImg:
     """Overlay difference between images of one size to image of another size.
     
     Parameters
@@ -117,6 +118,8 @@ def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked
         Resized version of original (should match marked_image size)
     marked_image : TorchImg
         Watermarked or processed image
+    factor : float
+        Factor to enhance difference
         
     Returns
     -------
@@ -130,7 +133,7 @@ def overlay_difference(original_image: TorchImg, resized_image: TorchImg, marked
     - Adds difference to original image
     """
     orig_height, orig_width = original_image.shape[1:]
-    diff = marked_image - resized_image
+    diff = (marked_image - resized_image) * factor
     min_val = diff.min()
     diff_resized = resize_torch_img((diff - min_val).squeeze(0), (orig_height, orig_width))
     marked_image = torch.clip(original_image + diff_resized + min_val, 0, 1).squeeze(0)
@@ -204,13 +207,17 @@ def delete_tmp_images(tmp_paths: List[str]):
         os.remove(tmp_path)
 
 
-def seed_everything(seed: Optional[int] = None):
+def generate_random_seed():
+    return secrets.randbelow(2**32)
+
+
+def seed_everything(seed: int):
     """Set random seeds for reproducibility.
     
     Parameters
     ----------
-    seed : Optional[int], optional
-        Random seed value. If None, no seeding is done.
+    seed : int
+        Random seed value.
         
     Notes
     -----
@@ -220,14 +227,13 @@ def seed_everything(seed: Optional[int] = None):
     - PyTorch (CPU and CUDA)
     - Sets deterministic algorithms for CUDA
     """
-    if seed is not None:
-        random.seed(seed)
-        os.environ['PYTHONHASHSEED'] = str(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def object_id_to_seed(object_id: str, bits: int = 32) -> int:

@@ -115,7 +115,7 @@ class ImageFolderDataset(RangeBaseDataset):
         self.images = []
         if preload:
             self.images = [
-                self.transform(Image.open(img_path)) for img_path in self.path_list[self.sample_range[0]: self.sample_range[1] + 1]
+                self.transform(Image.open(img_path).convert("RGB")) for img_path in self.path_list[self.sample_range[0]: self.sample_range[1] + 1]
             ]
         super().__init__(None, len(self))
         
@@ -141,7 +141,7 @@ class ImageFolderDataset(RangeBaseDataset):
                 yield ImageObject(path.name, img)
         else:
             for path in self.path_list[self.sample_range[0]: self.sample_range[1] + 1]:
-                img = self.transform(Image.open(path))
+                img = self.transform(Image.open(path).convert("RGB"))
                 yield ImageObject(path.name, img)
 
 
