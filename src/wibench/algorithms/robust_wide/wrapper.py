@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, asdict
-from typing import Optional, Union, Any, Dict
+from typing import Any, Dict
 from pathlib import Path
 
 import torch
@@ -10,7 +10,12 @@ from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.module_importer import ModuleImporter
 from wibench.config import Params
+from wibench.download import requires_download
 
+
+URL = "https://nextcloud.ispras.ru/index.php/s/6PWaxBTBJTA688x"
+NAME = "robust_wide"
+REQUIRED_FILES = ["wm_model.ckpt"]
 
 DEFAULT_MODULE_PATH = "./submodules/RobustWide"
 DEFAULT_CHECKPOINT_PATH = "./model_files/robust_wide/wm_model.ckpt"
@@ -55,6 +60,7 @@ class RobustWideParams(Params):
     wm_model_config: RobustWideWmModelParams = field(default_factory=RobustWideWmModelParams)
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class RobustWideWrapper(BaseAlgorithmWrapper):
     """Robust-Wide: Robust Watermarking Against Instruction-Driven Image Editing --- Image Watermarking Algorithm [`paper <https://arxiv.org/abs/2402.12688>`__].
     
@@ -67,7 +73,7 @@ class RobustWideWrapper(BaseAlgorithmWrapper):
         Robust-Wide algorithm configuration parameters (default EmptyDict)
     """
 
-    name = "robust_wide"
+    name = NAME
     
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
@@ -103,7 +109,7 @@ class RobustWideWrapper(BaseAlgorithmWrapper):
         """
         transform_image = self.transform_and_normalize(image).unsqueeze(0).to(self.device)
         watermark_image = self.model.encoder(transform_image, watermark_data.watermark.type(transform_image.dtype).to(self.device))
-        return torch.clip(self.denormalize(watermark_image.detach().cpu()), 0, 1).squeeze(0)
+        return torch.clip(self.denormalize(watermark_image.detach().cpu(), self.denormalize), 0, 1).squeeze(0)
     
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> torch.Tensor:
         """Extract watermark from marked image.

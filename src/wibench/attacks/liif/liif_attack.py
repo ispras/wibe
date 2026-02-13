@@ -2,7 +2,15 @@ import torch
 from .models import make
 from .utils import make_coord
 from wibench.typing import TorchImg
+from wibench.download import requires_download
 from ..base import BaseAttack
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/n2jSWZi4L8mAmEL"
+NAME = "liif"
+REQUIRED_FILES = ["rdn-liif.pth"]
+
+DEFAULT_MODEL_PATH = "./model_files/liif/rdn-liif.pth"
 
 
 def batched_predict(model, inp, coord, cell, bsize):
@@ -20,6 +28,7 @@ def batched_predict(model, inp, coord, cell, bsize):
     return pred
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class LIIFAttack(BaseAttack):
     """
     Attack using Local Implicit Image Function (`LIIF <https://github.com/yinboc/liif>`__) for image super-resolution.
@@ -30,14 +39,14 @@ class LIIFAttack(BaseAttack):
     """
     def __init__(
         self,
-        device: str = "cuda:0",
-        model_name: str = "./model_files/liif/rdn-liif.pth",
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
+        model_path: str = DEFAULT_MODEL_PATH,
     ) -> None:
         super().__init__()
         self.device = device
-        self.model_name = model_name
+        self.model_path = model_path
         self.model = make(
-            torch.load(model_name, map_location=torch.device(self.device))[
+            torch.load(model_path, map_location=torch.device(self.device))[
                 "model"
             ],
             load_sd=True,

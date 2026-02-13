@@ -19,7 +19,7 @@ class Averaging(BaseAttack):
         self,
         pattern_load_path: str | None = None,
         num_images: int | None = None,
-        device: torch.device | str = "cuda",
+        device: torch.device | str = "cuda" if torch.cuda.is_available() else "cpu",
     ) -> None:
         super().__init__()
         self.device = device

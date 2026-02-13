@@ -12,7 +12,12 @@ from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.module_importer import ModuleImporter
 from wibench.config import Params
+from wibench.download import requires_download
 
+
+URL = "https://nextcloud.ispras.ru/index.php/s/osapRKbLeKENdjb"
+NAME = "pimog"
+REQUIRED_FILES = ["Encoder_Decoder_Model_mask_99.pth"]
 
 DEFAULT_MODULE_PATH = "./submodules/PIMoG"
 DEFAULT_CHECKPOINT_PATH = "./model_files/pimog/Encoder_Decoder_Model_mask_99.pth"
@@ -36,6 +41,7 @@ class PIMoGParams(Params):
     wm_length: int = 30
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class PIMoGWrapper(BaseAlgorithmWrapper):
     """PIMoG: An Effective Screen-shooting Noise-Layer Simulation for Deep-Learning-Based Watermarking Network --- Image Watermarking Algorithm [`paper <https://dl.acm.org/doi/10.1145/3503161.3548049>`__].
     
@@ -48,7 +54,7 @@ class PIMoGWrapper(BaseAlgorithmWrapper):
         PIMoG algorithm configuration parameters (default EmptyDict)
     """
 
-    name = "pimog"
+    name = NAME
     
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)

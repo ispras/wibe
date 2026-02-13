@@ -6,9 +6,36 @@ from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
 from wibench.config import Params
 from wibench.watermark_data import TorchBitWatermarkData
+from wibench.download import requires_download
 from trustmark import TrustMark
 from pathlib import Path
 from functools import partialmethod
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/roAn4YYpXfq5Y7E"
+NAME = "trustmark"
+REQUIRED_FILES = ["trustmark_rm_P.ckpt",
+                  "trustmark_rm_P.yaml",
+                  "encoder_P.ckpt",
+                  "decoder_P.ckpt",
+                  "trustmark_P.yaml",
+                  "trustmark_rm_B.ckpt",
+                  "trustmark_rm_C.ckpt",
+                  "trustmark_rm_Q.ckpt",
+                  "decoder_B.ckpt",
+                  "decoder_Q.ckpt",
+                  "decoder_C.ckpt",
+                  "encoder_C.ckpt",
+                  "encoder_Q.ckpt",
+                  "encoder_B.ckpt",
+                  "trustmark_B.yaml",
+                  "trustmark_C.yaml",
+                  "trustmark_Q.yaml",
+                  "trustmark_rm_B.yaml",
+                  "trustmark_rm_C.yaml",
+                  "trustmark_rm_Q.yaml"]
+
+DEFAULT_MODELS_CACHE = "./model_files/trustmark"
 
 
 @dataclass
@@ -34,6 +61,7 @@ class TrustMarkParams(Params):
     wm_strength: float = 0.75
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class TrustMarkWrapper(BaseAlgorithmWrapper):
     """`TrustMark <https://arxiv.org/abs/2311.18297>`_: Universal Watermarking for Arbitrary Resolution Images - Image Watermarking Algorithm.
     
@@ -47,7 +75,7 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
 
     """
     
-    name = "trustmark"
+    name = NAME
 
     @staticmethod
     def patched_load_model(trustmark, config_path, weight_path, *args, models_cache, old_func, **kwargs):
@@ -56,7 +84,8 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
             weight_path = Path(models_cache) / Path(weight_path).name 
         return old_func(trustmark, str(config_path), str(weight_path), *args, **kwargs)
 
-    def __init__(self, params: Dict[str, Any] = {}, models_cache: str = "./model_files/trustmark") -> None:
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        models_cache = params.pop("models_cache", DEFAULT_MODELS_CACHE)
         super().__init__(TrustMarkParams(**params))
         self.params: TrustMarkParams
         self.device = self.params.device
