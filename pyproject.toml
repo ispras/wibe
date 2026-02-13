@@ -1,9 +1,96 @@
-[build-system]
-requires = [ "setuptools>=41", "wheel", "setuptools-git-versioning", ]
-build-backend = "setuptools.build_meta"
+[project]
+name = "wibench"
+version = "0.2.0"
+description = "An Extensible Open Source Framework for Evaluating Imperceptibility and Robustness of Digital Watermarks for Generated Images"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Ivannikov Institute for System Programming of the RAS", email = "info-isp@ispras.ru" }
+]
+urls = { Homepage = "https://github.com/ispras/wibe" }
+dependencies = [
+    "typer",
+    "numpy>=1.24.4",
+    "scikit-image>=0.21.0",
+    "scipy",
+    "tqdm",
+    "torch",
+    "pandas>=2.0.0,<3.0.0",
+    "jinja2",
+    "PyYaml",
+    "pydantic",
+    "opencv-python",
+    "torchvision",
+    "loguru",
+    "huggingface_hub",
+    "json2clickhouse @ git+https://gitlab.ispras.ru/opentools/jsons2clickhouse",
+    "plotly",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pytest-forked",
+    "flake8",
+    "flake8-commas",
+    "flake8-continuation",
+    "pep8-naming",
+    "flake8-expression-complexity",
+    "flake8-quotes",
+    "black",
+    "mypy",
+]
+
+[project.scripts]
+wibench = "wibench.cli:app"
+
+[tool.uv]
+package = true
+
+[tool.uv.extra-build-dependencies]
+clip = ["setuptools==80.10.2"]
 
 [tool.black]
 line-length = 79
 
-[tool.setuptools-git-versioning]
-enabled = true
+[tool.flake8]
+inline-quotes = "double"
+ignore = ["E203", "W503"]
+
+[tool.mypy]
+allow_redefinition = false
+check_untyped_defs = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+ignore_errors = false
+ignore_missing_imports = true
+implicit_reexport = false
+local_partial_types = true
+strict_optional = true
+strict_equality = true
+no_implicit_optional = true
+warn_no_return = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=src/wibench --cov-report=term --cov-report=html --cov-append"
+
+[tool.coverage.run]
+source = ["src/wibench"]
+parallel = true
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+]
+show_missing = true
