@@ -59,11 +59,11 @@ class FINWrapper(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         FIN algorithm configuration parameters (default EmptyDict)
     """
-    
+
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
-        module_path = params.pop("module_path", DEFAULT_MODULE_PATH)
+        module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(FINParams(**params))
         with ModuleImporter("FIN", str(Path(module_path).resolve())):
             from FIN.models.encoder_decoder import FED
