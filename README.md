@@ -143,7 +143,7 @@ Additionally you may require extra environment for dependencies conflicts
 python -m venv extra_venv
 ```
 
-4. Download the pre-trained model weights:
+4. (Optional) All necessary files are loaded dynamically as needed. If you want to download all the pre-trained model weights at once, run the following:
 
 ```console
 (venv) python download_models.py
