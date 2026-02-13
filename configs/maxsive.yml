@@ -1,0 +1,28 @@
+algorithms:
+  - maxsive
+
+post_embed_metrics:
+  - CLIP_IQA
+  - Aesthetic
+  - ImageReward
+  - CLIPScore
+  - BLIP
+
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %}
+
+post_extract_metrics:
+ - Result:
+    report_name: tpr@10e-3fpr
+
+datasets:
+{% include 'common/diffusiondb_prompts.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/maxsive
+  aggregators:
+    - CSV:
+        table_name: table

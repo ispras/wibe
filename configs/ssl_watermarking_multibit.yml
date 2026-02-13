@@ -1,19 +1,5 @@
 algorithms:
-  ssl_watermarking:
-    params:
-      method: multibit
-      backbone_weights_path: ./model_files/ssl_watermarking/dino_r50_plus.pth
-      normlayer_weights_path: ./model_files/ssl_watermarking/out2048_yfcc_orig.pth
-      module_path: ./submodules/ssl_watermarking
-      epochs: 100
-      optimizer_alg: Adam
-      optimizer_lr: 0.01
-      lambda_w: 20.
-      lambda_i: 1.
-      target_psnr: 42.
-      target_fpr: 1e-6
-      num_bits: 32
-      device: cuda
+  - ssl_watermarking
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 

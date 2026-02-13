@@ -26,7 +26,7 @@ class VAEAttack(BaseAttack):
     def __init__(self,
             n_avg_imgs: int = 100, 
             noise_level: float = 0.5,
-            device: str = 'cuda:0',
+            device: str = "cuda" if torch.cuda.is_available() else "cpu",
             cache_dir : str = None,
             ) -> None:
         self.n_avg_imgs = n_avg_imgs

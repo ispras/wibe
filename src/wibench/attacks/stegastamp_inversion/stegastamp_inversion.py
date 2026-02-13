@@ -4,8 +4,16 @@ import torch
 import torch.nn.functional as F
 from ..base import BaseAttack
 from wibench.typing import TorchImg
+from wibench.download import requires_download
+from wibench.algorithms.stega_stamp.wrapper import (
+    URL,
+    NAME,
+    REQUIRED_FILES,
+    DEFAULT_WEIGHT_PATH
+)
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class StegastampInversion(BaseAttack):
     """
     Adversarial attack that inverts watermarks encoded by Stegastamp from `here <https://github.com/leiluk1/erasing-the-invisible-beige-box/tree/main>`__.
@@ -27,7 +35,7 @@ class StegastampInversion(BaseAttack):
     """
 
     def __init__(self,
-                 stegastamp_model_path: str = "./model_files/stega_stamp/stega_stamp.onnx",
+                 stegastamp_model_path: str = DEFAULT_WEIGHT_PATH,
                  device_id: int = 0,
                  ) -> None:
         super().__init__()

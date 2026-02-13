@@ -5,8 +5,24 @@ from dreamsim import dreamsim
 
 from wibench.metrics.base import PostEmbedMetric
 from wibench.typing import TorchImg
+from wibench.download import requires_download
 
 
+URL = "https://nextcloud.ispras.ru/index.php/s/rM5gcPrfoBZTEtM"
+NAME = "dreamsim"
+REQUIRED_FILES = ["trusted_list",
+                  "open_clip_vitb16_pretrain.pth.tar",
+                  "clip_vitb16_pretrain.pth.tar",
+                  "pretrained.zip",
+                  "dino_vitb16_pretrain.pth",
+                  "ensemble_lora",
+                  "facebookresearch_dino_main",
+                  "checkpoints"]
+
+DEFAULT_CACHE_DIR = "./model_files/dreamsim"
+
+
+@requires_download(URL, NAME, REQUIRED_FILES)
 class DreamSim(PostEmbedMetric):
     """`DreamSim <https://arxiv.org/abs/2306.09344>`_: Learning New Dimensions of Human Visual Similarity using Synthetic Data.
 
@@ -34,7 +50,7 @@ class DreamSim(PostEmbedMetric):
     def __init__(
         self,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
-        cache_dir: str = "./model_files/dreamsim",
+        cache_dir: str = DEFAULT_CACHE_DIR,
         normalize_embeds: bool = True,
         dreamsim_type: str = "ensemble",
         use_patch_model: bool = False

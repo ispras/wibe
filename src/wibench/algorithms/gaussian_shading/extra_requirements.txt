@@ -1,0 +1,5 @@
+pycryptodome
+matplotlib
+diffusers <= 0.23.1
+huggingface_hub<=0.25.2
+transformers<= 4.48.3

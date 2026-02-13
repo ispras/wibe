@@ -1,5 +1,5 @@
 import torch
-import sys
+import numpy as np
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
@@ -15,6 +15,10 @@ from wibench.utils import (
     denormalize_image,
     overlay_difference
 )
+
+
+DEFAULT_MODULE_PATH = "./submodules/HiDDeN"
+DEFAULT_RUNS_ROOT = "./submodules/HiDDeN/experiments"
 
 
 @dataclass
@@ -62,31 +66,32 @@ class HiddenWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        HiDDeN algorithm configuration parameters
+        HiDDeN algorithm configuration parameters (default EmptyDict)
     """
 
     name = "hidden"
     
-    def __init__(self, params: Dict[str, Any]) -> None:
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
         # Load module from HiDDeN submodule
-        with ModuleImporter("HIDDEN", str(Path(params["module_path"]).resolve())):
+        module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
+        with ModuleImporter("HIDDEN", module_path):
             from HIDDEN.utils import (
                 load_options,
                 load_last_checkpoint
             )
             from HIDDEN.model.encoder_decoder import EncoderDecoder
 
-            self.device = params['device']
-            run_name = params['run_name']
-            runs_root = Path(params['runs_root']).resolve()
+            self.device = params.get("device", "cuda" if torch.cuda.is_available() else "cpu")
+            run_name = params.get("run_name", "combined-noise")
+            runs_root = Path(params.get("runs_root", DEFAULT_RUNS_ROOT)).resolve()
             current_run = runs_root / run_name
-            options_file_path = current_run / 'options-and-config.pickle'
-            checkpoint_file_path = current_run / 'checkpoints'
+            options_file_path = current_run / "options-and-config.pickle"
+            checkpoint_file_path = current_run / "checkpoints"
             _, hidden_config, _ = load_options(options_file_path)
             checkpoint, _ = load_last_checkpoint(checkpoint_file_path)
 
         self.encoder_decoder = EncoderDecoder(hidden_config, None)
-        self.encoder_decoder.load_state_dict(checkpoint['enc-dec-model'])
+        self.encoder_decoder.load_state_dict(checkpoint["enc-dec-model"])
         self.encoder_decoder = self.encoder_decoder.to(self.device)
         self.encoder_decoder.eval()
 
@@ -102,7 +107,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         )
         super().__init__(hidden_params)
     
-    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
         """Embed watermark into input image.
         
         Parameters
@@ -120,7 +125,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
         marked_image = overlay_difference(image, resized_image, encoded_tensor)
         return marked_image
     
-    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> np.ndarray:
         """Extract watermark from marked image.
         
         Parameters

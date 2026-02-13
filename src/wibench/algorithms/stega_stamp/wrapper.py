@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing_extensions import Optional, Union, Any
+from typing_extensions import Any, Dict
 from pathlib import Path
 
 from wibench.algorithms.stega_stamp.stega_stamp import StegaStamp
@@ -15,14 +15,17 @@ NAME = "stega_stamp"
 REQUIRED_FILES = ["stega_stamp.onnx"]
 
 
+DEFAULT_WEIGHT_PATH = "./model_files/stega_stamp/stega_stamp.onnx"
+
+
 @dataclass
-class StegaStampConfig:
-    """Configuration parameters for the StageStamp watermarking algorithm.
+class StegaStampParams:
+    f"""Configuration parameters for the StageStamp watermarking algorithm.
 
     Attributes
     ----------
         weights_path : Optional[Union[str, Path]]
-            Path to pretrained StegaStamp model weights (default None)
+            Path to pretrained StegaStamp model weights (default {DEFAULT_WEIGHT_PATH})
         wm_length: int
             Length of the watermark message to be embed (in bits) (default 100)
         width : int
@@ -32,7 +35,7 @@ class StegaStampConfig:
         alpha : float
             Weight parameter controlling the trade-off between watermark robustness and image quality during embedding (default 1.0)
     """
-    weights_path: Optional[Union[str, Path]] = None
+    weights_path: str = DEFAULT_WEIGHT_PATH
     wm_length: int = 100
     width: int = 400
     height: int = 400
@@ -49,13 +52,14 @@ class StegaStampWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        StegaStamp algorithm configuration parameters
+        StegaStamp algorithm configuration parameters (default EmptyDict)
     """
 
     name = NAME
     
-    def __init__(self, params: StegaStampConfig) -> None:
-        super().__init__(StegaStampConfig(**params))
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        super().__init__(StegaStampParams(**params))
+        self.params: StegaStampParams
         self.model_filepath = Path(self.params.weights_path).resolve()
         self.stega_stamp = StegaStamp(self.model_filepath,
                                       self.params.wm_length,

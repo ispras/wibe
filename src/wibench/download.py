@@ -68,8 +68,9 @@ def requires_download(url: str, name: str, required_files: List[str]):
         original_init = cls.__init__
 
         def new_init(self, *args, **kwargs):
-            if not check_files_in_folder(str(Path(DOWNLOAD_MODELS_PATH) / name), required_files):
-                download_folder(url, name)
+            if type(self) is cls:
+                if not check_files_in_folder(str(Path(DOWNLOAD_MODELS_PATH) / name), required_files):
+                    download_folder(url, name)
             original_init(self, *args, **kwargs)
 
         cls.__init__ = new_init
