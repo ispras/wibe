@@ -105,10 +105,20 @@ TPRxFPR
 
 .. autoclass:: wibench.metrics.base.TPRxFPR
 
+P-value
+~~~~~~~
+
+.. autoclass:: wibench.metrics.base.PValue
+
 LPIPS
 ~~~~~
 
 .. autoclass:: wibench.metrics.lpips.lpips.LPIPS
+
+DreamSim
+~~~~~~~~
+
+.. autoclass:: wibench.metrics.dreamsim.dreamsim.DreamSim
 
 Aesthetic
 ~~~~~~~~~

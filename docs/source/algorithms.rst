@@ -226,3 +226,57 @@ Watermark Anything
 
 .. automodule:: wibench.algorithms.watermark_anything.wrapper
     :members:
+
+MaskWM
+~~~~~~
+
+.. automodule:: wibench.algorithms.maskwm.wrapper
+    :members:
+
+SyncSeal
+~~~~~~~~
+
+.. automodule:: wibench.algorithms.syncseal.wrapper
+    :members:
+
+Gaussian Shading
+~~~~~~~~~~~~~~~~
+
+.. automodule:: wibench.algorithms.gaussian_shading.wrapper
+    :members:
+
+Ring-ID
+~~~~~~~
+
+.. automodule:: wibench.algorithms.ringid.wrapper
+    :members:
+
+MaXsive
+~~~~~~~
+
+.. automodule:: wibench.algorithms.maxsive.wrapper
+    :members:
+
+METR
+~~~~
+
+.. automodule:: wibench.algorithms.metr.wrapper
+    :members:
+
+PIMoG
+~~~~~
+
+.. automodule:: wibench.algorithms.pimog.wrapper
+    :members:
+
+Robust-Wide
+~~~~~~~~~~~
+
+.. automodule:: wibench.algorithms.robust_wide.wrapper
+    :members:
+
+FIN
+~~~
+
+.. automodule:: wibench.algorithms.fin.wrapper
+    :members:

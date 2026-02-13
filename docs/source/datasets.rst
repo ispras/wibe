@@ -60,6 +60,11 @@ If it is possible to get number of samples in dataset, you may inherit from ``Ra
 Implemented datasets
 --------------------
 
+.. autoclass:: wibench.datasets.base.ImageFolderDataset
+    
+.. autoclass:: wibench.datasets.base.PromptFolderDataset
+
 .. autoclass:: wibench.datasets.diffusiondb.diffusiondb.DiffusionDB
 
 .. autoclass:: wibench.datasets.mscoco.mscoco.MSCOCO
+

@@ -48,13 +48,14 @@ The system architecture consists of a sequence of processing configurable stages
 | ChunkySeal | post-hoc | chunkyseal | 1024 bits | [We Can Hide More Bits: The Unused Watermarking Capacity in Theory and in Practice](https://github.com/facebookresearch/videoseal) |
 | Watermark Anything | post-hoc | watermark_anything | 32 bits | [Watermark Anything with Localized Messages - Image Watermarking Algorithm](https://github.com/facebookresearch/watermark-anything)|
 | MaskWM | post-hoc | maskwm | 32/64/128 bits | [Mask Image Watermarking](https://github.com/hurunyi/MaskWM) |
-| SyncSeal | post-hoc | syncseal | zero-bit | [GEOMETRIC IMAGE SYNCHRONIZATION WITH DEEP WATERMARKING](https://github.com/facebookresearch/wmar/tree/main/syncseal) |
+| SyncSeal | post-hoc | syncseal | method-dependent | [GEOMETRIC IMAGE SYNCHRONIZATION WITH DEEP WATERMARKING](https://github.com/facebookresearch/wmar/tree/main/syncseal) |
 | Gaussian Shading | build-in | gaussian_shading | 256 bits | [Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models](https://github.com/bsmhmmlf/Gaussian-Shading) |
 | Ring-ID | build-in | ringid | zero-bit | [RingID: Rethinking Tree-Ring Watermarking for Enhanced Multi-Key Identification - Image Watermarking Algorithm](https://github.com/showlab/RingID) |
 | MaXsive | build-in | maxsive | zero-bit | [MaXsive: High-Capacity and Robust Training-Free Generative Image Watermarking in Diffusion Models](https://github.com/Mao718/MaXsive) |
 | METR | build-in | metr | 10 bits | [METR: Image Watermarking with Large Number of Unique Messages](https://github.com/deepvk/metr) |
 | PIMoG | post-hoc | pimog | 30 bits | [PIMoG: An Effective Screen-shooting Noise-Layer Simulation for Deep-Learning-Based Watermarking Network](https://github.com/FangHanNUS/PIMoG-An-Effective-Screen-shooting-Noise-Layer-Simulation-for-Deep-Learning-Based-Watermarking-Netw) |
 | Robust-Wide | post-hoc | robust_wide | 64 bits | [Robust-Wide: Robust Watermarking Against Instruction-Driven Image Editing](https://github.com/hurunyi/Robust-Wide) |
+| FIN | post-hoc | fin | 64 bits | [FIN: Flow-Based Robust Watermarking with Invertible Noise Layer for Black-Box Distortions](https://github.com/QQiuyp/FIN) |
 
 
 ### Attacks
@@ -100,6 +101,7 @@ The system architecture consists of a sequence of processing configurable stages
 | PSNR | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | psnr | peak signal-to-noise ratio|
 | SSIM | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | ssim | structural similarity index|
 | LPIPS | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | lpips | [The Unreasonable Effectiveness of Deep Features as a Perceptual Metric](https://github.com/richzhang/PerceptualSimilarity) |
+| DreamSim | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | dreamsim | [DreamSim: Learning New Dimensions of Human Visual Similarity using Synthetic Data.](https://arxiv.org/abs/2306.09344) |
 | Aesthetic | single image quality | post_embed_metrics, post_attack_metrics | aesthetic |[Aesthetic score predictor](https://github.com/christophschuhmann/improved-aesthetic-predictor)|
 | CLIP IQA | single image quality |post_embed_metrics, post_attack_metrics |clip_iqa |[Exploring CLIP for Assessing the Look and Feel of Images](https://lightning.ai/docs/torchmetrics/stable/multimodal/clip_iqa.html)|
 | BLIP | image quality, compare image with text prompt | post_embed_metrics, post_attack_metrics | blip | [BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation](https://github.com/salesforce/BLIP) |
@@ -107,7 +109,8 @@ The system architecture consists of a sequence of processing configurable stages
 | Image Reward | image quality, compare image with text prompt |post_embed_metrics, post_attack_metrics | imagereward |[Learning and Evaluating Human Preferences for Text-to-Image Generation](https://github.com/zai-org/ImageReward/tree/main)|
 | FID | image quality, compare two sets of images | post_pipeline_embed_metrics, post_pipeline_attack_metrics | fid | FID metric from [GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium](https://arxiv.org/abs/1706.08500)|
 | BER | extraction success | post_extract_metrics | ber | Bit Error Rate (multi-bit)|
-| TPR at x% FPR |extraction success | post_extract_metrics | tpr@xfpr | True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit)|
+| TPR at x% FPR | extraction success | post_extract_metrics | tpr@xfpr | True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit) |
+| P-value | extraction success | post_extract_metrics | p-value | P-value denotes probability to observe the same result as in case of extraction from not watermarked object. |
 | Result | auxiliary | post_extract_metrics | result | Records extraction result (zero-bit case) |
 | Embeded watermark | auxiliary | post_embed_metrics | embwm | Records embeded watermark (multi-bit case) |
 | Extracted watermark |auxiliary | post_extract_metrics | extwm | Records extracted watermark (multi-bit case) |
@@ -134,6 +137,12 @@ git submodule update --init --recursive
 python -m venv venv
 ```
 
+Additionally you may require extra environment for dependencies conflicts
+
+```console
+python -m venv extra_venv
+```
+
 4. Download the pre-trained model weights:
 
 ```console
@@ -141,12 +150,20 @@ python -m venv venv
 ```
 
 5. Install the dependencies:
+   
+* Base environment:
 
 ```console
 (venv) python install_requirements.py
 ```
 
-6. Set the **HF_TOKEN** environment variable with your **HuggingFace** [token](https://huggingface.co/settings/tokens) (see [HuggingFace Authentication Setup](https://ispras-wibe.readthedocs.io/en/latest/quick_start.html#huggingface-authentication-setup) for details), then authenticate:
+* Extra environment:
+
+```console
+(extra_venv) python install_requirements.py --mode extra
+```
+
+1. Set the **HF_TOKEN** environment variable with your **HuggingFace** [token](https://huggingface.co/settings/tokens) (see [HuggingFace Authentication Setup](https://ispras-wibe.readthedocs.io/en/latest/quick_start.html#huggingface-authentication-setup) for details), then authenticate:
 
 ```console
 (venv) python huggingface_login.py
@@ -155,8 +172,18 @@ python -m venv venv
 7. All set! Specify the path to your `сonfiguration file` as a required parameter:
 
 ```console
-(venv) python -m wibench --config configs/trustmark_demo.yml -d
+(venv) python -m wibench --config configs/trustmark_demo.yml
 ```
+
+If you need to run methods: `treering`, `gaussian_shading`, `metr` or `maxsive`, you should split your run to stages and run them in different environments (You may need enough empty disk space):
+```console
+(extra_venv) python -m wibench --config configs/treering.yml -d embed
+(venv) python -m wibench --config configs/treering.yml -d post_embed_metrics-post_attack_metrics
+(extra_venv) python -m wibench --config configs/treering.yml -d extract 
+(venv) python -m wibench --config configs/treering.yml -d post_extract_metrics-post_pipeline_aggregate
+
+```
+
 
 8. Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking algorithms, attacks, and computed performance metrics.
 
