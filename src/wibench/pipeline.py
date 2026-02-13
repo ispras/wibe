@@ -329,12 +329,12 @@ class PostPipelineAttackMetricsStage(PostPipelineStage):
     """
     def __init__(self,
                  metrics: List[PostPipelineMetric],
-                 attacks: List[Tuple[str, Dict[str, Any]]],
+                 attacks: List[BaseAttack],
                  algorithm_wrapper: BaseAlgorithmWrapper,
                  dump_type: DumpType) -> None:
         self.metrics = metrics
         self.algorithm_wrapper = algorithm_wrapper
-        self.attacks = [attack.report_name for attack in get_attacks(attacks)]
+        self.attacks = [attack.report_name for attack in attacks]
         self.dump_type = dump_type
         super().__init__()
 
@@ -460,15 +460,19 @@ class StageRunner:
         self.stages: List[Stage] = []
         self.post_pipeline_stages: List[Union[Stage, PostPipelineStage]] = []
         self.seed = pipeline_config.seed
-        wrapper_cache = None
+        
+        cache = {}
+        def cached_call(func, *args, **kwargs):
+            if hash(func) not in cache:
+                cache[hash(func)] = func(*args, **kwargs)
+            return cache[hash(func)]
+            
         for stage in stages:
             stage_class = STAGE_CLASSES.get(stage, None)
             if stage_class is None:
                 raise ValueError(f"Unknown stage: {stage}")
             if stage in [StageType.embed, StageType.extract]:
-                if wrapper_cache is None:
-                    wrapper_cache = get_algorithms([algorithm_wrapper])[0]
-                self.stages.append(stage_class(wrapper_cache))
+                self.stages.append(stage_class(cached_call(get_algorithms, [algorithm_wrapper])[0]))
             elif stage == StageType.post_embed_metrics:
                 post_embed_metrics = get_metrics(metrics[stage])
                 self.stages.append(stage_class(post_embed_metrics))
@@ -476,7 +480,7 @@ class StageRunner:
                 post_attack_metrics = get_metrics(metrics[stage])
                 self.stages.append(stage_class(post_attack_metrics))
             elif stage == StageType.attack:
-                self.stages.append(stage_class(get_attacks(attacks)))
+                self.stages.append(stage_class(cached_call(get_attacks, attacks)))
             elif stage == StageType.post_extract_metrics:
                 post_extract_metrics = get_metrics(metrics[stage])
                 self.stages.append(stage_class(post_extract_metrics))
@@ -485,13 +489,9 @@ class StageRunner:
             elif (stage == StageType.post_pipeline_aggregate) and (pipeline_config.workers == 1):
                 self.post_pipeline_stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, 0, dry_run, True))
             elif (stage == StageType.post_pipeline_embed_metrics) and (pipeline_config.workers == 1):
-                if wrapper_cache is None:
-                    wrapper_cache = get_algorithms([algorithm_wrapper])[0]
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), wrapper_cache, pipeline_config.dump_type))
+                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), cached_call(get_algorithms, [algorithm_wrapper])[0], pipeline_config.dump_type))
             elif (stage == StageType.post_pipeline_attack_metrics) and (pipeline_config.workers == 1):
-                if wrapper_cache is None:
-                    wrapper_cache = get_algorithms([algorithm_wrapper])[0]
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), attacks, wrapper_cache, pipeline_config.dump_type))
+                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), cached_call(get_attacks, attacks), cached_call(get_algorithms, [algorithm_wrapper])[0], pipeline_config.dump_type))
 
         pass
 
