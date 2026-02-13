@@ -29,10 +29,8 @@ def is_valid(p: Path) -> bool:
 
 
 def main():
-    base_path = Path("./src/wibench/").resolve()
-    vaer_path = base_path / "attacks" / "VAERegeneration" / "requirements.txt"
-    all_req = list(base_path.rglob("requirements.txt"))
-    req_paths = [vaer_path] + [p for p in all_req if p != vaer_path]
+    base_path = Path("./requirements/").resolve()
+    req_paths = list(base_path.rglob("*.txt"))
 
     logger.debug("\n".join(str(p) for p in req_paths))
 
@@ -72,7 +70,6 @@ def main():
         venv_path = lock_path.with_suffix("")
         subprocess.run(["uv", "venv", str(venv_path)])
         subprocess.run(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)])
-        subprocess.run(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-e", "."])
 
 
 if __name__ == "__main__":

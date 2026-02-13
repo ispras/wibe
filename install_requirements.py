@@ -4,8 +4,7 @@ import subprocess
 import sys
 
 
-dir_to_walk = './src/wibench/'
-requirements_txt = 'requirements.txt'
+dir_to_walk = './requirements/'
 all_requirements = []
 python_m_pip_install = f'{sys.executable} -m pip install'.split()
 
@@ -19,8 +18,9 @@ except Exception as e:
 
 for root, folders, files in os.walk(dir_to_walk):
     print(f'Searching for dependencies in directory: {root}')
-    if requirements_txt in files:
-        all_requirements.append(os.path.join(root, requirements_txt))
+    for f in files:
+        if f.endswith('.txt'):
+            all_requirements.append(os.path.join(root, f))
 
 assert len(all_requirements) > 0
 

@@ -42,6 +42,10 @@ dev = [
     "mypy",
 ]
 
+[build-system]
+requires = ["setuptools>=61.0,<81.0"]
+build-backend = "setuptools.build_meta"
+
 [project.scripts]
 wibench = "wibench.cli:app"
 
@@ -49,7 +53,7 @@ wibench = "wibench.cli:app"
 package = true
 
 [tool.uv.extra-build-dependencies]
-clip = ["setuptools==80.10.2"]
+clip = ["setuptools<81.0"]
 
 [tool.black]
 line-length = 79

@@ -1,7 +1,0 @@
-numpy
-torch
-pycocotools
-torchvision
-omegaconf
-matplotlib
-Pillow

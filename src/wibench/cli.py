@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 import wibench
+from loguru import logger
 
 
 def clear_sys_path():
@@ -86,6 +87,7 @@ def subprocess_run(pipeline_config: PipeLineConfig, python_exec = sys.executable
         procs.append(subprocess.Popen(args, env=env))
     
     for proc in procs:
+        logger.warning("------------subprocess_run------------")
         proc.wait()
 
 
@@ -131,19 +133,21 @@ def parse_stage_expression(expr: str) -> List[str]:
 
 def compatible_execs(alg_wrappers, metrics, datasets, attacks) -> list[Path]:
 
-    def module_paths(names, registry_class):
+    req_dir = Path("./requirements").resolve()
+
+    def module_paths(names: set[str], field: str):
         paths = set()
         for n in names:
-            p = Path(sys.modules[registry_class._registry[n.lower()].__module__].__file__).parent / "requirements.txt"
+            p =  req_dir / field / (n + ".txt")
             if p.exists():
                 paths.add(p)
         return paths
 
     current_req_paths = (
-        module_paths({n for n, _ in alg_wrappers}, BaseAlgorithmWrapper)
-        | module_paths({n for m in metrics.values() for n, _ in m}, BaseMetric)
-        | module_paths({n for n, _ in datasets}, BaseDataset)
-        | module_paths({n for n, _ in attacks}, BaseAttack)
+        module_paths({n for n, _ in alg_wrappers}, ALGORITHMS_FIELD)
+        | module_paths({n for m in metrics.values() for n, _ in m}, "metrics") # TODO: 
+        | module_paths({n for n, _ in datasets}, DATASETS_FIELD)
+        | module_paths({n for n, _ in attacks}, ATTACKS_FIELD)
     )
 
     venvs_dir = Path("./venvs").resolve()
@@ -229,9 +233,11 @@ def run(
     attacks = loaded_config[ATTACKS_FIELD]
 
     exec_candidates = compatible_execs(alg_wrappers, metrics, datasets, attacks)
-
-    if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices) or Path(sys.executable) not in exec_candidates):
+    if Path(sys.executable) not in exec_candidates:
         subprocess_run(pipeline_config, python_exec=next(iter(exec_candidates)))
+        return
+    if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
+        subprocess_run(pipeline_config)
         
         # for post_stages
         if stages is None or "all" in stages:
