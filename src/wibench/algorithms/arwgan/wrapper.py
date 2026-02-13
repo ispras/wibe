@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
@@ -20,6 +21,10 @@ from wibench.download import requires_download
 URL = "https://nextcloud.ispras.ru/index.php/s/4THrnJDdjF6xGMc"
 NAME = "arwgan"
 REQUIRED_FILES = ["checkpoints", "options-and-config.pickle"]
+
+DEFAULT_MODULE_PATH = "./submodules/ARWGAN"
+DEFAULT_OPTIONS_PATH = "./model_files/arwgan/options-and-config.pickle"
+DEFAULT_CHECKPOINT_PATH = "./model_files/arwgan/checkpoints/ARWGAN.pyt"
 
 
 @dataclass
@@ -95,31 +100,27 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        ARWGAN algorithm configuration parameters
+        ARWGAN algorithm configuration parameters (default EmptyDict)
 
     """
 
     name = NAME
     
-    def __init__(self, params: Dict[str, Any]) -> None:
-        with ModuleImporter("ARWGAN", params["module_path"]):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
+        with ModuleImporter("ARWGAN", module_path):
             from ARWGAN.utils import load_options
             from ARWGAN.model.encoder_decoder import EncoderDecoder
             from ARWGAN.noise_layers.noiser import Noiser
 
-            options_file_path = params["options_file_path"]
-            checkpoint_file_path = params["checkpoint_file_path"]
-
-            if options_file_path is None:
-                raise FileNotFoundError(f"The options file path: '{options_file_path}' does not exist!")
-            if checkpoint_file_path is None:
-                raise FileNotFoundError(f"The yaml config path: '{checkpoint_file_path}' does not exist!")
+            options_file_path = params.get("options_file_path", DEFAULT_OPTIONS_PATH)
+            checkpoint_file_path = params.get("checkpoint_file_path", DEFAULT_CHECKPOINT_PATH)
 
             options_file_path = Path(options_file_path).resolve()
             checkpoint_file_path = Path(checkpoint_file_path).resolve()
             train_options, config, noise_config = load_options(options_file_path)
         
-        self.device = params["device"]
+        self.device = params.get("device", "cuda" if torch.cuda.is_available() else "cpu")
         checkpoint = torch.load(checkpoint_file_path, map_location=self.device)
 
         params = ARWGANParams(
@@ -140,6 +141,7 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
             use_vgg = config.use_vgg
         )
         super().__init__(params)
+        self.params: ARWGANParams
 
         noiser = Noiser([], self.device)
         self.encoder_decoder = EncoderDecoder(config, noiser)
@@ -147,7 +149,7 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
         self.encoder_decoder = self.encoder_decoder.to(self.device)
         self.encoder_decoder.eval()
 
-    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
         """Embed watermark into input image.
         
         Parameters
@@ -165,7 +167,7 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
         marked_image = overlay_difference(image, resized_image, denormalized_marked_image)
         return marked_image
     
-    def extract(self, image: TorchImg, watermark_data: Any):
+    def extract(self, image: TorchImg, watermark_data: Any) -> np.ndarray:
         """Extract watermark from marked image.
         
         Parameters

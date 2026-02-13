@@ -9,10 +9,16 @@ sys.path.append(str(Path(__file__).parent.parent))
 runner = CliRunner()
 CONFIG_DIR = Path("configs")
 config_files = list(CONFIG_DIR.glob("*.yml"))
+# TODO: testing for build-in methods
 config_files = list(
     filter(
         lambda x: ("stable_signature" not in x.name)
-        and ("treering" not in x.name),
+        and ("treering" not in x.name)
+        and ("gaussian_shading" not in x.name)
+        and ("metr" not in x.name)
+        and ("maxsive" not in x.name)
+        and ("ringid" not in x.name)
+        and ("trustmark_fid_demo" not in x.name),
         config_files,
     )
 )
@@ -51,13 +57,34 @@ def test_stable_signature():
             str(config_file),
             "-d",
             "--dry-run",
-            "embed",
-            "post_attack_metrics",
+            "embed, post_attack_metrics"
         ],
     )
     assert_exception(result)
     result = runner.invoke(
         app,
-        ["-c", str(config_file), "-d", "--dry-run", "extract", "aggregate"],
+        ["-c", str(config_file), "-d", "--dry-run", "extract, aggregate"],
+    )
+    assert_exception(result)
+
+
+@pytest.mark.forked
+def test_trustmark_fid():
+    from wibench.cli import app
+    config_file = CONFIG_DIR / "trustmark_fid_demo.yml"
+    assert config_file.exists(), f"Config file {config_file} does not exist!"
+    result = runner.invoke(
+        app,
+        [
+            "-c",
+            str(config_file),
+            "-d",
+            "embed, attack"
+        ],
+    )
+    assert_exception(result)
+    result = runner.invoke(
+        app,
+        ["-c", str(config_file), "-d", "post_pipeline_attack_metrics, post_pipeline_embed_metrics, post_pipeline_aggregate"],
     )
     assert_exception(result)

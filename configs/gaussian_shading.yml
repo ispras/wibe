@@ -1,8 +1,5 @@
 algorithms:
-  treering:
-    params:
-      module_path: ./submodules/tree-ring-watermark
-      device: cuda
+  - gaussian_shading
 
 post_embed_metrics:
   - CLIP_IQA
@@ -10,21 +7,21 @@ post_embed_metrics:
   - ImageReward
   - CLIPScore
   - BLIP
+
 post_attack_metrics:
 {% include 'common/post_attack_metrics.yml' %}
 
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %} 
+
 datasets:
-  DiffusionDB:
-      cache_dir: ./datasets/diffusiondb
-      subset: 2m_first_5k
-      skip_nsfw: true
-      return_prompt: true
+{% include 'common/diffusiondb_prompts.yml' %}
 
 attacks:
 {% include 'common/distortions.yml' %}
 
 pipeline:
-  result_path: ./test_results/treering
+  result_path: ./test_results/gaussian_shading
   aggregators:
     - CSV:
         table_name: table

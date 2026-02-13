@@ -22,8 +22,8 @@ class ImageEditingFLuxContext(BaseAttack):
     
     def __init__(
         self,
-        device_vl: str = "cuda:0",
-        device_flux: str = "cuda:1",
+        device_vl: str = "cuda:0" if torch.cuda.is_available() else "cpu",
+        device_flux: str = "cuda:1" if torch.cuda.is_available() else "cpu",
         internvl_path: str = "OpenGVLab/InternVL2_5-8B",
         fluxcontext_path: str = "black-forest-labs/FLUX.1-Kontext-dev",
         prompts_path: str = "./resources/flux_prompts.json",

@@ -34,6 +34,21 @@
 [submodule "submodules/FIN"]
 	path = submodules/FIN
 	url = https://github.com/QQiuyp/FIN.git
+[submodule "submodules/GaussianShading"]
+	path = submodules/GaussianShading
+	url = https://github.com/bsmhmmlf/Gaussian-Shading.git
+[submodule "submodules/RingID"]
+	path = submodules/RingID
+	url = https://github.com/showlab/RingID.git
+[submodule "submodules/MaXsive"]
+	path = submodules/MaXsive
+	url = https://github.com/Mao718/MaXsive.git
+[submodule "submodules/RobustWide"]
+	path = submodules/RobustWide
+	url = https://github.com/hurunyi/Robust-Wide.git
+[submodule "submodules/PIMoG"]
+	path = submodules/PIMoG
+	url = https://github.com/FangHanNUS/PIMoG-An-Effective-Screen-shooting-Noise-Layer-Simulation-for-Deep-Learning-Based-Watermarking-Netw.git
 [submodule "submodules/WMAR"]
 	path = submodules/WMAR
 	url = https://github.com/facebookresearch/wmar.git

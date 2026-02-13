@@ -5,14 +5,13 @@ import numpy as np
 import torch
 
 from dataclasses import (
-    dataclass
+    dataclass,
+    field
 )
 from typing_extensions import (
     List,
     Dict,
-    Any,
-    ClassVar,
-    Optional
+    Any
 )
 from pathlib import Path
 from wibench.algorithms.base import BaseAlgorithmWrapper
@@ -29,17 +28,23 @@ NAME = "dwsf"
 REQUIRED_FILES = ["seg.pth", "encoder_best.pth", "decoder_best.pth"]
 
 
+DEFAULT_MODULE_PATH = "./submodules/DWSF"
+DEFAULT_ENCODER_WEIGHT_PATH = "./model_files/dwsf/encoder_best.pth"
+DEFAULT_DECODER_WEIGHT_PATH = "./model_files/dwsf/decoder_best.pth"
+DEFAULT_SEG_WEIGHT_PATH = "./model_files/dwsf/seg.pth"
+
+
 @dataclass
 class DWSFParams(Params):
-    """Configuration parameters for the DWSF watermarking algorithm.
+    f"""Configuration parameters for the DWSF watermarking algorithm.
 
     Attributes:
-        encoder_weights_path : Optional[str]
-            Path to the pretrained encoder model weights
-        decoder_weights_path : Optional[str]
-            Path to the pretrained decoder model weights
-        seg_weights_path : Optional[str]
-            Path to the segmentation model weights, used for block localization
+        encoder_weights_path : str
+            Path to the pretrained encoder model weights (default: {DEFAULT_ENCODER_WEIGHT_PATH})
+        decoder_weights_path : str
+            Path to the pretrained decoder model weights (default: {DEFAULT_DECODER_WEIGHT_PATH})
+        seg_weights_path : str
+            Path to the segmentation model weights, used for block localization (default: {DEFAULT_SEG_WEIGHT_PATH})
         message_length : int
             Length of the binary watermark message to embed (in bits) (default: 30)
         H : int
@@ -48,12 +53,12 @@ class DWSFParams(Params):
             Width of image blocks or patch size used during embedding/extraction (default: 128)
         split_size : int
             Block size for splitting images during dispersed embedding (default: 128)
-        default_noise_layer : ClassVar[List[str]]
+        default_noise_layer : List[str]
             Default attack or noise model applied to watermarked images
             '(Combined([Identity()])' means no attack by default)
-        mean : ClassVar[List[float]]
+        mean : List[float]
             Normalization mean for each image channel (default: [0.5, 0.5, 0.5])
-        std : ClassVar[List[float]]
+        std : List[float]
             Normalization standard deviation per channel (default: [0.5, 0.5, 0.5])
         psnr : int
             Required minimal quality of watermarked image in PSNR (Peak Signal-to-Noise Ratio) terms (default: 35)
@@ -62,16 +67,16 @@ class DWSFParams(Params):
 
     """
 
-    encoder_weights_path: Optional[str] = None
-    decoder_weights_path: Optional[str] = None
-    seg_weights_path: Optional[str] = None
+    encoder_weights_path: str = DEFAULT_ENCODER_WEIGHT_PATH
+    decoder_weights_path: str = DEFAULT_DECODER_WEIGHT_PATH
+    seg_weights_path: str = DEFAULT_SEG_WEIGHT_PATH
     message_length: int = 30
     H: int = 128
     W: int = 128
     split_size: int = 128
-    default_noise_layer: ClassVar[List[str]] = ["Combined([Identity()])"]
-    mean: ClassVar[List[float]] = [0.5, 0.5, 0.5]
-    std: ClassVar[List[float]] = [0.5, 0.5, 0.5]
+    default_noise_layer: List[str] = field(default_factory=lambda: ["Combined([Identity()])"])
+    mean: List[float] = field(default_factory=lambda: [0.5, 0.5, 0.5])
+    std: List[float] = field(default_factory=lambda: [0.5, 0.5, 0.5])
     psnr: int = 35
     gt: float = 0.5
 
@@ -86,15 +91,17 @@ class DWSFWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        DWSF algorithm configuration parameters
+        DWSF algorithm configuration parameters (default EmptyDict)
 
     """
     
     name = NAME
 
-    def __init__(self, params: Dict[str, Any]):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
         super().__init__(DWSFParams(**params))
-        with ModuleImporter("DWSF", params["module_path"]):
+        self.params: DWSFParams
+        module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
+        with ModuleImporter("DWSF", module_path):
             from DWSF.utils.util import generate_random_coor
             from DWSF.networks.models.EncoderDecoder import EncoderDecoder
             from DWSF.utils.img import psnr_clip

@@ -1,5 +1,3 @@
-import numpy as np
-
 from dataclasses import dataclass
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
@@ -30,7 +28,7 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        Invisible-Watermark algorithm configuration parameters
+        Invisible-Watermark algorithm configuration parameters (default EmptyDict)
     """
     
     abstract = True
@@ -124,7 +122,7 @@ class RivaGanWrapper(InvisibleWatermarkWrapper):
     name = "riva_gan"
     algorithm = "rivaGan"
 
-    def __init__(self, params={}):
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
         super().__init__(params)
         self.encoder.loadModel()
         self.decoder.loadModel()

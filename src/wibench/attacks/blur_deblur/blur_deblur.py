@@ -7,6 +7,14 @@ import torch.nn.functional as F
 from ..base import BaseAttack
 
 from .fpn_inception import FPNInception
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/jQfobp35dXG94p3"
+NAME = "blur_deblur"
+REQUIRED_FILES = ["fpn_inception.h5"]
+
+DEFAULT_WEIGHT_PATH = "./model_files/blur_deblur/fpn_inception.h5"
 
 
 def gaussian_kernel(sigma: float = 1., kernel_size: int | None = None, normalize: bool = True) -> torch.Tensor:
@@ -89,13 +97,14 @@ class DoGBlur(BaseAttack):
         return torch.clamp(x, 0, 1).detach().cpu().squeeze()
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class BlurDeblurFPNInception(BaseAttack):
     """Attack that blurs the image and then restores it using deblurring architecture from `DeblurGAN-v2 paper <https://arxiv.org/abs/1908.03826>`__."""
 
     def __init__(self,
                  sigma: float = 3.,
-                 weights_path: str = './model_files/blur_deblur/fpn_inception.h5',
-                 device: str = 'cuda:0'
+                 weights_path: str = DEFAULT_WEIGHT_PATH,
+                 device: str = "cuda" if torch.cuda.is_available() else "cpu"
                  ) -> None:
         super().__init__()
 
@@ -123,6 +132,7 @@ class BlurDeblurFPNInception(BaseAttack):
         return torch.clamp(deblurred, 0, 1).detach().cpu().squeeze()
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class DoGBlurDeblurFPNInception(BaseAttack):
     """Attack that blurs the image with DoG blur and then restores it using deblurring architecture from `DeblurGAN-v2 paper <https://arxiv.org/abs/1908.03826>`__."""
 
@@ -130,8 +140,8 @@ class DoGBlurDeblurFPNInception(BaseAttack):
                  alpha: float = 0.5,
                  sigma_1: float = 1.,
                  sigma_2: float = 1.6,
-                 weights_path: str = './model_files/blur_deblur/fpn_inception.h5',
-                 device: str = 'cuda:0'
+                 weights_path: str = DEFAULT_WEIGHT_PATH,
+                 device: str = "cuda" if torch.cuda.is_available() else "cpu"
                  ):
         super().__init__()
 

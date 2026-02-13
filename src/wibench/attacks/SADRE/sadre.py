@@ -11,7 +11,7 @@ class WPWMAttacker(BaseAttack):
     """
     Saliency-Aware Diffusion Reconstruction for Effective Invisible Watermark Removal. For more information visit the following `page <https://github.com/inzamamulDU/SADRE>`__.
     """
-    def __init__(self, pipe=None, noise_step=60, saliency_mask=None, device='cuda'):
+    def __init__(self, pipe=None, noise_step=60, saliency_mask=None, device="cuda" if torch.cuda.is_available() else "cpu"):
 
         if pipe is None:
             pipe = ReSDPipeline.from_pretrained("WIBE-HuggingFace/stable-diffusion-2-1", torch_dtype=torch.float16)
