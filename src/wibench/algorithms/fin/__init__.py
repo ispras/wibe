@@ -1,1 +1,1 @@
-from .wrapper import FEDWrapper
+from .wrapper import FINWrapper
