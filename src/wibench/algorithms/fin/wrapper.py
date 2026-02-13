@@ -67,7 +67,6 @@ class FINWrapper(BaseAlgorithmWrapper):
         super().__init__(FINParams(**params))
         with ModuleImporter("FIN", str(Path(module_path).resolve())):
             from FIN.models.encoder_decoder import FED
-            from FIN.utils.utils import load
             
         self.params: FINParams
         self.device = self.params.device
@@ -77,7 +76,9 @@ class FINWrapper(BaseAlgorithmWrapper):
             raise FileNotFoundError(f"FED checkpoint not found: {fed_ckpt}")
 
         self.fed = FED().to(self.device)
-        load(str(fed_ckpt), self.fed)
+        state_dicts = torch.load(str(fed_ckpt), map_location="cpu")
+        network_state_dict = {k: v for k, v in state_dicts['net'].items() if 'tmp_var' not in k}
+        self.fed.load_state_dict(network_state_dict)
         self.fed.eval()
 
     def _bits_to_fin_message(self, bits: torch.Tensor) -> torch.Tensor:
