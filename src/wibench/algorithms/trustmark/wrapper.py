@@ -8,6 +8,8 @@ from wibench.typing import TorchImg
 from wibench.config import Params
 from wibench.watermark_data import TorchBitWatermarkData
 from trustmark import TrustMark
+from pathlib import Path
+from functools import partialmethod
 
 
 @dataclass
@@ -23,12 +25,13 @@ class TrustMarkParams(Params):
             - 'Q': (Quality) Trade-off between robustness and imperceptibility. Uses ResNet-50 decoder.
             - 'B': (Beta) Very similar to Q, included mainly for reproducing the paper. Uses ResNet-50 decoder.
             - 'C': (Compact). Uses a ResNet-18 decoder (smaller model size). Slightly lower visual quality.
+            - 'P': (Perceptual). Very high visual quality and good robustness. ResNet-50 decoder trained with much higher weight on perceptual loss (see paper).
         wm_strength : float
             Controls visibility/strength of watermark embedding (default 0.75)
 
     """
     wm_length: int = 100
-    model_type: Literal['Q', 'B', 'C'] = 'Q'
+    model_type: Literal['Q', 'B', 'C', 'P'] = 'Q'
     wm_strength: float = 0.75
 
 
@@ -47,9 +50,19 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
     
     name = "trustmark"
 
-    def __init__(self, params: TrustMarkParams) -> None:
+    @staticmethod
+    def patched_load_model(trustmark, config_path, weight_path, *args, models_cache, old_func, **kwargs):
+        if models_cache:
+            config_path = Path(models_cache) / Path(config_path).name 
+            weight_path = Path(models_cache) / Path(weight_path).name 
+        return old_func(trustmark, str(config_path), str(weight_path), *args, **kwargs)
+
+    def __init__(self, params: TrustMarkParams, models_cache: str = "./model_files/trustmark") -> None:
         super().__init__(TrustMarkParams(**params))
         self.device = self.params.device
+        self.models_cache = Path(models_cache)
+        TrustMark.load_model = partialmethod(self.patched_load_model, models_cache=models_cache, old_func=TrustMark.load_model)
+    
         self.tm = TrustMark(use_ECC=False, device=self.device,
                             model_type=self.params.model_type)
 

@@ -49,13 +49,10 @@ class Params:
     
     Attributes
     ----------
-    module_path : Optional[Union[str, Path]]
-        Filesystem path to module implementation
     device : str
         Computation device ('cpu', 'cuda', any torch suitable device)
         Default is 'cpu'
     """
-    module_path: Optional[Union[str, Path]] = None
     device: str = "cpu"
 
 

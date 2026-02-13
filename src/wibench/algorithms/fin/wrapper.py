@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from pathlib import Path
 from typing import Any, Dict
 from dataclasses import dataclass
@@ -16,31 +17,52 @@ from wibench.utils import (
 from wibench.config import Params
 
 
+
+DEFAULT_MODULE_PATH = "./submodules/FIN"
 DEFAULT_CHECKPOINT_PATH = "./model_files/fin/FED.pt"
 
 
 @dataclass
 class FINParams(Params):
+    """Configuration parameters for FIN watermarking algorithm.
+    
+    H : int
+            Height of the input image (in pixels). Determines the vertical size of image tensors
+    W : int
+            Width of the input image (in pixels). Determines the horizontal size of image tensors
+    wm_length : int
+            Length of the watermark message to embed (in bits)
+    fed_checkpoint : str
+            Path to the pretrained FED (Feature-based Encoder-Decoder) model checkpoint
+    """
     H: int = 128
     W: int = 128
     wm_length: int = 64
-    noise_type: str = "JPEG"
     fed_checkpoint: str = DEFAULT_CHECKPOINT_PATH
 
 
 class FINWrapper(BaseAlgorithmWrapper):
+    """
+    FIN: Flow-Based Robust Watermarking with Invertible Noise Layer for Black-Box Distortions  --- Image Watermarking Algorithm [`paper <https://ojs.aaai.org/index.php/AAAI/article/view/25633>`__].
+    Based on the code from here https://github.com/QQiuyp/FIN
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        FIN algorithm configuration parameters (default EmptyDict)
+    """
     name = "fin"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
+        module_path = params.pop("module_path", DEFAULT_MODULE_PATH)
         super().__init__(FINParams(**params))
-        with ModuleImporter("FIN", str(Path(params["module_path"]).resolve())):
-            from FIN.models.encoder_decoder import FED, INL
+        with ModuleImporter("FIN", str(Path(module_path).resolve())):
+            from FIN.models.encoder_decoder import FED
             from FIN.utils.utils import load
             
         self.params: FINParams
         self.device = self.params.device
        
-        fed_ckpt = Path(params["fed_checkpoint"]).resolve()
+        fed_ckpt = Path(self.params.fed_checkpoint).resolve()
         if not fed_ckpt.exists():
             raise FileNotFoundError(f"FED checkpoint not found: {fed_ckpt}")
 
@@ -49,20 +71,25 @@ class FINWrapper(BaseAlgorithmWrapper):
         self.fed.eval()
 
     def _bits_to_fin_message(self, bits: torch.Tensor) -> torch.Tensor:
+        """Convert {0,1} bits to {-0.5, 0.5} as FIN expects."""
         return bits.float() - 0.5
 
     def _fin_message_to_bits(self, msg: torch.Tensor) -> torch.Tensor:
+        """Convert FIN output back to {0,1} bits."""
         return (msg > 0).long()
 
     def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+        """Embed watermark into input image.
         
-        if image.dim() == 4:
-            image = image[0]
-        elif image.dim() == 5:
-            image = image.squeeze()
-        
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
+    
         resized = resize_torch_img(image, (self.params.H, self.params.W))
-        
         norm_img = normalize_image(resized)
         
         message = self._bits_to_fin_message(watermark_data.watermark)
@@ -77,15 +104,18 @@ class FINWrapper(BaseAlgorithmWrapper):
         marked = overlay_difference(image.to(self.device), resized.to(self.device), stego)
         return marked.detach().cpu()
 
-    def extract(self, image: TorchImg, watermark_data: Any = None):
+    def extract(self, image: TorchImg, watermark_data: Any) -> np.ndarray:
+        """Extract watermark from marked image.
         
-        if image.dim() == 4:
-            image = image[0]
-        elif image.dim() == 5:
-            image = image.squeeze()
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor in (C, H, W) format
+        watermark_data: TorchBitWatermarkData
+            Torch bit message with data type torch.int64
+        """
         
         resized = resize_torch_img(image, (self.params.H, self.params.W))
-        
         norm_img = normalize_image(resized)
         
         dummy_message = torch.zeros(
@@ -105,4 +135,15 @@ class FINWrapper(BaseAlgorithmWrapper):
         return bits.squeeze(0).cpu().numpy()
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
+        """Generate watermark payload data for ARWGAN watermarking algorithm.
+        
+        Returns
+        -------
+        TorchBitWatermarkData
+            Torch bit message with data type torch.int64 and shape of message_length
+
+        Notes
+        -----
+        - Called automatically during embedding
+        """
         return TorchBitWatermarkData.get_random(self.params.wm_length)

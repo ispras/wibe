@@ -1,6 +1,3 @@
-[submodule "submodules/trustmark"]
-	path = submodules/trustmark
-	url = https://github.com/adobe/trustmark.git
 [submodule "submodules/HiDDeN"]
 	path = submodules/HiDDeN
 	url = https://github.com/ando-khachatryan/HiDDeN.git
@@ -37,3 +34,9 @@
 [submodule "submodules/FIN"]
 	path = submodules/FIN
 	url = https://github.com/QQiuyp/FIN.git
+[submodule "submodules/WMAR"]
+	path = submodules/WMAR
+	url = https://github.com/facebookresearch/wmar.git
+[submodule "submodules/MaskWM"]
+	path = submodules/MaskWM
+	url = https://github.com/hurunyi/MaskWM.git

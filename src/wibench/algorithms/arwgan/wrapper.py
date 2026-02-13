@@ -1,6 +1,4 @@
 import torch
-import numpy as np
-import sys
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
@@ -16,6 +14,12 @@ from wibench.utils import (
     normalize_image,
     denormalize_image
 )
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/4THrnJDdjF6xGMc"
+NAME = "arwgan"
+REQUIRED_FILES = ["checkpoints", "options-and-config.pickle"]
 
 
 @dataclass
@@ -80,6 +84,7 @@ class ARWGANParams:
     enable_fp16: bool = False
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class ARWGANWrapper(BaseAlgorithmWrapper):
     """
     `ARWGAN <https://ieeexplore.ieee.org/document/10155247>`__: Attention-Guided Robust Image Watermarking Model Based on GAN --- Image Watermarking Algorithm.
@@ -94,7 +99,7 @@ class ARWGANWrapper(BaseAlgorithmWrapper):
 
     """
 
-    name = "arwgan"
+    name = NAME
     
     def __init__(self, params: Dict[str, Any]) -> None:
         with ModuleImporter("ARWGAN", params["module_path"]):
