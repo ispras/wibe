@@ -1,4 +1,5 @@
 import torch
+import torchvision.transforms.functional as F
 from wibench.attacks import BaseAttack
 from wibench.typing import TorchImg
 from wibench.datasets.base import ImageFolderDataset
@@ -17,7 +18,7 @@ class Averaging(BaseAttack):
 
     def __init__(
         self,
-        pattern_load_path: str | None = None,
+        pattern_load_path: str | None = "./resources/averaging/pattern_stegastamp.pth",
         num_images: int | None = None,
         device: torch.device | str = "cuda" if torch.cuda.is_available() else "cpu",
     ) -> None:
@@ -32,9 +33,9 @@ class Averaging(BaseAttack):
     def __call__(self, img: TorchImg) -> TorchImg:
         if self.pattern is None:
             raise ValueError("Pattern is not computed, call compute_pattern or load_pattern first")
-        out = img - self.pattern
+        out = img.to(self.device) - F.resize(self.pattern.squeeze(0), img.shape[-2:])
         out = torch.clip(out, 0, 1)
-        return out
+        return out.cpu()
 
     def compute_pattern(self, dir_watermarked: str, dir_clean: str, batch_size: int = 1) -> torch.Tensor:
         """Compute the pattern needed for the attack by subtracting averaged watermarked images and clean images.

@@ -21,14 +21,14 @@
       device: cuda:0
   - DiffusionRegeneration:
       device: cuda:0
-#   - SEMAttack  # Requires high VRAM
+  - SEMAttack  # Requires high VRAM
   - Averaging
   - DoGBlur
   - BlurDeblurFPNInception
   - frequencymasking
   - latentfrequencymasking
-#   - imageeditinginstructpix2pix # Requires high VRAM
-#   - imageeditingfluxcontext # Requires high VRAM 
+  - imageeditinginstructpix2pix # Requires high VRAM
+  - imageeditingfluxcontext # Requires high VRAM 
   - liifattack
   - stegastampinversion
   - wmforger
