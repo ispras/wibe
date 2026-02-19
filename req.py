@@ -23,7 +23,7 @@ def _group_lock(venvs_dir: Path, i: int) -> Path:
     return venvs_dir / f"{GROUP_PREFIX}{i}{LOCK_SUFFIX}"
 
 
-def compatible(paths: list[Path]) -> bool:
+def _compatible(paths: list[Path]) -> bool:
     """Return True if uv pip compile succeeds for the given requirement files."""
     if not paths:
         return True
@@ -40,7 +40,7 @@ def compatible(paths: list[Path]) -> bool:
 def _validate(req_paths: list[Path]) -> list[Path]:
     result = []
     for p in req_paths:
-        if compatible([p]):
+        if _compatible([p]):
             logger.info(f"{p} valid")
             result.append(p)
         else:
@@ -56,7 +56,7 @@ def _compose_groups(req_paths: list[Path]) -> list[list[Path]]:
         group = [req_path]
         logger.info(f"{req_path} created new group")
         for c in req_paths:
-            if c != req_path and compatible(group + [c]):
+            if c != req_path and _compatible(group + [c]):
                 group.append(c)
         groups.append(group)
         added.update(group)
