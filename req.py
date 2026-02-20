@@ -105,7 +105,7 @@ def install(cfg: Config) -> None:
         subprocess.run(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)])
 
 
-STAGES = ("validate", "compose", "lock", "install")
+STAGES = (validate.__name__, compose.__name__, lock.__name__, install.__name__)
 
 app = typer.Typer(pretty_exceptions_enable=False)
 
@@ -132,17 +132,17 @@ def run(
 
     cfg.venvs_dir.mkdir(exist_ok=True)
 
-    if "validate" in run_stages:
+    if validate.__name__ in run_stages:
         req_paths = validate(req_paths)
 
     groups = None
-    if "compose" in run_stages:
+    if compose.__name__ in run_stages:
         groups = compose(cfg, req_paths)
 
-    if "lock" in run_stages:
+    if lock.__name__ in run_stages:
         lock(cfg, groups)
 
-    if "install" in run_stages:
+    if install.__name__ in run_stages:
         install(cfg)
 
 
