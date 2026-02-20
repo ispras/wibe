@@ -1,5 +1,6 @@
 import sys
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from loguru import logger
 import typer
@@ -8,19 +9,26 @@ import typer
 logger.remove()
 logger.add(sys.stderr, level="INFO")
 
-REQUIREMENTS_DIR = Path("./requirements").resolve()
-VENVS_DIR = Path("./venvs").resolve()
-GROUP_PREFIX = "venv"
-TXT_SUFFIX = ".txt"
-LOCK_SUFFIX = ".lock"
 
+@dataclass(frozen=True)
+class Config:
+    requirements_dir: Path
+    venvs_dir: Path
+    group_prefix: str = "venv"
+    txt_suffix: str = ".txt"
+    lock_suffix: str = ".lock"
 
-def _group_manifest(venvs_dir: Path, i: int) -> Path:
-    return venvs_dir / f"{GROUP_PREFIX}{i}{TXT_SUFFIX}"
+    def group_txt_path(self, i: int) -> Path:
+        return self.venvs_dir / f"{self.group_prefix}{i}{self.txt_suffix}"
 
+    def group_lock_path(self, i: int) -> Path:
+        return self.venvs_dir / f"{self.group_prefix}{i}{self.lock_suffix}"
 
-def _group_lock(venvs_dir: Path, i: int) -> Path:
-    return venvs_dir / f"{GROUP_PREFIX}{i}{LOCK_SUFFIX}"
+    def glob_txts(self):
+        return self.venvs_dir.glob(f"{self.group_prefix}*{self.txt_suffix}")
+
+    def glob_locks(self):
+        return self.venvs_dir.glob(f"{self.group_prefix}*{self.lock_suffix}")
 
 
 def _compatible(paths: list[Path]) -> bool:
@@ -37,7 +45,7 @@ def _compatible(paths: list[Path]) -> bool:
     return r.returncode == 0
 
 
-def _validate(req_paths: list[Path]) -> list[Path]:
+def validate(req_paths: list[Path]) -> list[Path]:
     result = []
     for p in req_paths:
         if _compatible([p]):
@@ -48,7 +56,7 @@ def _validate(req_paths: list[Path]) -> list[Path]:
     return result
 
 
-def _compose_groups(req_paths: list[Path]) -> list[list[Path]]:
+def compose(cfg: Config, req_paths: list[Path]) -> list[list[Path]]:
     groups, added = [], set()
     for req_path in req_paths:
         if req_path in added:
@@ -60,39 +68,44 @@ def _compose_groups(req_paths: list[Path]) -> list[list[Path]]:
                 group.append(c)
         groups.append(group)
         added.update(group)
+        txt_path = cfg.group_txt_path(len(groups) - 1)
+        txt_content = "\n".join(str(p) for p in group)
+        txt_path.write_text(txt_content)
+        logger.info(f"\n------ {txt_path.stem} ------\n" + txt_content)
     return groups
 
 
-def _load_groups(venvs_dir: Path) -> list[list[Path]]:
-    groups = []
-    for txt_path in sorted(venvs_dir.glob(f"{GROUP_PREFIX}*{TXT_SUFFIX}")):
-        group = [Path(line.strip()) for line in txt_path.read_text().splitlines() if line.strip()]
-        if group:
-            groups.append(group)
-    return groups
+def lock(cfg: Config, groups: list[list[Path]] | None = None) -> None:
+    if groups is not None:
+        pairs = [
+            (cfg.group_lock_path(i), group)
+            for i, group in enumerate(groups)
+            if group
+        ]
+    else:
+        pairs = []
+        for txt_path in cfg.glob_txts():
+            group = [Path(line.strip()) for line in txt_path.read_text().splitlines() if line.strip()]
+            if group:
+                pairs.append((txt_path.with_suffix(cfg.lock_suffix), group))
 
-
-def _run_lock(venvs_dir: Path, groups: list[list[Path]]) -> None:
-    for i, group in enumerate(groups):
-        lock_path = _group_lock(venvs_dir, i)
+    for lock_path, group in pairs:
         subprocess.run(
             ["uv", "pip", "compile", "--quiet", "--no-header", "--output-file", str(lock_path)]
             + [str(p) for p in group],
             check=True,
             stdout=subprocess.DEVNULL,
         )
-        _group_manifest(venvs_dir, i).write_text("\n".join(str(p) for p in group))
-        logger.info(f"\n------ {GROUP_PREFIX}{i} ------\n" + "\n".join(str(p) for p in group))
 
 
-def _run_venv(venvs_dir: Path) -> None:
-    for lock_path in venvs_dir.glob(f"{GROUP_PREFIX}*{LOCK_SUFFIX}"):
+def install(cfg: Config) -> None:
+    for lock_path in cfg.glob_locks():
         venv_path = lock_path.with_suffix("")
         subprocess.run(["uv", "venv", str(venv_path)])
         subprocess.run(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)])
 
 
-STAGES = ("validation", "composition", "lock", "venv")
+STAGES = ("validate", "compose", "lock", "install")
 
 app = typer.Typer(pretty_exceptions_enable=False)
 
@@ -110,26 +123,27 @@ def run(
         typer.echo(f"Unknown stages: {invalid}. Valid: {STAGES}", err=True)
         raise typer.Exit(1)
 
-    req_paths = list(REQUIREMENTS_DIR.rglob(f"*{TXT_SUFFIX}"))
+    cfg = Config(
+        requirements_dir=Path("./requirements").resolve(),
+        venvs_dir=Path("./venvs").resolve(),
+    )
+    req_paths = list(cfg.requirements_dir.rglob(f"*{cfg.txt_suffix}"))
     logger.debug("\n".join(str(p) for p in req_paths))
 
-    VENVS_DIR.mkdir(exist_ok=True)
+    cfg.venvs_dir.mkdir(exist_ok=True)
 
-    if "validation" in run_stages:
-        req_paths = _validate(req_paths)
+    if "validate" in run_stages:
+        req_paths = validate(req_paths)
 
-    if "composition" in run_stages:
-        groups = _compose_groups(req_paths)
-    elif "lock" in run_stages:
-        groups = _load_groups(VENVS_DIR)
-    else:
-        groups = []
+    groups = None
+    if "compose" in run_stages:
+        groups = compose(cfg, req_paths)
 
     if "lock" in run_stages:
-        _run_lock(VENVS_DIR, groups)
+        lock(cfg, groups)
 
-    if "venv" in run_stages:
-        _run_venv(VENVS_DIR)
+    if "install" in run_stages:
+        install(cfg)
 
 
 if __name__ == "__main__":
