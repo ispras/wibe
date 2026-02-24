@@ -1,2 +1,2 @@
-compressai
+compressai==1.2.8
 torch
