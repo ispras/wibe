@@ -484,11 +484,11 @@ class StageRunner:
                 self.stages.append(stage_class(post_extract_metrics))
             elif (stage == StageType.aggregate):
                 self.stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, pipeline_config.min_batch_size, dry_run))
-            elif (stage == StageType.post_pipeline_aggregate) and (is_post_run):
+            elif (stage == StageType.post_pipeline_aggregate) and (pipeline_config.workers == 1):
                 self.post_pipeline_stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, 0, dry_run, True))
-            elif (stage == StageType.post_pipeline_embed_metrics) and (is_post_run):
+            elif (stage == StageType.post_pipeline_embed_metrics) and (pipeline_config.workers == 1):
                 self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), cached_call(get_algorithms, [algorithm_wrapper])[0], pipeline_config.dump_type))
-            elif (stage == StageType.post_pipeline_attack_metrics) and (is_post_run):
+            elif (stage == StageType.post_pipeline_attack_metrics) and (pipeline_config.workers == 1):
                 self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), cached_call(get_attacks, attacks), cached_call(get_algorithms, [algorithm_wrapper])[0], pipeline_config.dump_type))
 
         pass
@@ -645,8 +645,7 @@ class Pipeline:
         stages: List[str],
         dump_context: bool = False,
         dry_run: bool = False,
-        process_num: int = 0,
-        is_post_run: bool = False
+        process_num: int = 0
     ):
         """Execute the watermarking evaluation pipeline.
 
@@ -695,7 +694,7 @@ class Pipeline:
             total_iters,
             process_num,
             self.config.workers,
-        ) if not is_post_run else None
+        )
         for wrapper_num, algorithm_wrapper_tuple in enumerate(
             self.algorithm_wrappers
         ):
@@ -708,8 +707,7 @@ class Pipeline:
                 self.attacks,
                 self.metrics,
                 self.config,
-                dry_run,
-                is_post_run
+                dry_run
             )
             dataset_stop = self.config.workers if dry_run else None
             
@@ -749,7 +747,7 @@ class Pipeline:
                     if isinstance(stage, AggregateMetricsStage):
                         stage.flush()
             
-            if (len(stage_runner.post_pipeline_stages) and (is_post_run)):
+            if (len(stage_runner.post_pipeline_stages) and (self.config.workers == 1)):
                 for (dataset_idx, dataset) in enumerate(self.datasets):
                     post_stage_context = self.init_context(run_id=run_id,
                                                            original_object={"id": dataset_idx},
@@ -759,5 +757,5 @@ class Pipeline:
                             post_stage.set_context_dir(context_dir)
                         post_stage.process_object(post_stage_context)
 
-        if (progress is not None) and (progress.progress is not None):
+        if progress.progress is not None:
             progress.progress.close()

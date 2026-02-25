@@ -199,7 +199,7 @@ def run(
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
 
-    if (CHILD_NUM_ENV_NAME not in os.environ) and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
+    if (CHILD_NUM_ENV_NAME not in os.environ) and (pipeline_config.workers > 1):
         subprocess_run(pipeline_config)
         
         # for post_stages
@@ -212,7 +212,7 @@ def run(
         pipeline = Pipeline(
             alg_wrappers, datasets, attacks, metrics, pipeline_config
         )
-        pipeline.run(run_id, post_stages, dump_context=dump_context, dry_run=dry_run, process_num=process_num, is_post_run=True)
+        pipeline.run(run_id, post_stages, dump_context=dump_context, dry_run=dry_run, process_num=process_num)
         return
     
     pipeline = Pipeline(
