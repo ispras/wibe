@@ -4,6 +4,10 @@ import wibench
 import json
 
 
+CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
+RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
+
+
 def clear_sys_path():
     path_to_remove = Path(wibench.__file__).parent
     remove_values = []
@@ -53,10 +57,6 @@ def clear_tables(config: PipeLineConfig):
             params_table_result_path.unlink()
         if post_pipeline_table_result_path.exists():
             post_pipeline_table_result_path.unlink()
-
-
-CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
-RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
 
 
 def set_cuda_devices(environ, device_list: List[int]):
@@ -199,18 +199,20 @@ def run(
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
 
-    if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
+    if (CHILD_NUM_ENV_NAME not in os.environ) and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
         subprocess_run(pipeline_config)
         
         # for post_stages
         if stages is None or "all" in stages:
             stages = list(STAGE_CLASSES.keys())
         post_stages = [stage for stage in stages if ("post_pipeline" in stage)]
+        if not len(post_stages):
+            return
         pipeline_config.workers = 1
         pipeline = Pipeline(
             alg_wrappers, datasets, attacks, metrics, pipeline_config
         )
-        pipeline.run(run_id, post_stages, dump_context=dump_context, dry_run=dry_run, process_num=process_num)
+        pipeline.run(run_id, post_stages, dump_context=dump_context, dry_run=dry_run, process_num=process_num, is_post_run=True)
         return
     
     pipeline = Pipeline(
