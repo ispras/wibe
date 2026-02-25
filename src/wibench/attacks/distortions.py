@@ -258,6 +258,40 @@ class Resize(BaseAttack):
         )
 
 
+class RandomCrop(BaseAttack):
+    """Randomly crops a rectangular region of specified area ratio. Removes the remaining area.
+
+    Parameters
+    ----------
+    ratio : float
+        Ratio of area to keep (0-1). For example, 0.8 keeps 80% of image area.
+    """
+
+    def __init__(self, ratio: float):
+        self.ratio = ratio
+
+    def __call__(self, image: TorchImg) -> TorchImg:
+        """Apply random crop to image.
+
+        Parameters
+        ----------
+        image : TorchImg
+            Input image tensor
+
+        Returns
+        -------
+        TorchImg
+            Image with random rectangular region kept and remaining removed
+        """
+        w_ratio = random.random() * (1 - self.ratio) + self.ratio
+        h_ratio = self.ratio / w_ratio
+        h, w = image.shape[-2:]
+        crop_w, crop_h = round(w_ratio * w), round(h_ratio * h)
+        left_pos = random.randint(0, w - crop_w)
+        top_pos = random.randint(0, h - crop_h)
+        return image[..., top_pos : top_pos + crop_h, left_pos : left_pos + crop_w].clone()
+
+
 class RandomCropout(BaseAttack):
     """Randomly crops out a rectangular region of specified area ratio. Fills the remaining area with black color.
 
