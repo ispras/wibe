@@ -213,7 +213,7 @@ class ApplyAttacksStage(Stage):
         for attack in self.attacks:
             object_context.attacked_object_metrics[attack.report_name] = {}
             s_time = perf_counter()
-            attacked_object_context[attack.report_name] = attack(marked_object)
+            attacked_object_context[attack.report_name] = attack(marked_object.clone())
             attack_time = perf_counter() - s_time
             object_context.attacked_object_metrics[attack.report_name]["attack_time"] = attack_time
 
