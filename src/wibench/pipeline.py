@@ -695,7 +695,7 @@ class Pipeline:
             total_iters,
             process_num,
             self.config.workers,
-        )
+        ) if not is_post_run else None
         for wrapper_num, algorithm_wrapper_tuple in enumerate(
             self.algorithm_wrappers
         ):
@@ -759,5 +759,5 @@ class Pipeline:
                             post_stage.set_context_dir(context_dir)
                         post_stage.process_object(post_stage_context)
 
-        if progress.progress is not None:
+        if (progress is not None) and (progress.progress is not None):
             progress.progress.close()
