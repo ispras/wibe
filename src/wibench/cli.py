@@ -5,6 +5,10 @@ import json
 from loguru import logger
 
 
+logger.remove()
+logger.add(sys.stderr, level="INFO")
+
+
 def clear_sys_path():
     path_to_remove = Path(wibench.__file__).parent
     remove_values = []
@@ -88,7 +92,7 @@ def subprocess_run(pipeline_config: PipeLineConfig, python_exec = sys.executable
         procs.append(subprocess.Popen(args, env=env))
     
     for proc in procs:
-        logger.warning("------------subprocess_run------------")
+        logger.debug("------------subprocess-run------------")
         proc.wait()
 
 
