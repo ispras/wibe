@@ -1,13 +1,21 @@
 from pathlib import Path
-import json
 import os
 import sys
+from typing_extensions import (
+    Optional,
+    List
+)
 
 from wibench.config_loader import load_pipeline_config_yaml
 from wibench.config import PipeLineConfig
 
 
 REEXEC_DONE = "_REEXEC_DONE"
+
+
+def set_cuda_devices(environ, device_list: List[int]):
+    environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+    environ["CUDA_VISIBLE_DEVICES"]=",".join(str(num) for num in device_list)
 
 
 def get_config_path_from_argv():
@@ -34,7 +42,7 @@ def setup_cuda_visible_devices():
     cuda_devices = pipeline_config.cuda_visible_devices
 
     if cuda_devices:
-        os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, cuda_devices))
+        set_cuda_devices(os.environ, cuda_devices)
 
     os.environ[REEXEC_DONE] = "1"
     os.execv(sys.executable, [sys.executable] + sys.argv)
@@ -64,10 +72,7 @@ clear_sys_path()
 
 
 import typer
-from typing_extensions import (
-    Optional,
-    List
-)
+import json
 import uuid
 from wibench.pipeline import Pipeline, STAGE_CLASSES
 from wibench.utils import generate_random_seed
@@ -82,7 +87,6 @@ from wibench.config_loader import (
 )
 from wibench.config import PipeLineConfig
 import subprocess
-import os
 from wibench.aggregator import PandasAggregatorConfig
 
 
@@ -99,11 +103,6 @@ def clear_tables(config: PipeLineConfig):
             params_table_result_path.unlink()
         if post_pipeline_table_result_path.exists():
             post_pipeline_table_result_path.unlink()
-
-
-def set_cuda_devices(environ, device_list: List[int]):
-    environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-    environ["CUDA_VISIBLE_DEVICES"]=",".join(str(num) for num in device_list)
 
 
 def subprocess_run(pipeline_config: PipeLineConfig):
