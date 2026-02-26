@@ -2,16 +2,28 @@ import os
 import os.path
 import subprocess
 import sys
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--mode', default='', help='Mode of operation: "extra" for requirements (treering, ringID, maxsive and gaussian shading)')
+args = parser.parse_args()
 
 
 dir_to_walk = './src/wibench/'
 requirements_txt = 'requirements.txt'
 all_requirements = []
+
+if args.mode == 'extra':
+    requirements_txt = 'extra_requirements.txt'
+
 python_m_pip_install = f'{sys.executable} -m pip install'.split()
 
 try:
     subprocess.check_call(f'{sys.executable} get-pip.py'.split())
-    subprocess.check_call(python_m_pip_install + ['--upgrade', 'pip'])
+    subprocess.check_call(python_m_pip_install + ['--upgrade', 'pip<=25.2']) # CLIP issue: https://github.com/openai/CLIP/issues/528
+    subprocess.check_call(python_m_pip_install + ['--upgrade', 'setuptools<=80.10.2'])
+    
 except Exception as e:
     print(f'Exception={str(e)}')
     sys.exit(1)
@@ -40,7 +52,6 @@ force_packages = [
 try:
     subprocess.check_call(python_m_pip_install + all_requirements_args)
     subprocess.check_call(python_m_pip_install + ['-e', '.'])
-    subprocess.check_call(python_m_pip_install + ['-e', './submodules/trustmark/python'])
     subprocess.check_call(python_m_pip_install + force_packages)
 except Exception as e:
     print(f'Exception={str(e)}')

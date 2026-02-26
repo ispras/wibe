@@ -1,10 +1,5 @@
 algorithms:
-  hidden:
-    params:
-      runs_root: ./submodules/HiDDeN/experiments
-      run_name: combined-noise
-      module_path: ./submodules/HiDDeN
-      device: cuda
+  - hidden
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 

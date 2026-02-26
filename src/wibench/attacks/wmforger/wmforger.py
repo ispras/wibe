@@ -6,24 +6,30 @@ import torchvision
 import tqdm
 
 from ..base import BaseAttack
-
+from wibench.download import requires_download
 from .models import build_extractor
 
 
+DEFAULT_WEIGHTS_PATH = "./model_files/wmforger/convnext_pref_model.pth"
+
+URL = "https://nextcloud.ispras.ru/index.php/s/mT7zE8wJzXW566P"
+NAME = "wmforger"
+REQUIRED_FILES = ["convnext_pref_model.pth"]
+
+
+@requires_download(URL, NAME, REQUIRED_FILES)
 class WMForger(BaseAttack):
     """Attack from Transferable Black-Box One-Shot Forging of Watermarks via Image Preference Models.
 
-    code is based on https://github.com/facebookresearch/videoseal/blob/main/wmforger/optimize_image.py
-
-    weights can be downloaded from https://dl.fbaipublicfiles.com/wmforger/convnext_pref_model.pth
+    code is based on https://github.com/facebookresearch/videoseal/blob/main/wmforger
     """
 
     def __init__(
         self,
-        weights_path: str = './model_files/wmforger/convnext_pref_model.pth',
+        weights_path: str = DEFAULT_WEIGHTS_PATH,
         num_steps: int = 50,
         lr: float = 0.05,
-        device: str = 'cuda:0'
+        device: str = "cuda" if torch.cuda.is_available() else "cpu"
     ) -> None:
         super().__init__()
         self.num_steps = num_steps

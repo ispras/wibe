@@ -7,7 +7,7 @@ from wibench.typing import TorchImg
 class DiffusionRegeneration(BaseAttack):
     """Based on the code from `here <https://github.com/XuandongZhao/WatermarkAttacker/blob/main/wmattacker.py#L155>`__."""
 
-    def __init__(self, pipe=None, device="cuda", noise_step=60):
+    def __init__(self, pipe=None, device="cuda" if torch.cuda.is_available() else "cpu", noise_step=60):
         self.device = device
         if pipe is None:
             pipe = ReSDPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", torch_dtype=torch.float16, revision="fp16")

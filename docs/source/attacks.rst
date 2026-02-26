@@ -62,6 +62,20 @@ Adversarial
 
 .. autoclass:: wibench.attacks.adversarial.adversarial.AdversarialEmbeddingPSNR
 
+Averaging
+~~~~~~~~~
+
+.. autoclass:: wibench.attacks.averaging.averaging.Averaging
+
+Blur Deblur
+~~~~~~~~~~~
+
+.. autoclass:: wibench.attacks.blur_deblur.blur_deblur.DoGBlur
+
+.. autoclass:: wibench.attacks.blur_deblur.blur_deblur.BlurDeblurFPNInception
+
+.. autoclass:: wibench.attacks.blur_deblur.blur_deblur.DoGBlurDeblurFPNInception
+
 BM3D
 ~~~~
 
@@ -89,3 +103,32 @@ This block contains regeneration attacks.
 .. autoclass:: wibench.attacks.flux_regeneration.regeneration.FluxRinsing
 
 .. autoclass:: wibench.attacks.VAERegeneration.regeneration.VAERegeneration
+
+Frequency Masking
+~~~~~~~~~~~~~~~~~
+
+.. autoclass:: wibench.attacks.frequency_masking.frequency_masking.FrequencyMasking
+
+.. autoclass:: wibench.attacks.frequency_masking.frequency_masking.LatentFrequencyMasking
+
+Image Editing
+~~~~~~~~~~~~~
+
+.. autoclass:: wibench.attacks.image_editing.ImageEditingFluxContext.ImageEditingFLuxContext
+
+.. autoclass:: wibench.attacks.image_editing.ImageEditingFluxContext.InstructPix2Pix
+
+LIIF
+~~~~
+
+.. autoclass:: wibench.attacks.liif.liif_attack.LIIFAttack
+
+SEMAttack
+~~~~~~~~~
+
+.. autoclass:: wibench.attacks.SemanticImprintRemoval.semantic_attack.SEMAttack
+
+WMForger
+~~~~~~~~
+
+.. autoclass:: wibench.attacks.wmforger.wmforger.WMForger

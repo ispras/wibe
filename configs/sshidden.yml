@@ -1,20 +1,5 @@
 algorithms:
-  sshidden:
-    params:
-      ckpt_path: ./submodules/stable_signature/hidden/ckpts/hidden_replicate.pth
-      encoder_depth: 4
-      encoder_channels: 64
-      decoder_depth: 8
-      decoder_channels: 64
-      num_bits: 48
-      attenuation: jnd
-      scale_channels: False
-      scaling_i: 1.
-      scaling_w: 1.5
-      H: 512
-      W: 512
-      module_path: ./submodules/stable_signature/hidden
-      device: cuda
+  - sshidden
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 

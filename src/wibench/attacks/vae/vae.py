@@ -5,10 +5,28 @@ from diffusers import AutoencoderKL
 
 
 class VAEAttack(BaseAttack):
+    """
+    Adversarial attack using a VAE to generate noisy image reconstructions.
+    
+    Encodes an image into latent space, adds Gaussian noise to the latents,
+    then decodes multiple noisy versions. Returns the average of these
+    reconstructions as an attacked image. Uses the `FLUX.1-schnell <https://huggingface.co/black-forest-labs/FLUX.1-schnell>`__ VAE.
+    
+    Parameters
+    ----------
+        n_avg_imgs: int 
+            Number of noisy reconstructions to average.
+        noise_level: float 
+            Standard deviation of Gaussian noise added to latents.
+        device: str
+            Device to run the VAE on.
+        cache_dir: str 
+            Directory for caching the VAE model.
+    """
     def __init__(self,
-            n_avg_imgs=100, 
-            noise_level=0.5,
-            device: str = 'cuda:0',
+            n_avg_imgs: int = 100, 
+            noise_level: float = 0.5,
+            device: str = "cuda" if torch.cuda.is_available() else "cpu",
             cache_dir : str = None,
             ) -> None:
         self.n_avg_imgs = n_avg_imgs

@@ -16,36 +16,36 @@ class IndexDistance(str, Enum):
 
 
 @dataclass
-class DCTMarkerConfig:
+class DCTMarkerParams:
     """
     Configuration for CAISS via DCT watermarking method.
 
     Attributes
     ----------
     width : int
-        Internal image width for watermarking algorithm. Input image is resized, marked and resized back (only difference to save details)
+        Internal image width for watermarking algorithm. Input image is resized, marked and resized back (only difference to save details) (default: 256)
     height : int
-        Internal image height for watermarking algorithm
+        Internal image height for watermarking algorithm (default: 256)
     wm_length : int
-        Number of bits to embed to image via watermark
+        Number of bits to embed to image via watermark (default: 100)
     block_size : int
-        Number of DCT coefficients, carrier of one watermark bit. Note: `block_size` * `wm_length` should be less than `width` * `height`
+        Number of DCT coefficients, carrier of one watermark bit. Note: `block_size` * `wm_length` should be less than `width` * `height` (default: 256)
     ampl1 : float
-        Relative amplitude for watermark embedding (watermark strength)
+        Relative amplitude for watermark embedding (watermark strength) (default: 0.01)
     ampl_ratio : float
-        Ratio of amplitudes with and without interference. For more information, refer to CAISS watermarking technique
+        Ratio of amplitudes with and without interference. For more information, refer to CAISS watermarking technique (default: 0.7)
     lambda_h : float
-        Coefficient for minimization of interference of carrier and watermark key. For more information, refer to ISS watermarking technique
+        Coefficient for minimization of interference of carrier and watermark key. For more information, refer to ISS watermarking technique (default: 4.0)
     index_distance : IndexDistance
-        2D distance to determine medium frequencies of DCT to embed watermark
+        2D distance to determine medium frequencies of DCT to embed watermark (default: l1)
     """
-    width: int = 512
-    height: int = 512
-    wm_length: int = 800
+    width: int = 256
+    height: int = 256
+    wm_length: int = 100
     block_size: int = 256
     ampl1: float = 0.01
-    ampl_ratio: float = 0.85
-    lambda_h: float = 2.0
+    ampl_ratio: float = 0.7
+    lambda_h: float = 4.0
     index_distance: IndexDistance = IndexDistance.l1
 
 
@@ -53,27 +53,27 @@ class DCTMarker:
     """DCT watermarking method wrapper.
     """
 
-    def __init__(self, config: DCTMarkerConfig) -> None:
-        self.config = config
-        self.ampl2 = self.config.ampl1 / self.config.ampl_ratio
-        self.flattened_indices = self.get_flattened_indices(config)
+    def __init__(self, params: DCTMarkerParams) -> None:
+        self.params = params
+        self.ampl2 = self.params.ampl1 / self.params.ampl_ratio
+        self.flattened_indices = self.get_flattened_indices(params)
 
     @staticmethod
-    def get_flattened_indices(config: DCTMarkerConfig):
-        if config.width * config.height < config.wm_length * config.block_size:
+    def get_flattened_indices(params: DCTMarkerParams):
+        if params.width * params.height < params.wm_length * params.block_size:
             return None
         not_used_coefs = (
-            config.width * config.height - config.wm_length * config.block_size
+            params.width * params.height - params.wm_length * params.block_size
         )
-        x = np.linspace(0, config.width - 1, config.width, dtype=int)
-        y = np.linspace(0, config.height - 1, config.height, dtype=int)
+        x = np.linspace(0, params.width - 1, params.width, dtype=int)
+        y = np.linspace(0, params.height - 1, params.height, dtype=int)
         xv, yv = np.meshgrid(x, y)
 
-        if config.index_distance == IndexDistance.l1:
+        if params.index_distance == IndexDistance.l1:
             index_distance = xv + yv
-        elif config.index_distance == IndexDistance.l2:
+        elif params.index_distance == IndexDistance.l2:
             index_distance = xv**2 + yv**2 # no need for sqrt
-        elif config.index_distance == IndexDistance.inf:
+        elif params.index_distance == IndexDistance.inf:
             index_distance = np.maximum(xv, yv)
         
         flattened = index_distance.ravel()
@@ -81,16 +81,16 @@ class DCTMarker:
             not_used_coefs // 2 : -(not_used_coefs - not_used_coefs // 2)
         ]
         reshaped_indices = sorted_filtered_indexes.reshape(
-            (config.block_size, config.wm_length)
+            (params.block_size, params.wm_length)
         ).transpose()
         return reshaped_indices
 
     def mark_prepared_img(
         self, image: np.ndarray, wm: np.ndarray, key: np.ndarray
     ):
-        assert image.shape == (self.config.height, self.config.width)
-        assert len(wm) == self.config.wm_length
-        assert len(key) == self.config.block_size
+        assert image.shape == (self.params.height, self.params.width)
+        assert len(wm) == self.params.wm_length
+        assert len(key) == self.params.block_size
         image_dct = fftpack.dct(
             fftpack.dct(image / 255, axis=-2, norm="ortho"),
             axis=-1,
@@ -101,13 +101,13 @@ class DCTMarker:
             cover_vector = flattened_dct[indices]
             cover_interference = cover_vector.dot(key)
             if np.sign(cover_interference) == bit:
-                add_vector = (bit * self.config.ampl1) * key
+                add_vector = (bit * self.params.ampl1) * key
             else:
                 add_vector = (
                     bit * self.ampl2
-                    - self.config.lambda_h
+                    - self.params.lambda_h
                     * cover_interference
-                    / self.config.block_size
+                    / self.params.block_size
                 ) * key
             flattened_dct[indices] += add_vector
 
@@ -119,14 +119,14 @@ class DCTMarker:
         return np.round(np.clip(inversed_dct, 0, 1) * 255).astype(np.uint8)
 
     def embed_wm(self, image: np.ndarray, wm: np.ndarray, key: np.ndarray):
-        assert len(wm) == self.config.wm_length
-        assert len(key) == self.config.block_size
+        assert len(wm) == self.params.wm_length
+        assert len(key) == self.params.block_size
         yuv_image = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
         orig_height, orig_width = image.shape[:2]
 
         y_resized = cv2.resize(
             yuv_image[..., 0],
-            (self.config.width, self.config.height),
+            (self.params.width, self.params.height),
             interpolation=cv2.INTER_LINEAR,
         )
         y_marked = self.mark_prepared_img(y_resized, wm, key)
@@ -138,11 +138,11 @@ class DCTMarker:
         return cv2.cvtColor(yuv_image, cv2.COLOR_YUV2BGR)
 
     def extract_wm(self, image: np.ndarray, key: np.ndarray):
-        assert len(key) == self.config.block_size
+        assert len(key) == self.params.block_size
         yuv_image = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
         y_resized = cv2.resize(
             yuv_image[..., 0],
-            (self.config.width, self.config.height),
+            (self.params.width, self.params.height),
             interpolation=cv2.INTER_LINEAR,
         )
         y_dct = scipy.fftpack.dct(scipy.fftpack.dct(y_resized / 255, axis=-2, norm = 'ortho'), axis=-1, norm = 'ortho')

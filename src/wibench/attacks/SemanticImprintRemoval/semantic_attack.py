@@ -32,13 +32,13 @@ class SEMAttack(BaseAttack):
     """
     def __init__(
         self,
-        modelid_attacker: str = "akaleksandr/stable-diffusion-2-1-base",
+        modelid_attacker: str = "WIBE-HuggingFace/stable-diffusion-2-1-base",
         scheduler_attacker: str = "DDIM",
         num_inference_steps_attacker: int = 50,
         lr: float = 1e-2,
         steps: int = 151,
         seed: int | None = None,
-        device: str = "cuda:0",
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
         cache_dir=None,
     ) -> None:
         

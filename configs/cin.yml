@@ -1,11 +1,5 @@
 algorithms:
-  cin:
-    params:
-      yaml_config_path: ./model_files/cin/opt.yml
-      checkpoint_path: ./model_files/cin/cinNet&nsmNet.pth
-      pre_noise_policy: pre_noise_nsm
-      device: cuda
-      module_path: ./submodules/CIN
+  - cin
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 

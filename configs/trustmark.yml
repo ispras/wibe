@@ -1,10 +1,5 @@
 algorithms:
-  trustmark:
-    params:
-      wm_length: 100
-      model_type: Q
-      wm_strength: 0.75
-      device: cuda
+  - trustmark
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 

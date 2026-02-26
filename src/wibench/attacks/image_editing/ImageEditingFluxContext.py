@@ -11,10 +11,19 @@ from wibench.attacks.base import BaseAttack
 
 
 class ImageEditingFLuxContext(BaseAttack):
+    """
+    Adversarial attack that edits images using instruction-guided generation.
+    
+    Combines InternVL2 for natural language understanding and FLUX.1-Kontext
+    for instruction-guided image editing. Generates textual instructions
+    describing the input image, then uses them to guide image-to-image 
+    transformations that create adversarial outputs.
+    """
+    
     def __init__(
         self,
-        device_vl: str = "cuda:0",
-        device_flux: str = "cuda:1",
+        device_vl: str = "cuda:0" if torch.cuda.is_available() else "cpu",
+        device_flux: str = "cuda:1" if torch.cuda.is_available() else "cpu",
         internvl_path: str = "OpenGVLab/InternVL2_5-8B",
         fluxcontext_path: str = "black-forest-labs/FLUX.1-Kontext-dev",
         prompts_path: str = "./resources/flux_prompts.json",
