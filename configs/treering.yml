@@ -1,18 +1,20 @@
 algorithms:
-  treering:
-    params:
-      module_path: ./submodules/tree-ring-watermark
-      device: cuda
+  - treering
 
 post_extract_metrics:
 {% include 'common/tpr_fpr.yml' %} 
 
+post_embed_metrics:
+  - CLIP_IQA
+  - Aesthetic
+  - ImageReward
+  - CLIPScore
+  - BLIP
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %}
+
 datasets:
-  DiffusionDB:
-      cache_dir: ./datasets/diffusiondb
-      subset: 2m_first_5k
-      skip_nsfw: true
-      return_prompt: true
+{% include 'common/diffusiondb_prompts.yml' %}
 
 attacks:
 {% include 'common/distortions.yml' %}

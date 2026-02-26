@@ -7,6 +7,7 @@ import cv2
 import tempfile
 import os
 import hashlib
+import secrets
 from typing_extensions import Dict, Any, List, Optional
 
 
@@ -206,13 +207,17 @@ def delete_tmp_images(tmp_paths: List[str]):
         os.remove(tmp_path)
 
 
-def seed_everything(seed: Optional[int] = None):
+def generate_random_seed():
+    return secrets.randbelow(2**32)
+
+
+def seed_everything(seed: int):
     """Set random seeds for reproducibility.
     
     Parameters
     ----------
-    seed : Optional[int], optional
-        Random seed value. If None, no seeding is done.
+    seed : int
+        Random seed value.
         
     Notes
     -----
@@ -222,14 +227,13 @@ def seed_everything(seed: Optional[int] = None):
     - PyTorch (CPU and CUDA)
     - Sets deterministic algorithms for CUDA
     """
-    if seed is not None:
-        random.seed(seed)
-        os.environ['PYTHONHASHSEED'] = str(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def object_id_to_seed(object_id: str, bits: int = 32) -> int:

@@ -11,7 +11,7 @@ class AdversarialEmbedding(BaseAttack):
 
     def __init__(self,
                  encoder: str = "resnet18",
-                 device: torch.device | str = "cuda",
+                 device: torch.device | str = "cuda" if torch.cuda.is_available() else "cpu",
                  loss_type: str = "l2",  # metric between attacked and non-attacked embeddings
                  strength: int = 2,  # 2,4,6,8
                  eps_factor: float = 1 / 255,
@@ -110,7 +110,7 @@ class AdversarialEmbeddingPSNR(BaseAttack):
 
     def __init__(self,
                  encoder: str = "resnet18",
-                 device: torch.device | str = "cuda",
+                 device: torch.device | str = "cuda" if torch.cuda.is_available() else "cpu",
                  psnr: float = 40,
                  loss_type: str = "l2",  # metric between attacked and non-attacked embeddings
                  alpha: float = 10.,

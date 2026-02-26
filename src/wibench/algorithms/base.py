@@ -1,7 +1,7 @@
 from wibench.watermark_data import WatermarkData
 from dataclasses import is_dataclass, asdict
 from hashlib import md5
-from typing_extensions import Any
+from typing import Any
 
 from wibench.registry import RegistryMeta
 

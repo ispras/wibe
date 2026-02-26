@@ -1,11 +1,5 @@
 algorithms:
-  arwgan:
-    params:
-      options_file_path: ./model_files/arwgan/options-and-config.pickle
-      checkpoint_file_path: ./model_files/arwgan/checkpoints/ARWGAN.pyt
-      module_path: ./submodules/ARWGAN
-      device: cuda
-
+  - arwgan
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %} 
 post_attack_metrics:

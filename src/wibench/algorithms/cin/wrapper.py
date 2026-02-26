@@ -1,12 +1,12 @@
 import torch
 import numpy as np
-import sys
 
 from typing_extensions import Any, Dict
 from dataclasses import dataclass
 from pathlib import Path
 from enum import Enum
 
+from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.utils import (
     normalize_image,
@@ -16,6 +16,17 @@ from wibench.utils import (
 )
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.typing import TorchImg, TorchImgNormalize
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/gJsYmLnAfsctaeo"
+NAME = "cin"
+REQUIRED_FILES = ["opt.yml", "cinNet&nsmNet.pth"]
+
+
+DEFAULT_MODULE_PATH = "./submodules/CIN"
+DEFAULT_CONFIG_PATH = "./model_files/cin/opt.yml"
+DEFAULT_CHECKPOINT_PATH = "./model_files/cin/cinNet&nsmNet.pth"
 
 
 class PreNoisePolicy(str, Enum):
@@ -54,6 +65,7 @@ class CINParams:
     experiment: str = ""
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class CINWrapper(BaseAlgorithmWrapper):
     """CIN: Towards Blind Watermarking: Combining Invertible and Non-invertible Mechanisms - Image Watermarking Algorithm [`paper <https://arxiv.org/abs/2212.12678>`__].
 
@@ -63,30 +75,30 @@ class CINWrapper(BaseAlgorithmWrapper):
     Parameters
     ----------
     params : Dict[str, Any]
-        CIN algorithm configuration parameters
+        CIN algorithm configuration parameters (default EmptyDict)
 
     """
     
-    name = "cin"
+    name = NAME
 
-    def __init__(self, params: Dict[str, Any]) -> None:
-        sys.path.append(params["module_path"])
-        sys.path.append(str((Path(params["module_path"]) / "codes").resolve()))
-        from codes.utils.yml import parse_yml, dict_to_nonedict
-        from codes.models.CIN import CIN
+    def __init__(self, params: Dict[str, Any] = {}) -> None:
+        module_path = ModuleImporter.pop_resolve_module_path(params, str(Path(DEFAULT_MODULE_PATH) / "codes"))
+        with ModuleImporter("CIN_codes", module_path):
+            from CIN_codes.utils.yml import parse_yml, dict_to_nonedict
+            from CIN_codes.models.CIN import CIN
         
-        self.device = torch.device(params["device"])
+        self.device = torch.device(params.get("device", "cuda" if torch.cuda.is_available() else "cpu"))
 
-        yaml_config_path = params["yaml_config_path"]
-        checkpoint_path = params["checkpoint_path"]
-
-        if yaml_config_path is None:
-            raise FileNotFoundError(f"The yaml config path: '{str(yaml_config_path)}' does not exist!")
-        if checkpoint_path is None:
-            raise FileNotFoundError(f"The checkpoint path: '{str(checkpoint_path)}' does not exist!")
+        yaml_config_path = params.get("yaml_config_path", DEFAULT_CONFIG_PATH)
+        checkpoint_path = params.get("checkpoint_path", DEFAULT_CHECKPOINT_PATH)
 
         yaml_config_path = Path(yaml_config_path).resolve()
         checkpoint_path = Path(checkpoint_path).resolve()
+
+        if not yaml_config_path.exists():
+            raise FileNotFoundError(f"The config path: '{str(yaml_config_path)}' does not exist!")
+        if not checkpoint_path.exists():
+            raise FileNotFoundError(f"The checkpoint path: '{str(checkpoint_path)}' does not exist!")
 
         option_yml = parse_yml(yaml_config_path)
         config = dict_to_nonedict(option_yml)
@@ -111,11 +123,12 @@ class CINWrapper(BaseAlgorithmWrapper):
             W=self.cin_net_wrapper.module.w,
             wm_length=self.cin_net_wrapper.module.msg_length,
             experiment="",
-            pre_noise_policy = params["pre_noise_policy"],
+            pre_noise_policy = params.get("pre_noise_policy", "pre_noise_nsm"),
         )
         super().__init__(params)
+        self.params: CINParams
 
-    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
         """
         Embed watermark into input image.
         
@@ -136,7 +149,7 @@ class CINWrapper(BaseAlgorithmWrapper):
         marked_image = overlay_difference(image, resized_image, denormalized_marked_image)
         return marked_image
 
-    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData):
+    def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> np.ndarray:
         """
         Extract watermark from marked image.
         

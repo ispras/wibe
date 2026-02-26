@@ -10,7 +10,7 @@ class FluxRegeneration(BaseAttack):
     """
 
     def __init__(self,
-                 device: torch.device | str = "cuda:0",
+                 device: torch.device | str = "cuda" if torch.cuda.is_available() else "cpu",
                  dtype: str = "bfloat16",
                  cpu_offload: bool = True,
                  sequential_cpu_offload: bool = False,

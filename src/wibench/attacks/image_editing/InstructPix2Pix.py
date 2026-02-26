@@ -18,7 +18,7 @@ class ImageEditingInstructPix2Pix(BaseAttack):
     """
     def __init__(
         self,
-        device: str = "cuda",
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
         internvl_path: str = "OpenGVLab/InternVL2_5-8B",
         instructpix2pix_path: str = "timbrooks/instruct-pix2pix",
         prompts_path: str = "./resources/prompts_internvl.json",

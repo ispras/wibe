@@ -1,23 +1,33 @@
 import torch
-import sys
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.utils import normalize_image, denormalize_image
+from wibench.module_importer import ModuleImporter
 from pathlib import Path
+from wibench.download import requires_download
+
+
+URL = "https://nextcloud.ispras.ru/index.php/s/bDJ9Z7foz9HoJEY"
+NAME = "invismark"
+REQUIRED_FILES = ["invismark.ckpt"]
+
+
+DEFAULT_MODULE_PATH = "./submodules/invismark"
+DEFAULT_CHECKPOINT_PATH = "./model_files/invismark/invismark.ckpt"
 
 
 class InvisMark:
     def __init__(self, ckpt_path: Path, module_path: Path, device: str):
-        sys.path.append(str(module_path))
-        import train
+        with ModuleImporter("INVISMARK", module_path.resolve()):
+            import INVISMARK.train
 
-        self.ckpt_path = ckpt_path
-        self.device = device
-        state_dict = torch.load(self.ckpt_path, map_location=self.device, weights_only=False)
-        cfg = state_dict["config"]
-        self.model = train.Watermark(cfg, device=self.device).to(self.device)
-        self.load_model(state_dict)
+            self.ckpt_path = ckpt_path
+            self.device = device
+            state_dict = torch.load(self.ckpt_path.resolve(), map_location=self.device, weights_only=False)
+            cfg = state_dict["config"]
+            self.model = INVISMARK.train.Watermark(cfg, device=self.device).to(self.device)
+            self.load_model(state_dict)
 
     def load_model(self, state_dict):
         self.model.encoder.load_state_dict(state_dict['encoder_state_dict'])
@@ -45,6 +55,7 @@ class InvisMark:
         return extracted.cpu()
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class InvisMarkWrapper(BaseAlgorithmWrapper):
     """`InvisMark <https://arxiv.org/pdf/2411.07795>`_: Invisible and Robust Watermarking for AI-generated Image Provenance
     
@@ -54,15 +65,15 @@ class InvisMarkWrapper(BaseAlgorithmWrapper):
     Note: real capacity of InvisMark is 94 message bits (reffer to watermark_data_gen for more information)
     """
         
-    name = "invismark"
+    name = NAME
 
     def __init__(
         self,
         wm_length: int = 100,
-        ckpt_path: str = "./model_files/invismark/invismark.ckpt",
-        module_path: str = "./submodules/invismark",
+        ckpt_path: str = DEFAULT_CHECKPOINT_PATH,
+        module_path: str = DEFAULT_MODULE_PATH,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
-    ):
+    ) -> None:
         super().__init__({"wm_length": wm_length})
         self.wm_length = wm_length
 

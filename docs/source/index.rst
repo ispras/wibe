@@ -6,9 +6,9 @@
 WIBE
 ====
 
-.. |number_of_algorithms| replace:: 22
+.. |number_of_algorithms| replace:: 31
 .. |number_of_attacks| replace:: 23
-.. |number_of_metrics| replace:: 11
+.. |number_of_metrics| replace:: 13
 
 .. _DiffusionDB: https://poloclub.github.io/diffusiondb/
 .. _MS COCO: https://cocodataset.org/#home

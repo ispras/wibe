@@ -60,7 +60,7 @@ class LatentFrequencyMasking(BaseAttack):
         mask_radius: int = 10,
         mask_channel: int = 0,
         cache_dir: str | None = None,
-        device: str = 'cuda:0'
+        device: str = "cuda" if torch.cuda.is_available() else "cpu"
     ) -> None:
         super().__init__()
 

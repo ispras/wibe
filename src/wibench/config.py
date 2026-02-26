@@ -14,6 +14,8 @@ from pathlib import Path
 from dataclasses import dataclass
 from enum import Enum
 
+import torch
+
 
 class DumpType(str, Enum):
     """Enumeration of supported context serialization formats.
@@ -49,14 +51,12 @@ class Params:
     
     Attributes
     ----------
-    module_path : Optional[Union[str, Path]]
-        Filesystem path to module implementation
     device : str
         Computation device ('cpu', 'cuda', any torch suitable device)
         Default is 'cpu'
     """
     module_path: Optional[Union[str, Path]] = None
-    device: str = "cpu"
+    device: str = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class PandasAggregatorConfig(BaseModel):

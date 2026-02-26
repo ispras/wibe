@@ -1,6 +1,6 @@
 [project]
 name = "wibench"
-version = "0.2.0"
+version = "0.3.0"
 description = "An Extensible Open Source Framework for Evaluating Imperceptibility and Robustness of Digital Watermarks for Generated Images"
 readme = "README.md"
 requires-python = ">=3.10"

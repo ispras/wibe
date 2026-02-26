@@ -11,8 +11,16 @@ from wibench.utils import (
 )
 from wibench.typing import TorchImg
 from wibench.metrics.base import PostEmbedMetric
+from wibench.download import requires_download
+from ..aesthetic.aesthetic import (
+    URL,
+    NAME,
+    REQUIRED_FILES,
+    DEFAULT_DOWNLOAD_ROOT
+)
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class CLIPScore(PostEmbedMetric):
     """`CLIPScore <https://arxiv.org/abs/2104.08718>`_: A Reference-free Evaluation Metric for Image Captioning.
     
@@ -39,7 +47,7 @@ class CLIPScore(PostEmbedMetric):
     
     def __init__(self,
                  device: str = "cuda" if torch.cuda.is_available() else "cpu",
-                 download_root: str = "./model_files/metrics/aesthetic"):
+                 download_root: str = DEFAULT_DOWNLOAD_ROOT):
         download_root = str(Path(download_root).resolve())
         self.model = RM.load_score("CLIP", device=device, download_root=download_root)
 

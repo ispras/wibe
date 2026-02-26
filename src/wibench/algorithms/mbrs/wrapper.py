@@ -1,15 +1,30 @@
 from pathlib import Path
-import sys
+from typing import TypeAlias
 import torch
 from torchvision import transforms
 from dataclasses import dataclass
 import json
 from pathlib import Path
+from wibench.module_importer import ModuleImporter
 from wibench.typing import TorchImg
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.utils import normalize_image, denormalize_image, overlay_difference
+from wibench.download import requires_download
 
+
+MBRSModel: TypeAlias
+
+DEFAULT_WEIGHT_PATH = "./model_files/mbrs"
+DEFAULT_MODULE_PATH = "./submodules/mbrs"
+SETTINGS_PATH_128 = f'results/MBRS_Diffusion_128_m30/test_Crop(0.19,0.19)_s1_params.json'
+SETTINGS_PATH_256 = f'results/MBRS_256_m256/test_JpegTest(50)_s1_params.json'
+MODEL_DIR_128 = f'results/MBRS_Diffusion_128_m30/models'
+MODEL_DIR_256 = f'results/MBRS_256_m256/models'
+
+URL = "https://nextcloud.ispras.ru/index.php/s/p8ARyDcHKYxodLB"
+NAME = "mbrs"
+REQUIRED_FILES = ["results"]
 
 settings_path_128 = f'results/MBRS_Diffusion_128_m30/test_Crop(0.19,0.19)_s1_params.json'
 settings_path_256 = f'results/MBRS_256_m256/test_JpegTest(50)_s1_params.json'
@@ -19,8 +34,7 @@ model_dir_256 = f'results/MBRS_256_m256/models'
 
 class MBRS:
     def __init__(self, settings_path, models_dir, strength_factor: float = 1.0, device = "cpu"):
-        from network.Network import Network
-        self.network_class = Network
+        self.network_class = MBRSModel
         if not Path(settings_path).exists():
             raise FileExistsError(f'File {settings_path} does not exist')
         if not Path(models_dir).is_dir():
@@ -30,7 +44,7 @@ class MBRS:
         self.strength_factor = strength_factor
         self.message_len = self.settings['message_length']
         self.models_dir = models_dir
-        self.model: None | Network = None
+        self.model = None
         self.device = torch.device(
             device)
         self.resize = transforms.Resize(
@@ -87,6 +101,7 @@ class MBRSParams:
     strength_factor: float
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class MBRSWrapper(BaseAlgorithmWrapper):
     """`MBRS <https://arxiv.org/abs/2108.08211>`_: Enhancing Robustness of DNN-based Watermarking by Mini-Batch of Real and Simulated JPEG Compression
     
@@ -98,20 +113,22 @@ class MBRSWrapper(BaseAlgorithmWrapper):
     def __init__(self, 
                  wm_length: int = 256,
                  strength_factor: float =1.,
-                 weights_path: str = "./model_files/mbrs",
-                 module_path: str = "./submodules/mbrs", 
+                 weights_path: str = DEFAULT_WEIGHT_PATH,
+                 module_path: str = DEFAULT_MODULE_PATH, 
                  device: str = "cuda" if torch.cuda.is_available() else "cpu"):
         params = MBRSParams(wm_length, strength_factor)
-        sys.path.append(module_path)
-        module_path = Path(module_path)
+        with ModuleImporter("mbrs_module", module_path):
+            global MBRSModel
+            from mbrs_module.network.Network import Network as MBRSModel
+        
         weights_path = Path(weights_path)
         super().__init__(params)
         if params.wm_length == 30:
-            settings_path = weights_path / settings_path_128
-            models_dir = weights_path / model_dir_128
+            settings_path = weights_path / SETTINGS_PATH_128
+            models_dir = weights_path / MODEL_DIR_128
         elif params.wm_length == 256:
-            settings_path = weights_path / settings_path_256
-            models_dir = weights_path / model_dir_256
+            settings_path = weights_path / SETTINGS_PATH_256
+            models_dir = weights_path / MODEL_DIR_256
 
         self.wa = MBRS(settings_path, models_dir, params.strength_factor, device)
 

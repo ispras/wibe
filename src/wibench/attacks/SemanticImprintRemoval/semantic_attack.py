@@ -38,7 +38,7 @@ class SEMAttack(BaseAttack):
         lr: float = 1e-2,
         steps: int = 151,
         seed: int | None = None,
-        device: str = "cuda:0",
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
         cache_dir=None,
     ) -> None:
         
