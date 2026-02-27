@@ -170,7 +170,7 @@ class RCAN(nn.Module):
                     own_state[name].copy_(param)
                 except Exception:
                     if name.find('tail') >= 0:
-                        logger.info('Replace pre-trained upsampler to new one...')
+                        logger.debug('Replace pre-trained upsampler to new one...')
                     else:
                         raise RuntimeError('While copying the parameter named {}, '
                                            'whose dimensions in the model are {} and '

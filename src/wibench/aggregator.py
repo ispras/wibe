@@ -105,9 +105,9 @@ class PandasAggregator(Aggregator):
                     index=False
                 )
         except Timeout:
-            logger.error(f"Timeout: Could not acquire lock on {lock_path}")
+            logger.warning(f"Timeout: Could not acquire lock on {lock_path}")
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.warning(f"Error: {e}")
 
     def add(self, records: Dict[str, Any], dry: bool = False, post_pipeline_run: bool = False) -> None:
         """Process records and append to CSV files.
@@ -216,7 +216,7 @@ class FanoutAggregator:
             try:
                 aggregator.add(records, dry, post_pipeline_run)
             except Exception:
-                logger.error(f"An error occurred while aggregating information using the {aggregator.name} aggregator")  # TODO: logging
+                logger.warning(f"An error occurred while aggregating information using the {aggregator.name} aggregator")  # TODO: logging
                 traceback.print_exc()
 
 

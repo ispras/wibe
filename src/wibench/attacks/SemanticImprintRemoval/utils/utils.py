@@ -122,18 +122,18 @@ def get_GS_thresholds(num_bits=256, NUM_USERS=100*1000):
     THRESHOLD_FOR_FPRs_GS = {fpri: thresholds[index] for fpri, index in THRESHOLD_INDEXES_FOR_FPRs_GS.items()}
     THRESHOLD_FLOAT_FOR_FPRs_GS = {fpri: thres / K for fpri, thres in THRESHOLD_FOR_FPRs_GS.items()}
     
-    logger.info("single:") # это правильно?
+    logger.debug("single:") # это правильно?
     for fpri, thres in THRESHOLD_FLOAT_FOR_FPRs_GS.items():
-        logger.info(f"\tThreshold for fpri {fpri:<10}:{thres:<30}") # это правильно?
+        logger.debug(f"\tThreshold for fpri {fpri:<10}:{thres:<30}") # это правильно?
         
     # multi-bit / detection & attribution scenario
     FPRs_GS_MULTI = multi_user_FPRs
     THRESHOLD_INDEXES_FOR_FPRs_GS_MULTI = {fpri: find_first_index_below_threshold(FPRs_GS_MULTI, fpri) for fpri in INTERESTING_FPRs_GS}
     THRESHOLD_FOR_FPRs_GS_MULTI = {fpri: thresholds[index] for fpri, index in THRESHOLD_INDEXES_FOR_FPRs_GS_MULTI.items()}
     THRESHOLD_FLOAT_FOR_FPRs_GS_MULTI = {fpri: thres / K for fpri, thres in THRESHOLD_FOR_FPRs_GS_MULTI.items()}
-    logger.info("multi:") # это правильно?
+    logger.debug("multi:") # это правильно?
     for fpri, thres in THRESHOLD_FLOAT_FOR_FPRs_GS_MULTI.items():
-        logger.info(f"\tThreshold for fpri {fpri:<10}:{thres:<30}") # это правильно?
+        logger.debug(f"\tThreshold for fpri {fpri:<10}:{thres:<30}") # это правильно?
 
     return {"INTERESTING_FPRs_GS": INTERESTING_FPRs_GS,
             "THRESHOLD_INDEXES_FOR_FPRs_GS": THRESHOLD_INDEXES_FOR_FPRs_GS_MULTI,

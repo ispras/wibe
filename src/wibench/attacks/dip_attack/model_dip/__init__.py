@@ -5,7 +5,7 @@ from loguru import logger
 
 def get_net_dip(NET_TYPE="vanila"):
     if NET_TYPE == "vanila":
-        logger.info(" *** Vanila DIP Model *** ")
+        logger.debug(" *** Vanila DIP Model *** ")
         input_depth = 3
         pad = "reflection"
         upsample_mode = 'bilinear'
@@ -22,7 +22,7 @@ def get_net_dip(NET_TYPE="vanila"):
                                             upsample_mode=upsample_mode, downsample_mode=downsample_mode,
                                             need_sigmoid=True, need_bias=True, pad=pad, act_fun=act_fun)
     elif NET_TYPE == "random_projector":
-        logger.info(" *** Random Projector Model *** ")
+        logger.debug(" *** Random Projector Model *** ")
         input_depth = 3
         pad = "reflection"
         upsample_mode = 'bilinear'

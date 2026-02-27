@@ -113,11 +113,11 @@ class SyncSeal(BaseAlgorithmWrapper):
 
             # Build the embedder model
             embedder = build_embedder(self.params.embedder_config.model, asdict(embedder_cfg))
-            logger.info(f'embedder: {sum(p.numel() for p in embedder.parameters() if p.requires_grad) / 1e6:.1f}M parameters')
+            logger.debug(f'embedder: {sum(p.numel() for p in embedder.parameters() if p.requires_grad) / 1e6:.1f}M parameters')
 
             # Build the extractor model
             extractor = build_extractor(self.params.extractor_config.model, extractor_cfg, self.params.img_size_proc)
-            logger.info(f'extractor: {sum(p.numel() for p in extractor.parameters() if p.requires_grad) / 1e6:.1f}M parameters')
+            logger.debug(f'extractor: {sum(p.numel() for p in extractor.parameters() if p.requires_grad) / 1e6:.1f}M parameters')
 
             attenuation_cfg = asdict(self.params.jnd_config)
             attenuation = JND(**attenuation_cfg)

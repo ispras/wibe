@@ -91,7 +91,7 @@ def get_kernel(factor, kernel_type, phase, kernel_width, support=None, sigma=Non
         assert phase != 0.5, 'phase 1/2 for gauss not implemented'
         
         center = (kernel_width + 1.)/2.
-        logger.info(f"{center} {kernel_width}") # это правильно?
+        logger.debug(f"{center} {kernel_width}")
         sigma_sq =  sigma * sigma
         
         for i in range(1, kernel.shape[0] + 1):

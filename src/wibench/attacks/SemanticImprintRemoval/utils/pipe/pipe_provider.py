@@ -129,7 +129,7 @@ class PipeProvider(ABC):
             for param in pipe.unet.parameters():
                 param.data.zero_()
             for name, param in pipe.unet.named_parameters():
-                logger.info(f"{name}: {param.data.sum()}")
+                logger.debug(f"{name}: {param.data.sum()}")
         
         return pipe
     
