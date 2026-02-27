@@ -1,4 +1,5 @@
 from tqdm import tqdm
+from loguru import logger
 
 import typing
 
@@ -61,7 +62,7 @@ class WmProvider():
 
         @return: generator
         """
-        print(target_start_index)
+        logger.info(target_start_index)
         target_start_index = target_start_index
         target_end_index = min(total_num_latents, target_end_index)
         for idx in tqdm(range(target_start_index,

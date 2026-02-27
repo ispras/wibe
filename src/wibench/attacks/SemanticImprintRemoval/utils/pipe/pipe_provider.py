@@ -8,6 +8,7 @@ from .schedulers.scheduling_ddim import DDIMScheduler
 from .schedulers.scheduling_ddim_inverse import DDIMInverseScheduler
 
 from diffusers import UNet2DConditionModel, AutoencoderKL, DiffusionPipeline, Transformer2DModel
+from loguru import logger
 
 import PIL
 
@@ -128,7 +129,7 @@ class PipeProvider(ABC):
             for param in pipe.unet.parameters():
                 param.data.zero_()
             for name, param in pipe.unet.named_parameters():
-                print(f"{name}: {param.data.sum()}")
+                logger.info(f"{name}: {param.data.sum()}")
         
         return pipe
     

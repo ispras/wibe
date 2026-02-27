@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 import torch.nn as nn 
+from loguru import logger
+
 
 class Downsampler(nn.Module):
     '''
@@ -89,7 +91,7 @@ def get_kernel(factor, kernel_type, phase, kernel_width, support=None, sigma=Non
         assert phase != 0.5, 'phase 1/2 for gauss not implemented'
         
         center = (kernel_width + 1.)/2.
-        print(center, kernel_width)
+        logger.info(f"{center} {kernel_width}") # это правильно?
         sigma_sq =  sigma * sigma
         
         for i in range(1, kernel.shape[0] + 1):

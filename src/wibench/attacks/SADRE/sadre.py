@@ -4,8 +4,10 @@ import numpy as np
 import torch
 from torchvision.models import vgg16
 from torchvision.transforms import ToTensor, Normalize
+from loguru import logger
 
 from .regen_pipe import ReSDPipeline
+
 
 class WPWMAttacker(BaseAttack):
     """
@@ -17,7 +19,7 @@ class WPWMAttacker(BaseAttack):
             pipe = ReSDPipeline.from_pretrained("WIBE-HuggingFace/stable-diffusion-2-1", torch_dtype=torch.float16)
             pipe.set_progress_bar_config(disable=True)
             pipe.to(device)
-            print('Finished loading model')
+            logger.info('Finished loading model')
 
         self.pipe = pipe
 
@@ -25,7 +27,7 @@ class WPWMAttacker(BaseAttack):
         self.noise_step = noise_step
         self.saliency_mask = saliency_mask  # Saliency mask for localized noise injection
         #self.dct_range = (10, 20)  # DCT coefficient range
-        print(f'Diffuse attack initialized with noise step {self.noise_step} ')
+        logger.info(f'Diffuse attack initialized with noise step {self.noise_step} ')
 
         # Pretrained VGG model for feature extraction
         self.vgg_model = vgg16(pretrained=True).features.eval().to(self.device)
@@ -51,7 +53,7 @@ class WPWMAttacker(BaseAttack):
                 noise = noise / torch.max(noise)  # Normalize to [0, 1]
         else:
             raise ValueError(f"Unknown noise type: {noise_type}")
-        print(f"Generated {noise_type} noise with sigma={sigma}")
+        logger.info(f"Generated {noise_type} noise with sigma={sigma}")
         return noise
 
     def adaptive_noise_level(self, x_w):
@@ -115,7 +117,7 @@ class WPWMAttacker(BaseAttack):
         #Step 6: Interpolate saliency map back to original latent resolution
         original_size = (latents.shape[2], latents.shape[3])  # Original H, W
         saliency = torch.nn.functional.interpolate(saliency, size=original_size, mode="bilinear", align_corners=False)
-        print(f"Feature-based saliency mask range: min={saliency.min()}, max={saliency.max()}")
+        logger.info(f"Feature-based saliency mask range: min={saliency.min()}, max={saliency.max()}")
         return saliency.to(latents.dtype)
 
     def __call__(self, img: TorchImg, prompts=None) -> TorchImg:

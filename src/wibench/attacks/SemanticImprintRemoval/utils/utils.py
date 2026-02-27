@@ -5,6 +5,8 @@ import numpy as np
 
 import PIL.Image
 
+from loguru import logger
+
 
 # Gaussian Shading FPR=10-6
 # caluclated using get_GS_thresholds, but you need mp math and it is not easy to install via pip
@@ -120,18 +122,18 @@ def get_GS_thresholds(num_bits=256, NUM_USERS=100*1000):
     THRESHOLD_FOR_FPRs_GS = {fpri: thresholds[index] for fpri, index in THRESHOLD_INDEXES_FOR_FPRs_GS.items()}
     THRESHOLD_FLOAT_FOR_FPRs_GS = {fpri: thres / K for fpri, thres in THRESHOLD_FOR_FPRs_GS.items()}
     
-    print("single:")
+    logger.info("single:") # это правильно?
     for fpri, thres in THRESHOLD_FLOAT_FOR_FPRs_GS.items():
-        print(f"\tThreshold for fpri {fpri:<10}:{thres:<30}")
+        logger.info(f"\tThreshold for fpri {fpri:<10}:{thres:<30}") # это правильно?
         
     # multi-bit / detection & attribution scenario
     FPRs_GS_MULTI = multi_user_FPRs
     THRESHOLD_INDEXES_FOR_FPRs_GS_MULTI = {fpri: find_first_index_below_threshold(FPRs_GS_MULTI, fpri) for fpri in INTERESTING_FPRs_GS}
     THRESHOLD_FOR_FPRs_GS_MULTI = {fpri: thresholds[index] for fpri, index in THRESHOLD_INDEXES_FOR_FPRs_GS_MULTI.items()}
     THRESHOLD_FLOAT_FOR_FPRs_GS_MULTI = {fpri: thres / K for fpri, thres in THRESHOLD_FOR_FPRs_GS_MULTI.items()}
-    print("multi:")
+    logger.info("multi:") # это правильно?
     for fpri, thres in THRESHOLD_FLOAT_FOR_FPRs_GS_MULTI.items():
-        print(f"\tThreshold for fpri {fpri:<10}:{thres:<30}")
+        logger.info(f"\tThreshold for fpri {fpri:<10}:{thres:<30}") # это правильно?
 
     return {"INTERESTING_FPRs_GS": INTERESTING_FPRs_GS,
             "THRESHOLD_INDEXES_FOR_FPRs_GS": THRESHOLD_INDEXES_FOR_FPRs_GS_MULTI,
@@ -140,4 +142,4 @@ def get_GS_thresholds(num_bits=256, NUM_USERS=100*1000):
 
 
 if __name__ == "__main__":
-    print(get_GS_thresholds())
+    logger.info(get_GS_thresholds())

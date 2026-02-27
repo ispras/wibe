@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from timm.models.layers import trunc_normal_, DropPath
+from loguru import logger
 
 from .common import LayerNorm, GRN
 from .vit import TemporalBlock
@@ -184,9 +185,9 @@ if __name__ == '__main__':
     model = convnextv2_tiny()
     x = torch.randn(1, 3, 256, 256)
     y = model(x)
-    print(y.shape)
+    logger.info(y.shape)
     print(model)
-    print("ConvNeXtV2 model created successfully.")
+    logger.info("ConvNeXtV2 model created successfully.")
 
     # try scripting
     scripted_model = torch.jit.script(model)
