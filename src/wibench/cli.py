@@ -34,6 +34,7 @@ from wibench.module_importer import import_modules
 from wibench.config_loader import (
     load_pipeline_config_yaml,
     ALGORITHMS_FIELD,
+    METRICS_FIELDS,
     METRICS_FIELD,
     DATASETS_FIELD,
     ATTACKS_FIELD,
@@ -139,7 +140,7 @@ def parse_stage_expression(expr: str) -> List[str]:
     return [name for name in registry if wanted[name]]
 
 
-def compatible_execs(alg_wrappers, metrics, datasets, attacks) -> list[Path]:
+def compatible_execs(alg_wrappers, metrics, datasets, attacks) -> tuple[list[Path], dict[str, set[Path]]]:
 
     req_dir = Path(REQUIREMENTS_DIR).resolve()
 
@@ -153,7 +154,7 @@ def compatible_execs(alg_wrappers, metrics, datasets, attacks) -> list[Path]:
 
     current_req_paths = (
         module_paths({n for n, _ in alg_wrappers}, ALGORITHMS_FIELD)
-        | module_paths({n for m in metrics.values() for n, _ in m}, "metrics") # TODO: 
+        | module_paths({n for m in metrics.values() for n, _ in m}, METRICS_FIELD)
         | module_paths({n for n, _ in datasets}, DATASETS_FIELD)
         | module_paths({n for n, _ in attacks}, ATTACKS_FIELD)
     )
@@ -161,12 +162,15 @@ def compatible_execs(alg_wrappers, metrics, datasets, attacks) -> list[Path]:
     venvs_dir = Path(VENVS_DIR).resolve()
     group_paths = list(venvs_dir.glob("*.txt"))
     exec_candidates = []
+    missing_per_group: dict[str, set[Path]] = {}
     for group_path in group_paths:
         with open(group_path, mode="r") as fp:
             group_req_paths = {Path(line) for line in fp.read().splitlines()}
-            if current_req_paths.issubset(group_req_paths):
-                exec_candidates.append(group_path.with_suffix("") / "bin" / "python")
-    return exec_candidates
+        missing = current_req_paths - group_req_paths
+        missing_per_group[group_path.stem] = missing
+        if not missing:
+            exec_candidates.append(group_path.with_suffix("") / "bin" / "python")
+    return exec_candidates, missing_per_group
 
 
 app = typer.Typer(pretty_exceptions_enable=False)
@@ -237,14 +241,19 @@ def run(
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
     alg_wrappers = loaded_config[ALGORITHMS_FIELD]
     metrics = {}
-    for metric_field in METRICS_FIELD:
+    for metric_field in METRICS_FIELDS:
         metrics[metric_field] = loaded_config[metric_field]
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
 
-    exec_candidates = compatible_execs(alg_wrappers, metrics, datasets, attacks)
+    exec_candidates, missing_per_group = compatible_execs(alg_wrappers, metrics, datasets, attacks)
     if exec_candidates == []:
-        raise ValueError("No valid venvs")
+        parts = ["No venv group has all required requirements. Missing per group (remove from config to use that venv):"]
+        for group_name, missing in missing_per_group.items():
+            if missing:
+                txt_content = "\n".join([str(p) for p in missing])
+                parts.append(f"\n------ {group_name} ------\n{txt_content}")
+        raise ValueError("".join(parts))
     if Path(sys.executable) not in exec_candidates:
         subprocess_run(pipeline_config, python_exec=next(iter(exec_candidates)))
         return

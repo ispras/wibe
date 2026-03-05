@@ -29,11 +29,12 @@ POST_ATTACK_METRICS_FIELD = "post_attack_metrics"
 POST_EXTRACT_METRICS_FIELD = "post_extract_metrics"
 POST_PIPELINE_EMBED_METRICS_FIELD = "post_pipeline_embed_metrics"
 POST_PIPELINE_ATTACK_METRICS_FIELD = "post_pipeline_attack_metrics"
-METRICS_FIELD = [POST_EMBED_METRICS_FIELD,
+METRICS_FIELDS = [POST_EMBED_METRICS_FIELD,
                  POST_ATTACK_METRICS_FIELD,
                  POST_EXTRACT_METRICS_FIELD,
                  POST_PIPELINE_EMBED_METRICS_FIELD,
                  POST_PIPELINE_ATTACK_METRICS_FIELD]
+METRICS_FIELD = "metrics"
 DATASETS_FIELD = "datasets"
 ATTACKS_FIELD = "attacks"
 PIPELINE_FIELD = "pipeline"
@@ -80,7 +81,7 @@ def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
         DATASETS_FIELD,
         ATTACKS_FIELD,
         PIPELINE_FIELD,
-    ] + METRICS_FIELD:
+    ] + METRICS_FIELDS:
         if field not in config:
             field_value = {}
         else:
