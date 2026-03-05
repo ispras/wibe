@@ -227,3 +227,6 @@ datasets
 
 # results
 test_results
+
+# uv
+uv.lock

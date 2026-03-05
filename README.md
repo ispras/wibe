@@ -131,24 +131,34 @@ git clone https://github.com/ispras/wibe.git
 git submodule update --init --recursive
 ```
 
-3. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) package manager
-
-4. Install base virtual environment:
+3. Create and activate a base virtual environment (the exact command varies slightly between OSes – you know how to do this):
 
 ```console
-uv sync
+python -m venv .venv
 ```
 
-5. Download the pre-trained model weights:
+4. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) package manager
 
 ```console
-uv run download_models.py
+(.venv) pip install uv
 ```
 
-6. Install other required virtual environments:
+5. Install base virtual environment:
 
 ```console
-uv run req.py
+(.venv) uv sync
+```
+
+6. (Optional) Download the pre-trained model weights:
+
+```console
+(.venv) python download_models.py
+```
+
+7. Install other required virtual environments:
+
+```console
+(.venv) python req.py
 ```
 
 This command will run 4 stages:
@@ -160,33 +170,23 @@ This command will run 4 stages:
 You can run each stage individually by passing the stage name:
 
 ```console
-uv run req.py compose lock
+(.venv) python req.py compose lock
 ```
 
 
-7. Set the **HF_TOKEN** environment variable with your **HuggingFace** [token](https://huggingface.co/settings/tokens) (see [HuggingFace Authentication Setup](https://ispras-wibe.readthedocs.io/en/latest/quick_start.html#huggingface-authentication-setup) for details), then authenticate:
+8. Set the **HF_TOKEN** environment variable with your **HuggingFace** [token](https://huggingface.co/settings/tokens) (see [HuggingFace Authentication Setup](https://ispras-wibe.readthedocs.io/en/latest/quick_start.html#huggingface-authentication-setup) for details), then authenticate:
 
 ```console
-uv run huggingface_login.py
+(.venv) python huggingface_login.py
 ```
 
-8. All set! Specify the path to your `сonfiguration file` as a required parameter:
+9. All set! Specify the path to your `сonfiguration file` as a required parameter:
 
 ```console
-uv run wibench --config configs/trustmark_demo.yml
+(.venv) wibench --config configs/trustmark_demo.yml
 ```
 
-If you need to run methods: `treering`, `gaussian_shading`, `metr` or `maxsive`, you should split your run to stages and run them in different environments (You may need enough empty disk space):
-```console
-(extra_venv) python -m wibench --config configs/treering.yml -d embed
-(venv) python -m wibench --config configs/treering.yml -d post_embed_metrics-post_attack_metrics
-(extra_venv) python -m wibench --config configs/treering.yml -d extract 
-(venv) python -m wibench --config configs/treering.yml -d post_extract_metrics-post_pipeline_aggregate
-
-```
-
-
-9. Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking algorithms, attacks, and computed performance metrics.
+10. Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking algorithms, attacks, and computed performance metrics.
 
 Below, from left to right, are the original, watermarked with [StegaStamp](https://www.matthewtancik.com/stegastamp), and attacked by [FLUX Regeneration](https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb) images.
 
@@ -199,7 +199,7 @@ And here are the same as above, the original and watermarked images, as well as 
 To explore interactive wind rose chart with average `TPR@0.1%FPR` for all algorithms and attacks evaluated so far, run the following command:
 
 ```console
-(venv) python make_plots.py --results_dir path_to_results_directory
+(.venv) python make_plots.py --results_dir path_to_results_directory
 ```
 
 Below is an average `TPR@0.1%FPR` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the [DiffusionDB](https://poloclub.githubithub.io/diffusiondb/) dataset).

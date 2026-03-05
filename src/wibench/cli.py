@@ -67,6 +67,9 @@ def clear_tables(config: PipeLineConfig):
 CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
 RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
 
+REQUIREMENTS_DIR = "./requirements"
+VENVS_DIR = "./venvs"
+
 
 def set_cuda_devices(environ, device_list: List[int]):
     environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
@@ -138,12 +141,12 @@ def parse_stage_expression(expr: str) -> List[str]:
 
 def compatible_execs(alg_wrappers, metrics, datasets, attacks) -> list[Path]:
 
-    req_dir = Path("./requirements").resolve()
+    req_dir = Path(REQUIREMENTS_DIR).resolve()
 
     def module_paths(names: set[str], field: str):
         paths = set()
         for n in names:
-            p =  req_dir / field / (n + ".txt")
+            p =  req_dir / field / (n.lower() + ".txt")
             if p.exists():
                 paths.add(p)
         return paths
@@ -155,7 +158,7 @@ def compatible_execs(alg_wrappers, metrics, datasets, attacks) -> list[Path]:
         | module_paths({n for n, _ in attacks}, ATTACKS_FIELD)
     )
 
-    venvs_dir = Path("./venvs").resolve()
+    venvs_dir = Path(VENVS_DIR).resolve()
     group_paths = list(venvs_dir.glob("*.txt"))
     exec_candidates = []
     for group_path in group_paths:
@@ -240,6 +243,8 @@ def run(
     attacks = loaded_config[ATTACKS_FIELD]
 
     exec_candidates = compatible_execs(alg_wrappers, metrics, datasets, attacks)
+    if exec_candidates == []:
+        raise ValueError("No valid venvs")
     if Path(sys.executable) not in exec_candidates:
         subprocess_run(pipeline_config, python_exec=next(iter(exec_candidates)))
         return

@@ -6,4 +6,3 @@ opencv-python
 scikit-image
 accelerate
 onnxruntime
-
