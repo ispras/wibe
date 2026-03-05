@@ -40,6 +40,12 @@ ATTACKS_FIELD = "attacks"
 PIPELINE_FIELD = "pipeline"
 
 
+def get_report_name(name: str, config: Any):
+    if isinstance(config, Dict) and "report_name" in config:
+        return config["report_name"]
+    return name.lower()
+
+    
 def get_objects(
     object_pairs: List[Tuple[str, Any]], registry_cls
 ) -> List[Any]:
