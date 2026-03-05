@@ -5,6 +5,7 @@ from typing_extensions import (
     Optional,
     List
 )
+from loguru import logger
 
 from wibench.config_loader import load_pipeline_config_yaml
 from wibench.config import PipeLineConfig
@@ -28,17 +29,10 @@ def get_config_path_from_argv():
     return None
 
 
-def setup_cuda_visible_devices():
+def setup_cuda_visible_devices(pipeline_config: PipeLineConfig):
     if os.environ.get(REEXEC_DONE) == "1":
         return
 
-    config_path = get_config_path_from_argv()
-    if config_path is None:
-        return
-
-    config = load_pipeline_config_yaml(config_path)
-    pipeline_config = config["pipeline"]
-    pipeline_config: PipeLineConfig
     cuda_devices = pipeline_config.cuda_visible_devices
 
     if cuda_devices:
@@ -48,7 +42,24 @@ def setup_cuda_visible_devices():
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
-setup_cuda_visible_devices()
+def setup_logging_level(pipeline_config: PipeLineConfig):
+    logger.remove()
+    logger.add(sys.stderr, level=pipeline_config.logging_level)
+
+
+def prerun():
+    config_path = get_config_path_from_argv()
+    if config_path is None:
+        return
+
+    config = load_pipeline_config_yaml(config_path)
+    pipeline_config: PipeLineConfig = config["pipeline"]
+
+    setup_logging_level(pipeline_config)
+    setup_cuda_visible_devices(pipeline_config)
+
+
+prerun()
 
 
 import wibench
