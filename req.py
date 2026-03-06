@@ -5,6 +5,7 @@ from pathlib import Path
 from loguru import logger
 import typer
 
+from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR
 
 logger.remove()
 logger.add(sys.stderr, level="INFO")
@@ -124,8 +125,8 @@ def run(
         raise typer.Exit(1)
 
     cfg = Config(
-        requirements_dir=Path("./requirements").resolve(),
-        venvs_dir=Path("./venvs").resolve(),
+        requirements_dir=Path(REQUIREMENTS_DIR).resolve(),
+        venvs_dir=Path(VENVS_DIR).resolve(),
     )
     req_paths = list(cfg.requirements_dir.rglob(f"*{cfg.txt_suffix}"))
     logger.debug("\n".join(str(p) for p in req_paths))

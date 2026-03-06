@@ -40,7 +40,7 @@ from wibench.config_loader import (
     ATTACKS_FIELD,
     PIPELINE_FIELD,
 )
-from wibench.config import PipeLineConfig
+from wibench.config import PipeLineConfig, StageType
 import subprocess
 import os
 from wibench.aggregator import PandasAggregatorConfig
@@ -48,6 +48,7 @@ from wibench.datasets.base import BaseDataset
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.attacks.base import BaseAttack
 from wibench.metrics.base import BaseMetric
+from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR
 
 
 def clear_tables(config: PipeLineConfig):
@@ -67,9 +68,6 @@ def clear_tables(config: PipeLineConfig):
 
 CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
 RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
-
-REQUIREMENTS_DIR = "./requirements"
-VENVS_DIR = "./venvs"
 
 
 def set_cuda_devices(environ, device_list: List[int]):
@@ -140,7 +138,11 @@ def parse_stage_expression(expr: str) -> List[str]:
     return [name for name in registry if wanted[name]]
 
 
-def compatible_execs(alg_wrappers, metrics, datasets, attacks) -> tuple[list[Path], dict[str, set[Path]]]:
+def compatible_execs(stages, datasets, alg_wrappers, attacks, metrics) -> tuple[list[Path], dict[str, set[Path]]]:
+    alg_wrappers = alg_wrappers if (StageType.embed or StageType.extract) in stages else []
+    attacks = attacks if StageType.attack in stages else []
+    for metric_field in metrics.keys():
+        metrics[metric_field] = metrics[metric_field] if metric_field in stages else []
 
     req_dir = Path(REQUIREMENTS_DIR).resolve()
 
@@ -246,7 +248,7 @@ def run(
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
 
-    exec_candidates, missing_per_group = compatible_execs(alg_wrappers, metrics, datasets, attacks)
+    exec_candidates, missing_per_group = compatible_execs(stages, datasets, alg_wrappers, attacks, metrics)
     if exec_candidates == []:
         parts = ["No venv group has all required requirements. Missing per group (remove from config to use that venv):"]
         for group_name, missing in missing_per_group.items():
