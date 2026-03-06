@@ -23,6 +23,7 @@ from .base_objects import (
     get_attacks,
     get_datasets,
     get_metrics,
+    get_report_name,
 )
 from .aggregator import build_fanout_from_config
 import tqdm
@@ -296,7 +297,7 @@ class PostPipelineEmbedMetricsStage(PostPipelineStage):
     """
     def __init__(self,
                  metrics: List[PostPipelineMetric],
-                 algorithm_wrapper: BaseAlgorithmWrapper,
+                 algorithm_wrapper: Tuple[str, Any],
                  dump_type: DumpType) -> None:
         self.metrics = metrics
         self.dump_type = dump_type
@@ -315,8 +316,8 @@ class PostPipelineEmbedMetricsStage(PostPipelineStage):
                 metric.update(original_object, marked_object)
             object_context.marked_object_metrics[metric.report_name] = metric()
             metric.reset()
-        object_context.method = self.algorithm_wrapper.report_name
-        object_context.param_hash = self.algorithm_wrapper.param_hash
+        object_context.method = get_report_name(*self.algorithm_wrapper)
+        object_context.param_hash = context.param_hash
         object_context.dtm = datetime.datetime.now()
         return object_context
 
@@ -326,12 +327,12 @@ class PostPipelineAttackMetricsStage(PostPipelineStage):
     """
     def __init__(self,
                  metrics: List[PostPipelineMetric],
-                 attacks: List[BaseAttack],
-                 algorithm_wrapper: BaseAlgorithmWrapper,
+                 attacks: List[Tuple[str, Any]],
+                 algorithm_wrapper: Tuple[str, Any],
                  dump_type: DumpType) -> None:
         self.metrics = metrics
         self.algorithm_wrapper = algorithm_wrapper
-        self.attacks = [attack.report_name for attack in attacks]
+        self.attacks = [get_report_name(name, config) for name, config in attacks]
         self.dump_type = dump_type
         super().__init__()
 
@@ -349,8 +350,8 @@ class PostPipelineAttackMetricsStage(PostPipelineStage):
                     metric.update(marked_object, attacked_object)
                 object_context.attacked_object_metrics[attack] = {metric.report_name: metric()}
                 metric.reset()
-        object_context.method = self.algorithm_wrapper.report_name
-        object_context.param_hash = self.algorithm_wrapper.param_hash
+        object_context.method = get_report_name(*self.algorithm_wrapper)
+        object_context.param_hash = context.param_hash
         object_context.dtm = datetime.datetime.now()
         return object_context
 
@@ -486,9 +487,9 @@ class StageRunner:
             elif (stage == StageType.post_pipeline_aggregate) and (pipeline_config.workers == 1):
                 self.post_pipeline_stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, 0, dry_run, True))
             elif (stage == StageType.post_pipeline_embed_metrics) and (pipeline_config.workers == 1):
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), cached_call(get_algorithms, [algorithm_wrapper])[0], pipeline_config.dump_type))
+                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), algorithm_wrapper, pipeline_config.dump_type))
             elif (stage == StageType.post_pipeline_attack_metrics) and (pipeline_config.workers == 1):
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), cached_call(get_attacks, attacks), cached_call(get_algorithms, [algorithm_wrapper])[0], pipeline_config.dump_type))
+                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), attacks, algorithm_wrapper, pipeline_config.dump_type))
 
         pass
 

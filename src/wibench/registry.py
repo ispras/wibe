@@ -21,8 +21,7 @@ class RegistryMeta(type):
             else:
                 plugin_name = cls.__name__
             plugin_name = plugin_name.lower()
-            if "report_name" not in cls.__dict__:
-                setattr(cls, "report_name", plugin_name)
+            setattr(cls, "report_name", plugin_name)
             for base in bases:
                 if hasattr(base, "_registry"):
                     if plugin_name in base._registry:

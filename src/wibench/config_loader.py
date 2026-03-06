@@ -35,6 +35,7 @@ ATTACKS_FIELD = "attacks"
 PIPELINE_FIELD = "pipeline"
 
 
+
 def validate_and_parse_yaml_config(config: Any) -> Dict[str, Any]:
     result = {}
     assert isinstance(config, Dict), "Config is not a dictionary"

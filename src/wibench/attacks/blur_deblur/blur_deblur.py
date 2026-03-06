@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 import torch
 import torch.nn.functional as F
+from torchvision.transforms.functional import pad
 
 from ..base import BaseAttack
 
@@ -122,14 +123,32 @@ class BlurDeblurFPNInception(BaseAttack):
         fixed_state_dict = OrderedDict((k.removeprefix("module."), v) for k, v in state_dict.items())
         self.deblur.load_state_dict(fixed_state_dict)
 
+    def pad_tensor(self, tensor: torch.Tensor, factor: int=32) -> tuple[torch.Tensor, tuple[int, int, int, int]]:
+        height, width = tensor.shape[-2:]
+        dst_height = ((height - 1) // factor + 1) * factor
+        dst_width = ((width - 1) // factor + 1) * factor 
+        left_pad = (dst_width - width) // 2 
+        top_pad = (dst_height - height) // 2
+        right_pad = dst_width - left_pad - width
+        bottom_pad =  dst_height - top_pad - height
+        pad_tuple = (left_pad, top_pad, right_pad, bottom_pad)
+        return pad(tensor, pad_tuple, padding_mode="reflect"), pad_tuple
+    
+    def unpad_tensor(self, tensor: torch.Tensor, pad_size: tuple[int, int, int, int]) -> torch.Tensor:
+        left_pad, top_pad, right_pad, bottom_pad = pad_size
+        height, width = tensor.shape[-2:]
+        return tensor[..., top_pad: height - bottom_pad, left_pad: width - right_pad]
+        
     def __call__(self, image: torch.Tensor) -> torch.Tensor:
         if len(image.shape) < 4:
             image = image.unsqueeze(0)
         blurred = self.blur(image.to(self.device).squeeze()).to(self.device)
         if len(blurred.shape) < 4:
             blurred = blurred.unsqueeze(0)
-        deblurred = self.deblur(blurred)
-        return torch.clamp(deblurred, 0, 1).detach().cpu().squeeze()
+        blurred_padded, pad_size = self.pad_tensor(blurred)
+        deblurred = self.deblur(blurred_padded)
+        unpadded = self.unpad_tensor(deblurred, pad_size)
+        return torch.clamp(unpadded, 0, 1).detach().cpu().squeeze()
 
 
 @requires_download(URL, NAME, REQUIRED_FILES)
