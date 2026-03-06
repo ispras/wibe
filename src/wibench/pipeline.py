@@ -309,6 +309,7 @@ class PostPipelineEmbedMetricsStage(PostPipelineStage):
 
     def process_object(self, object_context: Context):
         ids = [img_id for img_id in islice(Context.glob(self.context_dir, self.dump_type), 0, None, 1)]
+        context = None
         for metric in self.metrics:
             for img_id in ids:
                 context = Context.load(self.context_dir, img_id, self.dump_type)
@@ -320,7 +321,8 @@ class PostPipelineEmbedMetricsStage(PostPipelineStage):
             object_context.marked_object_metrics[metric.report_name] = metric()
             metric.reset()
         object_context.method = get_report_name(*self.algorithm_wrapper)
-        object_context.param_hash = context.param_hash
+        if context is not None:
+            object_context.param_hash = context.param_hash
         object_context.dtm = datetime.datetime.now()
         return object_context
 
@@ -342,6 +344,7 @@ class PostPipelineAttackMetricsStage(PostPipelineStage):
     def process_object(self, object_context: Context) -> None:
         object_context.attacked_object_metrics = {}
         ids = [img_id for img_id in islice(Context.glob(self.context_dir, self.dump_type), 0, None, 1)]
+        context = None
         for metric in self.metrics:
             for attack in self.attacks:
                 for img_id in ids:
@@ -354,7 +357,8 @@ class PostPipelineAttackMetricsStage(PostPipelineStage):
                 object_context.attacked_object_metrics[attack] = {metric.report_name: metric()}
                 metric.reset()
         object_context.method = get_report_name(*self.algorithm_wrapper)
-        object_context.param_hash = context.param_hash
+        if context is not None:
+            object_context.param_hash = context.param_hash
         object_context.dtm = datetime.datetime.now()
         return object_context
 
