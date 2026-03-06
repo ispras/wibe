@@ -1,8 +1,7 @@
 from pathlib import Path
-from .datasets.base import BaseDataset
 from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
-from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric, PostPipelineMetric
+from .metrics.base import PostEmbedMetric, PostExtractMetric, PostPipelineMetric
 from .config import PipeLineConfig, AggregatorConfig, StageType, DumpType
 from .utils import (
     seed_everything,
@@ -13,15 +12,13 @@ from typing import (
     List,
     Tuple,
     Union,
-    Iterable,
     Dict,
     Type,
-    Optional,
     Any,
 )
 from wibench.typing import Object
 from dataclasses import is_dataclass
-from .config_loader import (
+from .base_objects import (
     get_algorithms,
     get_attacks,
     get_datasets,
@@ -460,7 +457,7 @@ class StageRunner:
         attacks: List[Tuple[str, Dict[str, Any]]],
         metrics: Dict[str, List[Tuple[str, Dict[str, Any]]]],
         pipeline_config: PipeLineConfig,
-        dry_run: bool = False,
+        dry_run: bool = False
     ):
         self.stages: List[Stage] = []
         self.post_pipeline_stages: List[Union[Stage, PostPipelineStage]] = []
@@ -474,22 +471,22 @@ class StageRunner:
             
         for stage in stages:
             stage_class = STAGE_CLASSES.get(stage, None)
-            if stage_class is None:
+            if (stage_class is None):
                 raise ValueError(f"Unknown stage: {stage}")
-            if stage in [StageType.embed, StageType.extract]:
+            if (stage in [StageType.embed, StageType.extract]):
                 self.stages.append(stage_class(cached_call(get_algorithms, [algorithm_wrapper])[0]))
-            elif stage == StageType.post_embed_metrics:
+            elif (stage == StageType.post_embed_metrics):
                 post_embed_metrics = get_metrics(metrics[stage])
                 self.stages.append(stage_class(post_embed_metrics))
-            elif stage == StageType.post_attack_metrics:
+            elif (stage == StageType.post_attack_metrics):
                 post_attack_metrics = get_metrics(metrics[stage])
                 self.stages.append(stage_class(post_attack_metrics))
-            elif stage == StageType.attack:
+            elif (stage == StageType.attack):
                 self.stages.append(stage_class(cached_call(get_attacks, attacks)))
-            elif stage == StageType.post_extract_metrics:
+            elif (stage == StageType.post_extract_metrics):
                 post_extract_metrics = get_metrics(metrics[stage])
                 self.stages.append(stage_class(post_extract_metrics))
-            elif stage == StageType.aggregate:
+            elif (stage == StageType.aggregate):
                 self.stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, pipeline_config.min_batch_size, dry_run))
             elif (stage == StageType.post_pipeline_aggregate) and (pipeline_config.workers == 1):
                 self.post_pipeline_stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, 0, dry_run, True))
@@ -652,7 +649,7 @@ class Pipeline:
         stages: List[str],
         dump_context: bool = False,
         dry_run: bool = False,
-        process_num: int = 0,
+        process_num: int = 0
     ):
         """Execute the watermarking evaluation pipeline.
 
@@ -714,7 +711,7 @@ class Pipeline:
                 self.attacks,
                 self.metrics,
                 self.config,
-                dry_run,
+                dry_run
             )
             dataset_stop = self.config.workers if dry_run else None
             

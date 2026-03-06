@@ -1,7 +1,61 @@
 from pathlib import Path
+import os
 import sys
+from typing_extensions import (
+    Optional,
+    List
+)
+
+from wibench.config_loader import load_pipeline_config_yaml
+from wibench.config import PipeLineConfig
+
+
+REEXEC_DONE = "_REEXEC_DONE"
+
+
+def set_cuda_devices(environ, device_list: List[int]):
+    environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+    environ["CUDA_VISIBLE_DEVICES"]=",".join(str(num) for num in device_list)
+
+
+def get_config_path_from_argv():
+    argv = sys.argv
+    for i, arg in enumerate(argv):
+        if arg in ("--config", "-c") and i + 1 < len(argv):
+            return argv[i + 1]
+        if arg.startswith("--config="):
+            return arg.split("=", 1)[1]
+    return None
+
+
+def setup_cuda_visible_devices():
+    if os.environ.get(REEXEC_DONE) == "1":
+        return
+
+    config_path = get_config_path_from_argv()
+    if config_path is None:
+        return
+
+    config = load_pipeline_config_yaml(config_path)
+    pipeline_config = config["pipeline"]
+    pipeline_config: PipeLineConfig
+    cuda_devices = pipeline_config.cuda_visible_devices
+
+    if cuda_devices:
+        set_cuda_devices(os.environ, cuda_devices)
+
+    os.environ[REEXEC_DONE] = "1"
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
+setup_cuda_visible_devices()
+
+
 import wibench
-import json
+
+
+CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
+RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
 
 
 def clear_sys_path():
@@ -18,10 +72,7 @@ clear_sys_path()
 
 
 import typer
-from typing_extensions import (
-    Optional,
-    List
-)
+import json
 import uuid
 from wibench.pipeline import Pipeline, STAGE_CLASSES
 from wibench.utils import generate_random_seed
@@ -36,7 +87,6 @@ from wibench.config_loader import (
 )
 from wibench.config import PipeLineConfig
 import subprocess
-import os
 from wibench.aggregator import PandasAggregatorConfig
 
 
@@ -53,15 +103,6 @@ def clear_tables(config: PipeLineConfig):
             params_table_result_path.unlink()
         if post_pipeline_table_result_path.exists():
             post_pipeline_table_result_path.unlink()
-
-
-CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
-RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
-
-
-def set_cuda_devices(environ, device_list: List[int]):
-    environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-    environ["CUDA_VISIBLE_DEVICES"]=",".join(str(num) for num in device_list)
 
 
 def subprocess_run(pipeline_config: PipeLineConfig):
@@ -199,13 +240,15 @@ def run(
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
 
-    if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
+    if (CHILD_NUM_ENV_NAME not in os.environ) and (pipeline_config.workers > 1):
         subprocess_run(pipeline_config)
         
         # for post_stages
         if stages is None or "all" in stages:
             stages = list(STAGE_CLASSES.keys())
         post_stages = [stage for stage in stages if ("post_pipeline" in stage)]
+        if not len(post_stages):
+            return
         pipeline_config.workers = 1
         pipeline = Pipeline(
             alg_wrappers, datasets, attacks, metrics, pipeline_config
