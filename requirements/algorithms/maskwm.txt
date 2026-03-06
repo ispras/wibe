@@ -1,7 +1,7 @@
 torch
 torchvision
 accelerate
-compressai
+compressai>=1.2.8
 numpy
 kornia
 diffusers
