@@ -50,9 +50,6 @@ class VINEWrapper(BaseAlgorithmWrapper):
             from VINE.vine.src.stega_encoder_decoder import CustomConvNeXt
             from VINE.vine.src.vine_turbo import VINE_Turbo
         
-        sys.path.append(str(Path(params["module_path"]).resolve()))
-        super().__init__(VINEParams(**params))
-        
         encoder_weights_path = Path(self.params.encoder_weights_path).resolve()
         decoder_weights_path = Path(self.params.decoder_weights_path).resolve()
 
