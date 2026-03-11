@@ -9,6 +9,7 @@ from loguru import logger
 
 from wibench.config_loader import load_pipeline_config_yaml
 from wibench.config import PipeLineConfig
+import wibench.progress as progress
 
 
 REEXEC_DONE = "_REEXEC_DONE"
@@ -42,9 +43,24 @@ def setup_cuda_visible_devices(pipeline_config: PipeLineConfig):
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
+class StreamToLogger:
+    def __init__(self, level="INFO"):
+        self.level = level
+    
+    def write(self, message):
+        logger.log(self.level, message.strip())
+    
+    def flush(self):
+        pass
+
+
 def setup_logging_level(pipeline_config: PipeLineConfig):
     logger.remove()
-    logger.add(sys.stderr, level=pipeline_config.logging_level)
+    log_format = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    logger.add(sys.stderr, format=log_format, level=pipeline_config.logging_level)
+    progress.progress_file = sys.stdout
+    sys.stdout = StreamToLogger("INFO")
+    sys.stderr = StreamToLogger("WARNING")
 
 
 def prerun():
