@@ -1,2 +1,3 @@
 image-reward>=1.5
 clip @ git+https://github.com/openai/CLIP.git
+transformers<=4.55.4
