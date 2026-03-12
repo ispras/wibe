@@ -6,6 +6,7 @@ from argparse import Namespace
 from tqdm import tqdm
 from typing_extensions import List, Dict, Any
 from json2clickhouse import JSON2Clickhouse
+from loguru import logger
 
 
 def slice_records(records: List[Dict[str, Any]], batch_size: int):
@@ -20,7 +21,7 @@ def main(args: Namespace):
     j2c = JSON2Clickhouse.from_config(args.config)
     csv_table = pd.read_csv(args.table)
     all_records = csv_table.to_dict('records')
-    print(f"Sending data to {j2c.db.db_url}")
+    logger.info(f"Sending data to {j2c.db.db_url}")
     total = math.ceil(len(all_records) / args.batch_size) 
     for records in tqdm(slice_records(all_records, args.batch_size), total=total):
         try:

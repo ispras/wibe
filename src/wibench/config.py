@@ -130,6 +130,7 @@ class PipeLineConfig(BaseModel):
     dump_type: DumpType = DumpType.serialized
     workers: int = 1
     cuda_visible_devices: List[int] = Field(default_factory=list)
+    logging_level: Literal["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
     @model_validator(mode="before")
     @classmethod

@@ -1,3 +1,6 @@
+from loguru import logger
+
+
 class RegistryMeta(type):
     """Metaclass for implementing automatic plugin registration systems.
     
@@ -27,7 +30,7 @@ class RegistryMeta(type):
                     if plugin_name in base._registry:
                         raise ValueError(f"{plugin_name} already registered")
                     base._registry[plugin_name] = cls
-                    print(
+                    logger.info(
                         f"Registered {base.type}: {cls.__name__} as {plugin_name}"
                     )
                     break
