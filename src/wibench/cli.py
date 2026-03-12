@@ -153,7 +153,7 @@ def subprocess_run(pipeline_config: PipeLineConfig, python_exec = sys.executable
         procs.append(subprocess.Popen(args, env=env))
     
     for proc in procs:
-        logger.debug("------------subprocess-run------------")
+        logger.info("\n----- subprocess-run -----\n" + " ".join(args))
         proc.wait()
 
 
