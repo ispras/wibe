@@ -1,7 +1,7 @@
 from .base import BaseAttack
 from wibench.typing import TorchImg
 from typing_extensions import Any, List, Dict
-from wibench.config_loader import get_attacks
+from wibench.base_objects import get_attacks
 
 
 # ToDo: implement for any type of objects

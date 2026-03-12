@@ -2,6 +2,7 @@ import urllib.request
 import sys
 import zipfile
 import re
+from loguru import logger
 
 
 URL = 'https://nextcloud.ispras.ru/index.php/s/Dz9cCRjPxpYswXJ'
@@ -38,16 +39,16 @@ try:
     file_size = get_file_size(URL)
     urllib.request.urlretrieve(DOWNLOAD_URL, filename=FILENAME, reporthook=lambda count, block_size, _: progress_hook(count, block_size, file_size))
 except Exception as e:
-    print(f'Exception={str(e)}. Failed to download model files.')
+    logger.error(f'Exception={str(e)}. Failed to download model files.')
     sys.exit(1)
 
-print(f"Extracting {FILENAME}...")
+logger.info(f"Extracting {FILENAME}...")
 try:
     with zipfile.ZipFile(file=FILENAME) as zip_ref:
         zip_ref.extractall('./')
 except Exception as e:
-    print(f'Exception={str(e)}. Failed to extract archive file: {FILENAME}.')
+    logger.error(f'Exception={str(e)}. Failed to extract archive file: {FILENAME}.')
     sys.exit(1)
 
 
-print('Successfully downloaded model files.')
+logger.info('Successfully downloaded model files.')

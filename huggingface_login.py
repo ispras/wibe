@@ -1,6 +1,7 @@
 import os
 import sys
 from huggingface_hub import login
+from loguru import logger
 
 
 hf = 'HuggingFace'
@@ -14,11 +15,11 @@ try:
     token = os.environ[token_var]
     login(token=token)
 except KeyError:
-    print(f'Not found "{token_var}" in environment. Failed to log in to the {hf}.')
+    logger.error(f'Not found "{token_var}" in environment. Failed to log in to the {hf}.')
     sys.exit(1)
 except Exception as e:
-    print(f'Exception={str(e)}. Failed to log in to the {hf}.')
+    logger.error(f'Exception={str(e)}. Failed to log in to the {hf}.')
     sys.exit(1)
 
 
-print(f'Successfully logged into the {hf}.')
+logger.info(f'Successfully logged into the {hf}.')

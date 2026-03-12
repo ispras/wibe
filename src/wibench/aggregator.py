@@ -1,6 +1,7 @@
 import pandas as pd
 import traceback
 import json
+from loguru import logger
 
 from abc import (
     ABC,
@@ -104,9 +105,9 @@ class PandasAggregator(Aggregator):
                     index=False
                 )
         except Timeout:
-            print(f"Timeout: Could not acquire lock on {lock_path}")
+            logger.warning(f"Timeout: Could not acquire lock on {lock_path}")
         except Exception as e:
-            print(f"Error: {e}")
+            logger.warning(f"Error: {e}")
 
     def add(self, records: Dict[str, Any], dry: bool = False, post_pipeline_run: bool = False) -> None:
         """Process records and append to CSV files.
@@ -215,7 +216,7 @@ class FanoutAggregator:
             try:
                 aggregator.add(records, dry, post_pipeline_run)
             except Exception:
-                print(f"An error occurred while aggregating information using the {aggregator.name} aggregator")  # TODO: logging
+                logger.warning(f"An error occurred while aggregating information using the {aggregator.name} aggregator")  # TODO: logging
                 traceback.print_exc()
 
 
@@ -244,11 +245,11 @@ def build_fanout_from_config(aggregators: List[AggregatorConfig], result_path: U
         if isinstance(aggr_config, PandasAggregatorConfig):
             aggregator = PandasAggregator(aggr_config, result_path)
             _aggregators.append(aggregator)
-            print("Loaded: CSV aggregator") # TODO: logging
+            logger.info("Loaded: CSV aggregator") # TODO: logging
         if isinstance(aggr_config, ClickHouseAggregatorConfig):
             aggregator = ClickHouseAggregator(aggr_config, result_path)
             _aggregators.append(aggregator)
-            print("Loaded: ClickHouse aggregator")
+            logger.info("Loaded: ClickHouse aggregator")
     if not len(_aggregators):
         raise ValueError("No aggregators loaded!")
     return FanoutAggregator(_aggregators)

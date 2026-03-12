@@ -2,6 +2,7 @@ from typing import List
 from pathlib import Path
 import requests
 import zipfile
+from loguru import logger
 
 
 DOWNLOAD_MODELS_PATH = "./model_files"
@@ -11,7 +12,7 @@ DOWNLOAD_CACHE_PATH = "./wibe_downloads"
 def check_files_in_folder(folder_path: str, required_files: List[str]) -> bool:
     all_files = all((Path(folder_path) / f).exists() for f in required_files)
     if all_files:
-        print(f"Using cached files from {str(Path(folder_path).resolve())}.")
+        logger.info(f"Using cached files from {str(Path(folder_path).resolve())}.")
     return all_files
 
 
@@ -24,7 +25,7 @@ def download_folder(url: str, object_name: str) -> None:
 
     download_url = url + "/download"
     download_name = str(download_cache / object_name) + ".zip"
-    print(f"Download data for {object_name}...")
+    logger.info(f"Download data for {object_name}...")
     with requests.get(download_url, stream=True) as r:
         r.raise_for_status()
         total_size = int(r.headers.get('content-length', 0))

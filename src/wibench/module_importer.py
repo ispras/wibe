@@ -7,6 +7,7 @@ import os
 
 from pathlib import Path
 from typing_extensions import Union, Dict, Any
+from loguru import logger
 
 
 def import_modules(package_name):
@@ -15,14 +16,14 @@ def import_modules(package_name):
     try:
         package = importlib.import_module(package_name)
     except Exception as e:
-        print(
+        logger.warning(
             f"Could not import '{package_name}': {e}"
         )  # Todo: logging
     for _, module_name, _ in pkgutil.iter_modules(package.__path__):
         try:
             importlib.import_module(f"{package_name}.{module_name}")
         except Exception as e:
-            print(
+            logger.warning(
                 f"Could not import '{module_name}' from '{package_name}': {e}"
             )  # Todo: logging
   
@@ -197,9 +198,8 @@ class ModuleImporter():
             spec.loader.exec_module(module)
         except Exception as e:
             del sys.modules[fullname]
-            print(f"Failed to load nested module {fullname}: {e}")
+            logger.warning(f"Failed to load nested module {fullname}: {e}")
             return None
-            raise ImportError(f"Failed to load nested module {fullname}: {e}")
         
         self.nested_modules[fullname] = module
         if add_alias:

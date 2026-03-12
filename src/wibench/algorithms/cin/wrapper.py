@@ -82,8 +82,8 @@ class CINWrapper(BaseAlgorithmWrapper):
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
-        module_path = ModuleImporter.pop_resolve_module_path(params, str(Path(DEFAULT_MODULE_PATH) / "codes"))
-        with ModuleImporter("CIN_codes", module_path):
+        module_path = ModuleImporter.pop_resolve_module_path(params, str(Path(DEFAULT_MODULE_PATH)))
+        with ModuleImporter("CIN_codes", Path(module_path) / "codes"):
             from CIN_codes.utils.yml import parse_yml, dict_to_nonedict
             from CIN_codes.models.CIN import CIN
         

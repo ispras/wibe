@@ -24,6 +24,8 @@ from utils.prompt_utils import PROMPTS_SD_LIST, PROMPTS_I2P_LIST
 
 from utils.utils import set_random_seed
 
+from loguru import logger
+
 
 # device
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -103,7 +105,7 @@ rows = []
 with torch.no_grad():
             
     # --------------------------------------------------------------- PHASE 1 ----------------------------------------------------------------------
-    print("phase 1: generate target image")
+    logger.info("phase 1: generate target image")
 
     # generate a watermarked latent zT
     wm_provider = WmProviders[args.wm_type].value(latent_shape=pipe_provider_target.get_latent_shape(), **vars(args))
@@ -143,16 +145,16 @@ with torch.no_grad():
     rows.append(results)
 
     # log
-    print(f"(Benign image) detection_success: {detection_successful}, bit accuracy: {results['bit_accuracy']:.5f}, p_value: {results['p_value']}")
+    logger.info(f"(Benign image) detection_success: {detection_successful}, bit accuracy: {results['bit_accuracy']:.5f}, p_value: {results['p_value']}")
     
     # --------------------------------------------------------------- PHASE 2 ----------------------------------------------------------------------
-    print("phase 2: invert using attacker model")
+    logger.info("phase 2: invert using attacker model")
     
     pipe_provider_target.stash_pipe()
     res_2 = pipe_provider_attacker.invert_images(images=res_1["images_torch"], num_inference_steps=args.num_inference_steps_attacker)
 
     # --------------------------------------------------------------- PHASE 3 ----------------------------------------------------------------------
-    print("phase 3: generate attacker image")
+    logger.info("phase 3: generate attacker image")
 
     # resample strategy, used in Reprompt+ attack, but only for GS
     # For TR, there is no resampling, but merely trying out multiple attacker prompts and choosing the best performing sample
@@ -171,7 +173,7 @@ with torch.no_grad():
     harmful_image = res_3["images_PIL"][0]
     
     # --------------------------------------------------------------- PHASE 4 ----------------------------------------------------------------------
-    print("phase 4: invert using target model and verify watermark")
+    logger.info("phase 4: invert using target model and verify watermark")
 
     pipe_provider_attacker.stash_pipe()
     
@@ -198,7 +200,7 @@ with torch.no_grad():
     rows.append(results)
 
     # log
-    print(f"(Harmful image) detection_success: {detection_successful}, bit accuracy: {results['bit_accuracy']:.5f}, p_value: {results['p_value']}")
+    logger.info(f"(Harmful image) detection_success: {detection_successful}, bit accuracy: {results['bit_accuracy']:.5f}, p_value: {results['p_value']}")
 
     # save metrics as csv
     df = pd.DataFrame(rows)
