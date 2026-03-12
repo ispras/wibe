@@ -102,7 +102,7 @@ def lock(cfg: Config, groups: list[list[Path]] | None = None) -> None:
 def install(cfg: Config) -> None:
     for lock_path in cfg.glob_locks():
         venv_path = lock_path.with_suffix("")
-        subprocess.run(["uv", "venv", str(venv_path)])
+        subprocess.run(["uv", "venv", "--clear", str(venv_path)])
         subprocess.run(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)])
 
 
