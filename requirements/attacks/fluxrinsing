@@ -1,0 +1,6 @@
+torch
+diffusers>=0.31.0
+transformers
+accelerate
+protobuf
+sentencepiece
