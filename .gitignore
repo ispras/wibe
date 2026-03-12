@@ -222,6 +222,11 @@ model_files.zip
 
 # datasets
 datasets
+!requirements/datasets
+!src/wibench/datasets
 
 # results
 test_results
+
+# uv
+uv.lock
