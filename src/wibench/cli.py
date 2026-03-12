@@ -44,10 +44,6 @@ from wibench.config import PipeLineConfig, StageType
 import subprocess
 import os
 from wibench.aggregator import PandasAggregatorConfig
-from wibench.datasets.base import BaseDataset
-from wibench.algorithms.base import BaseAlgorithmWrapper
-from wibench.attacks.base import BaseAttack
-from wibench.metrics.base import BaseMetric
 from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR
 
 
