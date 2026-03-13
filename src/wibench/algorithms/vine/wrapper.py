@@ -58,8 +58,8 @@ class VINEWrapper(BaseAlgorithmWrapper):
         if not decoder_weights_path.exists():
             raise FileNotFoundError(f"The decoder weights path: '{str(decoder_weights_path)}' does not exist!")
 
-        self.encoder = VINE_Turbo.from_pretrained(encoder_weights_path, device=self.device)
-        self.decoder = CustomConvNeXt.from_pretrained(decoder_weights_path, device=self.device)
+        self.encoder = VINE_Turbo.from_pretrained(encoder_weights_path, device=self.device).to(self.device)
+        self.decoder = CustomConvNeXt.from_pretrained(decoder_weights_path, device=self.device).to(self.device)
 
     def embed(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> TorchImg:
         """Embed watermark into input image.
@@ -71,18 +71,20 @@ class VINEWrapper(BaseAlgorithmWrapper):
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """
-        normalized_image: TorchImgNormalize = normalize_image(image)
+        image = image.to(self.device)
+
+        normalized_image: TorchImgNormalize = normalize_image(image).squeeze(0)
         resized_normalized_image: TorchImgNormalize = resize_torch_img(normalized_image, [self.params.H, self.params.W])
 
         with torch.no_grad():
-            encoded = self.encoder(resized_normalized_image.unsqueeze(0), watermark_data.watermark.unsqueeze(0))
-        residual = encoded - resized_normalized_image
+            encoded = self.encoder(resized_normalized_image.unsqueeze(0), watermark_data.watermark.unsqueeze(0).to(self.device))
+        residual = encoded.squeeze(0) - resized_normalized_image
         residual = resize_torch_img(residual, [image.shape[1], image.shape[2]], mode="bicubic")
         
         encoded_image = normalized_image + residual
         encoded_image = denormalize_image(encoded_image)
         encoded_image = torch.clamp(encoded_image, 0, 1)
-        return encoded_image
+        return encoded_image.cpu()
 
     def extract(self, image: TorchImg, watermark_data: TorchBitWatermarkData) -> Any:
         """Extract watermark from marked image.
@@ -94,9 +96,11 @@ class VINEWrapper(BaseAlgorithmWrapper):
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """
+        image = image.to(self.device)
+
         resized_image: TorchImgNormalize = resize_torch_img(image, [self.params.H, self.params.W])
         with torch.no_grad():
-            res = self.decoder(resized_image)
+            res = self.decoder(resized_image.unsqueeze(0))
         return (res.cpu().numpy() > 0.5).astype(int)
 
 

@@ -18,12 +18,12 @@ xformers
 streamlit-keyup==0.2.0
 lpips
 clean-fid
-peft==0.11.1
+peft #==0.11.1
 dominate
 gradio==3.43.1
 transformers==4.43.3
 tokenizers==0.19.1
-accelerate==0.30.0
+accelerate>=0.32.0
 datasets==2.20.0
 pilgram
 kornia
@@ -34,3 +34,4 @@ ipykernel
 sentencepiece
 bchlib==0.7
 easydict
+diffusers

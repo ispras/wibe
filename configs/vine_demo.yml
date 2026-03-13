@@ -1,10 +1,7 @@
 algorithms:
   vine:            # Watermarking algorithm and its parameters
     params:
-      wm_length: 100
-      encoder_weights_path: ./model_files/vine/VINE-B-Enc
-      decoder_weights_path: ./model_files/vine/VINE-B-Dec
-      device: cuda
+      device: cuda          # CUDA only due to Vine implementation
 
 post_embed_metrics:         # Watermark impeccability metrics
   - PSNR
