@@ -1,5 +1,5 @@
-import sys
-sys.path.append("/data8/john/inr_adv_defense/liif")
+#import sys
+#sys.path.append("/data8/john/inr_adv_defense/liif")
 import models as inr_models
 from utils import make_coord
 from tqdm import tqdm

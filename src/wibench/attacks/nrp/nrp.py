@@ -14,6 +14,17 @@ import functools
 import torch.nn.init as init
 #import subprocess
 from wibench.attacks.base import BaseAttack
+from wibench.download import requires_download
+#TODO: add url
+URL_NRPSMALL=""
+NAME_NRP="nrp"
+REQUIRED_FILES_NRPSMALL=["NRP_resG.pth"]
+DEFAULT_NRPSMALL_WEIGHTS_PATH = f"./model_files/{NAME_NRP}/{REQUIRED_FILES_NRPSMALL[0]}"
+#TODO: add url
+URL_NRPLARGE=""
+REQUIRED_FILES_NRPLARGE=["NRP.pth"]
+DEFAULT_NRPLARGE_WEIGHTS_PATH = f"./model_files/{NAME_NRP}/{REQUIRED_FILES_NRPLARGE[0]}"
+
 # ===============       modules/module_utils.py         ================= #
 ###############################################################
 
@@ -141,14 +152,19 @@ class NRP_resG(nn.Module):
 
 
 ##############################
-
+@requires_download(URL_NRPSMALL, NAME_NRP, REQUIRED_FILES_NRPSMALL)
 class NRPSmall(BaseAttack):
     """ 
     Adversarial defense method NRP from the paper 'A Self-supervised Approach for Adversarial Robustness'.
     Smaller backbone variant.
     https://openaccess.thecvf.com/content_CVPR_2020/papers/Naseer_A_Self-supervised_Approach_for_Adversarial_Robustness_CVPR_2020_paper.pdf
     """
-    def __init__(self, defence_type='nonadaptive', eps=16/255, weights_path='NRP_resG.pth', device='cuda:0'):
+    def __init__(self, 
+                 defence_type : str = 'nonadaptive', 
+                 eps : float = 16/255, 
+                 weights_path : str = DEFAULT_NRPSMALL_WEIGHTS_PATH, 
+                 device: str = "cuda" if torch.cuda.is_available() else "cpu"
+                 ):
         #assert purifier_type in ['NRP_resG', 'NRP']
         assert defence_type in ['adaptive', 'nonadaptive']
         self.purifier_type='NRP_resG'
@@ -182,14 +198,19 @@ class NRPSmall(BaseAttack):
             res = res.squeeze()
         return res.to(orig_device)
     
-
+@requires_download(URL_NRPLARGE, NAME_NRP, REQUIRED_FILES_NRPLARGE)
 class NRPLarge(BaseAttack):
     """ 
     Adversarial defense method NRP from the paper 'A Self-supervised Approach for Adversarial Robustness'.
     Larger backbone variant.
     https://openaccess.thecvf.com/content_CVPR_2020/papers/Naseer_A_Self-supervised_Approach_for_Adversarial_Robustness_CVPR_2020_paper.pdf
     """
-    def __init__(self, defence_type='nonadaptive', eps=16/255, weights_path='NRP.pth', device='cuda:0'):
+    def __init__(self, 
+                 defence_type : str = 'nonadaptive', 
+                 eps : float = 16/255, 
+                 weights_path : str = DEFAULT_NRPLARGE_WEIGHTS_PATH, 
+                 device: str = "cuda" if torch.cuda.is_available() else "cpu"
+                 ):
         self.purifier_type = 'NRP'
         assert defence_type in ['adaptive', 'nonadaptive']
         netG = NRP(3,3,64,23)

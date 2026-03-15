@@ -4,14 +4,18 @@ import os
 import sys
 import torch
 import numpy as np
-from einops import rearrange
+#from einops import rearrange
 
 # Add UniEdit-Flow_FLUX to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'UniEdit-Flow_FLUX', 'src'))
+#sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'UniEdit-Flow_FLUX', 'src'))
 
-from flux.sampling import edit_uniedit, denoise_uniinv, get_schedule, prepare, unpack
-from flux.util import load_t5, load_clip, load_flow_model, load_ae
-from ..base import BaseAttack
+#from flux.sampling import edit_uniedit, denoise_uniinv, get_schedule, prepare, unpack
+#from flux.util import load_t5, load_clip, load_flow_model, load_ae
+
+#from ..base import BaseAttack
+from wibench.attacks.base import BaseAttack
+from wibench.module_importer import ModuleImporter
+DEFAULT_UNI_PATH = "./src/wibench/attacks/UniEdit_FLUX/UniEdit-Flow_FLUX/src"
 
 
 @torch.inference_mode()
@@ -30,6 +34,7 @@ class UniEditAttackFlux(BaseAttack):
     def __init__(
         self,
         model_name: str = "flux-dev",
+        module_path: str = DEFAULT_UNI_PATH,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
         num_steps: int = 30,
         source_prompt: str = 'photorealistic image',
@@ -55,6 +60,7 @@ class UniEditAttackFlux(BaseAttack):
             zero_init: Zero initialization for UniInv
         """
         super().__init__()
+
         self.model_name = model_name
         self.device = torch.device(device)
         self.num_steps = num_steps
@@ -65,12 +71,24 @@ class UniEditAttackFlux(BaseAttack):
         self.guidance = guidance
         self.offload = offload
         self.zero_init = zero_init
+        with ModuleImporter("FLUX", module_path):
+            from FLUX.flux.sampling import edit_uniedit, get_schedule, prepare, unpack
+            from FLUX.flux.util import load_t5, load_clip, load_flow_model, load_ae
+            self.t5_loader = load_t5 
+            self.clip_loader = load_clip
+            self.flow_loader = load_flow_model 
+            self.ae_loader = load_ae
+
+            self.edit_uniedit = edit_uniedit
+            self.get_schedule = get_schedule
+            self.prepare = prepare
+            self.unpack = unpack
 
         # Initialize models
-        self.t5 = load_t5(self.device, max_length=256 if model_name == "flux-schnell" else 512)
-        self.clip = load_clip(self.device)
-        self.model = load_flow_model(model_name, device="cpu" if offload else self.device)
-        self.ae = load_ae(model_name, device="cpu" if offload else self.device)
+        self.t5 = self.t5_loader(self.device, max_length=256 if model_name == "flux-schnell" else 512)
+        self.clip =  self.clip_loader(self.device)
+        self.model = self.flow_loader(model_name, device="cpu" if offload else self.device)
+        self.ae = self.ae_loader(model_name, device="cpu" if offload else self.device)
 
         self.t5.eval()
         self.clip.eval()
@@ -124,15 +142,15 @@ class UniEditAttackFlux(BaseAttack):
                     self.clip.to(self.device)
 
                 # Use same logic as in edit.py for uniedit strategy
-                inp = prepare(self.t5, self.clip, init_image, prompt="")
-                inp_target = prepare(self.t5, self.clip, init_image, prompt=self.target_prompt)
+                inp = self.prepare(self.t5, self.clip, init_image, prompt="")
+                inp_target = self.prepare(self.t5, self.clip, init_image, prompt=self.target_prompt)
                 # src cond
-                src_tmp = prepare(self.t5, self.clip, init_image, prompt=self.source_prompt)
+                src_tmp = self.prepare(self.t5, self.clip, init_image, prompt=self.source_prompt)
                 inp_target['src_txt'] = src_tmp['txt']
                 inp_target['src_txt_ids'] = src_tmp['txt_ids']
                 inp_target['src_vec'] = src_tmp['vec']
 
-                timesteps = get_schedule(self.num_steps, inp["img"].shape[1], shift=(self.model_name != "flux-schnell"))
+                timesteps = self.get_schedule(self.num_steps, inp["img"].shape[1], shift=(self.model_name != "flux-schnell"))
 
                 # Setup info dict (same as in edit.py for uniedit)
                 info = {}
@@ -155,7 +173,7 @@ class UniEditAttackFlux(BaseAttack):
                     self.model.to(self.device)
 
                 # Inversion: image -> noise (using edit_uniedit)
-                z, info = edit_uniedit(
+                z, info = self.edit_uniedit(
                     self.model,
                     **inp,
                     timesteps=timesteps,
@@ -165,10 +183,10 @@ class UniEditAttackFlux(BaseAttack):
                 )
                 inp_target["img"] = z
 
-                timesteps = get_schedule(self.num_steps, inp_target["img"].shape[1], shift=(self.model_name != "flux-schnell"))
+                timesteps = self.get_schedule(self.num_steps, inp_target["img"].shape[1], shift=(self.model_name != "flux-schnell"))
 
                 # Editing: noise -> edited image (using edit_uniedit)
-                edited_latent, _ = edit_uniedit(
+                edited_latent, _ = self.edit_uniedit(
                     self.model,
                     **inp_target,
                     timesteps=timesteps,
@@ -185,7 +203,7 @@ class UniEditAttackFlux(BaseAttack):
                     self.ae.decoder.to(edited_latent.device)
 
                 # decode latents to pixel space
-                batch_x = unpack(edited_latent.float(), width, height)
+                batch_x = self.unpack(edited_latent.float(), width, height)
 
                 edited_images = []
                 for x in batch_x:
@@ -217,6 +235,7 @@ class UniInvAttackFlux(BaseAttack):
     def __init__(
         self,
         model_name: str = "flux-dev",
+        module_path: str = DEFAULT_UNI_PATH,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
         num_steps: int = 30,
         prompt: str = "photorealistic image",
@@ -240,12 +259,24 @@ class UniInvAttackFlux(BaseAttack):
         self.prompt = prompt
         self.offload = offload
         self.zero_init = zero_init
+        with ModuleImporter("FLUX", module_path):
+            from FLUX.flux.sampling import denoise_uniinv, get_schedule, prepare, unpack
+            from FLUX.flux.util import load_t5, load_clip, load_flow_model, load_ae
+            self.t5_loader = load_t5 
+            self.clip_loader = load_clip
+            self.flow_loader = load_flow_model 
+            self.ae_loader = load_ae
+
+            self.denoise_uniinv = denoise_uniinv
+            self.get_schedule = get_schedule
+            self.prepare = prepare
+            self.unpack = unpack
 
         # Initialize models
-        self.t5 = load_t5(self.device, max_length=256 if model_name == "flux-schnell" else 512)
-        self.clip = load_clip(self.device)
-        self.model = load_flow_model(model_name, device="cpu" if offload else self.device)
-        self.ae = load_ae(model_name, device="cpu" if offload else self.device)
+        self.t5 = self.t5_loader(self.device, max_length=256 if model_name == "flux-schnell" else 512)
+        self.clip = self.clip_loader(self.device)
+        self.model = self.flow_loader(model_name, device="cpu" if offload else self.device)
+        self.ae = self.ae_loader(model_name, device="cpu" if offload else self.device)
 
         self.t5.eval()
         self.clip.eval()
@@ -298,8 +329,8 @@ class UniInvAttackFlux(BaseAttack):
                     self.t5.to(self.device)
                     self.clip.to(self.device)
 
-                inp = prepare(self.t5, self.clip, init_image, prompt=self.prompt)
-                timesteps = get_schedule(self.num_steps, inp["img"].shape[1], shift=(self.model_name != "flux-schnell"))
+                inp = self.prepare(self.t5, self.clip, init_image, prompt=self.prompt)
+                timesteps = self.get_schedule(self.num_steps, inp["img"].shape[1], shift=(self.model_name != "flux-schnell"))
 
                 # Setup info dict (same as in edit.py for uniinv)
                 info = {}
@@ -320,7 +351,7 @@ class UniInvAttackFlux(BaseAttack):
                     self.model.to(self.device)
 
                 # Inversion: image -> noise (using denoise_uniinv, same as in edit.py)
-                z, info = denoise_uniinv(
+                z, info = self.denoise_uniinv(
                     self.model,
                     **inp,
                     timesteps=timesteps,
@@ -330,12 +361,12 @@ class UniInvAttackFlux(BaseAttack):
                 )
 
                 # Prepare target input for reconstruction (same as in edit.py)
-                inp_target = prepare(self.t5, self.clip, init_image, prompt=self.prompt)
+                inp_target = self.prepare(self.t5, self.clip, init_image, prompt=self.prompt)
                 inp_target["img"] = z
-                timesteps = get_schedule(self.num_steps, inp_target["img"].shape[1], shift=(self.model_name != "flux-schnell"))
+                timesteps = self.get_schedule(self.num_steps, inp_target["img"].shape[1], shift=(self.model_name != "flux-schnell"))
 
                 # Reconstruction: noise -> image (using denoise_uniinv, same as in edit.py)
-                recon_latent, _ = denoise_uniinv(
+                recon_latent, _ = self.denoise_uniinv(
                     self.model,
                     **inp_target,
                     timesteps=timesteps,
@@ -352,7 +383,7 @@ class UniInvAttackFlux(BaseAttack):
                     self.ae.decoder.to(recon_latent.device)
 
                 # decode latents to pixel space
-                batch_x = unpack(recon_latent.float(), width, height)
+                batch_x = self.unpack(recon_latent.float(), width, height)
 
                 recon_images = []
                 for x in batch_x:
