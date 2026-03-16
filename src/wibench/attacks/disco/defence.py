@@ -1,21 +1,13 @@
-import sys 
-import os 
-#print(os.path.join(os.path.dirname(__file__), 'dfsrc_disco'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
-
-from .dfsrc_disco.robustbench.model_zoo.defense import inr
-#from base import Attack
 from wibench.attacks.base import BaseAttack
 from wibench.download import requires_download
 from wibench.module_importer import ModuleImporter
-from pathlib import Path
-#TODO: add url
-URL_DISCO=""
+import torch 
+
+URL_DISCO="https://nextcloud.ispras.ru/index.php/s/4zX2pNcxdTnFMEr"
 NAME_DISCO="disco"
 REQUIRED_FILES_DISCO=["disco_pgd.pth"]
 DEFAULT_DISCO_PATH="./src/wibench/attacks/disco/dfsrc_disco"
 DEFAULT_DISCO_WEIGHTS_PATH = f"./model_files/{NAME_DISCO}/{REQUIRED_FILES_DISCO[0]}"
-import torch 
 
 @requires_download(URL_DISCO, NAME_DISCO, REQUIRED_FILES_DISCO)
 class DISCOAttack(BaseAttack):

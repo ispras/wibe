@@ -11,8 +11,8 @@ import torch
 from collections import OrderedDict
 from wibench.attacks.base import BaseAttack
 from wibench.download import requires_download
-#TODO: add url
-URL_MPRNET=""
+
+URL_MPRNET="https://nextcloud.ispras.ru/index.php/s/q7tY4HWcSWQSwqi"
 NAME_MPRNET="mprnet"
 REQUIRED_FILES_MPRNET=["mprnet_denoise.pth"]
 DEFAULT_MPRNET_WEIGHTS_PATH = f"./model_files/{NAME_MPRNET}/{REQUIRED_FILES_MPRNET[0]}"

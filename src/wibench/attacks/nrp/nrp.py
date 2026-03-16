@@ -1,27 +1,17 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-# import torchvision.transforms as transforms
-# import torchvision.datasets as datasets
-# import torchvision.utils as vutils
-# from torchvision.utils import save_image, make_grid
-import os
-import numpy as np
-#import argparse
-#import cv2
 import functools
-#import modules.module_util as mutil
 import torch.nn.init as init
-#import subprocess
 from wibench.attacks.base import BaseAttack
 from wibench.download import requires_download
-#TODO: add url
-URL_NRPSMALL=""
+
+URL_NRPSMALL="https://nextcloud.ispras.ru/index.php/s/TNDBfKNr4EtH9qJ"
 NAME_NRP="nrp"
 REQUIRED_FILES_NRPSMALL=["NRP_resG.pth"]
 DEFAULT_NRPSMALL_WEIGHTS_PATH = f"./model_files/{NAME_NRP}/{REQUIRED_FILES_NRPSMALL[0]}"
-#TODO: add url
-URL_NRPLARGE=""
+
+URL_NRPLARGE="https://nextcloud.ispras.ru/index.php/s/TNDBfKNr4EtH9qJ"
 REQUIRED_FILES_NRPLARGE=["NRP.pth"]
 DEFAULT_NRPLARGE_WEIGHTS_PATH = f"./model_files/{NAME_NRP}/{REQUIRED_FILES_NRPLARGE[0]}"
 
