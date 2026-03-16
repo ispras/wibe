@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from dfsrc_disco.models import register
+from dfsrc_disco.models.models import register
 
 
 @register('mlp')

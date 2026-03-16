@@ -23,8 +23,8 @@ class DISCOAttack(BaseAttack):
         self.defence_name = 'disco'
         self.weights_path = weights_path
         self.device = device
-        with ModuleImporter("DISCO", module_path):
-            from DISCO.robustbench.model_zoo.defense import inr
+        with ModuleImporter("dfsrc_disco", module_path):
+            from dfsrc_disco.robustbench.model_zoo.defense import inr
             self.inr = inr
 
 

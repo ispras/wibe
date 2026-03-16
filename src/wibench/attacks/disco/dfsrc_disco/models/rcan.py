@@ -4,7 +4,7 @@ from argparse import Namespace
 import torch
 import torch.nn as nn
 
-from dfsrc_disco.models import register
+from dfsrc_disco.models.models import register
 
 
 def default_conv(in_channels, out_channels, kernel_size, bias=True):

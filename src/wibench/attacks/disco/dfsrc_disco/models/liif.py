@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import dfsrc_disco.models as models
-from dfsrc_disco.models import register
+from dfsrc_disco.models.models import register, make
 from dfsrc_disco.utils import make_coord
 import random
 import numpy as np
@@ -18,7 +17,7 @@ class LIIF(nn.Module):
         self.feat_unfold = feat_unfold
         self.cell_decode = cell_decode
 
-        self.encoder = models.make(encoder_spec)
+        self.encoder = make(encoder_spec)
 
         if imnet_spec is not None:
             imnet_in_dim = self.encoder.out_dim
@@ -29,7 +28,7 @@ class LIIF(nn.Module):
             imnet_in_dim += 2 # attach coord
             if self.cell_decode:
                 imnet_in_dim += 2
-            self.imnet = models.make(imnet_spec, args={'in_dim': imnet_in_dim})
+            self.imnet = make(imnet_spec, args={'in_dim': imnet_in_dim})
         else:
             self.imnet = None
 

@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import dfsrc_disco.models as models
-from dfsrc_disco.models import register
+from dfsrc_disco.models.models import register, make
 from dfsrc_disco.utils import make_coord
 
 
@@ -13,7 +12,7 @@ class MetaSR(nn.Module):
     def __init__(self, encoder_spec):
         super().__init__()
 
-        self.encoder = models.make(encoder_spec)
+        self.encoder = make(encoder_spec)
         imnet_spec = {
             'name': 'mlp',
             'args': {
@@ -22,7 +21,7 @@ class MetaSR(nn.Module):
                 'hidden_list': [256]
             }
         }
-        self.imnet = models.make(imnet_spec)
+        self.imnet = make(imnet_spec)
 
     def gen_feat(self, inp):
         self.feat = self.encoder(inp)
