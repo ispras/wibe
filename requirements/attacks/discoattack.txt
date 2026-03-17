@@ -1,3 +1,4 @@
 torch
 geotorch
 torchdiffeq
+tensorboardX
