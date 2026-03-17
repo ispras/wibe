@@ -1,8 +1,0 @@
-timm
-kornia
-scipy
-augly
-scikit-image
-pandas
-matplotlib
-torch
