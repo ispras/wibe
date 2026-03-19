@@ -10,12 +10,17 @@ from wibench.config import Params
 from wibench.typing import TorchImg, TorchImgNormalize
 from wibench.utils import normalize_image, denormalize_image, resize_torch_img
 from wibench.watermark_data import TorchBitWatermarkData
+from wibench.download import requires_download
 
+
+URL = "https://nextcloud.ispras.ru/index.php/s/qPBLwFQG4YYqErg"
+NAME = "vine"
+REQUIRED_FILES = ["VINE-B-Dec/model.safetensors", "VINE-B-Dec/config.json",
+                  "VINE-B-Enc/model.safetensors", "VINE-B-Enc/config.json"]
 
 DEFAULT_MODULE_PATH = "./submodules/VINE"
 DEFAULT_ENCODER_PATH = "./model_files/vine/VINE-B-Enc"
 DEFAULT_DECODER_PATH = "./model_files/vine/VINE-B-Dec"
-NAME = "vine"
 
 
 @dataclass
@@ -27,6 +32,7 @@ class VINEParams(Params):
     wm_length: int = 100
 
 
+@requires_download(URL, NAME, REQUIRED_FILES)
 class VINEWrapper(BaseAlgorithmWrapper):
     """Robust Watermarking Using Generative Priors Against Image Editing: From Benchmarking to Advances [`paper <https://arxiv.org/abs/2410.18775>`__].
     
