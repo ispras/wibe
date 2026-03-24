@@ -194,6 +194,8 @@ class ModuleImporter():
         return self._try_import_from_module_path(absolute_name, importer_name, fromlist)
 
     def _load_nested_module(self, fullname, path, add_alias=False):
+        if fullname in sys.modules:
+            return sys.modules[fullname]
         if fullname in self.nested_modules:
             return self.nested_modules[fullname]
         rel_name = fullname.split(".", maxsplit=1)[1]
