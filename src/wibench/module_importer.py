@@ -4,6 +4,7 @@ import pkgutil
 import sys
 import builtins
 import os
+import importlib
 
 from pathlib import Path
 from typing_extensions import Union, Dict, Any
@@ -228,5 +229,11 @@ class ModuleImporter():
     def __exit__(self, exc_type, exc, exc_tb):
         builtins.__import__ = self.original_import
 
-        for name in list(self.nested_modules.keys()):
+        pop_set = set(self.nested_modules.keys())
+        
+        for module in sys.modules:
+            if module.startswith(self.module_name + "."):
+                pop_set.add(module)
+        
+        for name in pop_set:
             sys.modules.pop(name, None)
