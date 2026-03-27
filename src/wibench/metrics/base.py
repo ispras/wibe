@@ -165,6 +165,23 @@ class BER(PostExtractMetric):
         return float((np.array(wm) != np.array(extraction_result)).mean())
 
 
+class WER(PostExtractMetric):
+    """Word Error Rate for extracted watermark.
+    
+    1 if embedded and extracted watermarks are equal, 0 if there is at least one bit flip.
+    """
+
+    def __call__(
+        self,
+        img1: TorchImg,
+        img2: TorchImg,
+        watermark_data: Any,
+        extraction_result: Any,
+    ) -> float:
+        wm = watermark_data.watermark
+        return int(np.all(np.array(wm).flatten() == np.array(extraction_result).flatten()))
+
+
 class TPRxFPR(PostExtractMetric):
     """True Positive Rate at fixed False Positive Rate threshold.
     

@@ -109,6 +109,7 @@ The system architecture consists of a sequence of processing configurable stages
 | Image Reward | image quality, compare image with text prompt |post_embed_metrics, post_attack_metrics | imagereward |[Learning and Evaluating Human Preferences for Text-to-Image Generation](https://github.com/zai-org/ImageReward/tree/main)|
 | FID | image quality, compare two sets of images | post_pipeline_embed_metrics, post_pipeline_attack_metrics | fid | FID metric from [GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium](https://arxiv.org/abs/1706.08500)|
 | BER | extraction success | post_extract_metrics | ber | Bit Error Rate (multi-bit)|
+| WER | extraction success | post_extract_metrics | wer | Word Error Rate (multi-bit)|
 | TPR at x% FPR | extraction success | post_extract_metrics | tpr@xfpr | True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit) |
 | P-value | extraction success | post_extract_metrics | p-value | P-value denotes probability to observe the same result as in case of extraction from not watermarked object. |
 | Result | auxiliary | post_extract_metrics | result | Records extraction result (zero-bit case) |
