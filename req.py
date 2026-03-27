@@ -106,7 +106,7 @@ def install(cfg: Config) -> None:
         subprocess.run(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)])
 
 
-STAGES = (validate.__name__, compose.__name__, lock.__name__, install.__name__)
+STAGES = (validate.__name__, compose.__name__, lock.__name__, install.__name__, "all")
 
 app = typer.Typer(pretty_exceptions_enable=False)
 
@@ -118,7 +118,9 @@ def run(
         help=f"Stages to run: {STAGES}. Default: {install.__name__}",
     ),
 ):
-    run_stages = set(stages) if stages else {install.__name__}
+    run_stages = {install.__name__}
+    if stages:
+        run_stages = set(STAGES) if "all" in stages else set(stages)
     invalid = run_stages - set(STAGES)
     if invalid:
         typer.echo(f"Unknown stages: {invalid}. Valid: {STAGES}", err=True)
