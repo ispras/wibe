@@ -14,7 +14,6 @@ CONFIG_DIR = Path("configs")
 stems_with_stage_split = {"metr"}
 
 config_files = list(CONFIG_DIR.glob("*.yml"))
-config_files = [CONFIG_DIR / "metr.yml"]
 config_files_without_split: list[Path] = []
 config_files_with_split: list[Path] = []
 
