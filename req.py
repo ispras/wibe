@@ -115,10 +115,10 @@ app = typer.Typer(pretty_exceptions_enable=False)
 def run(
     stages: list[str] = typer.Argument(
         None,
-        help=f"Stages to run: {STAGES}. Default: all",
+        help=f"Stages to run: {STAGES}. Default: {install.__name__}",
     ),
 ):
-    run_stages = set(stages) if stages else set(STAGES)
+    run_stages = set(stages) if stages else {install.__name__}
     invalid = run_stages - set(STAGES)
     if invalid:
         typer.echo(f"Unknown stages: {invalid}. Valid: {STAGES}", err=True)
