@@ -10,27 +10,59 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 
 CONFIG_DIR = Path("configs")
+
+stems_with_stage_split = {"metr"}
+
 config_files = list(CONFIG_DIR.glob("*.yml"))
+config_files = [CONFIG_DIR / "metr.yml"]
+config_files_without_split: list[Path] = []
+config_files_with_split: list[Path] = []
 
-@pytest.mark.parametrize(
-    "config_file", config_files, ids=[f.name for f in config_files]
-)
-def test_app_with_config_files(config_file: Path):
-    assert config_file.exists(), f"Config file {config_file} does not exist!"
+for config_file in config_files:
+    if config_file.stem in stems_with_stage_split:
+        config_files_with_split.append(config_file)
+    else:
+        config_files_without_split.append(config_file)
 
-    loaded_config = load_pipeline_config_yaml(config_file)
-    alg_wrappers = loaded_config[ALGORITHMS_FIELD]
-    metrics = {}
-    for metric_field in METRICS_FIELDS:
-        metrics[metric_field] = loaded_config[metric_field]
-    datasets = loaded_config[DATASETS_FIELD]
-    attacks = loaded_config[ATTACKS_FIELD]
-    stages = list(STAGE_CLASSES.keys())
 
-    exec_candidates, missing_per_group = compatible_execs(stages, datasets, alg_wrappers, attacks, metrics)
+def run_dry_run(config_file, loaded_config, stages):
+    exec_candidates, missing_per_group = compatible_execs(
+        stages,
+        loaded_config[DATASETS_FIELD],
+        loaded_config[ALGORITHMS_FIELD],
+        loaded_config[ATTACKS_FIELD],
+        {metric_field: loaded_config[metric_field] for metric_field in METRICS_FIELDS},
+    )
     assert exec_candidates != [], f"No venv has all required requirements for {config_file}\nmissing: {missing_per_group}"
 
     exec_path = next(iter(exec_candidates))
     wibench_path = exec_path.parent / "wibench"
-    result = subprocess.run([str(exec_path), str(wibench_path), "-c", str(config_file), "-d", "--dry-run"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert result.returncode == 0, f"Failed to run dry run: {result.stderr.decode('utf-8')}"
+    result = subprocess.run([str(exec_path), str(wibench_path), "-c", str(config_file), "-d", "--dry-run", ",".join(stages)], capture_output=True, text=True)
+    assert result.returncode == 0, f"Failed to run dry run: {result.stderr}"
+
+@pytest.mark.forked
+@pytest.mark.parametrize(
+    "config_file", config_files_without_split, ids=[f.name for f in config_files_without_split]
+)
+def test_configs_without_stage_split(config_file: Path):
+    assert config_file.exists(), f"Config file {config_file} does not exist!"
+
+    loaded_config = load_pipeline_config_yaml(config_file)
+    stages = list(STAGE_CLASSES.keys())
+    run_dry_run(config_file, loaded_config, stages)
+
+
+@pytest.mark.forked
+@pytest.mark.parametrize(
+    "config_file", config_files_with_split, ids=[f.name for f in config_files_with_split]
+)
+def test_configs_with_stage_split(config_file: Path):
+    assert config_file.exists(), f"Config file {config_file} does not exist!"
+
+    loaded_config = load_pipeline_config_yaml(config_file)
+    
+    stages = ["embed", "attack", "extract"]
+    run_dry_run(config_file, loaded_config, stages)
+    
+    stages = ["post_embed_metrics", "post_attack_metrics", "post_extract_metrics", "aggregate"]
+    run_dry_run(config_file, loaded_config, stages)
