@@ -53,6 +53,9 @@ wibench = "wibench.cli:app"
 [tool.uv]
 package = true
 
+[tool.uv.extra-build-dependencies]
+image-reward = ["setuptools<82"]
+
 [tool.black]
 line-length = 79
 
