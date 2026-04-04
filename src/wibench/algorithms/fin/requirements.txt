@@ -1,6 +1,0 @@
-kornia
-natsort
-numpy
-pandas
-torch
-torchvision
