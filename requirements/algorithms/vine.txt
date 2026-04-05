@@ -1,0 +1,9 @@
+torch
+torchvision
+tqdm
+peft
+transformers>=4.36.0,<=4.51.3
+accelerate>=0.32.0
+diffusers
+huggingface_hub
+requests

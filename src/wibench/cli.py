@@ -1,7 +1,88 @@
 from pathlib import Path
+import os
 import sys
+from typing_extensions import (
+    Optional,
+    List
+)
+from loguru import logger
+
+from wibench.config_loader import load_pipeline_config_yaml
+from wibench.config import PipeLineConfig
+import wibench.progress as progress
+
+
+REEXEC_DONE = "_REEXEC_DONE"
+
+
+def set_cuda_devices(environ, device_list: List[int]):
+    environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+    environ["CUDA_VISIBLE_DEVICES"]=",".join(str(num) for num in device_list)
+
+
+def get_config_path_from_argv():
+    argv = sys.argv
+    for i, arg in enumerate(argv):
+        if arg in ("--config", "-c") and i + 1 < len(argv):
+            return argv[i + 1]
+        if arg.startswith("--config="):
+            return arg.split("=", 1)[1]
+    return None
+
+
+def setup_cuda_visible_devices(pipeline_config: PipeLineConfig):
+    if os.environ.get(REEXEC_DONE) == "1":
+        return
+
+    cuda_devices = pipeline_config.cuda_visible_devices
+
+    if cuda_devices:
+        set_cuda_devices(os.environ, cuda_devices)
+
+    os.environ[REEXEC_DONE] = "1"
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
+class StreamToLogger:
+    def __init__(self, level="INFO"):
+        self.level = level
+    
+    def write(self, message):
+        logger.log(self.level, message.strip())
+    
+    def flush(self):
+        pass
+
+
+def setup_logging_level(pipeline_config: PipeLineConfig):
+    logger.remove()
+    log_format = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    logger.add(sys.stderr, format=log_format, level=pipeline_config.logging_level)
+    progress.progress_file = sys.stdout
+    sys.stdout = StreamToLogger("INFO")
+    sys.stderr = StreamToLogger("WARNING")
+
+
+def prerun():
+    config_path = get_config_path_from_argv()
+    if config_path is None:
+        return
+
+    config = load_pipeline_config_yaml(config_path)
+    pipeline_config: PipeLineConfig = config["pipeline"]
+
+    setup_logging_level(pipeline_config)
+    setup_cuda_visible_devices(pipeline_config)
+
+
+prerun()
+
+
 import wibench
-import json
+
+
+CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
+RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
 
 
 def clear_sys_path():
@@ -18,10 +99,7 @@ clear_sys_path()
 
 
 import typer
-from typing_extensions import (
-    Optional,
-    List
-)
+import json
 import uuid
 from wibench.pipeline import Pipeline, STAGE_CLASSES
 from wibench.utils import generate_random_seed
@@ -29,15 +107,16 @@ from wibench.module_importer import import_modules
 from wibench.config_loader import (
     load_pipeline_config_yaml,
     ALGORITHMS_FIELD,
+    METRICS_FIELDS,
     METRICS_FIELD,
     DATASETS_FIELD,
     ATTACKS_FIELD,
     PIPELINE_FIELD,
 )
-from wibench.config import PipeLineConfig
+from wibench.config import PipeLineConfig, StageType
 import subprocess
-import os
 from wibench.aggregator import PandasAggregatorConfig
+from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR
 
 
 def clear_tables(config: PipeLineConfig):
@@ -55,17 +134,8 @@ def clear_tables(config: PipeLineConfig):
             post_pipeline_table_result_path.unlink()
 
 
-CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
-RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
-
-
-def set_cuda_devices(environ, device_list: List[int]):
-    environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-    environ["CUDA_VISIBLE_DEVICES"]=",".join(str(num) for num in device_list)
-
-
-def subprocess_run(pipeline_config: PipeLineConfig):
-    args = [sys.executable] + sys.argv
+def subprocess_run(pipeline_config: PipeLineConfig, python_exec = sys.executable):
+    args = [str(python_exec)] + sys.argv
     
     # Hack for windows parallel execution via console script wibench.exe
     if os.name == "nt" and Path(args[1]).with_suffix(".exe").exists():
@@ -83,6 +153,7 @@ def subprocess_run(pipeline_config: PipeLineConfig):
         procs.append(subprocess.Popen(args, env=env))
     
     for proc in procs:
+        logger.info("\n----- subprocess-run -----\n" + " ".join(args))
         proc.wait()
 
 
@@ -124,6 +195,43 @@ def parse_stage_expression(expr: str) -> List[str]:
             add_exact(token)
 
     return [name for name in registry if wanted[name]]
+
+
+def compatible_execs(stages, datasets, alg_wrappers, attacks, metrics) -> tuple[list[Path], dict[str, set[Path]]]:
+    alg_wrappers = alg_wrappers if (StageType.embed or StageType.extract) in stages else []
+    attacks = attacks if StageType.attack in stages else []
+    for metric_field in metrics.keys():
+        metrics[metric_field] = metrics[metric_field] if metric_field in stages else []
+
+    req_dir = Path(REQUIREMENTS_DIR).resolve()
+
+    def module_paths(names: set[str], field: str):
+        paths = set()
+        for n in names:
+            p =  req_dir / field / (n.lower() + ".txt")
+            if p.exists():
+                paths.add(p)
+        return paths
+
+    current_req_paths = (
+        module_paths({n for n, _ in alg_wrappers}, ALGORITHMS_FIELD)
+        | module_paths({n for m in metrics.values() for n, _ in m}, METRICS_FIELD)
+        | module_paths({n for n, _ in datasets}, DATASETS_FIELD)
+        | module_paths({n for n, _ in attacks}, ATTACKS_FIELD)
+    )
+
+    venvs_dir = Path(VENVS_DIR).resolve()
+    group_paths = list(venvs_dir.glob("*.txt"))
+    exec_candidates = []
+    missing_per_group: dict[str, set[Path]] = {}
+    for group_path in group_paths:
+        with open(group_path, mode="r") as fp:
+            group_req_paths = {Path(line) for line in fp.read().splitlines()}
+        missing = current_req_paths - group_req_paths
+        missing_per_group[group_path.stem] = missing
+        if not missing:
+            exec_candidates.append(group_path.with_suffix("") / "bin" / "python")
+    return exec_candidates, missing_per_group
 
 
 app = typer.Typer(pretty_exceptions_enable=False)
@@ -194,10 +302,24 @@ def run(
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
     alg_wrappers = loaded_config[ALGORITHMS_FIELD]
     metrics = {}
-    for metric_field in METRICS_FIELD:
+    for metric_field in METRICS_FIELDS:
         metrics[metric_field] = loaded_config[metric_field]
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
+
+    exec_candidates, missing_per_group = compatible_execs(stages, datasets, alg_wrappers, attacks, metrics)
+
+    if exec_candidates == []:
+        parts = ["No venv group has all required requirements. Missing per group (remove from config to use that venv):"]
+        for group_name, missing in missing_per_group.items():
+            if missing:
+                txt_content = "\n".join([str(p) for p in missing])
+                parts.append(f"\n------ {group_name} ------\n{txt_content}")
+        raise ValueError("".join(parts))
+
+    if Path(sys.executable) not in exec_candidates:
+        subprocess_run(pipeline_config, python_exec=next(iter(exec_candidates)))
+        return
 
     if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
         subprocess_run(pipeline_config)
@@ -206,6 +328,8 @@ def run(
         if stages is None or "all" in stages:
             stages = list(STAGE_CLASSES.keys())
         post_stages = [stage for stage in stages if ("post_pipeline" in stage)]
+        if not len(post_stages):
+            return
         pipeline_config.workers = 1
         pipeline = Pipeline(
             alg_wrappers, datasets, attacks, metrics, pipeline_config

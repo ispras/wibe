@@ -25,6 +25,7 @@
   - Averaging
   - DoGBlur
   - BlurDeblurFPNInception
+  - dogblurdeblurfpninception
   - frequencymasking
   - latentfrequencymasking
   - imageeditinginstructpix2pix # Requires high VRAM
@@ -32,3 +33,9 @@
   - liifattack
   - stegastampinversion
   - wmforger
+  - nrpsmall
+  - nrplarge
+  - mprnetattack
+  - uniinvattackflux # Requires high VRAM
+  - unieditattackflux # Requires high VRAM
+  - discoattack

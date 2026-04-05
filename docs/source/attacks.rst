@@ -33,6 +33,13 @@ Attack class should inherit ``BaseAttack`` class and implement ``__call__`` meth
 
 Implemented attacks
 -------------------
+Common
+~~~~~~
+
+.. automodule:: wibench.attacks.common
+   :members:
+   :undoc-members:
+
 
 Distortions
 ~~~~~~~~~~~

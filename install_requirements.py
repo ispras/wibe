@@ -3,6 +3,7 @@ import os.path
 import subprocess
 import sys
 import argparse
+from loguru import logger
 
 
 parser = argparse.ArgumentParser()
@@ -10,8 +11,7 @@ parser.add_argument('--mode', default='', help='Mode of operation: "extra" for r
 args = parser.parse_args()
 
 
-dir_to_walk = './src/wibench/'
-requirements_txt = 'requirements.txt'
+dir_to_walk = './requirements/'
 all_requirements = []
 
 if args.mode == 'extra':
@@ -21,16 +21,16 @@ python_m_pip_install = f'{sys.executable} -m pip install'.split()
 
 try:
     subprocess.check_call(f'{sys.executable} get-pip.py'.split())
-    subprocess.check_call(python_m_pip_install + ['--upgrade', 'pip<=25.2']) # CLIP issue: https://github.com/openai/CLIP/issues/528
-    subprocess.check_call(python_m_pip_install + ['--upgrade', 'setuptools<=80.10.2'])
+    subprocess.check_call(python_m_pip_install + ['--upgrade', 'pip'])
+    subprocess.check_call(python_m_pip_install + ['--upgrade', 'setuptools'])
     
 except Exception as e:
-    print(f'Exception={str(e)}')
+    logger.error(f'Exception={str(e)}')
     sys.exit(1)
 
 
 for root, folders, files in os.walk(dir_to_walk):
-    print(f'Searching for dependencies in directory: {root}')
+    logger.info(f'Searching for dependencies in directory: {root}')
     if requirements_txt in files:
         all_requirements.append(os.path.join(root, requirements_txt))
 
@@ -54,8 +54,8 @@ try:
     subprocess.check_call(python_m_pip_install + ['-e', '.'])
     subprocess.check_call(python_m_pip_install + force_packages)
 except Exception as e:
-    print(f'Exception={str(e)}')
+    logger.error(f'Exception={str(e)}')
     sys.exit(1)
 
 
-print("All the requirements are successfully installed")
+logger.info("All the requirements are successfully installed")

@@ -45,6 +45,7 @@ class TreeRingParams(Params):
     w_injection: str = "complex"
     w_pattern_const: int = 0
     threshold: int = 77
+    apply_watermark: bool = True
 
 
 @dataclass
@@ -109,8 +110,6 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
             torch_dtype=torch.float16
         )
         self.pipe = pipe.to(self.device)
-
-        self.ground_truth_patch = get_watermarking_pattern(self.pipe, self.params, self.device)
 
         self.tester_prompt = '' # assume at the detection time, the original prompt is unknown
         self.text_embeddings = pipe.get_text_embedding(self.tester_prompt)
@@ -199,6 +198,7 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         watermarking_mask = get_watermarking_mask(init_latents_w, self.params, self.device)
 
         # inject watermark
-        init_latents_w = inject_watermark(init_latents_w, watermarking_mask, self.ground_truth_patch, self.params)
+        if self.params.apply_watermark:
+            init_latents_w = inject_watermark(init_latents_w, watermarking_mask, gt_patch, self.params)
         return TreeRingWatermarkData(init_latents_w,
                                      watermarking_mask, gt_patch.cpu().type(torch.complex64).numpy())

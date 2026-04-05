@@ -1,4 +1,4 @@
-from wibench.typing import ImageObject
+from wibench.typing import ImageObject, PromptObject
 from ..base import RangeBaseDataset
 from datasets import load_dataset
 from typing import Optional, Tuple, Generator
@@ -20,17 +20,20 @@ class MSCOCO(RangeBaseDataset):
     cache_dir : Optional[str]
         Directory to cache downloaded dataset files
     """
-    dataset_path = "rafaelpadilla/coco2017"
+    dataset_path = "lmms-lab/COCO-Caption2017"
 
     def __init__(
         self,
         split: str = "val",
         sample_range: Optional[Tuple[int, int]] = None,
-        cache_dir: Optional[str] = None
+        cache_dir: Optional[str] = None,
+        return_prompt: bool = False
     ):
+        self.return_prompt = return_prompt
         self.dataset = load_dataset(self.dataset_path,
                                     split=split,
                                     cache_dir=cache_dir)
+
         super().__init__(sample_range, len(self.dataset))
 
     def __len__(self) -> int:
@@ -53,4 +56,8 @@ class MSCOCO(RangeBaseDataset):
             if (len_idx >= self.len):
                 break
             data = self.dataset[start_idx]
-            yield ImageObject(str(data["image_id"]), to_tensor(data["image"].convert("RGB")))
+            if self.return_prompt:
+                prompt = data["answer"][0]
+                yield PromptObject(str(start_idx), prompt)
+            else:
+                yield ImageObject(str(data["id"]), to_tensor(data["image"].convert("RGB")))
