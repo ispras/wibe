@@ -101,7 +101,7 @@ clear_sys_path()
 import typer
 import json
 import uuid
-from wibench.pipeline import Pipeline, STAGE_CLASSES
+from wibench.pipeline import Pipeline, STAGE_CLASSES, StageType
 from wibench.utils import generate_random_seed
 from wibench.module_importer import import_modules
 from wibench.config_loader import (
@@ -119,19 +119,22 @@ from wibench.aggregator import PandasAggregatorConfig
 from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR
 
 
-def clear_tables(config: PipeLineConfig):
+def clear_tables(config: PipeLineConfig, stages: List[str]):
     for aggregator_config in config.aggregators:
         if not isinstance(aggregator_config, PandasAggregatorConfig):
             continue
         table_result_path = config.result_path / f"{aggregator_config.table_name}.csv"
         params_table_result_path = config.result_path / f"{aggregator_config.params_table_name}.csv"
         post_pipeline_table_result_path = config.result_path / f"{aggregator_config.post_pipeline_table_name}.csv"
-        if table_result_path.exists():
-            table_result_path.unlink()
-        if params_table_result_path.exists():
-            params_table_result_path.unlink()
-        if post_pipeline_table_result_path.exists():
-            post_pipeline_table_result_path.unlink()
+        if StageType.aggregate in stages:
+            if table_result_path.exists():
+                table_result_path.unlink()
+        if StageType.embed in stages:
+            if params_table_result_path.exists():
+                params_table_result_path.unlink()
+        if StageType.post_pipeline_aggregate in stages:
+            if post_pipeline_table_result_path.exists():
+                post_pipeline_table_result_path.unlink()
 
 
 def subprocess_run(pipeline_config: PipeLineConfig, python_exec = sys.executable):
@@ -297,7 +300,7 @@ def run(
         pipeline_config.result_path /= "dry"
     if pipeline_config.seed is None:
         pipeline_config.seed = generate_random_seed()
-    clear_tables(pipeline_config)
+    clear_tables(pipeline_config, stages)
 
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
     alg_wrappers = loaded_config[ALGORITHMS_FIELD]
