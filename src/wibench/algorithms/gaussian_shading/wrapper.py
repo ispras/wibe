@@ -7,9 +7,6 @@ import torch
 import numpy as np
 from torchvision import transforms
 from scipy.stats import norm,truncnorm
-from diffusers import DPMSolverMultistepScheduler
-from Crypto.Cipher import ChaCha20
-from Crypto.Random import get_random_bytes
 
 from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
@@ -105,6 +102,8 @@ class GaussianShadingWrapper(BaseAlgorithmWrapper):
         with ModuleImporter("GaussianShading", self.module_path):
             from GaussianShading.inverse_stable_diffusion import InversableStableDiffusionPipeline
             from GaussianShading.image_utils import transform_img
+            from diffusers import DPMSolverMultistepScheduler
+            
             scheduler = DPMSolverMultistepScheduler.from_pretrained(self.params.model_name, subfolder='scheduler')
             pipe = InversableStableDiffusionPipeline.from_pretrained(
                 self.params.model_name,
@@ -185,6 +184,8 @@ class GaussianShadingWrapper(BaseAlgorithmWrapper):
         return vote
 
     def _stream_key_decrypt(self, reversed_m, key, nonce):
+        from Crypto.Cipher import ChaCha20
+        
         cipher = ChaCha20.new(key=key, nonce=nonce)
         sd_byte = cipher.decrypt(np.packbits(reversed_m).tobytes())
         sd_bit = np.unpackbits(np.frombuffer(sd_byte, dtype=np.uint8))
@@ -192,6 +193,9 @@ class GaussianShadingWrapper(BaseAlgorithmWrapper):
         return sd_tensor.to(self.device)
 
     def _stream_key_encrypt(self, sd):
+        from Crypto.Cipher import ChaCha20        
+        from Crypto.Random import get_random_bytes
+
         key = get_random_bytes(32)
         nonce = get_random_bytes(12)
         cipher = ChaCha20.new(key=key, nonce=nonce)
