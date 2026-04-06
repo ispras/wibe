@@ -1,90 +1,82 @@
+import subprocess
 import pytest
 import sys
 from pathlib import Path
-from typer.testing import CliRunner
-import traceback
+
+from wibench.cli import compatible_execs
+from wibench.config_loader import ALGORITHMS_FIELD, ATTACKS_FIELD, DATASETS_FIELD, METRICS_FIELDS, load_pipeline_config_yaml
+from wibench.pipeline import STAGE_CLASSES
 sys.path.append(str(Path(__file__).parent.parent))
 
 
-runner = CliRunner()
 CONFIG_DIR = Path("configs")
+
+stems_with_stage_split = {"metr"}
+stems_without_dry_run = {"trustmark_fid_demo"}
+
 config_files = list(CONFIG_DIR.glob("*.yml"))
-# TODO: testing for build-in methods
-config_files = list(
-    filter(
-        lambda x: ("stable_signature" not in x.name)
-        and ("treering" not in x.name)
-        and ("gaussian_shading" not in x.name)
-        and ("metr" not in x.name)
-        and ("maxsive" not in x.name)
-        and ("ringid" not in x.name)
-        and ("trustmark_fid_demo" not in x.name),
-        config_files,
+configs_without_split: list[Path] = []
+configs_with_split: list[Path] = []
+
+for config_file in config_files:
+    if config_file.stem in stems_with_stage_split:
+        configs_with_split.append(config_file)
+    else:
+        configs_without_split.append(config_file)
+
+
+def run_wibench(config_file: Path, loaded_config: dict, stages: list[str]):
+    exec_candidates, missing_per_group = compatible_execs(
+        stages,
+        loaded_config[DATASETS_FIELD],
+        loaded_config[ALGORITHMS_FIELD],
+        loaded_config[ATTACKS_FIELD],
+        {metric_field: loaded_config[metric_field] for metric_field in METRICS_FIELDS},
     )
+    assert exec_candidates != [], f"No venv has all required requirements for {config_file}\nmissing: {missing_per_group}"
+
+    exec_path = next(iter(exec_candidates))
+    wibench_path = exec_path.parent / "wibench"
+    args = [
+        str(exec_path),
+        str(wibench_path),
+        "-c", str(config_file),
+        "-d",
+    ]
+    if config_file.stem not in stems_without_dry_run:
+        args.append("--dry-run")
+    args.append(",".join(stages))
+
+    result = subprocess.run(
+        args=args,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, f"Failed to run wibench: {result.stderr}"
+
+@pytest.mark.forked
+@pytest.mark.parametrize(
+    "config_file", configs_without_split, ids=[f.name for f in configs_without_split]
 )
+def test_configs_without_stage_split(config_file: Path):
+    assert config_file.exists(), f"Config file {config_file} does not exist!"
 
-
-def assert_exception(result):
-    assert result.exit_code == 0, "".join(
-        traceback.format_exception(
-            type(result.exception),
-            result.exception,
-            result.exception.__traceback__,
-        )
-    )
+    loaded_config = load_pipeline_config_yaml(config_file)
+    stages = list(STAGE_CLASSES.keys())
+    run_wibench(config_file, loaded_config, stages)
 
 
 @pytest.mark.forked
 @pytest.mark.parametrize(
-    "config_file", config_files, ids=[f.name for f in config_files]
+    "config_file", configs_with_split, ids=[f.name for f in configs_with_split]
 )
-def test_app_with_config_files(config_file: Path):
-    from wibench.cli import app
+def test_configs_with_stage_split(config_file: Path):
     assert config_file.exists(), f"Config file {config_file} does not exist!"
-    result = runner.invoke(app, ["-c", str(config_file), "-d", "--dry-run"])
-    assert_exception(result)
 
-
-@pytest.mark.forked
-def test_stable_signature():
-    from wibench.cli import app
-    config_file = CONFIG_DIR / "stable_signature.yml"
-    assert config_file.exists(), f"Config file {config_file} does not exist!"
-    result = runner.invoke(
-        app,
-        [
-            "-c",
-            str(config_file),
-            "-d",
-            "--dry-run",
-            "embed, post_attack_metrics"
-        ],
-    )
-    assert_exception(result)
-    result = runner.invoke(
-        app,
-        ["-c", str(config_file), "-d", "--dry-run", "extract, aggregate"],
-    )
-    assert_exception(result)
-
-
-@pytest.mark.forked
-def test_trustmark_fid():
-    from wibench.cli import app
-    config_file = CONFIG_DIR / "trustmark_fid_demo.yml"
-    assert config_file.exists(), f"Config file {config_file} does not exist!"
-    result = runner.invoke(
-        app,
-        [
-            "-c",
-            str(config_file),
-            "-d",
-            "embed, attack"
-        ],
-    )
-    assert_exception(result)
-    result = runner.invoke(
-        app,
-        ["-c", str(config_file), "-d", "post_pipeline_attack_metrics, post_pipeline_embed_metrics, post_pipeline_aggregate"],
-    )
-    assert_exception(result)
+    loaded_config = load_pipeline_config_yaml(config_file)
+    
+    stages = ["embed", "attack", "extract"]
+    run_wibench(config_file, loaded_config, stages)
+    
+    stages = ["post_embed_metrics", "post_attack_metrics", "post_extract_metrics", "aggregate"]
+    run_wibench(config_file, loaded_config, stages)
