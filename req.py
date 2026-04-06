@@ -39,7 +39,7 @@ def _compatible(paths: list[Path]) -> bool:
     args = ["uv", "pip", "compile", "--quiet", "--no-header", "--no-annotate"] + [str(p) for p in paths]
     logger.debug(" ".join(args))
     try:
-        r = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+        r = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
     except subprocess.TimeoutExpired:
         logger.warning(f"Command timed out: {' '.join(args)}")
         return False
@@ -128,8 +128,8 @@ def run(
         raise typer.Exit(1)
 
     cfg = Config(
-        requirements_dir=Path(REQUIREMENTS_DIR).resolve(),
-        venvs_dir=Path(VENVS_DIR).resolve(),
+        requirements_dir=Path(REQUIREMENTS_DIR),
+        venvs_dir=Path(VENVS_DIR),
     )
     req_paths = list(cfg.requirements_dir.rglob(f"*{cfg.txt_suffix}"))
     logger.debug("\n".join(str(p) for p in req_paths))
