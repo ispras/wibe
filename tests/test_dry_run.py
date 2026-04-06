@@ -11,7 +11,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 CONFIG_DIR = Path("configs")
 
-stems_with_stage_split = {"metr"}
+stems_with_stage_split = {"metr", "ringid", "treering", "maxsive", "gaussian_shading"}
 stems_without_dry_run = {"trustmark_fid_demo"}
 
 config_files = list(CONFIG_DIR.glob("*.yml"))
