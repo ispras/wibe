@@ -5,19 +5,12 @@ absl-py==2.4.0
 accelerate==1.13.0
     # via
     #   -r requirements/algorithms/maskwm.txt
-    #   -r requirements/algorithms/vine.txt
-    #   -r requirements/attacks/fluxregeneration.txt
-    #   -r requirements/attacks/fluxrinsing.txt
-    #   -r requirements/attacks/semattack.txt
-    #   -r requirements/attacks/unieditfttackflux.txt
-    #   -r requirements/attacks/uniinvfttackflux.txt
     #   -r requirements/attacks/vaeattack.txt
     #   -r requirements/attacks/wpwmattacker.txt
-    #   image-reward
     #   peft
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.13.3
+aiohttp==3.13.5
     # via
     #   fsspec
     #   torch-geometric
@@ -29,8 +22,8 @@ annotated-types==0.7.0
     # via pydantic
 antlr4-python3-runtime==4.9.3
     # via omegaconf
-anyio==4.13.0
-    # via httpx
+async-timeout==5.0.1
+    # via aiohttp
 attrs==26.1.0
     # via aiohttp
 augly==1.0.0
@@ -44,25 +37,16 @@ av==17.0.0
     #   -r requirements/algorithms/videoseal.txt
 bchlib==2.1.3
     # via -r requirements/algorithms/invismark.txt
-beautifulsoup4==4.14.3
-    # via -r requirements/attacks/semattack.txt
 bm3d==4.0.3
     # via -r requirements/attacks/bm3d.txt
 bm4d==4.2.5
     # via bm3d
 certifi==2026.2.25
-    # via
-    #   httpcore
-    #   httpx
-    #   requests
-cffi==2.0.0
-    # via cryptography
-charset-normalizer==3.4.6
     # via requests
-click==8.3.1
+charset-normalizer==3.4.7
+    # via requests
+click==8.3.2
     # via typer
-clip @ https://github.com/openai/CLIP/archive/refs/heads/main.zip#egg=clip-1.0
-    # via image-reward
 coloredlogs==15.0.1
     # via onnxruntime
 colormath==3.0.0
@@ -75,53 +59,40 @@ contourpy==1.3.2
     # via matplotlib
 crc8==0.2.1
     # via -r requirements/algorithms/dwsf.txt
-cryptography==46.0.6
-    # via -r requirements/attacks/semattack.txt
 cuda-bindings==12.9.4
     # via torch
-cuda-pathfinder==1.5.0
+cuda-pathfinder==1.5.1
     # via cuda-bindings
 cycler==0.12.1
     # via matplotlib
 datasets==3.6.0
     # via
-    #   -r requirements/algorithms/stable_signature.txt
     #   -r requirements/datasets/diffusiondb.txt
     #   -r requirements/datasets/mscoco.txt
-    #   image-reward
-diffusers==0.37.1
+diffusers==0.14.0
     # via
+    #   -r requirements/algorithms/gaussian_shading.txt
     #   -r requirements/algorithms/maskwm.txt
-    #   -r requirements/algorithms/stable_signature.txt
-    #   -r requirements/algorithms/vine.txt
+    #   -r requirements/algorithms/maxsive.txt
+    #   -r requirements/algorithms/metr.txt
+    #   -r requirements/algorithms/ringid.txt
+    #   -r requirements/algorithms/treering.txt
     #   -r requirements/attacks/adversarialembedding.txt
     #   -r requirements/attacks/adversarialembeddingpsnr.txt
     #   -r requirements/attacks/diffusionregeneration.txt
-    #   -r requirements/attacks/fluxregeneration.txt
-    #   -r requirements/attacks/fluxrinsing.txt
-    #   -r requirements/attacks/imageeditingfluxcontext.txt
-    #   -r requirements/attacks/imageeditinginstructpix2pix.txt
-    #   -r requirements/attacks/latentfrequencymasking.txt
-    #   -r requirements/attacks/semattack.txt
-    #   -r requirements/attacks/unieditfttackflux.txt
-    #   -r requirements/attacks/uniinvfttackflux.txt
     #   -r requirements/attacks/vaeattack.txt
     #   -r requirements/attacks/wpwmattacker.txt
-    #   image-reward
+    #   metr
 dill==0.3.8
     # via
     #   datasets
     #   multiprocess
-dreamsim==0.2.1
-    # via -r requirements/metrics/dreamsim.txt
 einops==0.8.2
     # via
     #   -r requirements/algorithms/syncseal.txt
     #   -r requirements/attacks/wmforger.txt
     #   compressai
     #   trustmark
-fairscale==0.4.13
-    # via image-reward
 filelock==3.25.2
     # via
     #   datasets
@@ -148,49 +119,30 @@ fsspec==2025.3.0
     #   torch
     #   torch-geometric
 ftfy==6.3.1
-    # via
-    #   -r requirements/attacks/semattack.txt
-    #   clip
-    #   open-clip-torch
+    # via -r requirements/algorithms/metr.txt
 geotorch==0.3.0
     # via -r requirements/attacks/discoattack.txt
-grpcio==1.78.0
+grpcio==1.80.0
     # via tensorboard
-h11==0.16.0
-    # via httpcore
-hf-xet==1.4.3
-    # via huggingface-hub
-httpcore==1.0.9
-    # via httpx
-httpx==0.28.1
-    # via diffusers
-huggingface-hub==0.36.2
+huggingface-hub==0.25.2
     # via
-    #   -r requirements/algorithms/stable_signature.txt
-    #   -r requirements/algorithms/vine.txt
+    #   -r requirements/algorithms/gaussian_shading.txt
+    #   -r requirements/algorithms/maxsive.txt
+    #   -r requirements/algorithms/metr.txt
+    #   -r requirements/algorithms/ringid.txt
+    #   -r requirements/algorithms/treering.txt
     #   accelerate
     #   datasets
     #   diffusers
-    #   image-reward
-    #   open-clip-torch
     #   timm
-    #   tokenizers
     #   transformers
     #   wibench
 humanfriendly==10.0
     # via coloredlogs
 idna==3.11
     # via
-    #   anyio
-    #   httpx
     #   requests
     #   yarl
-image-reward @ git+https://github.com/zai-org/ImageReward.git@78f8051059b34fef8e0032ccb40561c23a2ddbbb
-    # via
-    #   -r requirements/metrics/aesthetic.txt
-    #   -r requirements/metrics/blip.txt
-    #   -r requirements/metrics/clipscore.txt
-    #   -r requirements/metrics/imagereward.txt
 imageio==2.37.3
     # via scikit-image
 importlib-metadata==9.0.0
@@ -228,7 +180,6 @@ kornia==0.8.2
     #   -r requirements/algorithms/mbrs.txt
     #   -r requirements/algorithms/pimog.txt
     #   -r requirements/algorithms/sshidden.txt
-    #   -r requirements/algorithms/stable_signature.txt
 kornia-rs==0.1.10
     # via kornia
 lazy-loader==0.5
@@ -247,7 +198,6 @@ loguru==0.7.3
 lpips==0.1.4
     # via
     #   -r requirements/algorithms/syncseal.txt
-    #   -r requirements/attacks/semattack.txt
     #   -r requirements/metrics/lpips.txt
 markdown==3.10.2
     # via tensorboard
@@ -259,14 +209,15 @@ markupsafe==3.0.3
     #   werkzeug
 matplotlib==3.10.8
     # via
+    #   -r requirements/algorithms/gaussian_shading.txt
     #   -r requirements/algorithms/sshidden.txt
     #   -r requirements/algorithms/syncseal.txt
     #   -r requirements/algorithms/watermark_anything.txt
-    #   -r requirements/attacks/semattack.txt
     #   compressai
-    #   torchutils
 mdurl==0.1.2
     # via markdown-it-py
+metr @ git+https://github.com/deepvk/metr@8eb26e180ca98c5d58ec8519132daeffde9d3ec5
+    # via -r requirements/algorithms/metr.txt
 mpmath==1.3.0
     # via sympy
 multidict==6.7.1
@@ -312,8 +263,6 @@ numpy==1.26.4
     #   contourpy
     #   datasets
     #   diffusers
-    #   dreamsim
-    #   fairscale
     #   focal-frequency-loss
     #   imageio
     #   invisible-watermark
@@ -334,7 +283,6 @@ numpy==1.26.4
     #   torch-fidelity
     #   torch-geometric
     #   torchmetrics
-    #   torchutils
     #   torchvision
     #   transformers
     #   trustmark
@@ -380,7 +328,7 @@ nvidia-nvtx-cu12==12.8.90
     # via torch
 omegaconf==2.3.0
     # via
-    #   -r requirements/algorithms/stable_signature.txt
+    #   -r requirements/algorithms/metr.txt
     #   -r requirements/algorithms/syncseal.txt
     #   -r requirements/algorithms/watermark_anything.txt
     #   -r requirements/attacks/wmforger.txt
@@ -394,10 +342,6 @@ onnxruntime==1.23.2
     #   -r requirements/algorithms/stega_stamp.txt
     #   -r requirements/attacks/stegastampinversion.txt
     #   -r requirements/attacks/wpwmattacker.txt
-open-clip-torch==2.32.0
-    # via
-    #   -r requirements/algorithms/stable_signature.txt
-    #   dreamsim
 opencv-python==4.11.0.86
     # via
     #   -r requirements/algorithms/cin.txt
@@ -413,7 +357,6 @@ opencv-python==4.11.0.86
 packaging==26.0
     # via
     #   accelerate
-    #   clip
     #   datasets
     #   huggingface-hub
     #   kornia
@@ -437,25 +380,20 @@ pandas==2.3.3
     #   -r requirements/algorithms/sshidden.txt
     #   -r requirements/algorithms/ssl_watermarking.txt
     #   -r requirements/algorithms/syncseal.txt
-    #   -r requirements/attacks/semattack.txt
     #   compressai
     #   datasets
     #   wibench
 peft==0.6.2
-    # via
-    #   -r requirements/algorithms/vine.txt
-    #   dreamsim
-pillow==12.1.1
+    # via -r requirements/algorithms/ringid.txt
+pillow==12.2.0
     # via
     #   -r requirements/algorithms/arwgan.txt
     #   -r requirements/algorithms/dwsf.txt
     #   -r requirements/algorithms/maskwm.txt
     #   -r requirements/algorithms/ssl_watermarking.txt
     #   -r requirements/algorithms/watermark_anything.txt
-    #   -r requirements/attacks/semattack.txt
     #   -r requirements/datasets/diffusiondb.txt
     #   diffusers
-    #   dreamsim
     #   imageio
     #   invisible-watermark
     #   matplotlib
@@ -480,11 +418,6 @@ propcache==0.4.1
     #   yarl
 protobuf==7.34.1
     # via
-    #   -r requirements/attacks/fluxregeneration.txt
-    #   -r requirements/attacks/fluxrinsing.txt
-    #   -r requirements/attacks/semattack.txt
-    #   -r requirements/attacks/unieditfttackflux.txt
-    #   -r requirements/attacks/uniinvfttackflux.txt
     #   -r requirements/attacks/vaeattack.txt
     #   onnxruntime
     #   tensorboard
@@ -496,19 +429,19 @@ psutil==7.2.2
     #   torch-geometric
 pyarrow==23.0.1
     # via datasets
-pybind11==3.0.2
+pybind11==3.0.3
     # via compressai
 pycocotools==2.0.11
     # via
     #   -r requirements/algorithms/syncseal.txt
     #   -r requirements/algorithms/watermark_anything.txt
-pycparser==3.0
-    # via cffi
+pycryptodome==3.23.0
+    # via -r requirements/algorithms/gaussian_shading.txt
 pydantic==2.12.5
     # via wibench
 pydantic-core==2.41.5
     # via pydantic
-pygments==2.19.2
+pygments==2.20.0
     # via rich
 pyparsing==3.3.2
     # via
@@ -521,9 +454,7 @@ python-dateutil==2.9.0.post0
 python-magic==0.4.27
     # via augly
 pytorch-lightning==2.6.1
-    # via
-    #   -r requirements/algorithms/stable_signature.txt
-    #   lightning
+    # via lightning
 pytorch-msssim==1.0.0
     # via
     #   -r requirements/algorithms/syncseal.txt
@@ -550,16 +481,13 @@ pyyaml==6.0.3
     #   timm
     #   transformers
     #   wibench
-regex==2026.2.28
+regex==2026.4.4
     # via
     #   augly
-    #   clip
     #   diffusers
-    #   open-clip-torch
     #   transformers
-requests==2.33.0
+requests==2.33.1
     # via
-    #   -r requirements/algorithms/vine.txt
     #   datasets
     #   diffusers
     #   huggingface-hub
@@ -571,8 +499,6 @@ rich==14.3.3
 safetensors==0.7.0
     # via
     #   accelerate
-    #   diffusers
-    #   open-clip-torch
     #   peft
     #   timm
     #   transformers
@@ -580,7 +506,6 @@ scikit-image==0.25.2
     # via
     #   -r requirements/algorithms/sshidden.txt
     #   -r requirements/algorithms/syncseal.txt
-    #   -r requirements/attacks/semattack.txt
     #   -r requirements/attacks/wpwmattacker.txt
     #   wibench
 scikit-learn==1.7.2
@@ -591,10 +516,8 @@ scipy==1.15.3
     #   -r requirements/algorithms/sshidden.txt
     #   -r requirements/algorithms/ssl_watermarking.txt
     #   -r requirements/algorithms/syncseal.txt
-    #   -r requirements/attacks/semattack.txt
     #   bm4d
     #   compressai
-    #   dreamsim
     #   lpips
     #   scikit-image
     #   scikit-learn
@@ -602,28 +525,19 @@ scipy==1.15.3
     #   torchmetrics
     #   wibench
 sentencepiece==0.2.1
-    # via
-    #   -r requirements/attacks/fluxregeneration.txt
-    #   -r requirements/attacks/fluxrinsing.txt
-    #   -r requirements/attacks/semattack.txt
-    #   -r requirements/attacks/unieditfttackflux.txt
-    #   -r requirements/attacks/uniinvfttackflux.txt
-    #   -r requirements/attacks/vaeattack.txt
-setuptools==81.0.0
+    # via -r requirements/attacks/vaeattack.txt
+setuptools==82.0.1
     # via
     #   compressai
     #   infi-clickhouse-orm
     #   json2clickhouse
     #   tensorboard
-    #   torch
 shellingham==1.5.4
     # via typer
 six==1.17.0
     # via
     #   python-dateutil
     #   trustmark
-soupsieve==2.8.3
-    # via beautifulsoup4
 sympy==1.14.0
     # via
     #   onnxruntime
@@ -634,7 +548,7 @@ tensorboard==2.20.0
     #   -r requirements/algorithms/syncseal.txt
 tensorboard-data-server==0.7.2
     # via tensorboard
-tensorboardx==2.6.4
+tensorboardx==2.6.5
     # via -r requirements/attacks/discoattack.txt
 threadpoolctl==3.6.0
     # via scikit-learn
@@ -644,15 +558,9 @@ timm==1.0.26
     # via
     #   -r requirements/algorithms/sshidden.txt
     #   -r requirements/algorithms/ssl_watermarking.txt
-    #   -r requirements/algorithms/stable_signature.txt
     #   -r requirements/algorithms/syncseal.txt
-    #   -r requirements/attacks/imageeditingfluxcontext.txt
-    #   -r requirements/attacks/imageeditinginstructpix2pix.txt
     #   -r requirements/attacks/wmforger.txt
-    #   dreamsim
-    #   image-reward
-    #   open-clip-torch
-tokenizers==0.21.4
+tokenizers==0.13.3
     # via transformers
 tomli==2.4.1
     # via compressai
@@ -666,8 +574,6 @@ torch==2.10.0
     #   -r requirements/algorithms/pimog.txt
     #   -r requirements/algorithms/robust_wide.txt
     #   -r requirements/algorithms/sshidden.txt
-    #   -r requirements/algorithms/stable_signature.txt
-    #   -r requirements/algorithms/vine.txt
     #   -r requirements/algorithms/watermark_anything.txt
     #   -r requirements/attacks/adversarialembedding.txt
     #   -r requirements/attacks/adversarialembeddingpsnr.txt
@@ -675,27 +581,18 @@ torch==2.10.0
     #   -r requirements/attacks/dip.txt
     #   -r requirements/attacks/dipnoise.txt
     #   -r requirements/attacks/discoattack.txt
-    #   -r requirements/attacks/fluxregeneration.txt
-    #   -r requirements/attacks/fluxrinsing.txt
-    #   -r requirements/attacks/semattack.txt
     #   -r requirements/attacks/stegastampinversion.txt
-    #   -r requirements/attacks/unieditfttackflux.txt
-    #   -r requirements/attacks/uniinvfttackflux.txt
     #   -r requirements/attacks/vaeattack.txt
     #   -r requirements/attacks/vaeregeneration.txt
     #   -r requirements/attacks/wpwmattacker.txt
     #   accelerate
-    #   clip
     #   compressai
-    #   dreamsim
-    #   fairscale
     #   focal-frequency-loss
     #   geotorch
     #   invisible-watermark
     #   kornia
     #   lightning
     #   lpips
-    #   open-clip-torch
     #   peft
     #   pretrainedmodels
     #   pytorch-lightning
@@ -704,7 +601,6 @@ torch==2.10.0
     #   torch-fidelity
     #   torchdiffeq
     #   torchmetrics
-    #   torchutils
     #   torchvision
     #   trustmark
     #   wibench
@@ -714,18 +610,15 @@ torch-geometric==2.7.0
     # via compressai
 torchdiffeq==0.2.5
     # via -r requirements/attacks/discoattack.txt
-torchmetrics==1.6.3
+torchmetrics==1.4.0.post0
     # via
     #   -r requirements/algorithms/syncseal.txt
-    #   -r requirements/attacks/semattack.txt
     #   -r requirements/metrics/clip_iqa.txt
     #   -r requirements/metrics/fid.txt
     #   lightning
     #   pytorch-lightning
 torchsummary==1.5.1
     # via -r requirements/algorithms/dwsf.txt
-torchutils==0.0.4
-    # via -r requirements/attacks/semattack.txt
 torchvision==0.25.0
     # via
     #   -r requirements/algorithms/arwgan.txt
@@ -735,19 +628,13 @@ torchvision==0.25.0
     #   -r requirements/algorithms/invismark.txt
     #   -r requirements/algorithms/maskwm.txt
     #   -r requirements/algorithms/robust_wide.txt
-    #   -r requirements/algorithms/stable_signature.txt
-    #   -r requirements/algorithms/vine.txt
     #   -r requirements/algorithms/watermark_anything.txt
     #   -r requirements/attacks/adversarialembedding.txt
     #   -r requirements/attacks/adversarialembeddingpsnr.txt
-    #   -r requirements/attacks/semattack.txt
     #   -r requirements/attacks/wpwmattacker.txt
     #   -r requirements/datasets/mscoco.txt
-    #   clip
     #   compressai
-    #   dreamsim
     #   lpips
-    #   open-clip-torch
     #   piq
     #   pretrainedmodels
     #   timm
@@ -760,18 +647,14 @@ tqdm==4.67.3
     #   -r requirements/algorithms/dwsf.txt
     #   -r requirements/algorithms/ssl_watermarking.txt
     #   -r requirements/algorithms/syncseal.txt
-    #   -r requirements/algorithms/vine.txt
     #   -r requirements/attacks/dip.txt
     #   -r requirements/attacks/dipnoise.txt
-    #   -r requirements/attacks/semattack.txt
-    #   clip
     #   compressai
     #   datasets
     #   huggingface-hub
     #   iopath
     #   lightning
     #   lpips
-    #   open-clip-torch
     #   peft
     #   pretrainedmodels
     #   pytorch-lightning
@@ -779,27 +662,19 @@ tqdm==4.67.3
     #   torch-geometric
     #   transformers
     #   wibench
-transformers==4.48.3
+transformers==4.31.0
     # via
-    #   -r requirements/algorithms/stable_signature.txt
-    #   -r requirements/algorithms/vine.txt
+    #   -r requirements/algorithms/gaussian_shading.txt
+    #   -r requirements/algorithms/maxsive.txt
+    #   -r requirements/algorithms/metr.txt
+    #   -r requirements/algorithms/ringid.txt
+    #   -r requirements/algorithms/treering.txt
     #   -r requirements/attacks/adversarialembedding.txt
     #   -r requirements/attacks/adversarialembeddingpsnr.txt
     #   -r requirements/attacks/diffusionregeneration.txt
-    #   -r requirements/attacks/fluxregeneration.txt
-    #   -r requirements/attacks/fluxrinsing.txt
-    #   -r requirements/attacks/semattack.txt
-    #   -r requirements/attacks/unieditfttackflux.txt
-    #   -r requirements/attacks/uniinvfttackflux.txt
     #   -r requirements/attacks/vaeattack.txt
     #   -r requirements/attacks/wpwmattacker.txt
-    #   -r requirements/metrics/aesthetic.txt
-    #   -r requirements/metrics/blip.txt
-    #   -r requirements/metrics/clipscore.txt
-    #   -r requirements/metrics/dreamsim.txt
-    #   -r requirements/metrics/imagereward.txt
-    #   dreamsim
-    #   image-reward
+    #   metr
     #   peft
     #   torchmetrics
 triton==3.6.0
@@ -811,14 +686,13 @@ typer==0.24.1
 typing-extensions==4.15.0
     # via
     #   aiosignal
-    #   anyio
-    #   beautifulsoup4
     #   compressai
     #   grpcio
     #   huggingface-hub
     #   iopath
     #   lightning
     #   lightning-utilities
+    #   multidict
     #   pydantic
     #   pydantic-core
     #   pytorch-lightning
@@ -826,15 +700,15 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
-tzdata==2025.3
+tzdata==2026.1
     # via pandas
 urllib3==2.6.3
     # via requests
-uv==0.11.2
+uv==0.11.3
     # via wibench
 wcwidth==0.6.0
     # via ftfy
-werkzeug==3.1.7
+werkzeug==3.1.8
     # via tensorboard
 wheel==0.46.3
     # via compressai
