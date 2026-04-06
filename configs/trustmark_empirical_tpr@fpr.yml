@@ -1,0 +1,75 @@
+algorithms:
+  - trustmark
+
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %} 
+post_attack_metrics:
+{% include 'common/post_attack_metrics.yml' %} 
+post_extract_metrics:
+  - ExtWm
+  - BER
+  - EmpiricalTPR@xFPR:
+      report_name: etpr@10e-1fpr
+      fpr_rate: 0.1
+      algorithm: trustmark
+      dataset: diffusiondb
+      dataset_params:
+        sample_range: [0, 99]
+      random_extracts_path: "./random_extracts_0.1.csv"
+  - EmpiricalTPR@xFPR:
+      report_name: etpr@10e-2fpr
+      fpr_rate: 0.01
+      algorithm: trustmark
+      dataset: diffusiondb
+      dataset_params:
+        sample_range: [0, 999]
+      random_extracts_path: "./random_extracts_0.01.csv"
+  - EmpiricalTPR@xFPR:
+      report_name: etpr@10e-3fpr
+      fpr_rate: 0.001
+      algorithm: trustmark
+      dataset: diffusiondb
+      dataset_params:
+        subset: 2m_first_50k
+        sample_range: [0, 9999]
+      random_extracts_path: "./random_extracts_0.001.csv"
+  - TPR@xFPR:
+      report_name: tpr@10e-1fpr
+      fpr_rate: 0.1
+  - TPR@xFPR:
+      report_name: tpr@10e-2fpr
+      fpr_rate: 0.01
+  - TPR@xFPR:
+      report_name: tpr@10e-3fpr
+      fpr_rate: 0.001
+  - TPR@xFPR:
+      report_name: tpr@10e-4fpr
+      fpr_rate: 0.0001
+  - TPR@xFPR:
+      report_name: tpr@10e-5fpr
+      fpr_rate: 0.00001
+  - TPR@xFPR:
+      report_name: tpr@10e-6fpr
+      fpr_rate: 0.000001
+  - TPR@xFPR:
+      report_name: tpr@10e-7fpr
+      fpr_rate: 0.0000001
+  - TPR@xFPR:
+      report_name: tpr@10e-8fpr
+      fpr_rate: 0.00000001
+
+datasets:
+{% include 'common/diffusiondb.yml' %}
+
+attacks:
+ - Identity
+ - JPEG:
+    report_name: jpeg_20
+    quality: 20
+
+pipeline:
+  result_path: ./test_results/trustmark_empirical_tpr@fpr
+  min_batch_size: 1
+  aggregators:
+    - CSV:
+        table_name: table

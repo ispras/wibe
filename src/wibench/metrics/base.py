@@ -1,10 +1,13 @@
-from typing import Any
+from typing import Any, Dict, List
 from functools import lru_cache
 from abc import abstractmethod
 import numpy as np
 import torch
 from wibench.registry import RegistryMeta
+from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.datasets.base import BaseDataset
 from wibench.typing import TorchImg
+from wibench.typing import Object
 from wibench.utils import resize_torch_img
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
@@ -182,6 +185,62 @@ class WER(PostExtractMetric):
         return int(np.all(np.array(wm).flatten() == np.array(extraction_result).flatten()))
 
 
+class EmpiricalTPRxFPR(PostExtractMetric):
+    
+    name = "EmpiricalTPR@xFPR"
+
+    @staticmethod
+    def get_random_extracts(method: BaseAlgorithmWrapper, dataset: BaseDataset, re_path: str) -> List[torch.Tensor]:
+        random_extracts = []
+        for data_object in dataset.generator():
+            data_object: Object
+            obj = getattr(data_object, data_object.get_object_alias())
+            watermark_data = method.watermark_data_gen()
+            extracted = method.extract(obj, watermark_data)
+            random_extracts.append(extracted.flatten())
+        np.savetxt(re_path, torch.stack(random_extracts).numpy(), delimiter=",")
+        return random_extracts
+
+    def __init__(self,
+                 algorithm: str,
+                 algorithm_params: Dict[str, Any] = {},
+                 dataset: str = "diffusiondb",
+                 dataset_params: Dict[str, Any] = {},
+                 fpr_rate: float = 0.1,
+                 random_extracts_path: str = "./thresholds.csv") -> None:
+        self.method = BaseAlgorithmWrapper._registry.get(algorithm)(**algorithm_params)
+        self.dataset = BaseDataset._registry.get(dataset)(**dataset_params)
+        self.fpr_rate = fpr_rate
+        self.re_path = random_extracts_path
+        try:
+            random_extracts = np.loadtxt(random_extracts_path, delimiter=",")
+        except Exception:
+            random_extracts = None
+        self.random_extracts = self.get_random_extracts(self.method, self.dataset, self.re_path) if random_extracts is None else random_extracts
+        super().__init__()
+
+    def __call__(
+        self,
+        img1: TorchImg,
+        img2: TorchImg,
+        watermark_data: Any,
+        extraction_result: Any,
+    ) -> int:
+        watermark = watermark_data.watermark
+        watermark = watermark.flatten()
+        extraction_result = extraction_result.flatten()
+        if isinstance(extraction_result, torch.Tensor):
+            extraction_result = extraction_result.numpy()
+        if isinstance(watermark, torch.Tensor):
+            watermark = watermark.numpy()
+        extract_threshold = np.sum(extraction_result != watermark)
+        thresholds = []
+        for random_extract in self.random_extracts:
+            random_threshold = np.sum(extraction_result != random_extract)
+            thresholds.append(random_threshold)
+        return int((np.sum(np.array(thresholds) <= extract_threshold) / len(thresholds)) <= self.fpr_rate)
+
+
 class TPRxFPR(PostExtractMetric):
     """True Positive Rate at fixed False Positive Rate threshold.
     
@@ -217,7 +276,7 @@ class TPRxFPR(PostExtractMetric):
         img2: TorchImg,
         watermark_data: Any,
         extraction_result: Any,
-    ) -> float:
+    ) -> int:
         if isinstance(extraction_result, float): # zero-bit method returns p-value, fpr rate is considered as decision threshold
             return int (self.fpr_rate > extraction_result)
         wm = watermark_data.watermark
