@@ -234,11 +234,9 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         if isinstance(watermark, torch.Tensor):
             watermark = watermark.numpy()
         extract_threshold = np.sum(extraction_result != watermark)
-        thresholds = []
-        for random_extract in self.random_extracts:
-            random_threshold = np.sum(extraction_result != random_extract)
-            thresholds.append(random_threshold)
-        return int((np.sum(np.array(thresholds) <= extract_threshold) / len(thresholds)) <= self.fpr_rate)
+        thresholds = (extraction_result != self.random_extracts).sum(axis=1)
+        num_matches = np.sum(thresholds <= extract_threshold)
+        return int(num_matches <= round(self.fpr_rate * len(thresholds)))
 
 
 class TPRxFPR(PostExtractMetric):
