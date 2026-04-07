@@ -62,8 +62,8 @@ datasets:
 attacks:
  - Identity
  - JPEG:
-    report_name: jpeg_20
-    quality: 20
+    report_name: jpeg_10
+    quality: 10
  - JPEG:
     report_name: jpeg_20
     quality: 20
