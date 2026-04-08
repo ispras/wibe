@@ -15,7 +15,7 @@ dependencies = [
     "scikit-image>=0.21.0",
     "scipy",
     "tqdm",
-    "torch",
+    "torch<2.11",
     "pandas>=2.0.0,<3.0.0",
     "jinja2",
     "PyYaml",

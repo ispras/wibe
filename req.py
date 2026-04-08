@@ -39,7 +39,7 @@ def _compatible(paths: list[Path]) -> bool:
     args = ["uv", "pip", "compile", "--quiet", "--no-header", "--no-annotate"] + [str(p) for p in paths]
     logger.debug(" ".join(args))
     try:
-        r = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+        r = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
     except subprocess.TimeoutExpired:
         logger.warning(f"Command timed out: {' '.join(args)}")
         return False
@@ -106,7 +106,8 @@ def install(cfg: Config) -> None:
         subprocess.run(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)])
 
 
-STAGES = (validate.__name__, compose.__name__, lock.__name__, install.__name__)
+ALL_STAGES = "all"
+STAGES = (validate.__name__, compose.__name__, lock.__name__, install.__name__, ALL_STAGES)
 
 app = typer.Typer(pretty_exceptions_enable=False)
 
@@ -115,18 +116,20 @@ app = typer.Typer(pretty_exceptions_enable=False)
 def run(
     stages: list[str] = typer.Argument(
         None,
-        help=f"Stages to run: {STAGES}. Default: all",
+        help=f"Stages to run: {STAGES}. Default: {install.__name__}",
     ),
 ):
-    run_stages = set(stages) if stages else set(STAGES)
+    run_stages = {install.__name__}
+    if stages:
+        run_stages = set(STAGES) if ALL_STAGES in stages else set(stages)
     invalid = run_stages - set(STAGES)
     if invalid:
         typer.echo(f"Unknown stages: {invalid}. Valid: {STAGES}", err=True)
         raise typer.Exit(1)
 
     cfg = Config(
-        requirements_dir=Path(REQUIREMENTS_DIR).resolve(),
-        venvs_dir=Path(VENVS_DIR).resolve(),
+        requirements_dir=Path(REQUIREMENTS_DIR),
+        venvs_dir=Path(VENVS_DIR),
     )
     req_paths = list(cfg.requirements_dir.rglob(f"*{cfg.txt_suffix}"))
     logger.debug("\n".join(str(p) for p in req_paths))
