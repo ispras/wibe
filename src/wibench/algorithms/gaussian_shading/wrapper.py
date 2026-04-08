@@ -52,6 +52,7 @@ class GaussianShadingParams(Params):
     threshold: int = 77
     latentlength: int = 4 * 64 * 64
     denominator: float = 2.0
+    apply_watermark: bool = True
 
 
 @dataclass
@@ -231,6 +232,6 @@ class GaussianShadingWrapper(BaseAlgorithmWrapper):
         watermark = torch.randint(0, 2, [1, 4 // ch, 64 // hw, 64 // hw]).to(self.device)
         sd = watermark.repeat(1, ch, hw, hw)
         m, key, nonce = self._stream_key_encrypt(sd.flatten().cpu().numpy())
-        init_latents_w = self._truncSampling(m)
+        init_latents_w = self._truncSampling(m) if self.params.apply_watermark else self.pipe.get_random_latents()
         threshold = 1 if hw == 1 and ch == 1 else ch * hw * hw // 2
         return GaussianShadingWatermarkData(watermark.detach().cpu().flatten().unsqueeze(0), key, nonce, init_latents_w, threshold)
