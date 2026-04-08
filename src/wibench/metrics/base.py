@@ -3,6 +3,8 @@ from functools import lru_cache
 from abc import abstractmethod
 import numpy as np
 import torch
+from tqdm import tqdm
+from pathlib import Path
 from wibench.registry import RegistryMeta
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.datasets.base import BaseDataset
@@ -12,6 +14,7 @@ from wibench.utils import resize_torch_img
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 from scipy.stats import binom
+from loguru import logger
 
 
 class BaseMetric(metaclass=RegistryMeta):
@@ -192,12 +195,15 @@ class EmpiricalTPRxFPR(PostExtractMetric):
     @staticmethod
     def get_random_extracts(method: BaseAlgorithmWrapper, dataset: BaseDataset, re_path: str) -> List[torch.Tensor]:
         random_extracts = []
-        for data_object in dataset.generator():
+        total = len(dataset)
+        logger.info(f"Generate random extracts for dataset length: {total}")
+        for data_object in tqdm(dataset.generator(), total=total):
             data_object: Object
             obj = getattr(data_object, data_object.get_object_alias())
             watermark_data = method.watermark_data_gen()
             extracted = method.extract(obj, watermark_data)
             random_extracts.append(extracted.flatten())
+        logger.info(f"Random extracts are saved along the path: {re_path}")
         np.savetxt(re_path, torch.stack(random_extracts).numpy(), delimiter=",")
         return random_extracts
 
@@ -208,12 +214,13 @@ class EmpiricalTPRxFPR(PostExtractMetric):
                  dataset_params: Dict[str, Any] = {},
                  fpr_rate: float = 0.1,
                  random_extracts_path: str = "./thresholds.csv") -> None:
-        self.method = BaseAlgorithmWrapper._registry.get(algorithm)(**algorithm_params)
-        self.dataset = BaseDataset._registry.get(dataset)(**dataset_params)
         self.fpr_rate = fpr_rate
-        self.re_path = random_extracts_path
+        self.dataset = BaseDataset._registry.get(dataset)(**dataset_params)
+        self.method = BaseAlgorithmWrapper._registry.get(algorithm)(**algorithm_params)
+        self.re_path = str(Path(random_extracts_path).resolve())
         try:
-            random_extracts = np.loadtxt(random_extracts_path, delimiter=",")
+            random_extracts = np.loadtxt(self.re_path, delimiter=",")
+            logger.info(f"Random extracts are used along the path: {self.re_path}")
         except Exception:
             random_extracts = None
         self.random_extracts = self.get_random_extracts(self.method, self.dataset, self.re_path) if random_extracts is None else random_extracts
