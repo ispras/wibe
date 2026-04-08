@@ -13,6 +13,12 @@ from trustmark import TrustMark
 
 @requires_download(URL, NAME, REQUIRED_FILES)
 class TrustMarkRM(BaseAttack):
+    """`TrustMark <https://arxiv.org/abs/2311.18297>`_: Universal Watermarking for Arbitrary Resolution Images - Image Watermarking Algorithm.
+    
+    Using TrustmarkRM model as an attack on watermarks.
+    Based on the code from `here <https://github.com/adobe/trustmark>`__.
+
+    """
     def __init__(self, model_type: str = 'Q', device: str = "cuda" if torch.cuda.is_available() else "cpu") -> None:
         super().__init__()
         self.device = device

@@ -2,9 +2,13 @@
 
 ## Version 0.4.0 -TBA
 
+WARP paper release
+
 Added:
 
-- Attacks: NRP, MPRNet, UniEditFlux, DISCO and support for any attack combination
+- Attacks: NRP, MPRNet, UniEditFlux, DISCO, TrustMarkRM and support for any attack combination
+- Methods: VINE
+- MSCOCO with captions
 
 Features:
 
