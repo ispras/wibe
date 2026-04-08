@@ -226,7 +226,7 @@ def compatible_execs(stages, datasets, alg_wrappers, attacks, metrics) -> tuple[
     missing_per_group: dict[str, set[Path]] = {}
     for group_path in group_paths:
         with open(group_path, mode="r") as fp:
-            group_req_paths = {Path(line) for line in fp.read().splitlines()}
+            group_req_paths = {Path(line).resolve() for line in fp.read().splitlines()}
         missing = current_req_paths - group_req_paths
         missing_per_group[group_path.stem] = missing
         if not missing:
