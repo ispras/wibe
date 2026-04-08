@@ -61,7 +61,7 @@ crc8==0.2.1
     # via -r requirements/algorithms/dwsf.txt
 cuda-bindings==12.9.4
     # via torch
-cuda-pathfinder==1.5.1
+cuda-pathfinder==1.5.2
     # via cuda-bindings
 cycler==0.12.1
     # via matplotlib
@@ -228,7 +228,7 @@ multiprocess==0.70.16
     # via datasets
 munch==4.0.0
     # via pretrainedmodels
-narwhals==2.18.1
+narwhals==2.19.0
     # via plotly
 natsort==8.4.0
     # via -r requirements/algorithms/fin.txt
@@ -680,7 +680,9 @@ transformers==4.31.0
 triton==3.6.0
     # via torch
 trustmark==0.9.0
-    # via -r requirements/algorithms/trustmark.txt
+    # via
+    #   -r requirements/algorithms/trustmark.txt
+    #   -r requirements/attacks/trustmarkrm.txt
 typer==0.24.1
     # via wibench
 typing-extensions==4.15.0
@@ -704,7 +706,7 @@ tzdata==2026.1
     # via pandas
 urllib3==2.6.3
     # via requests
-uv==0.11.3
+uv==0.11.4
     # via wibench
 wcwidth==0.6.0
     # via ftfy

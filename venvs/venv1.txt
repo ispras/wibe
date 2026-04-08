@@ -1,5 +1,6 @@
 requirements/algorithms/metr.txt
 requirements/wibench.txt
+requirements/attacks/trustmarkrm.txt
 requirements/attacks/wmforger.txt
 requirements/attacks/diffusionregeneration.txt
 requirements/attacks/vaeattack.txt

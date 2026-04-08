@@ -1,4 +1,5 @@
 requirements/wibench.txt
+requirements/attacks/trustmarkrm.txt
 requirements/attacks/wmforger.txt
 requirements/attacks/diffusionregeneration.txt
 requirements/attacks/semattack.txt
