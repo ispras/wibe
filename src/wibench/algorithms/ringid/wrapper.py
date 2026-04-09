@@ -181,7 +181,13 @@ class RingIDWrapper(BaseAlgorithmWrapper):
                             p=self.params.p,
                             mode=self.params.mode,
                             channel_min=self.params.channel_min)
-        return dist < self.params.threshold
+        
+
+
+
+
+        return dist 
+    # < self.params.threshold
     
     def watermark_data_gen(self) -> RignIDWatermarkData:
         """Get watermark payload data for RingID watermarking algorithm.

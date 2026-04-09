@@ -20,6 +20,7 @@ class MaXsiveParams(Params):
     Paramenters of MaXsive watermarking algorithm.
 
     """
+   
     model_id: str = "WIBE-HuggingFace/stable-diffusion-2-1-base"
     model_name: str = "watermarkSD21"
     guidance_scale: float = 7.5
@@ -139,7 +140,36 @@ class MaXsiveWrapper(BaseAlgorithmWrapper):
             guidance_scale=1,
             num_inference_steps=self.params.num_inversion_steps,
         )
-        return self.watermark_model.detection(reversed_latents_w, watermark_data.data)
+        
+        # Получаем ключи из watermark_data
+        keys = watermark_data.data["keys"]
+        
+        # Восстанавливаем от поворота
+        z_restored = self.watermark_model.template_restore(reversed_latents_w)
+        
+        # Декодируем (обратное перемешивание)
+        rotate_zs = self.watermark_model.k2_decode(z_restored, keys[1])
+        vote_rotate_z = self.watermark_model.voting(rotate_zs)
+        
+        # Оригинальный водяной знак
+        w = keys[0].reshape(1, -1).to(self.device)
+        vote_rotate_z = vote_rotate_z.reshape(1, -1).to(self.device)
+        
+        # Вычисляем метрику в зависимости от distant_func
+        if self.params.distant_func == 'corr':
+            cor1 = torch.corrcoef(torch.concat([w, vote_rotate_z]))
+            score = abs(cor1[0, 1].item())
+        elif self.params.distant_func == 'cos':
+            score = torch.nn.functional.cosine_similarity(vote_rotate_z, w).item()
+        elif self.params.distant_func == 'mse':
+            score = -torch.nn.functional.mse_loss(vote_rotate_z, w).item()
+        elif self.params.distant_func == 'l1':
+            score = -abs(vote_rotate_z - w).mean().item()
+        else:
+            score = 0.0
+        
+        return score
+        # return self.watermark_model.detection(reversed_latents_w, watermark_data.data)
     
     def watermark_data_gen(self) -> MaXsiveWatermarkData:
         """Get watermark payload data for MaXsive watermarking algorithm.
