@@ -31,7 +31,7 @@ class SepMarkParams(Params):
     wm_range: float = 0.1
     attention_encoder: str = "se"
     attention_decoder: str = "se"
-    extract_head: Literal["c", "rf"] = "c"
+    decoder_type: Literal["c", "rf"] = "c"
 
 
 @requires_download(URL, NAME, REQUIRED_FILES)
@@ -133,15 +133,13 @@ class SepMarkWrapper(BaseAlgorithmWrapper):
         normalized_image: TorchImgNormalize = normalize_image(image).squeeze(0)
         resized_image: TorchImgNormalize = resize_torch_img(normalized_image, [self.params.H, self.params.W])
         
-        if self.params.extract_head == "c":
+        if self.params.decoder_type == "c":
             with torch.no_grad():
-                res_c = self.decoder_c(resized_image.unsqueeze(0))
-            return (res_c.cpu().numpy() > 0).astype(int)
-        
-        if self.params.extract_head == "rf":
+                res = self.decoder_c(resized_image.unsqueeze(0))        
+        if self.params.decoder_type == "rf":
             with torch.no_grad():
-                res_rf = self.decoder_rf(resized_image.unsqueeze(0))
-            return (res_rf.cpu().numpy() > 0).astype(int)
+                res = self.decoder_rf(resized_image.unsqueeze(0))
+        return (res.cpu().numpy() > 0).astype(int)
 
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
