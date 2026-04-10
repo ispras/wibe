@@ -24,7 +24,7 @@ DEFAULT_MODEL256_PATH = "./model_files/sepmark/EC_90.pth"
 
 @dataclass
 class SepMarkParams(Params):
-    model_weights_path: str = DEFAULT_MODEL256_PATH
+    weights_path: str = DEFAULT_MODEL256_PATH
     H: int = 256
     W: int = 256
     wm_length: Optional[int] = None
@@ -58,11 +58,11 @@ class SepMarkWrapper(BaseAlgorithmWrapper):
             from SepMark.network.Encoder_U import DW_Encoder
             from SepMark.network.Decoder_U import DW_Decoder
 
-        model_weights_path = Path(self.params.model_weights_path).resolve()
-        if not model_weights_path.exists():
-            raise FileNotFoundError(f"The model weights path: '{str(model_weights_path)}' does not exist!")
+        weights_path = Path(self.params.weights_path).resolve()
+        if not weights_path.exists():
+            raise FileNotFoundError(f"The model weights path: '{str(weights_path)}' does not exist!")
 
-        weights = torch.load(model_weights_path, map_location=self.device)
+        weights = torch.load(weights_path, map_location=self.device)
         weights_prefixes = ("decoder_C", "decoder_RF", "encoder")
         weights_split = {prefix: OrderedDict() for prefix in weights_prefixes}
         for key, value in weights.items():
