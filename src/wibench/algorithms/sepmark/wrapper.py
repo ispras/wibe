@@ -18,13 +18,13 @@ NAME = "sepmark"
 REQUIRED_FILES = ["EC_99.pth", "EC_90.pth"]
 
 DEFAULT_MODULE_PATH = "./submodules/SepMark"
-DEFAULT_MODEL128_PATH = "./model_files/sepmark/EC_99.pth"
-DEFAULT_MODEL256_PATH = "./model_files/sepmark/EC_90.pth"
+DEFAULT_MODEL30_PATH = "./model_files/sepmark/EC_99.pth"
+DEFAULT_MODEL128_PATH = "./model_files/sepmark/EC_90.pth"
 
 
 @dataclass
 class SepMarkParams(Params):
-    weights_path: str = DEFAULT_MODEL256_PATH
+    weights_path: str = DEFAULT_MODEL128_PATH
     H: int = 256
     W: int = 256
     wm_length: Optional[int] = None
@@ -145,7 +145,7 @@ class SepMarkWrapper(BaseAlgorithmWrapper):
 
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """Generate watermark payload data for VINE watermarking algorithm.
+        """Generate watermark payload data for SepMark watermarking algorithm.
         
         Returns
         -------
