@@ -13,7 +13,7 @@ from wibench.watermark_data import TorchBitWatermarkData
 from wibench.download import requires_download
 
 
-URL = ""
+URL = "https://nextcloud.ispras.ru/index.php/s/KGwxqaX97QtKP2c"
 NAME = "sepmark"
 REQUIRED_FILES = []
 
