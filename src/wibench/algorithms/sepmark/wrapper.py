@@ -50,15 +50,14 @@ class SepMarkWrapper(BaseAlgorithmWrapper):
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}):
-        super().__init__(SepMarkParams(**params))
-        self.params: SepMarkParams
-        self.device = self.params.device
         module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
+        sepmark_params = SepMarkParams(**params)
+        self.device = sepmark_params.device
         with ModuleImporter("SepMark", module_path):
             from SepMark.network.Encoder_U import DW_Encoder
             from SepMark.network.Decoder_U import DW_Decoder
 
-        weights_path = Path(self.params.weights_path).resolve()
+        weights_path = Path(sepmark_params.weights_path).resolve()
         if not weights_path.exists():
             raise FileNotFoundError(f"The model weights path: '{str(weights_path)}' does not exist!")
 
@@ -71,11 +70,14 @@ class SepMarkWrapper(BaseAlgorithmWrapper):
                     suffix = key[len(prefix) + 1:]
                     weights_split[prefix][suffix] = value
 
-        if self.params.wm_length is None:
+        if sepmark_params.wm_length is None:
             try:
-                self.params.wm_length = int(weights_split["encoder"]["linear0.weight"].shape[1])
+                sepmark_params.wm_length = int(weights_split["encoder"]["linear0.weight"].shape[1])
             except KeyError as exc:
                 raise ValueError("Cannot infer `wm_length` from SepMark checkpoint. Expected `encoder.linear0.weight` key.") from exc
+        
+        super().__init__(sepmark_params)
+        self.params: SepMarkParams
 
         self.encoder = DW_Encoder(self.params.wm_length, attention=self.params.attention_encoder).to(self.device)
         self.decoder_c = DW_Decoder(self.params.wm_length, attention=self.params.attention_decoder).to(self.device)
