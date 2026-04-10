@@ -15,7 +15,7 @@ from wibench.download import requires_download
 
 URL = "https://nextcloud.ispras.ru/index.php/s/KGwxqaX97QtKP2c"
 NAME = "sepmark"
-REQUIRED_FILES = []
+REQUIRED_FILES = ["EC_99.pth", "EC_90.pth"]
 
 DEFAULT_MODULE_PATH = "./submodules/SepMark"
 DEFAULT_MODEL128_PATH = "./model_files/sepmark/EC_99.pth"
