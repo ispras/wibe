@@ -242,7 +242,11 @@ class Context:
         return record
 
     @classmethod
-    def load(cls, context_dir: Path, object_id: str, dump_type: DumpType) -> "Context":
+    def load(cls,
+             context_dir: Path,
+             object_id: Optional[str],
+             dump_type: DumpType,
+             context_name: str = "context.json") -> "Context":
         """Load context from disk.
         
         Parameters
@@ -266,12 +270,12 @@ class Context:
         """
         if dump_type == DumpType.pickle:
             return load_context_pkl(context_dir, object_id)
-        img_context_dir = context_dir / object_id
-        with open(img_context_dir / "context.json", "r") as f:
+        object_context_dir = context_dir / object_id if object_id is not None else context_dir
+        with open(object_context_dir / context_name, "r") as f:
             data = json.load(f)
-        return Context(**ContextDecoder.decode(data, img_context_dir))
+        return Context(**ContextDecoder.decode(data, object_context_dir))
 
-    def dump(self, context_dir: Path, dump_type: DumpType) -> None:
+    def dump(self, context_dir: Path, dump_type: DumpType, context_name: str = "context.json", global_context: bool = False) -> None:
         """Save context to disk.
         
         Parameters
@@ -283,11 +287,11 @@ class Context:
         """
         if dump_type == DumpType.pickle:
             return save_context_pkl(context_dir, self)
-        img_context_dir = context_dir / self.object_id
-        img_context_dir.mkdir(exist_ok=True)
+        object_context_dir = context_dir / self.object_id if not global_context else context_dir
+        object_context_dir.mkdir(exist_ok=True)
 
-        encoded = ContextEncoder.encode(self, img_context_dir)
-        with open(img_context_dir / "context.json", "w") as f:
+        encoded = ContextEncoder.encode(self, object_context_dir)
+        with open(object_context_dir / context_name, "w") as f:
             json.dump(encoded, f, indent=2)
 
     @classmethod

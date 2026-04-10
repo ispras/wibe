@@ -27,10 +27,10 @@ The system architecture consists of a sequence of processing configurable stages
 |---------------|----------|-----------------|----------------------|---------------|
 | ARWGAN | post-hoc | arwgan| 30 bits | [ARWGAN: Attention-Guided Robust Image Watermarking Model Based on GAN](https://ieeexplore.ieee.org/document/10155247) |
 | CIN | post-hoc | cin | 30 bits | [Towards Blind Watermarking: Combining Invertible and Non-invertible Mechanisms](https://arxiv.org/abs/2212.12678) |
-| DCT Marker | post-hoc | dct_marker | 800 bits | [Real data performance evaluation of CAISS watermarking scheme](https://link.springer.com/article/10.1007/s11042-013-1544-3)|
+| DCT Marker | post-hoc | dct_marker | 1 - 800 bits | [Real data performance evaluation of CAISS watermarking scheme](https://link.springer.com/article/10.1007/s11042-013-1544-3)|
 | DFT Circle | post-hoc | dft_circle | zero-bit | [Discrete Fourier transform-based watermarking method with an optimal implementation radius](https://doi.org/10.1117/1.3609010) |
 | DWSF | post-hoc | dwsf | 30 bits | [Practical Deep Dispersed Watermarking with Synchronization and Fusion - Image Watermarking Algorithm](https://github.com/bytedance/DWSF)|
-| DWT SVM | post-hoc | dwt_svm | zero-bit | [SVM-based robust image watermarking technique in LWT domain using different sub-bands](https://doi.org/10.1007/s00521-018-3647-2) |
+| DWT SVM | post-hoc | dwt_svm | 512 bits | [SVM-based robust image watermarking technique in LWT domain using different sub-bands](https://doi.org/10.1007/s00521-018-3647-2) |
 | DWT DCT | post-hoc | dwt_dct | 100 bits | [frequency-domain transforms: DWT + DCT](https://github.com/ShieldMnt/invisible-watermark)|
 | DWT DCT SVD | post-hoc | dwt_dct_svd | 100 bits | [frequency-domain with additional SVD processing](https://github.com/ShieldMnt/invisible-watermark)|
 | HiDDeN | post-hoc | hidden | 30 bits | [HiDDeN: Hiding Data in Deep Networks --- Image Watermarking Algorithm](https://github.com/ando-khachatryan/HiDDeN) |
@@ -56,6 +56,7 @@ The system architecture consists of a sequence of processing configurable stages
 | PIMoG | post-hoc | pimog | 30 bits | [PIMoG: An Effective Screen-shooting Noise-Layer Simulation for Deep-Learning-Based Watermarking Network](https://github.com/FangHanNUS/PIMoG-An-Effective-Screen-shooting-Noise-Layer-Simulation-for-Deep-Learning-Based-Watermarking-Netw) |
 | Robust-Wide | post-hoc | robust_wide | 64 bits | [Robust-Wide: Robust Watermarking Against Instruction-Driven Image Editing](https://github.com/hurunyi/Robust-Wide) |
 | FIN | post-hoc | fin | 64 bits | [FIN: Flow-Based Robust Watermarking with Invertible Noise Layer for Black-Box Distortions](https://github.com/QQiuyp/FIN) |
+| VINE | post-hoc | vine | 100 bits | [Robust Watermarking Using Generative Priors Against Image Editing: From Benchmarking to Advances](https://github.com/Shilin-LU/VINE) |
 
 
 ### Attacks
@@ -84,6 +85,13 @@ The system architecture consists of a sequence of processing configurable stages
 | LIIF | liifattack | [LIIF](https://github.com/yinboc/liif) super-resolution |
 | SEMAttack | semattack | [Black-Box Forgery Attacks on Semantic Watermarks for Diffusion Models](https://github.com/and-mill/semantic-forgery) |
 | WMForger | wmforger | [Transferable Black-Box One-Shot Forging of Watermarks via Image Preference Models](https://github.com/facebookresearch/videoseal/blob/main/wmforger) |
+| TrustMarkRM | trustmarkrm | [TrustMark: Universal Watermarking for Arbitrary Resolution Images](https://github.com/adobe/trustmark) |
+| NRP small | nrpsmall | [A Self-supervised Approach for Adversarial Robustness.](https://openaccess.thecvf.com/content_CVPR_2020/papers/Naseer_A_Self-supervised_Approach_for_Adversarial_Robustness_CVPR_2020_paper.pdf) Smaller backbone variant. |
+| NRP large | nrplarge | [A Self-supervised Approach for Adversarial Robustness.](https://openaccess.thecvf.com/content_CVPR_2020/papers/Naseer_A_Self-supervised_Approach_for_Adversarial_Robustness_CVPR_2020_paper.pdf) Larger backbone variant. |
+| MPRNet | mprnetattack | [Multi-stage progressive image restoration](https://arxiv.org/abs/2102.02808) |
+| Uni inv attack FLUX | uniinvattackflux | Image Inversion and Reconstruction using Flux model |
+| Uni edit attack FLUX | unieditattackflux | Image Editing using Flux model |
+| DISCO | discoattack | [DISCO: Adversarial Defense with Local Implicit Functions](https://arxiv.org/abs/2212.05630) |
 
 ### Datasets
 
@@ -91,8 +99,8 @@ The system architecture consists of a sequence of processing configurable stages
 |-------------|-----------------|-----------------|
 | Image folder | imagefolderdataset | Loading images from a directory |
 | Prompt folder | promptfolderdataset | Loading text prompts from a directory with .txt files |
-| DiffusionDB | diffusiondb | https://github.com/poloclub/diffusiondb |
-| MSCOCO | mscoco | https://cocodataset.org/ |
+| DiffusionDB | diffusiondb | https://github.com/poloclub/diffusiondb, both images and prompts |
+| MSCOCO | mscoco | https://cocodataset.org/, both images and prompts |
 
 ### Metrics
 
@@ -109,11 +117,12 @@ The system architecture consists of a sequence of processing configurable stages
 | Image Reward | image quality, compare image with text prompt |post_embed_metrics, post_attack_metrics | imagereward |[Learning and Evaluating Human Preferences for Text-to-Image Generation](https://github.com/zai-org/ImageReward/tree/main)|
 | FID | image quality, compare two sets of images | post_pipeline_embed_metrics, post_pipeline_attack_metrics | fid | FID metric from [GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium](https://arxiv.org/abs/1706.08500)|
 | BER | extraction success | post_extract_metrics | ber | Bit Error Rate (multi-bit)|
+| WER | extraction success | post_extract_metrics | wer | Word Error Rate (multi-bit)|
 | TPR at x% FPR | extraction success | post_extract_metrics | tpr@xfpr | True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit) |
 | P-value | extraction success | post_extract_metrics | p-value | P-value denotes probability to observe the same result as in case of extraction from not watermarked object. |
 | Result | auxiliary | post_extract_metrics | result | Records extraction result (zero-bit case) |
 | Embeded watermark | auxiliary | post_embed_metrics | embwm | Records embeded watermark (multi-bit case) |
-| Extracted watermark |auxiliary | post_extract_metrics | extwm | Records extracted watermark (multi-bit case) |
+| Extracted watermark | auxiliary | post_extract_metrics | extwm | Records extracted watermark (multi-bit case) |
 
 ## Quick start
 

@@ -658,7 +658,7 @@ class Pipeline:
             dataset_stop = self.config.workers if dry_run else None
             
             if (len(stage_runner.stages)):
-                if "embed" in stages:
+                if StageType.embed in stages:
                     context_gen = (
                         self.init_context(
                             run_id, dataset.report_name, watermark_object
@@ -696,12 +696,23 @@ class Pipeline:
             if (len(stage_runner.post_pipeline_stages) and (self.config.workers == 1)):
                 for (dataset_idx, dataset) in enumerate(self.datasets):
                     post_stage_context = self.init_context(run_id=run_id,
-                                                           original_object={"id": dataset_idx},
+                                                           original_object={"id": str(dataset_idx)},
                                                            dataset_name=dataset.report_name)
                     for post_stage in stage_runner.post_pipeline_stages:
                         if isinstance(post_stage, PostPipelineStage):
                             post_stage.set_context_dir(context_dir)
+                        elif (StageType.post_pipeline_embed_metrics not in stages) and \
+                             (StageType.post_pipeline_attack_metrics not in stages):
+                            post_stage_context = Context.load(context_dir.parent,
+                                                              None,
+                                                              self.config.dump_type,
+                                                              context_name="post_pipeline_context.json")
                         post_stage.process_object(post_stage_context)
+                        if dump_context:
+                            post_stage_context.dump(context_dir.parent,
+                                                    self.config.dump_type,
+                                                    context_name = "post_pipeline_context.json",
+                                                    global_context=True)
 
         if progress.progress is not None:
             progress.progress.close()

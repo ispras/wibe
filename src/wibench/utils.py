@@ -9,6 +9,7 @@ import os
 import hashlib
 import secrets
 from typing_extensions import Dict, Any, List, Optional
+from torchvision.transforms.functional import pad
 
 
 def planarize_dict(d: Dict[str, Any]) -> Dict[str, Any]:
@@ -285,3 +286,127 @@ def is_image(tensor: torch.Tensor) -> bool:
     if tensor.max() > 1. + 1e-5 or tensor.min() < - 1e-5:
         return False
     return True
+
+
+class FactorPad:
+    """ Pads and unpads image tensors to make dimensions divisible by a factor
+    Parameters
+    ----------
+    factor : int
+        Factor to make spatial dimensions divisible by
+    padding_mode : str
+        Padding mode, refer to torchvision pad padding modes
+    """
+    
+    def __init__(self, factor: int = 4, padding_mode: str = "reflect"):
+        self.factor = factor
+        self.pad_tuple = None
+        self.padding_mode = padding_mode
+        
+    def pad(self, tensor: torch.Tensor) -> torch.Tensor:
+        """ Pads image tensor so spatial dimensions are divisible by factor
+        Parameters
+        ----------
+        tensor : torch.Tensor
+            Input tensor with spatial dimensions as last two axes
+
+        Returns
+        -------
+        torch.Tensor
+            Padded tensor with height and width divisible by factor
+        """
+        height, width = tensor.shape[-2:]
+        dst_height = ((height - 1) // self.factor + 1) * self.factor
+        dst_width = ((width - 1) // self.factor + 1) * self.factor 
+        left_pad = (dst_width - width) // 2 
+        top_pad = (dst_height - height) // 2
+        right_pad = dst_width - left_pad - width
+        bottom_pad =  dst_height - top_pad - height
+        self.pad_tuple = (left_pad, top_pad, right_pad, bottom_pad)
+        return pad(tensor, self.pad_tuple, padding_mode=self.padding_mode)
+
+    def unpad(self, tensor: torch.Tensor) -> torch.Tensor:
+        """ Removes padding applied by pad_tensor
+        Parameters
+        ----------
+        tensor : torch.Tensor
+            Padded tensor to restore to original dimensions
+
+        Returns
+        -------
+        torch.Tensor
+            Tensor with padding removed
+        
+        Raises
+        ------
+        ValueError
+            If `unpad` is called before `pad`
+        """
+        if self.pad_tuple is None:
+            raise ValueError("Apply pad first")
+        left_pad, top_pad, right_pad, bottom_pad = self.pad_tuple
+        height, width = tensor.shape[-2:]
+        return tensor[..., top_pad: height - bottom_pad, left_pad: width - right_pad]
+    
+    
+class FactorCrop:
+    """ Crops and uncrops image tensors to make dimensions divisible by a factor. Crop is centered
+    Parameters
+    ----------
+    factor : int
+        Factor to make spatial dimensions divisible by
+    """
+    
+    def __init__(self, factor: int = 4):
+        self.factor = factor
+        self.crop_tuple = (0, 0, 0, 0)
+        self.original_tensor = None
+        
+        
+    def crop(self, tensor: torch.Tensor) -> torch.Tensor:
+        """ Crops image tensor to make spatial dimensions divisible by factor
+        Parameters
+        ----------
+        tensor : torch.Tensor
+            Input tensor with spatial dimensions as last two axes
+
+        Returns
+        -------
+        torch.Tensor
+            Cropped tensor with height and width divisible by factor
+        """
+        self.original_tensor = tensor
+        height, width = tensor.shape[-2:]
+        dst_height = (height // self.factor) * self.factor
+        dst_width = (width // self.factor) * self.factor 
+        left = (width - dst_width) // 2 
+        top = (height - dst_height) // 2
+        right = left + dst_width
+        bottom = top + dst_height
+        self.crop_tuple = (left, top, right, bottom)
+        return tensor[..., top: bottom, left: right].clone()
+
+    def uncrop(self, tensor: torch.Tensor) -> torch.Tensor:
+        """ Places cropped tensor back into original tensor dimensions
+        Parameters
+        ----------
+        tensor : torch.Tensor
+            Cropped tensor to place back into original spatial context
+
+        Returns
+        -------
+        torch.Tensor
+            Tensor restored to original dimensions with cropped content placed
+            at the crop position
+
+        Raises
+        ------
+        ValueError
+            If `uncrop` is called before `crop`
+        """
+        if self.original_tensor is None:
+            raise ValueError("No original image. Call crop first.")
+        result = self.original_tensor.clone()
+        left, top, right, bottom = self.crop_tuple
+        result[..., top: bottom, left: right] = tensor
+        return result

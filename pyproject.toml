@@ -15,7 +15,7 @@ dependencies = [
     "scikit-image>=0.21.0",
     "scipy",
     "tqdm",
-    "torch",
+    "torch<2.11",
     "pandas>=2.0.0,<3.0.0",
     "jinja2",
     "PyYaml",
@@ -52,6 +52,9 @@ wibench = "wibench.cli:app"
 
 [tool.uv]
 package = true
+
+[tool.uv.extra-build-dependencies]
+image-reward = ["setuptools<82"]
 
 [tool.black]
 line-length = 79
