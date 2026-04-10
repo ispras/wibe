@@ -30,7 +30,9 @@ from .aggregator import build_fanout_from_config
 import tqdm
 from time import perf_counter
 import datetime
-from itertools import islice
+from itertools import islice, product
+from wibench.pipeline_type import PipelineType
+from loguru import logger
 
 
 class Stage:
@@ -465,9 +467,18 @@ class StageRunner:
         self.seed = pipeline_config.seed
         
         cache = {}
+        all_entities = []
+        
+        def add_entity(func, *args, **kwargs):
+            result = func(*args, **kwargs)
+            all_entities.extend(result)
+            return result
+        
         def cached_call(func, *args, **kwargs):
             if hash(func) not in cache:
-                cache[hash(func)] = func(*args, **kwargs)
+                result = func(*args, **kwargs)
+                cache[hash(func)] = result
+                all_entities.extend(result)
             return cache[hash(func)]
             
         for stage in stages:
@@ -475,27 +486,45 @@ class StageRunner:
             if (stage_class is None):
                 raise ValueError(f"Unknown stage: {stage}")
             if (stage in [StageType.embed, StageType.extract]):
-                self.stages.append(stage_class(cached_call(get_algorithms, [algorithm_wrapper])[0]))
+                wrapper = cached_call(get_algorithms, [algorithm_wrapper])[0]
+                self.stages.append(stage_class(wrapper))
             elif (stage == StageType.post_embed_metrics):
-                post_embed_metrics = get_metrics(metrics[stage])
+                post_embed_metrics = add_entity(get_metrics, metrics[stage])
                 self.stages.append(stage_class(post_embed_metrics))
             elif (stage == StageType.post_attack_metrics):
-                post_attack_metrics = get_metrics(metrics[stage])
+                post_attack_metrics = add_entity(get_metrics, metrics[stage])
                 self.stages.append(stage_class(post_attack_metrics))
             elif (stage == StageType.attack):
                 self.stages.append(stage_class(cached_call(get_attacks, attacks)))
             elif (stage == StageType.post_extract_metrics):
-                post_extract_metrics = get_metrics(metrics[stage])
+                post_extract_metrics = add_entity(get_metrics, metrics[stage])
                 self.stages.append(stage_class(post_extract_metrics))
             elif (stage == StageType.aggregate):
                 self.stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, pipeline_config.min_batch_size, dry_run))
             elif (stage == StageType.post_pipeline_aggregate) and (pipeline_config.workers == 1):
                 self.post_pipeline_stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, 0, dry_run, True))
             elif (stage == StageType.post_pipeline_embed_metrics) and (pipeline_config.workers == 1):
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), algorithm_wrapper, pipeline_config.dump_type))
+                self.post_pipeline_stages.append(stage_class(add_entity(get_metrics, metrics[stage]), algorithm_wrapper, pipeline_config.dump_type))
             elif (stage == StageType.post_pipeline_attack_metrics) and (pipeline_config.workers == 1):
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), attacks, algorithm_wrapper, pipeline_config.dump_type))
+                self.post_pipeline_stages.append(stage_class(add_entity(get_metrics, metrics[stage]), attacks, algorithm_wrapper, pipeline_config.dump_type))
 
+        self.check_compatibility(all_entities)
+
+    @staticmethod
+    def check_compatibility(entities):
+        compatibility_problems = {pipeline_type: [] for pipeline_type in PipelineType.single_types()}
+        for pipeline_type, entity in product(PipelineType.single_types(), entities):
+            if (entity.pipeline_type & pipeline_type).value == 0:
+                compatibility_problems[pipeline_type].append(entity.report_name)
+        for pipeline_type, problem_entities in compatibility_problems.items():
+            if len(problem_entities) == 0:
+                logger.info(f"Running pipeline in {pipeline_type.name} mode")
+                return
+        else:
+            parts = ["Incompatible pipeline configuration. For each mode, you may remove these entities:"]
+            for pipeline_type, problem_entities in compatibility_problems.items():
+                parts.append(f"\n------ {pipeline_type.name} MODE ------\n{problem_entities}")
+            raise ValueError("".join(parts))
         pass
 
     def run(self, context: Context):
