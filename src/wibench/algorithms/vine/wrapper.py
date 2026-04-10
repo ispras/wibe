@@ -13,7 +13,7 @@ from wibench.watermark_data import TorchBitWatermarkData
 from wibench.download import requires_download
 
 
-URL = "https://nextcloud.ispras.ru/index.php/s/qPBLwFQG4YYqErg"
+URL = "https://nextcloud.ispras.ru/index.php/s/3sZHiq6G2Tx2X7g"
 NAME = "vine"
 REQUIRED_FILES = ["VINE-B-Dec/model.safetensors", "VINE-B-Dec/config.json",
                   "VINE-B-Enc/model.safetensors", "VINE-B-Enc/config.json"]
