@@ -45,6 +45,7 @@ requirements/algorithms/gaussian_shading.txt
 requirements/algorithms/maskwm.txt
 requirements/algorithms/chunkyseal.txt
 requirements/algorithms/dwt_dct_svd.txt
+requirements/algorithms/sepmark.txt
 requirements/metrics/fid.txt
 requirements/metrics/clip_iqa.txt
 requirements/metrics/lpips.txt
