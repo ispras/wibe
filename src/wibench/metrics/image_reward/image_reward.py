@@ -3,6 +3,7 @@ import torch
 
 from typing_extensions import Any
 
+from wibench.pipeline_type import PipelineType
 from wibench.utils import (
     torch_img2numpy_bgr,
     save_tmp_images,
@@ -36,6 +37,8 @@ class ImageReward(PostEmbedMetric):
     - The watermark_data field is required for the pipeline to work correctly
     """
 
+    pipeline_type = PipelineType.PROMPT
+        
     def __init__(self, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
         self.model = RM.load("ImageReward-v1.0", device=device)
 

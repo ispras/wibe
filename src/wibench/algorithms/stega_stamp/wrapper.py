@@ -4,6 +4,7 @@ from pathlib import Path
 
 from wibench.algorithms.stega_stamp.stega_stamp import StegaStamp
 from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 from wibench.watermark_data import TorchBitWatermarkData
@@ -54,7 +55,7 @@ class StegaStampWrapper(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         StegaStamp algorithm configuration parameters (default EmptyDict)
     """
-
+    pipeline_type = PipelineType.IMAGE
     name = NAME
     
     def __init__(self, params: Dict[str, Any] = {}) -> None:

@@ -3,6 +3,7 @@ from ..base import RangeBaseDataset
 from datasets import load_dataset
 from typing import Optional, Tuple, Generator
 from torchvision.transforms.functional import to_tensor
+from wibench.pipeline_type import PipelineType
 
 
 class MSCOCO(RangeBaseDataset):
@@ -20,6 +21,7 @@ class MSCOCO(RangeBaseDataset):
     cache_dir : Optional[str]
         Directory to cache downloaded dataset files
     """
+    pipeline_type = PipelineType.IMAGE
     dataset_path = "lmms-lab/COCO-Caption2017"
 
     def __init__(
@@ -30,6 +32,8 @@ class MSCOCO(RangeBaseDataset):
         return_prompt: bool = False
     ):
         self.return_prompt = return_prompt
+        if self.return_prompt:
+            self.pipeline_type = PipelineType.PROMPT
         self.dataset = load_dataset(self.dataset_path,
                                     split=split,
                                     cache_dir=cache_dir)

@@ -2,6 +2,7 @@ import numpy as np
 from typing import Any, Dict
 from wibench.algorithms.dft_circle.dft_circle import DFTMarker
 from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.pipeline_type import PipelineType
 from wibench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 
 
@@ -14,6 +15,7 @@ class DFTMarkerWrapper(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         Contains value for watermark strength "alpha" parameter of the algorithm (default EmptyDict)
     """
+    pipeline_type = PipelineType.IMAGE
     name = "dft_circle"
 
     def __init__(self, params: Dict[str, Any] = {}):

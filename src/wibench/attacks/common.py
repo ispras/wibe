@@ -1,3 +1,4 @@
+from wibench.pipeline_type import PipelineType
 from .base import BaseAttack
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
@@ -84,6 +85,8 @@ class ImageWatermark(BaseAttack):
     def __init__(self, algorithm: str, config: Optional[Dict[str, Any]] = None):
         wrapper_tuples = [(algorithm, config)]
         self.algorithm_wrapper: BaseAlgorithmWrapper = get_algorithms(wrapper_tuples)[0]
+        if self.algorithm_wrapper.pipeline_type != PipelineType.IMAGE:
+            raise ValueError(f"ImageWatermark attack: only post-hoc image watermarking methods are allowed, got {self.algorithm_wrapper.pipeline_type.name} type instead ({self.algorithm_wrapper.report_name})")
 
     def __call__(self, watermark_object: TorchImg) -> TorchImg:
         watermark_data = self.algorithm_wrapper.watermark_data_gen()

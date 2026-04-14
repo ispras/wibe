@@ -4,6 +4,7 @@ import datasets
 from typing import Optional, Tuple, Generator, Union
 from torchvision.transforms.functional import to_tensor
 from packaging import version
+from wibench.pipeline_type import PipelineType
 
 
 class DiffusionDB(RangeBaseDataset):
@@ -25,6 +26,7 @@ class DiffusionDB(RangeBaseDataset):
     return_prompt : bool
         Whether to return prompts instead of images (default False)
     """
+    pipeline_type = PipelineType.IMAGE
     dataset_path = "poloclub/diffusiondb"
 
     def __init__(
@@ -48,6 +50,8 @@ class DiffusionDB(RangeBaseDataset):
         self.dataset_len = dataset_len
         super().__init__(sample_range, self.dataset_len)
         self.return_prompt = return_prompt
+        if self.return_prompt:
+            self.pipeline_type = PipelineType.PROMPT
 
     def __len__(self):
         return self.len

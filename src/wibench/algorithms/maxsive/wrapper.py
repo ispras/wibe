@@ -6,6 +6,7 @@ from torchvision import transforms
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.module_importer import ModuleImporter
 
@@ -66,7 +67,7 @@ class MaXsiveWrapper(BaseAlgorithmWrapper):
         MaXsive algorithm configuration parameters (default EmptyDict)
 
     """
-    
+    pipeline_type = PipelineType.PROMPT
     name = "maxsive"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:

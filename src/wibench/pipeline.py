@@ -460,6 +460,7 @@ class StageRunner:
         attacks: List[Tuple[str, Dict[str, Any]]],
         metrics: Dict[str, List[Tuple[str, Dict[str, Any]]]],
         pipeline_config: PipeLineConfig,
+        pipeline_type: PipelineType,
         dry_run: bool = False
     ):
         self.stages: List[Stage] = []
@@ -493,6 +494,10 @@ class StageRunner:
                 self.stages.append(stage_class(post_embed_metrics))
             elif (stage == StageType.post_attack_metrics):
                 post_attack_metrics = add_entity(get_metrics, metrics[stage])
+                for metric in post_attack_metrics:
+                    if metric.pipeline_type == PipelineType.IMAGE and pipeline_type == PipelineType.PROMPT:
+                        metric.pipeline_type = PipelineType.ALL# Hack for psnr, ssim, lpips as attack assessment metrics
+
                 self.stages.append(stage_class(post_attack_metrics))
             elif (stage == StageType.attack):
                 self.stages.append(stage_class(cached_call(get_attacks, attacks)))
@@ -508,24 +513,16 @@ class StageRunner:
             elif (stage == StageType.post_pipeline_attack_metrics) and (pipeline_config.workers == 1):
                 self.post_pipeline_stages.append(stage_class(add_entity(get_metrics, metrics[stage]), attacks, algorithm_wrapper, pipeline_config.dump_type))
 
-        self.check_compatibility(all_entities)
+        self.check_compatibility(all_entities, pipeline_type)
 
     @staticmethod
-    def check_compatibility(entities):
-        compatibility_problems = {pipeline_type: [] for pipeline_type in PipelineType.single_types()}
-        for pipeline_type, entity in product(PipelineType.single_types(), entities):
-            if (entity.pipeline_type & pipeline_type).value == 0:
-                compatibility_problems[pipeline_type].append(entity.report_name)
-        for pipeline_type, problem_entities in compatibility_problems.items():
-            if len(problem_entities) == 0:
-                logger.info(f"Running pipeline in {pipeline_type.name} mode")
-                return
-        else:
-            parts = ["Incompatible pipeline configuration. For each mode, you may remove these entities:"]
-            for pipeline_type, problem_entities in compatibility_problems.items():
-                parts.append(f"\n------ {pipeline_type.name} MODE ------\n{problem_entities}")
-            raise ValueError("".join(parts))
-        pass
+    def check_compatibility(entities: list[Any], pipeline_type: PipelineType):
+        compatibility_problems = [entity.report_name for entity in entities 
+                                  if (entity.pipeline_type & pipeline_type).value == 0]
+        if len(compatibility_problems) == 0:
+            logger.info(f"Running pipeline in {pipeline_type.name} mode")
+            return
+        raise ValueError(f"Incompatible pipeline configuration. These entities are not compatible with dataset type ({pipeline_type.name}): {compatibility_problems}")
 
     def run(self, context: Context):
         """Execute all stages on the given object context. Context is modified internally.
@@ -644,6 +641,10 @@ class Pipeline:
         - Flushes aggregators after processing
         - Supports partial stage execution
         """
+        pipeline_type = self.datasets[0].pipeline_type
+        for dataset in self.datasets:
+            if dataset.pipeline_type != pipeline_type:
+                raise ValueError(f"Incompatible datasets: expected {pipeline_type.name}, got {dataset.pipeline_type.name} for {dataset.report_name}")
         total_iters = None
         if "embed" in stages:
             dataset_iters = 0
@@ -682,7 +683,8 @@ class Pipeline:
                 self.attacks,
                 self.metrics,
                 self.config,
-                dry_run
+                pipeline_type,
+                dry_run,
             )
             dataset_stop = self.config.workers if dry_run else None
             
