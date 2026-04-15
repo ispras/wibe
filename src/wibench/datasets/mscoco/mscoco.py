@@ -1,3 +1,4 @@
+import aiohttp
 from wibench.typing import ImageObject, PromptObject
 from ..base import RangeBaseDataset
 from datasets import load_dataset
@@ -20,7 +21,7 @@ class MSCOCO(RangeBaseDataset):
     cache_dir : Optional[str]
         Directory to cache downloaded dataset files
     """
-    dataset_path = "lmms-lab/COCO-Caption2017"
+    dataset_path = "whyen-wang/coco_captions"
 
     def __init__(
         self,
@@ -29,10 +30,13 @@ class MSCOCO(RangeBaseDataset):
         cache_dir: Optional[str] = None,
         return_prompt: bool = False
     ):
+        split = split + "idation" if split == "val" else split
         self.return_prompt = return_prompt
         self.dataset = load_dataset(self.dataset_path,
                                     split=split,
-                                    cache_dir=cache_dir)
+                                    cache_dir=cache_dir,
+                                    trust_remote_code=True,
+                                    storage_options={'client_kwargs': {'timeout': aiohttp.ClientTimeout(total=3600)}})
 
         super().__init__(sample_range, len(self.dataset))
 
@@ -57,7 +61,7 @@ class MSCOCO(RangeBaseDataset):
                 break
             data = self.dataset[start_idx]
             if self.return_prompt:
-                prompt = data["answer"][0]
+                prompt = data["caption"][0]
                 yield PromptObject(str(start_idx), prompt)
             else:
-                yield ImageObject(str(data["id"]), to_tensor(data["image"].convert("RGB")))
+                yield ImageObject(str(start_idx), to_tensor(data["image"].convert("RGB")))
