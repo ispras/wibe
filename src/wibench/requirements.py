@@ -23,7 +23,7 @@ def special_requirements(entity: str, config: dict[str, Any], entity_type: str):
             else:
                 pass
     if entity.lower() == "syncseal":
-        params = config.get("params", {})
+        params = config.get("params", {}) if isinstance(config, dict) else {}
         inner_result = special_requirements(params.get("method", "trustmark"), params.get("method_params", {}), "algorithms")
         result.update(inner_result)
     if entity.lower() == "imagewatermark":
