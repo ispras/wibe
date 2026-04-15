@@ -10,6 +10,7 @@ from loguru import logger
 from wibench.config_loader import load_pipeline_config_yaml
 from wibench.config import PipeLineConfig
 import wibench.progress as progress
+from wibench.requirements import compatible_execs
 
 
 REEXEC_DONE = "_REEXEC_DONE"
@@ -200,43 +201,6 @@ def parse_stage_expression(expr: str) -> List[str]:
     return [name for name in registry if wanted[name]]
 
 
-def compatible_execs(stages, datasets, alg_wrappers, attacks, metrics) -> tuple[list[Path], dict[str, set[Path]]]:
-    alg_wrappers = alg_wrappers if (StageType.embed or StageType.extract) in stages else []
-    attacks = attacks if StageType.attack in stages else []
-    for metric_field in metrics.keys():
-        metrics[metric_field] = metrics[metric_field] if metric_field in stages else []
-
-    req_dir = Path(REQUIREMENTS_DIR).resolve()
-
-    def module_paths(names: set[str], field: str):
-        paths = set()
-        for n in names:
-            p =  req_dir / field / (n.lower() + ".txt")
-            if p.exists():
-                paths.add(p)
-        return paths
-
-    current_req_paths = (
-        module_paths({n for n, _ in alg_wrappers}, ALGORITHMS_FIELD)
-        | module_paths({n for m in metrics.values() for n, _ in m}, METRICS_FIELD)
-        | module_paths({n for n, _ in datasets}, DATASETS_FIELD)
-        | module_paths({n for n, _ in attacks}, ATTACKS_FIELD)
-    )
-
-    venvs_dir = Path(VENVS_DIR).resolve()
-    group_paths = list(venvs_dir.glob("*.txt"))
-    exec_candidates = []
-    missing_per_group: dict[str, set[Path]] = {}
-    for group_path in group_paths:
-        with open(group_path, mode="r") as fp:
-            group_req_paths = {Path(line).resolve() for line in fp.read().splitlines()}
-        missing = current_req_paths - group_req_paths
-        missing_per_group[group_path.stem] = missing
-        if not missing:
-            exec_candidates.append(group_path.with_suffix("") / "bin" / "python")
-    return exec_candidates, missing_per_group
-
-
 app = typer.Typer(pretty_exceptions_enable=False)
 
 
@@ -285,12 +249,6 @@ def run(
 
     stages = parse_stage_expression(stages)
 
-    import_modules("wibench.algorithms")
-    import_modules("wibench.datasets")
-    import_modules("wibench.metrics")
-    import_modules("wibench.attacks")
-    import_modules("user_plugins")
-
     run_id = str(uuid.uuid1()) if RUN_ID_ENV_NAME not in os.environ else os.environ[RUN_ID_ENV_NAME]
     os.environ[RUN_ID_ENV_NAME] = run_id
     loaded_config = load_pipeline_config_yaml(config)
@@ -323,7 +281,12 @@ def run(
     if Path(sys.executable) not in exec_candidates:
         subprocess_run(pipeline_config, python_exec=next(iter(exec_candidates)))
         return
-
+    import_modules("wibench.algorithms")
+    import_modules("wibench.datasets")
+    import_modules("wibench.metrics")
+    import_modules("wibench.attacks")
+    import_modules("user_plugins")
+    
     if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
         subprocess_run(pipeline_config)
         
