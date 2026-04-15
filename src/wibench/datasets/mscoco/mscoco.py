@@ -20,6 +20,8 @@ class MSCOCO(RangeBaseDataset):
         Optional (start, end) index range to subset the dataset
     cache_dir : Optional[str]
         Directory to cache downloaded dataset files
+    timeout : int
+        Timeout for dataset download
     """
     dataset_path = "whyen-wang/coco_captions"
 
@@ -28,7 +30,8 @@ class MSCOCO(RangeBaseDataset):
         split: str = "val",
         sample_range: Optional[Tuple[int, int]] = None,
         cache_dir: Optional[str] = None,
-        return_prompt: bool = False
+        return_prompt: bool = False,
+        timeout: int = 3600
     ):
         split = split + "idation" if split == "val" else split
         self.return_prompt = return_prompt
@@ -36,7 +39,7 @@ class MSCOCO(RangeBaseDataset):
                                     split=split,
                                     cache_dir=cache_dir,
                                     trust_remote_code=True,
-                                    storage_options={'client_kwargs': {'timeout': aiohttp.ClientTimeout(total=3600)}})
+                                    storage_options={'client_kwargs': {'timeout': aiohttp.ClientTimeout(total=timeout)}})
 
         super().__init__(sample_range, len(self.dataset))
 
