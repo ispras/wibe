@@ -314,9 +314,9 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         self.fpr_rate = fpr_rate
         self.method_type = method_type
         #params zero multi
+        self.dataset = get_datasets([(dataset, dataset_params)])[0]
+        self.method = get_algorithms([(algorithm, algorithm_params)])[0]
 
-        self.dataset = get_datasets(dataset)
-        self.method = get_algorithms(algorithm, **algorithm_params)
         self.re_path = str(Path(random_extracts_path).resolve())
 
         # method_wrapper = self.method(**algorithm_params)
