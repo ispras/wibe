@@ -15,13 +15,8 @@ from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 from scipy.stats import binom
 from loguru import logger
-from wibench.base_objects import (
-    get_algorithms,
-    get_attacks,
-    get_datasets,
-    get_metrics,
-    get_report_name,
-)
+
+
 
 class BaseMetric(metaclass=RegistryMeta):
     """Abstract base class for all metric calculators in the watermarking pipeline.
@@ -289,7 +284,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
             np.savetxt(re_path, np.array(scores), delimiter=",")
 
             meta_path = re_path.replace('.csv', '_metadata.txt')
-                        with open(meta_path, 'w') as f:
+            with open(meta_path, 'w') as f:
                             f.write(f"method_type=zerobit\n")
                             f.write(f"threshold={threshold}\n")
                             f.write(f"percentile={percentile}\n")
@@ -315,12 +310,12 @@ class EmpiricalTPRxFPR(PostExtractMetric):
                  random_extracts_path: str = "./thresholds.csv",
                  method_type: str = "z"
                  ) -> None:
-        
+        from wibench.base_objects import get_datasets, get_algorithms
         self.fpr_rate = fpr_rate
         self.method_type = method_type
         #params zero multi
 
-        self.dataset = get_datasets(dataset, **dataset_params)
+        self.dataset = get_datasets(dataset)
         self.method = get_algorithms(algorithm, **algorithm_params)
         self.re_path = str(Path(random_extracts_path).resolve())
 
