@@ -1,0 +1,11 @@
+torch<2.6
+omegaconf
+einops
+pytorch-lightning<=1.9.5
+lpips
+kornia
+matplotlib
+wand
+numpy<2.0.0
+# taming-transformers @ git+https://github.com/CompVis/taming-transformers.git
+imagenet-c @ git+https://github.com/hendrycks/robustness.git#subdirectory=ImageNet-C/imagenet_c
