@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from .dwtsvm_marker import DWTSVMMarker
 from wibench.algorithms.base import BaseAlgorithmWrapper
-from wibench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
+from wibench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img, FactorPad
 from wibench.typing import TorchImg
 
 
@@ -37,12 +37,17 @@ class DWTSVMWrapper(BaseAlgorithmWrapper):
     def embed(self, image: TorchImg, watermark_data: WatermarkData) -> TorchImg:
         watermark = watermark_data.watermark
         key = watermark_data.key
-        np_res = self.marker.embed(torch_img2numpy_bgr(image), watermark, key)
-        return numpy_bgr2torch_img(np_res)
+        padder = FactorPad(factor=8, padding_mode="constant")
+        padded_image = padder.pad(image)
+        np_res = self.marker.embed(torch_img2numpy_bgr(padded_image), watermark, key)
+        torch_res = numpy_bgr2torch_img(np_res)
+        return padder.unpad(torch_res)
 
     def extract(self, image: TorchImg, watermark_data: WatermarkData) -> np.ndarray:
         key = watermark_data.key
-        extracted = self.marker.extract(torch_img2numpy_bgr(image), key)
+        padder = FactorPad(factor=8, padding_mode="constant")
+        padded_image = padder.pad(image)
+        extracted = self.marker.extract(torch_img2numpy_bgr(padded_image), key)
         return extracted
 
     def watermark_data_gen(self) -> WatermarkData:

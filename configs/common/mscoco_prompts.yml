@@ -1,0 +1,4 @@
+  - MSCOCO:
+      cache_dir: ./datasets/mscoco
+      split: val
+      return_prompt: true

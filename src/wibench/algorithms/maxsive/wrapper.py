@@ -32,7 +32,8 @@ class MaXsiveParams(Params):
     template_c: int = 3
     distant_func: str = "corr"
     diffusion_bit: int = 16
-    tpr_file: str = DEFAULT_TPR_FILE 
+    tpr_file: str = DEFAULT_TPR_FILE
+    apply_watermark: bool = True
 
 
 @dataclass
@@ -79,7 +80,7 @@ class MaXsiveWrapper(BaseAlgorithmWrapper):
             from Maxsive.models import MaXsive
             from Maxsive.image_utils import transform_img
             global transform_img
-            if self.params.model_name == "SD21":
+            if (self.params.model_name == "SD21") or (not self.params.apply_watermark):
                 from diffusers import DPMSolverMultistepScheduler
                 sch = DPMSolverMultistepScheduler
             elif self.params.model_name == "watermarkSD21":
@@ -185,5 +186,7 @@ class MaXsiveWrapper(BaseAlgorithmWrapper):
 
         """
         z, data = self.watermark_model.watermark_injection()
+        if not self.params.apply_watermark:
+            z = self.pipe.get_random_latents()
         watermark = data["keys"][0]
         return MaXsiveWatermarkData(watermark, z, data)

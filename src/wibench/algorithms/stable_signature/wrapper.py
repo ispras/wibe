@@ -54,6 +54,8 @@ class StableSignatureParams(Params):
     decoder_path: str = DEFAULT_DECODER_PATH
     model: str = "WIBE-HuggingFace/stable-diffusion-2"
     secret: str = "111010110101000001010111010011010100010000100111"
+    apply_watermark: bool = True
+    image_size: int | None = 768
 
 
 @requires_download(URL, NAME, REQUIRED_FILES)
@@ -76,21 +78,22 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
         super().__init__(StableSignatureParams(**params))
         self.params: StableSignatureParams
         self.device = self.params.device
-        with ModuleImporter("StableSignature", Path(module_path)):
-            # from StableSignature.ldm.models.diffusion.ddpm import LatentDiffusion
-            from StableSignature.utils_model import load_model_from_config
-            config_path = str(Path(self.params.ldm_config_path).resolve())
-            checkpoint_path = str(Path(self.params.ldm_checkpoint_path).resolve())
-            config = OmegaConf.load(config_path)
-            with ModuleImporter("ldm", Path(module_path) / "src" / "ldm"):
-                ldm_ae = load_model_from_config(config, checkpoint_path)
-            ldm_aef = ldm_ae.first_stage_model
-            ldm_aef.eval()
-            # loading the fine-tuned decoder weights
-            state_dict = torch.load(Path(self.params.ldm_decoder_path).resolve(), weights_only=False)
-            ldm_aef.load_state_dict(state_dict, strict=False)
-            self.pipe = StableDiffusionPipeline.from_pretrained(self.params.model).to(self.device)
-            self.pipe.vae.decode = (lambda x,  *args, **kwargs: ldm_aef.decode(x).unsqueeze(0))
+        self.pipe = StableDiffusionPipeline.from_pretrained(self.params.model).to(self.device)
+        if self.params.apply_watermark:
+            with ModuleImporter("StableSignature", Path(module_path)):
+                # from StableSignature.ldm.models.diffusion.ddpm import LatentDiffusion
+                from StableSignature.utils_model import load_model_from_config
+                config_path = str(Path(self.params.ldm_config_path).resolve())
+                checkpoint_path = str(Path(self.params.ldm_checkpoint_path).resolve())
+                config = OmegaConf.load(config_path)
+                with ModuleImporter("ldm", Path(module_path) / "src" / "ldm"):
+                    ldm_ae = load_model_from_config(config, checkpoint_path)
+                ldm_aef = ldm_ae.first_stage_model
+                ldm_aef.eval()
+                # loading the fine-tuned decoder weights
+                state_dict = torch.load(Path(self.params.ldm_decoder_path).resolve(), weights_only=False)
+                ldm_aef.load_state_dict(state_dict, strict=False)
+                self.pipe.vae.decode = (lambda x,  *args, **kwargs: ldm_aef.decode(x).unsqueeze(0))
 
         self.normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
         self.decoder = torch.jit.load(Path(self.params.decoder_path).resolve()).to(self.device)
@@ -106,7 +109,7 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
         watermark_data: TorchBitWatermarkData
             Torch bit message with data type torch.int64
         """
-        pil_image = self.pipe(prompt).images[0]
+        pil_image = self.pipe(prompt, width=self.params.image_size, height = self.params.image_size).images[0]
         marked_image = numpy_bgr2torch_img(cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR))
         return marked_image
     

@@ -11,8 +11,7 @@ parser.add_argument('--mode', default='', help='Mode of operation: "extra" for r
 args = parser.parse_args()
 
 
-dir_to_walk = './src/wibench/'
-requirements_txt = 'requirements.txt'
+dir_to_walk = './requirements/'
 all_requirements = []
 
 if args.mode == 'extra':
