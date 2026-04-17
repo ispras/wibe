@@ -8,6 +8,7 @@ import torch.nn as nn
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.module_importer import ModuleImporter
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.config import Params
 from wibench.watermark_data import WatermarkData
@@ -88,7 +89,7 @@ class SyncSeal(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         SyncSeal algorithm configuration parameters (default EmptyDict)
     """
-
+    pipeline_type = PipelineType.IMAGE
     name = "syncseal"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:

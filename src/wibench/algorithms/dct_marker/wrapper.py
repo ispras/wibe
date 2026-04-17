@@ -8,6 +8,7 @@ from wibench.algorithms.dct_marker.dct_marker import (
     DCTMarkerParams,
 )
 from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img
 
@@ -31,6 +32,7 @@ class DCTMarkerWrapper(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         dictionary, containing values for `DCTMarkerConfig` dataclass (default EmptyDict)
     """
+    pipeline_type = PipelineType.IMAGE
     name = "dct_marker"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:

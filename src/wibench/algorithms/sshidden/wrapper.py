@@ -7,6 +7,7 @@ from pathlib import Path
 
 from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.utils import (
     resize_torch_img,
@@ -89,7 +90,7 @@ class SSHiddenWrapper(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         SSHiDDeN algorithm configuration parameters (default EmptyDict)
     """
-
+    pipeline_type = PipelineType.IMAGE
     name = "sshidden"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:

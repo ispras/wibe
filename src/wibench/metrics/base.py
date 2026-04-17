@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from pathlib import Path
+from wibench.pipeline_type import PipelineType
 from wibench.registry import RegistryMeta
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.datasets.base import BaseDataset
@@ -85,6 +86,8 @@ class PSNR(PostEmbedMetric):
     - Range: Typically 20-50 dB for images
     - Infinite if images are identical
     """
+    
+    pipeline_type = PipelineType.IMAGE
 
     def __call__(
         self,
@@ -108,6 +111,8 @@ class SSIM(PostEmbedMetric):
     -----
     - value 1 indicates perfect similarity
     """
+    
+    pipeline_type = PipelineType.IMAGE
 
     def __call__(
         self,
@@ -356,6 +361,7 @@ class PValue(PostExtractMetric):
             num_bits = len(wm)
         
         return 1 - binom.cdf(matched_bits - 1, num_bits, 0.5)
+
 
 class ExtractedWatermark(PostExtractMetric):
     """Records the extracted watermark payload for analysis.

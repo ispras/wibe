@@ -10,6 +10,7 @@ import numpy as np
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.module_importer import ModuleImporter
 
@@ -77,7 +78,7 @@ class RingIDWrapper(BaseAlgorithmWrapper):
         RingID algorithm configuration parameters (default EmptyDict)
 
     """
-    
+    pipeline_type = PipelineType.PROMPT
     name = "ringid"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
