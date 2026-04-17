@@ -8,6 +8,7 @@ from enum import Enum
 
 from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.pipeline_type import PipelineType
 from wibench.utils import (
     normalize_image,
     denormalize_image,
@@ -78,7 +79,7 @@ class CINWrapper(BaseAlgorithmWrapper):
         CIN algorithm configuration parameters (default EmptyDict)
 
     """
-    
+    pipeline_type = PipelineType.IMAGE
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:

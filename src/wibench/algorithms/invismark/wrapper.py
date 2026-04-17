@@ -1,5 +1,6 @@
 import torch
 from wibench.algorithms import BaseAlgorithmWrapper
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.utils import normalize_image, denormalize_image
@@ -64,7 +65,7 @@ class InvisMarkWrapper(BaseAlgorithmWrapper):
 
     Note: real capacity of InvisMark is 94 message bits (reffer to watermark_data_gen for more information)
     """
-        
+    pipeline_type = PipelineType.IMAGE 
     name = NAME
 
     def __init__(

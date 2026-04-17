@@ -10,6 +10,7 @@ from wibench.download import requires_download
 from trustmark import TrustMark
 from pathlib import Path
 from functools import partialmethod
+from wibench.pipeline_type import PipelineType
 
 
 URL = "https://nextcloud.ispras.ru/index.php/s/roAn4YYpXfq5Y7E"
@@ -74,7 +75,7 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
         TrustMark algorithm configuration parameters (default EmptyDict)
 
     """
-    
+    pipeline_type = PipelineType.IMAGE
     name = NAME
 
     @staticmethod

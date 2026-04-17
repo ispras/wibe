@@ -6,6 +6,7 @@ import torch
 from torchvision.transforms import transforms
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.module_importer import ModuleImporter
@@ -73,7 +74,7 @@ class RobustWideWrapper(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         Robust-Wide algorithm configuration parameters (default EmptyDict)
     """
-
+    pipeline_type = PipelineType.IMAGE
     name = NAME
     
     def __init__(self, params: Dict[str, Any] = {}) -> None:

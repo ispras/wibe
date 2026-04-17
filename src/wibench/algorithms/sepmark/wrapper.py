@@ -8,6 +8,7 @@ from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
 from wibench.typing import TorchImg, TorchImgNormalize
+from wibench.pipeline_type import PipelineType
 from wibench.utils import normalize_image, denormalize_image, resize_torch_img
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.download import requires_download
@@ -47,6 +48,7 @@ class SepMarkWrapper(BaseAlgorithmWrapper):
         SepMark algorithm configuration parameters (default EmptyDict)
     """
 
+    pipeline_type = PipelineType.IMAGE
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}):

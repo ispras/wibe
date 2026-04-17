@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.pipeline_type import PipelineType
 from wibench.utils import numpy_bgr2torch_img, torch_img2numpy_bgr, resize_torch_img
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
@@ -30,7 +31,7 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         Invisible-Watermark algorithm configuration parameters (default EmptyDict)
     """
-    
+    pipeline_type = PipelineType.IMAGE
     abstract = True
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:

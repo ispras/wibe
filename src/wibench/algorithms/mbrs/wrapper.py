@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 from wibench.module_importer import ModuleImporter
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
@@ -108,7 +109,7 @@ class MBRSWrapper(BaseAlgorithmWrapper):
     Provides an interface for embedding and extracting watermarks using the MBRS watermarking algorithm.
     Based on the code from `here <https://github.com/jzyustc/MBRS>`__.
     """
-        
+    pipeline_type = PipelineType.IMAGE
     name = "MBRS"
     def __init__(self, 
                  wm_length: int = 256,

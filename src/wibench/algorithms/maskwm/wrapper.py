@@ -5,6 +5,7 @@ from pathlib import Path
 import torch
 from torchvision import transforms
 
+from wibench.pipeline_type import PipelineType
 from wibench.utils import normalize_image, overlay_difference, resize_torch_img, denormalize_image
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
@@ -60,7 +61,7 @@ class MaskWMWrapper(BaseAlgorithmWrapper):
     Provides an interface for embedding and extracting watermarks using the MaskWM algorithm.
     Based on the code from `here <https://github.com/hurunyi/MaskWM>`__.
     """
-
+    pipeline_type = PipelineType.IMAGE
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}):

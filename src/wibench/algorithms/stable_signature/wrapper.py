@@ -11,6 +11,7 @@ from pathlib import Path
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.utils import numpy_bgr2torch_img, normalize_image
 from wibench.watermark_data import TorchBitWatermarkData
@@ -70,7 +71,7 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         StableSignature algorithm configuration parameters (default EmptyDict)
     """
-    
+    pipeline_type = PipelineType.PROMPT
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:

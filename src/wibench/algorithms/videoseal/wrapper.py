@@ -1,5 +1,6 @@
 import torch
 from pathlib import Path
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
@@ -30,7 +31,7 @@ class VideosealWrapper(BaseAlgorithmWrapper):
     Provides an interface for embedding and extracting watermarks using the VideoSeal watermarking algorithm.
     Based on the code from `here <https://github.com/facebookresearch/videoseal>`__.
     """
-    
+    pipeline_type = PipelineType.IMAGE
     name = NAME_VIDEOSEAL
 
     def __init__(

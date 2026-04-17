@@ -1,4 +1,5 @@
 from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.pipeline_type import PipelineType
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.typing import TorchImg
 from wibench.module_importer import ModuleImporter
@@ -39,6 +40,7 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
 
     """
     
+    pipeline_type = PipelineType.IMAGE
     name = NAME
 
     def __init__(

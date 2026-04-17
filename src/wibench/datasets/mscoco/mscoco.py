@@ -4,6 +4,7 @@ from ..base import RangeBaseDataset
 from datasets import load_dataset
 from typing import Optional, Tuple, Generator
 from torchvision.transforms.functional import to_tensor
+from wibench.pipeline_type import PipelineType
 
 
 class MSCOCO(RangeBaseDataset):
@@ -23,6 +24,7 @@ class MSCOCO(RangeBaseDataset):
     timeout : int
         Timeout for dataset download
     """
+    pipeline_type = PipelineType.IMAGE
     dataset_path = "whyen-wang/coco_captions"
 
     def __init__(
@@ -35,6 +37,8 @@ class MSCOCO(RangeBaseDataset):
     ):
         split = split + "idation" if split == "val" else split
         self.return_prompt = return_prompt
+        if self.return_prompt:
+            self.pipeline_type = PipelineType.PROMPT
         self.dataset = load_dataset(self.dataset_path,
                                     split=split,
                                     cache_dir=cache_dir,

@@ -1,5 +1,6 @@
 from typing import Any
 import lpips
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.metrics.base import PostEmbedMetric
 from wibench.utils import normalize_image, resize_torch_img
@@ -31,6 +32,8 @@ class LPIPS(PostEmbedMetric):
     -----
     - The watermark_data field is required for the pipeline to work correctly
     """
+    
+    pipeline_type = PipelineType.IMAGE
     
     def __init__(self, net: str = "alex", device: str = "cuda" if torch.cuda.is_available() else "cpu") -> None:
         self.device = device

@@ -11,6 +11,7 @@ from scipy.stats import norm,truncnorm
 from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 
 
@@ -92,7 +93,7 @@ class GaussianShadingWrapper(BaseAlgorithmWrapper):
         Gaussian Shading algorithm configuration parameters (default EmptyDict)
 
     """
-    
+    pipeline_type = PipelineType.PROMPT
     name = "gaussian_shading"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
