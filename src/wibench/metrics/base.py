@@ -15,7 +15,7 @@ from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 from scipy.stats import binom
 from loguru import logger
-
+import os
 
 
 class BaseMetric(metaclass=RegistryMeta):
@@ -272,13 +272,14 @@ class EmpiricalTPRxFPR(PostExtractMetric):
             watermark_data = method.watermark_data_gen()
             extracted = method.extract(obj, watermark_data)
 
-            random_extracts.append(extracted.flatten())
             if method_type == 'z':
                 score = float(extracted)
                 scores.append(score)
+            else:
+                random_extracts.append(extracted.flatten())
 
         if method_type =="z":
-            percentile, reverse = self.get_percentile_and_reverse(method.__class__.__name__.lower(), fpr_rate, method_wrapper)  
+            percentile, reverse = EmpiricalTPRxFPR.get_percentile_and_reverse(method.__class__.__name__.lower(), fpr_rate, method_wrapper)  
             threshold = float(np.percentile(scores, percentile))  
             logger.info(f"Zerobit: threshold={threshold:.6f} at {percentile:.2f}% percentile")
             np.savetxt(re_path, np.array(scores), delimiter=",")
@@ -293,11 +294,11 @@ class EmpiricalTPRxFPR(PostExtractMetric):
 
 
             return threshold
+        else:
 
-
-        logger.info(f"Random extracts are saved along the path: {re_path}")
-        np.savetxt(re_path, torch.stack(random_extracts).numpy(), delimiter=",")
-        return random_extracts
+            logger.info(f"Random extracts are saved along the path: {re_path}")
+            np.savetxt(re_path, torch.stack(random_extracts).numpy(), delimiter=",")
+            return random_extracts
 
 
 
@@ -316,34 +317,16 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         #params zero multi
         self.dataset = get_datasets([(dataset, dataset_params)])[0]
         self.method = get_algorithms([(algorithm, algorithm_params)])[0]
-
         self.re_path = str(Path(random_extracts_path).resolve())
-
         # method_wrapper = self.method(**algorithm_params)
         if method_type =="z":
-            try:
-                meta_path = self.re_path.replace('.csv', '_metadata.txt')
-                if os.path.exists(meta_path):
-                    with open(meta_path, 'r') as f:
-                        metadata = {}
-                        for line in f:
-                            if '=' in line:
-                                key, value = line.strip().split('=', 1)
-                                metadata[key] = value
-                    
-                    if float(metadata.get('fpr_rate', 0)) == fpr_rate:
-                        self.threshold = float(metadata['threshold'])
-                        logger.info(f"Loaded zerobit threshold from cache: {self.threshold}")
-            except Exception as e:
-                # Генерируем новый порог
-                logger.info(f"Generating new zerobit threshold: {e}")
-                self.threshold = self.get_random_extracts(
+            self.threshold = self.get_random_extracts(
                     self.method, self.dataset, self.re_path,
                     method_wrapper=self.method, method_type='z', fpr_rate=fpr_rate
-                )     
+                ) 
+            
+
         else:
-
-
             try:
                 random_extracts = np.loadtxt(self.re_path, delimiter=",")
                 logger.info(f"Random extracts are used along the path: {self.re_path}")
@@ -351,7 +334,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
             except Exception:
                 random_extracts = None
         
-            self.random_extracts = self.get_random_extracts(self.method, self.dataset, self.re_path) if random_extracts is None else random_extracts
+                self.random_extracts = self.get_random_extracts(self.method, self.dataset, self.re_path) if random_extracts is None else random_extracts
         super().__init__()
 
 
@@ -365,20 +348,22 @@ class EmpiricalTPRxFPR(PostExtractMetric):
     ) -> int:
         
         if self.method_type == 'z':
+
             score = float(extraction_result)
+
             return int(score >= self.threshold)
-        
-        watermark = watermark_data.watermark
-        watermark = watermark.flatten()
-        extraction_result = extraction_result.flatten()
-        if isinstance(extraction_result, torch.Tensor):
-            extraction_result = extraction_result.numpy()
-        if isinstance(watermark, torch.Tensor):
-            watermark = watermark.numpy()
-        extract_threshold = np.sum(extraction_result != watermark)
-        thresholds = (extraction_result != self.random_extracts).sum(axis=1)
-        num_matches = np.sum(thresholds <= extract_threshold)
-        return int(num_matches <= round(self.fpr_rate * len(thresholds)))
+        else:
+            watermark = watermark_data.watermark
+            watermark = watermark.flatten()
+            extraction_result = extraction_result.flatten()
+            if isinstance(extraction_result, torch.Tensor):
+                extraction_result = extraction_result.numpy()
+            if isinstance(watermark, torch.Tensor):
+                watermark = watermark.numpy()
+            extract_threshold = np.sum(extraction_result != watermark)
+            thresholds = (extraction_result != self.random_extracts).sum(axis=1)
+            num_matches = np.sum(thresholds <= extract_threshold)
+            return int(num_matches <= round(self.fpr_rate * len(thresholds)))
 
 
 class TPRxFPR(PostExtractMetric):
