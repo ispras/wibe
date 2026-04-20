@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import torch
 import scipy
 from torchvision import transforms
-from diffusers import DPMSolverMultistepScheduler
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
@@ -87,6 +86,8 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(TreeRingParams(**params))
         self.params: TreeRingParams
+        from diffusers import DPMSolverMultistepScheduler
+        
         with ModuleImporter("TreeRing", self.module_path):
             from TreeRing.inverse_stable_diffusion import InversableStableDiffusionPipeline
             from TreeRing.optim_utils import (eval_watermark,

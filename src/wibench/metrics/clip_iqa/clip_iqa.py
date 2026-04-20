@@ -1,5 +1,4 @@
 from typing import Any, Tuple, Union
-from torchmetrics.multimodal import CLIPImageQualityAssessment
 from wibench.typing import TorchImg
 from wibench.metrics.base import PostEmbedMetric
 import torch
@@ -32,6 +31,7 @@ class CLIP_IQA(PostEmbedMetric):
     """
     
     def __init__(self, prompts: Tuple[Union[str, Tuple[str]]] = ("quality",), device: str = "cuda" if torch.cuda.is_available() else "cpu") -> None:
+        from torchmetrics.multimodal import CLIPImageQualityAssessment
         self.device = device
         self.metric = CLIPImageQualityAssessment(prompts=prompts).to(self.device)
 

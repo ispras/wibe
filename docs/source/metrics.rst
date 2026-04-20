@@ -100,10 +100,20 @@ BER
 
 .. autoclass:: wibench.metrics.base.BER
 
+WER
+~~~
+
+.. autoclass:: wibench.metrics.base.WER
+
 TPRxFPR
 ~~~~~~~
 
 .. autoclass:: wibench.metrics.base.TPRxFPR
+
+Empirical TPRxFPR
+~~~~~~~~~~~~~~~~~
+
+.. autoclass:: wibench.metrics.base.EmpiricalTPRxFPR
 
 P-value
 ~~~~~~~
@@ -149,3 +159,18 @@ FID
 ~~~
 
 .. autoclass:: wibench.metrics.fid.fid.FID
+
+Result
+~~~~~~
+
+.. autoclass:: wibench.metrics.base.Result
+
+Embedded Watermark
+~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: wibench.metrics.base.EmbedWatermark
+
+Extracted Watermark
+~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: wibench.metrics.base.ExtractedWatermark

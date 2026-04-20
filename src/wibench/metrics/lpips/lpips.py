@@ -1,5 +1,4 @@
 from typing import Any
-import lpips
 from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.metrics.base import PostEmbedMetric
@@ -36,6 +35,7 @@ class LPIPS(PostEmbedMetric):
     pipeline_type = PipelineType.IMAGE
     
     def __init__(self, net: str = "alex", device: str = "cuda" if torch.cuda.is_available() else "cpu") -> None:
+        import lpips
         self.device = device
         self.loss_fn = lpips.LPIPS(net=net, verbose=False).to(self.device)
 

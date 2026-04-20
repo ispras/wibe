@@ -2,7 +2,6 @@ import numpy as np
 import torch
 from wibench.attacks import BaseAttack
 from wibench.typing import TorchImg
-import diffusers
 
 
 class FrequencyMasking(BaseAttack):
@@ -56,26 +55,24 @@ class LatentFrequencyMasking(BaseAttack):
         self,
         beta: float = 0.,
         mask_mode: str = "zero",
-        vae: diffusers.AutoencoderKL | None = None,
+        model: str = "WIBE-HuggingFace/stable-diffusion-2-1-base",
         mask_radius: int = 10,
         mask_channel: int = 0,
         cache_dir: str | None = None,
         device: str = "cuda" if torch.cuda.is_available() else "cpu"
     ) -> None:
         super().__init__()
-
-        if vae:
-            self.vae = vae
-        else:
-            # the same VAE as in treering
-            self.vae = diffusers.AutoencoderKL.from_pretrained(
-                "WIBE-HuggingFace/stable-diffusion-2-1-base",
-                subfolder="vae",
-                # revision="fp16",
-                torch_dtype=torch.float16,
-                cache_dir=cache_dir,
-            )
-            self.vae.to(device)
+        import diffusers
+        
+        # the same VAE as in treering
+        self.vae = diffusers.AutoencoderKL.from_pretrained(
+            model,
+            subfolder="vae",
+            # revision="fp16",
+            torch_dtype=torch.float16,
+            cache_dir=cache_dir,
+        )
+        self.vae.to(device)
         self.device = device
         self.mask_mode = mask_mode
         self.beta = beta

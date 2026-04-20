@@ -1,9 +1,7 @@
 import torchvision.transforms as T
 from torchvision.transforms.functional import InterpolationMode
-from transformers import AutoModel, AutoTokenizer
 import torch
 import json
-from diffusers import StableDiffusionInstructPix2PixPipeline
 from wibench.attacks.base import BaseAttack
 from wibench.typing import TorchImg
 
@@ -33,6 +31,8 @@ class ImageEditingInstructPix2Pix(BaseAttack):
         self.device = device
 
         self.internvl_path = internvl_path
+        from transformers import AutoModel, AutoTokenizer
+        from diffusers import StableDiffusionInstructPix2PixPipeline
         self.internvl_model = (
             AutoModel.from_pretrained(
                 self.internvl_path,

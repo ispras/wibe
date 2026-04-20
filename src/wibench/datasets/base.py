@@ -158,7 +158,7 @@ class PromptFolderDataset(RangeBaseDataset):
     sample_range : Optional[Tuple[int, int]]
         Optional (start, end) index range to subset the dataset (including both borders). Default: None (full dataset)
     separator : str
-        Separator for prompts in one file, default "\n"
+        Separator for prompts in one file, default is line break
     """
 
     def __init__(

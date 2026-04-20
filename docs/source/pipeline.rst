@@ -33,7 +33,7 @@ The YAML configuration file provides all necessary components of the benchmarkin
     pipeline:
       ...
 
-The configuration file supports `Jinja2`` inclusion syntax, e.g.:
+The configuration file supports ``Jinja2`` inclusion syntax, e.g.:
 
 .. code-block:: yaml+jinja
 
@@ -233,9 +233,11 @@ Description of parameters:
 
     * `table_name` — name of the table to save results in; creates two tables:
 
-      * `result_path/metrics_table_name.csv` — for metric results
+      * `result_path/table_name.csv` — for metric results
 
       * `result_path/params_table_name.csv` — for algorithm parameters
+
+      * `result_path/post_pipeline_metrics_table_name` - for post pipeline metrics results (FID)
 
     * `ClickHouse` — aggregates results into a `ClickHouse <https://clickhouse.com/>`__ database
 

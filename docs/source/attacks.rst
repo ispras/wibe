@@ -38,7 +38,6 @@ Common
 
 .. automodule:: wibench.attacks.common
    :members:
-   :undoc-members:
 
 
 Distortions
@@ -48,7 +47,6 @@ This block contains basic distortion attacks.
 
 .. automodule:: wibench.attacks.distortions
    :members:
-   :undoc-members:
 
 SADRE
 ~~~~~
@@ -123,7 +121,7 @@ Image Editing
 
 .. autoclass:: wibench.attacks.image_editing.ImageEditingFluxContext.ImageEditingFLuxContext
 
-.. autoclass:: wibench.attacks.image_editing.ImageEditingFluxContext.InstructPix2Pix
+.. autoclass:: wibench.attacks.image_editing.InstructPix2Pix.ImageEditingInstructPix2Pix
 
 LIIF
 ~~~~
@@ -139,3 +137,34 @@ WMForger
 ~~~~~~~~
 
 .. autoclass:: wibench.attacks.wmforger.wmforger.WMForger
+
+TrustMarkRM
+~~~~~~~~~~~
+
+.. autoclass:: wibench.attacks.trustmark_rm.trustmark_rm.TrustMarkRM
+
+NRP
+~~~
+
+.. autoclass:: wibench.attacks.nrp.nrp.NRPSmall
+
+.. autoclass:: wibench.attacks.nrp.nrp.NRPLarge
+
+
+MPRNet
+~~~~~~
+
+.. autoclass:: wibench.attacks.mprnet.MPRNetAttack
+
+
+FLux Attack
+~~~~~~~~~~~
+
+.. autoclass:: wibench.attacks.UniEdit_FLUX.image_editing.UniEditAttackFlux
+
+.. autoclass:: wibench.attacks.UniEdit_FLUX.image_editing.UniInvAttackFlux
+
+DISCO
+~~~~~
+
+.. autoclass:: wibench.attacks.disco.DISCOAttack

@@ -1,10 +1,4 @@
-from compressai.zoo import (
-    bmshj2018_factorized,
-    bmshj2018_hyperprior,
-    cheng2020_anchor,
-    mbt2018,
-    mbt2018_mean,
-)
+
 import torch
 import torch.nn.functional as F
 from ..base import BaseAttack
@@ -14,6 +8,13 @@ class VAERegeneration(BaseAttack):
     """Based on the code from `here <https://github.com/XuandongZhao/WatermarkAttacker/blob/main/wmattacker.py#L19>`__."""
 
     def __init__(self, model_name="bmshj2018-factorized", quality=1, device="cuda" if torch.cuda.is_available() else "cpu"):
+        from compressai.zoo import (
+            bmshj2018_factorized,
+            bmshj2018_hyperprior,
+            cheng2020_anchor,
+            mbt2018,
+            mbt2018_mean,
+        )
         if model_name == "bmshj2018-factorized":
             self.model = bmshj2018_factorized(quality=quality, pretrained=True)
         elif model_name == "bmshj2018-hyperprior":
