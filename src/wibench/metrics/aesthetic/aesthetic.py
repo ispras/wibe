@@ -32,8 +32,8 @@ class Aesthetic(PostEmbedMetric):
 
     Call Parameters
     ---------------
-        img1 : TorchImg
-            Input image tensor in (C, H, W) format
+        _ : Any
+            Not used, can be anything
         img2 : TorchImg
             Input image tensor in (C, H, W) format
         watermark_data : Any
@@ -52,7 +52,7 @@ class Aesthetic(PostEmbedMetric):
         self.model = RM.load_score("Aesthetic", device=device, download_root=download_root)
 
     def __call__(self,
-                 img1: TorchImg,
+                 _: Any,
                  img2: TorchImg,
                  watermark_data: Any) -> float:
         numpy_image = torch_img2numpy_bgr(img2)
