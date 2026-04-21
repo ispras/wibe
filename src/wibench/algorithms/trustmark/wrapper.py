@@ -7,7 +7,6 @@ from wibench.typing import TorchImg
 from wibench.config import Params
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.download import requires_download
-from trustmark import TrustMark
 from pathlib import Path
 from functools import partialmethod
 from wibench.pipeline_type import PipelineType
@@ -87,6 +86,7 @@ class TrustMarkWrapper(BaseAlgorithmWrapper):
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         models_cache = params.pop("models_cache", DEFAULT_MODELS_CACHE)
+        from trustmark import TrustMark
         super().__init__(TrustMarkParams(**params))
         self.params: TrustMarkParams
         self.device = self.params.device

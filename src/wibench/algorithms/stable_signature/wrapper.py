@@ -4,8 +4,6 @@ import numpy as np
 import cv2
 
 from typing_extensions import Dict, Any
-from omegaconf import OmegaConf 
-from diffusers import StableDiffusionPipeline 
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -75,6 +73,8 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
+        from omegaconf import OmegaConf 
+        from diffusers import StableDiffusionPipeline 
         module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(StableSignatureParams(**params))
         self.params: StableSignatureParams

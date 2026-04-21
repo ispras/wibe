@@ -1,9 +1,6 @@
 import torch
 import torchvision.transforms as T
 from torchvision.transforms.functional import InterpolationMode
-from transformers import AutoModel, AutoTokenizer
-
-from diffusers import FluxKontextPipeline
 
 import json
 from wibench.typing import TorchImg
@@ -41,6 +38,8 @@ class ImageEditingFLuxContext(BaseAttack):
         self.device_flux = device_flux
 
         self.internvl_path = internvl_path
+        from transformers import AutoModel, AutoTokenizer
+        from diffusers import FluxKontextPipeline
         self.internvl_model = (
             AutoModel.from_pretrained(
                 self.internvl_path,

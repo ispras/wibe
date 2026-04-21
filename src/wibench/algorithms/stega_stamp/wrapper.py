@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing_extensions import Any, Dict
 from pathlib import Path
 
-from wibench.algorithms.stega_stamp.stega_stamp import StegaStamp
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
@@ -60,6 +59,7 @@ class StegaStampWrapper(BaseAlgorithmWrapper):
     
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         super().__init__(StegaStampParams(**params))
+        from wibench.algorithms.stega_stamp.stega_stamp import StegaStamp
         self.params: StegaStampParams
         self.model_filepath = Path(self.params.weights_path).resolve()
         self.stega_stamp = StegaStamp(self.model_filepath,

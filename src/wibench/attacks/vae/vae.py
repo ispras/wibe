@@ -1,7 +1,6 @@
 from wibench.attacks.base import BaseAttack
 import torch
 from torchvision import transforms
-from diffusers import AutoencoderKL
 
 
 class VAEAttack(BaseAttack):
@@ -32,6 +31,7 @@ class VAEAttack(BaseAttack):
         self.n_avg_imgs = n_avg_imgs
         self.noise_level = noise_level
         self.device = device
+        from diffusers import AutoencoderKL
         self.vae = AutoencoderKL.from_pretrained("black-forest-labs/FLUX.1-schnell", revision="refs/pr/1", subfolder="vae", torch_dtype=torch.bfloat16, 
                                                  cache_dir=cache_dir).to(device)
         self.preprocess_transform = transforms.Compose([

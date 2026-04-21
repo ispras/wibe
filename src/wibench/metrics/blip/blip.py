@@ -1,4 +1,3 @@
-import ImageReward as RM
 import torch
 
 from typing_extensions import Any
@@ -40,6 +39,7 @@ class BLIP(PostEmbedMetric):
     pipeline_type = PipelineType.PROMPT
 
     def __init__(self, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
+        import ImageReward as RM
         self.model = RM.load_score("BLIP", device=device)
 
     def __call__(self,

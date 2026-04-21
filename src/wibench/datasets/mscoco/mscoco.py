@@ -1,7 +1,5 @@
-import aiohttp
 from wibench.typing import ImageObject, PromptObject
 from ..base import RangeBaseDataset
-from datasets import load_dataset
 from typing import Optional, Tuple, Generator
 from torchvision.transforms.functional import to_tensor
 from wibench.pipeline_type import PipelineType
@@ -21,6 +19,8 @@ class MSCOCO(RangeBaseDataset):
         Optional (start, end) index range to subset the dataset
     cache_dir : Optional[str]
         Directory to cache downloaded dataset files
+    return_prompt : bool
+        If enabled, returns image captions instead of images (default False)
     timeout : int
         Timeout for dataset download
     """
@@ -35,6 +35,9 @@ class MSCOCO(RangeBaseDataset):
         return_prompt: bool = False,
         timeout: int = 3600
     ):
+        import aiohttp
+        from datasets import load_dataset
+        
         split = split + "idation" if split == "val" else split
         self.return_prompt = return_prompt
         if self.return_prompt:

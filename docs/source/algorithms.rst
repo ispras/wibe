@@ -18,6 +18,9 @@ Implement the wrapper class ctor
 .. code-block:: python
 
     from wibench.algorithms import BaseAlgorithmWrapper
+    from wibench.module_importer import ModuleImporter
+    from wibench.pipeline_type import PipelineType
+
 
     class MyAlgorithmWrapper(BaseAlgorithmWrapper):
         """Wrapper for My Watermarking Algorithm"""
@@ -25,6 +28,11 @@ Implement the wrapper class ctor
         # Unique identifier for your algorithm (lowercase, no spaces).
         # Not strictly required; by default, it is the same as the class name.
         name = "my_algorithm"
+       
+        # Algorithm type: 
+        # PipelineType.IMAGE for post-hoc methods (embed method takes image as a parameter)
+        # PipelineType.PROMPT for built-in methods (embed method takes prompt string as a parameter)
+        pipeline_type = PipelineType.IMAGE
         
         def __init__(self, params: dict):
             """
@@ -39,14 +47,16 @@ Implement the wrapper class ctor
             # If this code is implemented in a package, for example:
             from trustmark import TrustMark
             
-            # If the external code resides in an unorganized project, the simplest way
-            # to import it is via sys.path (example from hidden):
-            import sys
-            sys.path.append(str(Path(params["module_path"])))
-            from utils import (
-                load_options,
-                load_last_checkpoint
-            )
+            # If the external code resides in an unorganized project, the best way is
+            # to import it is via ModuleImporter context manager (example from hidden):
+            DEFAULT_MODULE_PATH = "./submodules/HiDDeN"
+            module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
+            with ModuleImporter("HIDDEN", module_path):
+                from HIDDEN.utils import (
+                    load_options,
+                    load_last_checkpoint
+                )
+                from HIDDEN.model.encoder_decoder import EncoderDecoder
             # etc.
 
 Implement the "watermark_data_gen" function
@@ -279,4 +289,16 @@ FIN
 ~~~
 
 .. automodule:: wibench.algorithms.fin.wrapper
+    :members:
+
+VINE
+~~~~
+
+.. automodule:: wibench.algorithms.vine.wrapper
+    :members:
+
+SepMark
+~~~~~~~
+
+.. automodule:: wibench.algorithms.sepmark.wrapper
     :members:
