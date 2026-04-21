@@ -174,13 +174,13 @@ HiDDeN
 InvisMark
 ~~~~~~~~~
 
-.. automodule:: wibench.algorithms.invismark.wrapper.InvisMarkWrapper
+.. autoclass:: wibench.algorithms.invismark.wrapper.InvisMarkWrapper
     :members:
 
 MBRS
 ~~~~
 
-.. automodule:: wibench.algorithms.mbrs.wrapper.MBRSWrapper
+.. autoclass:: wibench.algorithms.mbrs.wrapper.MBRSWrapper
     :members:
 
 SSHiDDeN
