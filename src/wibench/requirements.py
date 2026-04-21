@@ -31,6 +31,15 @@ def special_requirements(entity: str, config: dict[str, Any], entity_type: str):
         algorithm_config = config.get("config", {})
         inner_result = special_requirements(algorithm, algorithm_config, "algorithms")
         result.update(inner_result)
+    if entity.lower() == "empiricaltpr@xfpr":
+        algorithm = config.get("algorithm", "trustmark")
+        algorithm_config = config.get("algorithm_params", {})
+        dataset = config.get("dataset", "diffusiondb")
+        dataset_config = config.get("dataset_params", {})
+        inner_result = special_requirements(algorithm, algorithm_config, "algorithms")
+        result.update(inner_result)
+        inner_result = special_requirements(dataset, dataset_config, "datasets")
+        result.update(inner_result)
     result.add((entity, entity_type))
     return result
 
