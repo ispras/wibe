@@ -67,3 +67,6 @@
 [submodule "submodules/taming-transformers"]
 	path = submodules/taming-transformers
 	url = https://github.com/CompVis/taming-transformers.git
+[submodule "submodules/RoSteALS"]
+	path = submodules/RoSteALS
+	url = https://github.com/D3c3453d/RoSteALS.git
