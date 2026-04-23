@@ -8,20 +8,21 @@ from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
 from wibench.typing import TorchImg, TorchImgNormalize
+from wibench.pipeline_type import PipelineType
 from wibench.utils import normalize_image, denormalize_image, resize_torch_img
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.download import requires_download
 
 
-URL = ""
+URL = "https://nextcloud.ispras.ru/index.php/s/Qwz3YsZTjw2RxHj"
 NAME = "rosteals"
-REQUIRED_FILES = ["epoch=000017-step=000449999.ckpt"]
+REQUIRED_FILES = ["VQ4_mir_inference.yaml", "epoch=000017-step=000449999.ckpt"]
 
 DEFAULT_MODULE_PATH = "./submodules/RoSteALS"
-DEFAULT_CONFIG_PATH = "./submodules/RoSteALS/models/VQ4_mir_inference.yaml"
+DEFAULT_CONFIG_PATH = "./model_files/rosteals/VQ4_mir_inference.yaml"
 DEFAULT_WEIGHTS_PATH = "./model_files/rosteals/epoch=000017-step=000449999.ckpt"
 TAMING_TRANSFORMERS_PATH = "./submodules/taming-transformers/taming"
-IMAGENET_C_PATH = "./submodules/robustness/ImageNet-C/imagenet_c/imagenet_c"
+
 
 @dataclass
 class RoSteALSParams(Params):
@@ -45,6 +46,7 @@ class RoSteALSWrapper(BaseAlgorithmWrapper):
         RoSteALS algorithm configuration parameters (default EmptyDict)
     """
 
+    pipeline_type = PipelineType.IMAGE
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}):
@@ -70,7 +72,6 @@ class RoSteALSWrapper(BaseAlgorithmWrapper):
 
         with ModuleImporter("RoSteALS", module_path):
             with ModuleImporter("taming", TAMING_TRANSFORMERS_PATH):
-                # with ModuleImporter("imagenet_c", IMAGENET_C_PATH):
                 from RoSteALS.ldm.util import instantiate_from_config
                 self.model = instantiate_from_config(config).to(self.device)
         
@@ -131,7 +132,7 @@ class RoSteALSWrapper(BaseAlgorithmWrapper):
 
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """Generate watermark payload data for VINE watermarking algorithm.
+        """Generate watermark payload data for RoSteALS watermarking algorithm.
         
         Returns
         -------
