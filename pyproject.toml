@@ -26,7 +26,6 @@ dependencies = [
     "huggingface_hub",
     "json2clickhouse @ git+https://gitlab.ispras.ru/opentools/jsons2clickhouse",
     "plotly",
-    "setuptools>=61.0",
 ]
 
 [dependency-groups]
@@ -45,7 +44,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["setuptools>=61.0,<82.0"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
