@@ -5,3 +5,4 @@ pytorch-lightning<=1.9.5
 lpips
 matplotlib
 kornia
+setuptools<82.0

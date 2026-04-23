@@ -1,3 +1,4 @@
+requirements/algorithms/rosteals.txt
 requirements/wibench.txt
 requirements/attacks/trustmarkrm.txt
 requirements/attacks/wmforger.txt
@@ -32,7 +33,6 @@ requirements/algorithms/pimog.txt
 requirements/algorithms/trustmark.txt
 requirements/algorithms/stable_signature.txt
 requirements/algorithms/robust_wide.txt
-requirements/algorithms/invismark.txt
 requirements/algorithms/mbrs.txt
 requirements/algorithms/hidden.txt
 requirements/algorithms/dwt_svm.txt
