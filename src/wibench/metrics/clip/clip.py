@@ -1,4 +1,3 @@
-import ImageReward as RM
 import torch
 
 from typing_extensions import Any
@@ -52,6 +51,7 @@ class CLIPScore(PostEmbedMetric):
                  device: str = "cuda" if torch.cuda.is_available() else "cpu",
                  download_root: str = DEFAULT_DOWNLOAD_ROOT):
         download_root = str(Path(download_root).resolve())
+        import ImageReward as RM
         self.model = RM.load_score("CLIP", device=device, download_root=download_root)
 
     def __call__(self,

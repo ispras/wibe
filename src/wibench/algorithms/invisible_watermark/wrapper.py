@@ -5,7 +5,6 @@ from wibench.pipeline_type import PipelineType
 from wibench.utils import numpy_bgr2torch_img, torch_img2numpy_bgr, resize_torch_img
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
-from imwatermark import WatermarkEncoder, WatermarkDecoder
 from typing_extensions import Dict, Any
 
 
@@ -36,6 +35,7 @@ class InvisibleWatermarkWrapper(BaseAlgorithmWrapper):
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         super().__init__(InvisibleWatermarkConfig(**params))
+        from imwatermark import WatermarkEncoder, WatermarkDecoder
         self.encoder = WatermarkEncoder()
         self.decoder = WatermarkDecoder(
             wm_type="bits", length=self.params.wm_length

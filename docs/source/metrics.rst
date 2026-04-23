@@ -40,6 +40,13 @@ For example, for image-based metrics:
     from wibench.typing import TorchImg
 
     class MyMetric(PostEmbedMetric):
+
+        # Pipeline metrics compatibility 
+        # PipelineType.IMAGE for pipeline with post-hoc methods
+        # PipelineType.PROMPT for built-in methods (embed method takes prompt string as a parameter). Metric __call__ method should take prompt and image in this case
+        # PipelineType.ALL (default) for universal metrics (e.g. Aesthetic)
+        pipeline_type = PipelineType.IMAGE
+
         def __call__(
             self,
             img1: TorchImg,
@@ -89,63 +96,124 @@ PSNR
 ~~~~
 
 .. autoclass:: wibench.metrics.base.PSNR
+    :members:
+    :special-members: __call__
 
 SSIM
 ~~~~
 
 .. autoclass:: wibench.metrics.base.SSIM
+    :members:
+    :special-members: __call__
 
 BER
 ~~~
 
 .. autoclass:: wibench.metrics.base.BER
+    :members:
+    :special-members: __call__
+
+WER
+~~~
+
+.. autoclass:: wibench.metrics.base.WER
+    :members:
+    :special-members: __call__
 
 TPRxFPR
 ~~~~~~~
 
 .. autoclass:: wibench.metrics.base.TPRxFPR
+    :members:
+    :special-members: __call__
+
+Empirical TPRxFPR
+~~~~~~~~~~~~~~~~~
+
+.. autoclass:: wibench.metrics.base.EmpiricalTPRxFPR
+    :members:
+    :special-members: __call__
 
 P-value
 ~~~~~~~
 
 .. autoclass:: wibench.metrics.base.PValue
+    :members:
+    :special-members: __call__
 
 LPIPS
 ~~~~~
 
 .. autoclass:: wibench.metrics.lpips.lpips.LPIPS
+    :members:
+    :special-members: __call__
 
 DreamSim
 ~~~~~~~~
 
 .. autoclass:: wibench.metrics.dreamsim.dreamsim.DreamSim
+    :members:
+    :special-members: __call__
 
 Aesthetic
 ~~~~~~~~~
 
 .. autoclass:: wibench.metrics.aesthetic.aesthetic.Aesthetic
+    :members:
+    :special-members: __call__
 
 BLIP
 ~~~~
 
 .. autoclass:: wibench.metrics.blip.blip.BLIP
+    :members:
+    :special-members: __call__
 
 CLIPScore
 ~~~~~~~~~
 
 .. autoclass:: wibench.metrics.clip.clip.CLIPScore
+    :members:
+    :special-members: __call__
 
 CLIP_IQA
 ~~~~~~~~
 
 .. autoclass:: wibench.metrics.clip_iqa.clip_iqa.CLIP_IQA
+    :members:
+    :special-members: __call__
 
 ImageReward
 ~~~~~~~~~~~
 
 .. autoclass:: wibench.metrics.image_reward.image_reward.ImageReward
+    :members:
+    :special-members: __call__
 
 FID
 ~~~
 
 .. autoclass:: wibench.metrics.fid.fid.FID
+    :members:
+    :special-members: __call__
+
+Result
+~~~~~~
+
+.. autoclass:: wibench.metrics.base.Result
+    :members:
+    :special-members: __call__
+
+Embedded Watermark
+~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: wibench.metrics.base.EmbedWatermark
+    :members:
+    :special-members: __call__
+
+Extracted Watermark
+~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: wibench.metrics.base.ExtractedWatermark
+    :members:
+    :special-members: __call__

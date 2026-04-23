@@ -430,5 +430,8 @@ class ColorInversion(BaseAttack):
     """Inverts colors in image.
 
     """
+    def __init__(self):
+        super().__init__()
+
     def __call__(self, image: TorchImg) -> TorchImg:
         return -image + 1

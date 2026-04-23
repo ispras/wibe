@@ -11,6 +11,8 @@ class Identity(BaseAttack):
     """
     Implementation of "no attack" case
     """
+    def __init__(self):
+        super().__init__()
 
     def __call__(self, watermark_object: TorchImg) -> TorchImg:
         """
@@ -31,7 +33,9 @@ class Identity(BaseAttack):
 class Combination(BaseAttack):
     """
     Combination of attacks. Any combination of registered attack is supported. For example, you may use combination of rotation and center crop as:
-    
+
+    .. code-block:: yaml
+
         - combination:
             report_name: rotate_crop
             attacks:
@@ -39,7 +43,7 @@ class Combination(BaseAttack):
                 angle: 30
             - centercrop:
                 ratio: 0.5
-              
+
     Parameters
     ----------
     attacks: list[dict[str, Any]]
@@ -64,12 +68,16 @@ class ImageWatermark(BaseAttack):
     """
     Applies watermark as attack on another watermark. Watermark data (e.g. bit message) is chosen randomly. Example of configuration (default algorithm parameters):
 
+    .. code-block:: yaml
+
         - ImageWatermark:
             report_name: trustmark_attack
             algorithm: trustmark 
-          
+
     Or you may pass specified algorithm parameters via `config` field:
      
+    .. code-block:: yaml
+
         - ImageWatermark:
             report_name: trustmark_attack
             algorithm: trustmark 
@@ -79,7 +87,7 @@ class ImageWatermark(BaseAttack):
               model_type: Q
               wm_strength: 0.75
               device: cpu
-              
+
     Parameters
     ----------
     algorithm: str

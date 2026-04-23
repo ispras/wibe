@@ -43,6 +43,9 @@ If it is possible to get number of samples in dataset, you may inherit from ``Ra
 
     class MyDataset(BaseDataset):
 
+        # Pipeline type depends on returned data type
+        pipeline_type = PipelineType.IMAGE
+
         def __init__(self, parametrs_of_dataset, sample_range: Optional[Tuple[int, int]] = None):
             ...
             super().__init__(sample_range, self.__len__())
@@ -52,7 +55,8 @@ If it is possible to get number of samples in dataset, you may inherit from ``Ra
             ...
 
         def generator(self) -> Generator[ImageObject, None, None]:
-                # Yields images from directory.
+                # Yields images from directory. Alternatively, PromptObject 
+                # may be returned (pipeline_type should be changed accordingly)
                 ...
                 yield ImageObject(image_id, torch_image)
 

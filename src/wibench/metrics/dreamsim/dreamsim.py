@@ -1,7 +1,6 @@
 from typing import Any
 
 import torch
-from dreamsim import dreamsim
 
 from wibench.metrics.base import PostEmbedMetric
 from wibench.typing import TorchImg
@@ -55,6 +54,7 @@ class DreamSim(PostEmbedMetric):
         dreamsim_type: str = "ensemble",
         use_patch_model: bool = False
     ) -> None:
+        from dreamsim import dreamsim
         self.device = device
         self.model, _ = dreamsim(pretrained=True,
                                  device=self.device,

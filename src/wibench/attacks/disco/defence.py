@@ -27,9 +27,7 @@ class DISCOAttack(BaseAttack):
             from dfsrc_disco.robustbench.model_zoo.defense import inr
             self.inr = inr
 
-
-
-    def __call__(self, image):
+    def __call__(self, image: torch.Tensor) -> torch.Tensor:
         orig_ndims = len(image.shape)
         orig_device = image.device
         if orig_ndims < 4:
@@ -43,4 +41,3 @@ class DISCOAttack(BaseAttack):
             res = res.squeeze()
         image.to(orig_device)
         return res.detach().to(orig_device)
-

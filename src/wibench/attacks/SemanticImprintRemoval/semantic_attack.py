@@ -1,15 +1,4 @@
 import torch
-from torchvision import transforms
-
-from .utils import imprint_utils
-from .utils.imprint_utils import invert_image, validate
-#from .utils.utils import get_detection_threshold, check_if_detection_successful
-
-#from .utils.pipe import pipe_utils
-
-#from .utils.prompt_utils import PROMPTS_SD_LIST
-
-from .utils.utils import set_random_seed
 
 #import torch.nn as nn
 from PIL import Image
@@ -43,6 +32,12 @@ class SEMAttack(BaseAttack):
     ) -> None:
         
         super().__init__()
+        
+        from .utils import imprint_utils
+        from .utils.imprint_utils import invert_image
+        from .utils.utils import set_random_seed
+        self.imprint_utils = imprint_utils
+        self.invert_image = invert_image
 
         self.modelid_attacker = modelid_attacker
         self.scheduler_attacker = scheduler_attacker
@@ -83,14 +78,14 @@ class SEMAttack(BaseAttack):
 
 
         # z0_original из пикселей
-        z0_original = imprint_utils.pixel_to_latent(image_pil, self.pipe_attacker).to(self.device)
+        z0_original = self.imprint_utils.pixel_to_latent(image_pil, self.pipe_attacker).to(self.device)
         z0 = torch.nn.Parameter(z0_original.detach().clone())
         optim = torch.optim.Adam([z0], lr=self.lr)
 
         # инверсия (получаем zT_retrieved)
         with torch.no_grad():
             image_pt_for_inv = image_tensor.to(dtype=torch.float32)
-            zT_retrieved = invert_image(pipe=self.pipe_attacker,
+            zT_retrieved = self.invert_image(pipe=self.pipe_attacker,
                                         image_pt=image_pt_for_inv,
                                         scheduler=self.inverse_scheduler,
                                         num_inference_steps=self.num_inference_steps_attacker)
@@ -104,7 +99,7 @@ class SEMAttack(BaseAttack):
             loss.backward()
             optim.step()
 
-        final_pil = imprint_utils.latent_to_pil(z0, self.pipe_attacker)[0]
+        final_pil = self.imprint_utils.latent_to_pil(z0, self.pipe_attacker)[0]
         
         arr = (np.asarray(final_pil).astype(np.float32) / 255.0).transpose(2, 0, 1)
         final_pt = torch.from_numpy(arr).unsqueeze(0).to(dtype=torch.float32).to(self.device)

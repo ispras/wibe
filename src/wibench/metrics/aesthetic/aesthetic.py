@@ -1,4 +1,3 @@
-import ImageReward as RM
 import torch
 from typing_extensions import Any
 from pathlib import Path
@@ -33,8 +32,8 @@ class Aesthetic(PostEmbedMetric):
 
     Call Parameters
     ---------------
-        img1 : TorchImg
-            Input image tensor in (C, H, W) format
+        _ : Any
+            Not used, can be anything
         img2 : TorchImg
             Input image tensor in (C, H, W) format
         watermark_data : Any
@@ -49,10 +48,11 @@ class Aesthetic(PostEmbedMetric):
                  device: str = "cuda" if torch.cuda.is_available() else "cpu",
                  download_root: str = DEFAULT_DOWNLOAD_ROOT):
         download_root = str(Path(download_root).resolve())
+        import ImageReward as RM
         self.model = RM.load_score("Aesthetic", device=device, download_root=download_root)
 
     def __call__(self,
-                 img1: TorchImg,
+                 _: Any,
                  img2: TorchImg,
                  watermark_data: Any) -> float:
         numpy_image = torch_img2numpy_bgr(img2)

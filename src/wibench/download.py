@@ -2,6 +2,8 @@ from typing import List
 from pathlib import Path
 import requests
 import zipfile
+from functools import wraps
+import inspect
 from loguru import logger
 
 
@@ -68,11 +70,13 @@ def requires_download(url: str, name: str, required_files: List[str]):
     def decorator(cls):
         original_init = cls.__init__
 
+        @wraps(original_init)
         def new_init(self, *args, **kwargs):
             if type(self) is cls:
                 if not check_files_in_folder(str(Path(DOWNLOAD_MODELS_PATH) / name), required_files):
                     download_folder(url, name)
             original_init(self, *args, **kwargs)
+        new_init.__signature__ = inspect.signature(original_init)
 
         cls.__init__ = new_init
         return cls

@@ -8,7 +8,6 @@ from wibench.algorithms.trustmark.wrapper import (
     URL,
     REQUIRED_FILES
 )
-from trustmark import TrustMark
 
 
 @requires_download(URL, NAME, REQUIRED_FILES)
@@ -22,6 +21,7 @@ class TrustMarkRM(BaseAttack):
     def __init__(self, model_type: str = 'Q', device: str = "cuda" if torch.cuda.is_available() else "cpu") -> None:
         super().__init__()
         self.device = device
+        from trustmark import TrustMark
         self.tm = TrustMark(use_ECC=False, device=self.device, model_type=model_type)
 
     def __call__(self, image: TorchImg) -> TorchImg:
