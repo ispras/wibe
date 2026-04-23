@@ -2,7 +2,6 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 import torch
-from omegaconf import OmegaConf
 
 from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
@@ -50,6 +49,7 @@ class RoSteALSWrapper(BaseAlgorithmWrapper):
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}):
+        from omegaconf import OmegaConf
         module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         rosteals_params = RoSteALSParams(**params)
         self.device = rosteals_params.device
@@ -96,13 +96,9 @@ class RoSteALSWrapper(BaseAlgorithmWrapper):
         normalized_image: TorchImgNormalize = normalize_image(image).squeeze(0)
         resized_normalized_image: TorchImgNormalize = resize_torch_img(normalized_image, [self.params.H, self.params.W])
 
-        secret = watermark_data.watermark.to(self.device).float()
-        if secret.ndim == 1:
-            secret = secret.unsqueeze(0)
-
         with torch.no_grad():
             z = self.model.encode_first_stage(resized_normalized_image.unsqueeze(0))
-            z_embed, _ = self.model(z, None, secret)
+            z_embed, _ = self.model(z, None, watermark_data.watermark.to(self.device).float())
             stego = self.model.decode_first_stage(z_embed).clamp(-1, 1)
 
         residual = stego.squeeze(0) - resized_normalized_image
