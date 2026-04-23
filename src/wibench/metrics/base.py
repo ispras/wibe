@@ -1,8 +1,9 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union, Optional
 from functools import lru_cache
 from abc import abstractmethod
 import numpy as np
 import torch
+import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
 from wibench.registry import RegistryMeta
@@ -16,7 +17,6 @@ from skimage.metrics import structural_similarity as ssim
 from scipy.stats import binom
 from loguru import logger
 import os
-
 
 class BaseMetric(metaclass=RegistryMeta):
     """Abstract base class for all metric calculators in the watermarking pipeline.
@@ -224,14 +224,77 @@ class EmpiricalTPRxFPR(PostExtractMetric):
     - Saves thresholds to disk for efficiency
     - Binary classification metric
     """
-    
+
     name = "EmpiricalTPR@xFPR" 
 
-    @staticmethod
-    def get_percentile_and_reverse(method_name: str, target_fpr: float, method_wrapper=None) -> tuple:
+    def __init__(self,
+                 algorithm: str,
+                 algorithm_params: Dict[str, Any] = {},
+                 dataset: str = "diffusiondb",
+                 dataset_params: Dict[str, Any] = {},
+                 fpr_rate: float = 0.1,
+                 random_extracts_path: str = "./thresholds.csv",
+                 method_type: str = "z",
+                 results_csv_path: str = "./thresholds_results.csv"
+                 ) -> None:
+        from wibench.base_objects import get_datasets, get_algorithms
+        self.fpr_rate = fpr_rate
+        self.method_type = method_type
+        self.algorithm_name = algorithm.lower()
+        self.results_csv_path = results_csv_path
+
+        self.dataset = get_datasets([(dataset, dataset_params)])[0]
+        self.method = get_algorithms([(algorithm, algorithm_params)])[0]
+
+        path_obj = Path(random_extracts_path)
+        self.re_path = str(path_obj.parent / f"{path_obj.stem}_{method_type}{path_obj.suffix}")
+        if method_type == "z":
+            self.threshold = self._load_or_generate_threshold()
+        else:
+            self.random_extracts = self._load_or_generate_multibit_extracts()
+        
+        super().__init__()
+
+    def _load_or_generate_threshold(self) -> float:
+        """Load threshold from cache or generate new one."""
+        if os.path.exists(self.results_csv_path):
+            df = pd.read_csv(self.results_csv_path)
+            matching = df[
+                (df['algorithm'] == self.algorithm_name) & 
+                (df['fpr_rate'] == self.fpr_rate)
+            ]
+            if not matching.empty:
+                threshold = matching.iloc[0]['threshold']
+                logger.info(f"Loaded threshold from DataFrame: {threshold}")
+                return threshold
+        try:
+            scores = np.loadtxt(self.re_path, delimiter=",")
+            meta_path = self.re_path.replace('.csv', '_metadata.txt')
+            if os.path.exists(meta_path):
+                with open(meta_path, 'r') as f:
+                    metadata = {}
+                    for line in f:
+                        if '=' in line:
+                            key, value = line.strip().split('=', 1)
+                            metadata[key] = value
+                
+                if float(metadata.get('fpr_rate', 0)) == self.fpr_rate:
+                    threshold = float(metadata['threshold'])
+                    logger.info(f"Loaded zerobit threshold from cache: {threshold}")
+                    return threshold
+        except Exception as e:
+            logger.info(f"Cache not found or invalid: {e}")
+        
+        return self._generate_threshold()
+   
+
+    def get_percentile_and_reverse(
+            self,
+            method_name: str, 
+            target_fpr: float, 
+            method_wrapper=None) -> tuple:
         """
         Возвращает (percentile, reverse) для заданного метода.
-        
         Для DFT Circle: extract возвращает корреляцию (0-1), маркированные имеют БОЛЬШУЮ корреляцию
         Для MaXsive: extract возвращает score (корреляция или L1)
         Для RingID: extract возвращает расстояние, маркированные имеют МЕНЬШЕЕ расстояние
@@ -242,7 +305,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         
         elif method_name == "maxsive":
             if method_wrapper and hasattr(method_wrapper, 'params'):
-                distant_func = method_wrapper.params.distant_func
+                distant_func = self.method.params.distant_func
             else:
                 distant_func = "corr"
             
@@ -259,85 +322,46 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         
         else:
             return (1 - target_fpr) * 100, False
-
-    @staticmethod
-    def get_random_extracts(method: BaseAlgorithmWrapper, dataset: BaseDataset, re_path: str, method_wrapper=None, method_type = 'z',  fpr_rate: float = 0.1 ) -> List[torch.Tensor]:
+   
+    def get_random_extracts(self) -> List[torch.Tensor]: #Uniion
         random_extracts = []
-        scores = [] if method_type =="z" else None
-        total = len(dataset)
+        scores = [] if self.method_type =="z" else None
+        total = len(self.dataset)
         logger.info(f"Generate random extracts for dataset length: {total}")
-        for data_object in tqdm(dataset.generator(), total=total):
+        for data_object in tqdm(self.dataset.generator(), total=total):
             data_object: Object
             obj = getattr(data_object, data_object.get_object_alias())
-            watermark_data = method.watermark_data_gen()
-            extracted = method.extract(obj, watermark_data)
+            watermark_data = self.method.watermark_data_gen()
+            extracted = self.method.extract(obj, watermark_data)
 
-            if method_type == 'z':
+            if self.method_type == 'z':
                 score = float(extracted)
                 scores.append(score)
             else:
                 random_extracts.append(extracted.flatten())
 
-        if method_type =="z":
-            percentile, reverse = EmpiricalTPRxFPR.get_percentile_and_reverse(method.__class__.__name__.lower(), fpr_rate, method_wrapper)  
+        if self.method_type =="z":
+            percentile, reverse = EmpiricalTPRxFPR.get_percentile_and_reverse(self.method.__class__.__name__.lower(), fpr_rate, method_wrapper)  
             threshold = float(np.percentile(scores, percentile))  
             logger.info(f"Zerobit: threshold={threshold:.6f} at {percentile:.2f}% percentile")
-            np.savetxt(re_path, np.array(scores), delimiter=",")
-
-            meta_path = re_path.replace('.csv', '_metadata.txt')
+            np.savetxt(self.re_path, np.array(scores), delimiter=",")
+#менять КЭЩИРОВАТЬ ОДИНАКОВЫМ ОБРАЗОМ
+            meta_path = self.re_path.replace('.csv', '_metadata.txt')
             with open(meta_path, 'w') as f:
                             f.write(f"method_type=zerobit\n")
                             f.write(f"threshold={threshold}\n")
                             f.write(f"percentile={percentile}\n")
                             f.write(f"reverse={reverse}\n")
-                            f.write(f"fpr_rate={fpr_rate}\n")
-
+                            f.write(f"fpr_rate={self.fpr_rate}\n")
 
             return threshold
         else:
 
-            logger.info(f"Random extracts are saved along the path: {re_path}")
-            np.savetxt(re_path, torch.stack(random_extracts).numpy(), delimiter=",")
+            logger.info(f"Random extracts are saved along the path: {self.re_path}")
+            np.savetxt(self.re_path, torch.stack(random_extracts).numpy(), delimiter=",")
             return random_extracts
 
-
-
-    def __init__(self,
-                 algorithm: str,
-                 algorithm_params: Dict[str, Any] = {},
-                 dataset: str = "diffusiondb",
-                 dataset_params: Dict[str, Any] = {},
-                 fpr_rate: float = 0.1,
-                 random_extracts_path: str = "./thresholds.csv",
-                 method_type: str = "z"
-                 ) -> None:
-        from wibench.base_objects import get_datasets, get_algorithms
-        self.fpr_rate = fpr_rate
-        self.method_type = method_type
-        #params zero multi
-        self.dataset = get_datasets([(dataset, dataset_params)])[0]
-        self.method = get_algorithms([(algorithm, algorithm_params)])[0]
-        self.re_path = str(Path(random_extracts_path).resolve())
-        # method_wrapper = self.method(**algorithm_params)
-        if method_type =="z":
-            self.threshold = self.get_random_extracts(
-                    self.method, self.dataset, self.re_path,
-                    method_wrapper=self.method, method_type='z', fpr_rate=fpr_rate
-                ) 
-            
-
-        else:
-            try:
-                random_extracts = np.loadtxt(self.re_path, delimiter=",")
-                logger.info(f"Random extracts are used along the path: {self.re_path}")
-
-            except Exception:
-                random_extracts = None
-        
-                self.random_extracts = self.get_random_extracts(self.method, self.dataset, self.re_path) if random_extracts is None else random_extracts
-        super().__init__()
-
-
+   
 
     def __call__(
         self,
@@ -348,9 +372,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
     ) -> int:
         
         if self.method_type == 'z':
-
             score = float(extraction_result)
-
             return int(score >= self.threshold)
         else:
             watermark = watermark_data.watermark
@@ -363,6 +385,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
             extract_threshold = np.sum(extraction_result != watermark)
             thresholds = (extraction_result != self.random_extracts).sum(axis=1)
             num_matches = np.sum(thresholds <= extract_threshold)
+
             return int(num_matches <= round(self.fpr_rate * len(thresholds)))
 
 
