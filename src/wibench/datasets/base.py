@@ -96,6 +96,8 @@ class ImageFolderDataset(RangeBaseDataset):
     sample_range : Optional[Tuple[int, int]]
         Optional (start, end) index range to subset the dataset (including both borders)
     """
+    pipeline_type = PipelineType.IMAGE
+
     def __init__(
         self,
         path: Union[Path, str],
@@ -160,6 +162,7 @@ class PromptFolderDataset(RangeBaseDataset):
     separator : str
         Separator for prompts in one file, default is line break
     """
+    pipeline_type = PipelineType.PROMPT
 
     def __init__(
         self,
