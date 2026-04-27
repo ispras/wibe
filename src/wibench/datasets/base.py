@@ -16,6 +16,7 @@ from wibench.typing import (
     PromptObject
 )
 from wibench.registry import RegistryMeta
+from wibench.pipeline_type import PipelineType
 
 
 class BaseDataset(metaclass=RegistryMeta):
