@@ -1,13 +1,14 @@
 # Changelog
 
-## Version 0.4.0 -TBA
+## Version 0.4.0 - TBA
 
 WARP paper release
 
 Added:
 
-- Attacks: NRP, MPRNet, UniEditFlux, DISCO, TrustMarkRM and support for any attack combination
-- Methods: VINE
+- Attacks: NRP, MPRNet, UniEditFlux, DISCO, TrustMarkRM, DiffPure, RealESRGAN, support for any attack combination and embedding watermark as an attack
+- Methods: VINE, SepMark, Rosteals
+- Metrics: WER, Empirical TPR@xFPR
 - MSCOCO with captions
 
 Features:
