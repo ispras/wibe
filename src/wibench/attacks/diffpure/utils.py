@@ -15,7 +15,7 @@ import torchvision.models as models
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
-from robustbench import load_model
+
 #import defence.data
 
 
@@ -174,6 +174,7 @@ def get_image_classifier(classifier_name):
         wrapper_resnet = _Wrapper_ResNet(model)
 
     elif 'cifar10' in classifier_name:
+        from wibench.attacks.disco.dfsrc_disco.robustbench import load_model
         if 'wideresnet-28-10' in classifier_name:
             print('using cifar10 wideresnet-28-10...')
             model = load_model(model_name='Standard', dataset='cifar10', threat_model='Linf')  # pixel in [0, 1]
@@ -205,7 +206,7 @@ def get_image_classifier(classifier_name):
 
         elif 'wideresnet-70-16' in classifier_name:
             print('using cifar10 wideresnet-70-16 (dm_wrn-70-16)...')
-            from robustbench.model_zoo.architectures.dm_wide_resnet import DMWideResNet, Swish
+            from wibench.attacks.disco.dfsrc_disco.robustbench.model_zoo.architectures.dm_wide_resnet import DMWideResNet, Swish
             model = DMWideResNet(num_classes=10, depth=70, width=16, activation_fn=Swish)  # pixel in [0, 1]
 
             model_path = 'pretrained/cifar10/wresnet-76-10/weights-best.pt'

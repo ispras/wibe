@@ -89,6 +89,9 @@ class DiffPureDefence:
 
 @requires_download(URL_DIFFPURE, NAME_DIFFPURE, REQUIRED_FILES_DIFFPURE)
 class DiffPureAttack(BaseAttack):
+    """
+    ToDo
+    """
     def __init__(self, 
                  weights_path: str = DEFAULT_DIFFPURE_WEIGHTS_PATH, 
                  device: str = "cuda" if torch.cuda.is_available() else "cpu",

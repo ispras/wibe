@@ -39,6 +39,9 @@ DEFAULT_REALESRGAN_WEIGHTS_PATH_2 = f"./model_files/{NAME_REALESRGAN}/{REQUIRED_
 
 @requires_download(URL_REALESRGAN, NAME_REALESRGAN, REQUIRED_FILES_REALESRGAN)
 class RealESRGANAttack(BaseAttack):
+    """
+    ToDo
+    """
     def __init__(self, model_name = 'realesr-general-x4v3', 
                         model_path = DEFAULT_REALESRGAN_WEIGHTS_PATH,
                         denoise_strength = 0.2, 
@@ -72,9 +75,6 @@ class RealESRGANAttack(BaseAttack):
             self.model_path = [self.model_path, wdn_model_path]
             self.dni_weight = [self.denoise_strength, 1 - self.denoise_strength]
 
-        print("self.model_path", self.model_path)
-        print("self.dni_weight", self.dni_weight)
-
         self.upsampler = RealESRGANer(
             scale=self.netscale,
             model_path=self.model_path,
@@ -93,12 +93,10 @@ class RealESRGANAttack(BaseAttack):
             image = image.unsqueeze(0)
         
         h, w = image.shape[2], image.shape[3]
-        print(image.shape)
         with torch.no_grad():
             output_img, _ = self.upsampler.enhance(image.to(self.device), outscale=self.outscale)
             output_img = output_img.squeeze()
             resized_out = resize_torch_img(output_img, (image.shape[-2], image.shape[-1]))
-        print(resized_out.shape)
         return resized_out.clamp(0,1).cpu()
 
 

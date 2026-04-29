@@ -1,1 +1,4 @@
-git+https://github.com/RobustBench/robustbench.git@v1.0
+torch
+geotorch
+torchdiffeq
+tensorboardX

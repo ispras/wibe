@@ -12,6 +12,8 @@ requirements/attacks/dipnoise.txt
 requirements/attacks/wpwmattacker.txt
 requirements/attacks/adversarialembedding.txt
 requirements/attacks/dogblur.txt
+requirements/attacks/diffpureattack.txt
+requirements/attacks/realesrganattack.txt
 requirements/attacks/adversarialembeddingpsnr.txt
 requirements/attacks/vaeregeneration.txt
 requirements/attacks/dogblurdeblurfpninception.txt
@@ -38,6 +40,7 @@ requirements/algorithms/dft_circle.txt
 requirements/algorithms/dwt_dct.txt
 requirements/algorithms/dwsf.txt
 requirements/algorithms/ringid.txt
+requirements/algorithms/sepmark.txt
 requirements/algorithms/stega_stamp.txt
 requirements/algorithms/riva_gan.txt
 requirements/algorithms/videoseal.txt
@@ -45,7 +48,6 @@ requirements/algorithms/gaussian_shading.txt
 requirements/algorithms/maskwm.txt
 requirements/algorithms/chunkyseal.txt
 requirements/algorithms/dwt_dct_svd.txt
-requirements/algorithms/sepmark.txt
 requirements/metrics/fid.txt
 requirements/metrics/clip_iqa.txt
 requirements/metrics/lpips.txt

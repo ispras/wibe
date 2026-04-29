@@ -14,8 +14,10 @@ requirements/attacks/unieditfttackflux.txt
 requirements/attacks/wpwmattacker.txt
 requirements/attacks/adversarialembedding.txt
 requirements/attacks/dogblur.txt
+requirements/attacks/diffpureattack.txt
 requirements/attacks/imageeditinginstructpix2pix.txt
 requirements/attacks/imageeditingfluxcontext.txt
+requirements/attacks/realesrganattack.txt
 requirements/attacks/fluxregeneration.txt
 requirements/attacks/adversarialembeddingpsnr.txt
 requirements/attacks/vaeregeneration.txt
@@ -44,13 +46,13 @@ requirements/algorithms/fin.txt
 requirements/algorithms/dft_circle.txt
 requirements/algorithms/dwt_dct.txt
 requirements/algorithms/dwsf.txt
+requirements/algorithms/sepmark.txt
 requirements/algorithms/stega_stamp.txt
 requirements/algorithms/riva_gan.txt
 requirements/algorithms/videoseal.txt
 requirements/algorithms/maskwm.txt
 requirements/algorithms/chunkyseal.txt
 requirements/algorithms/dwt_dct_svd.txt
-requirements/algorithms/sepmark.txt
 requirements/metrics/fid.txt
 requirements/metrics/aesthetic.txt
 requirements/metrics/clip_iqa.txt
