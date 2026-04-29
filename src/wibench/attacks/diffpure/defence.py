@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 from wibench.attacks.base import BaseAttack
-from .eval_sde_adv import SDE_Adv_Model
 from wibench.utils import (
     resize_torch_img,
     #normalize_image,
@@ -14,6 +13,7 @@ import argparse
 import yaml
 import os
 
+
 def dict2namespace(config):
     namespace = argparse.Namespace()
     for key, value in config.items():
@@ -23,11 +23,13 @@ def dict2namespace(config):
             new_value = value
         setattr(namespace, key, new_value)
     return namespace
-# TODO: add download path
-URL_DIFFPURE="TODO"
+
+
+URL_DIFFPURE="https://nextcloud.ispras.ru/index.php/s/8BNJNdXERcnsodT"
 NAME_DIFFPURE="diffpure"
 REQUIRED_FILES_DIFFPURE=["256x256_diffusion_uncond.pt"]
 DEFAULT_DIFFPURE_WEIGHTS_PATH = f"./model_files/{NAME_DIFFPURE}/{REQUIRED_FILES_DIFFPURE[0]}"
+
 
 class DiffPureDefence:
     def __init__(self, weights_path=DEFAULT_DIFFPURE_WEIGHTS_PATH, device='cuda'):
@@ -67,6 +69,8 @@ class DiffPureDefence:
         new_config.device = torch.device(device)
         new_config.weights_path = weights_path
 
+        from .eval_sde_adv import SDE_Adv_Model
+        
         self.defence_model = SDE_Adv_Model(args, new_config)
         self.defence_model.eval()
         self.defence_name = 'diffpure'

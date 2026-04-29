@@ -17,8 +17,6 @@ except ImportError:
     except ImportError:
         pass  # shrug...
 
-from .dfsrc_realesrgan import RealESRGANer
-from .dfsrc_realesrgan.archs.srvgg_arch import SRVGGNetCompact
 import numpy as np
 import torchvision
 from wibench.attacks.base import BaseAttack
@@ -30,8 +28,9 @@ from wibench.utils import (
 )
 from wibench.download import requires_download
 
+
 #from defence_evaluate import test_main
-URL_REALESRGAN="TODO"
+URL_REALESRGAN="https://nextcloud.ispras.ru/index.php/s/dKiNcrb4PtNmJ4N"
 NAME_REALESRGAN="realesrgan"
 REQUIRED_FILES_REALESRGAN=["realesr-general-x4v3.pth", "realesr-general-wdn-x4v3.pth"]
 DEFAULT_REALESRGAN_PATH="./src/wibench/attacks/disco/dfsrc_disco"
@@ -58,6 +57,9 @@ class RealESRGANAttack(BaseAttack):
         self.pre_pad = pre_pad
         self.fp32 = fp32
         self.device = device
+        
+        from .dfsrc_realesrgan import RealESRGANer
+        from .dfsrc_realesrgan.archs.srvgg_arch import SRVGGNetCompact
 
         self.model = SRVGGNetCompact(num_in_ch=3, num_out_ch=3, num_feat=64, num_conv=32, upscale=4, act_type='prelu')
         self.netscale = 4
