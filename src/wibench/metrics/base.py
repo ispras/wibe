@@ -234,7 +234,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
                  dataset_params: Dict[str, Any] = {},
                  fpr_rate: float = 0.1,
                  random_extracts_path: str = "./thresholds.csv",
-                 method_type: str = "z"
+                 method_type: str = "zerobit"
                  ) -> None:
         from wibench.base_objects import get_datasets, get_algorithms
         self.fpr_rate = fpr_rate
@@ -245,79 +245,96 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         self.method = get_algorithms([(algorithm, algorithm_params)])[0]
         self.base_path = str(Path(random_extracts_path))
 
-        path_obj = Path(self.base_path)
-        self.re_path = str(path_obj.parent / f"{path_obj.stem}_{method_type}{path_obj.suffix}")
+        result = self._load_or_generate()
 
-        if method_type == "z":
-            self.threshold = self._load_or_generate_threshold()
+        if method_type == "zerobit":
+            self.threshold = result
         else:
-            self.random_extracts = self._load_or_generate_multibit_extracts()
+            self.random_extracts = result
         
         super().__init__()
 
-    def _load_or_generate_threshold(self) -> float:
-        """Load threshold from cache or generate new one for zerobit method"""
+    def _loading(self) -> Optional[Dict]:
+        "Loading from .pt"
         if os.path.exists(self.base_path):
             try:
-                df = pd.read_csv(self.base_path)
-                matching = df[
-                    (df['algorithm'] == self.algorithm_name) & 
-                    (df['fpr_rate'] == self.fpr_rate)
-                ]
-                if not matching.empty:
-                    threshold = matching.iloc[0]['threshold']
-                    logger.info(f"Loaded threshold from DataFrame: {threshold}")
-                    return threshold
+                cache_data = torch.load(self.base_path)
+                logger.info(f"Loaded cache from: {self.base_path}")
+                return cache_data
             except Exception as e:
-                logger.warning(f"Error reading CSV: {e}")
-
-        return self._generate_threshold()
+                logger.warning(f"Error loading cache: {e}")
+        return None
     
-    def _generate_threshold(self)-> float:
-        scores = []
-        total = len(self.dataset)
-        logger.info(f"Generate random extracts for dataset length: {total}")
+    def _saving(self, cache_data: Dict) -> None:
+        "Saving to .pt"
+        torch.save(cache_data, self.cache_path)
+        logger.info(f"Saved cache to: {self.cache_path}")
 
+    def _load_or_generate(self) -> Union[float, np.ndarray]:
+        cache_data = self._loading()
+        key = (self.algorithm_name, self.fpr_rate)
+        if cache_data is not None:
+            if self.method_type =="zerobit":
+                if key in cache_data.get('zerobit', {}):
+                    threshold = cache_data['zerobit'][key]['threshold']
+                    logger.info(f"Loaded zerobit threshold from cache: {threshold}")
+                    return threshold
+                else:
+                    if key in cache_data.get('multibit', {}):
+                        extracts = cache_data['multibit'][key]['extracts']
+                        logger.info(f"Loaded multibit extracts from cache: {len(extracts)} samples")
+                        return extracts
+        return self._generate()
+    
+    def _generate(self) -> Union[float, np.ndarray]:
+        extracts = []
+        scores = [] if self.method_type == "z" else None
+        total = len(self.dataset)
+        logger.info(f"Generating random data for dataset length: {total}")
+        
         for data_object in tqdm(self.dataset.generator(), total=total):
             obj = getattr(data_object, data_object.get_object_alias())
             watermark_data = self.method.watermark_data_gen()
             extracted = self.method.extract(obj, watermark_data)
-            scores.append(float(extracted))
-
-        percentile, reverse = self.get_percentile_and_reverse()  
-        threshold = float(np.percentile(scores, percentile))  
-        logger.info(f"Zerobit: threshold={threshold:.6f} at {percentile:.2f}% percentile")
-       
-        self._save_to_csv(threshold, percentile, reverse)
-        return threshold
-    
-    def _save_to_csv(self, threshold: float, percentile: float, reverse: bool) -> None:
-        result_df = pd.DataFrame([{
-            "algorithm": self.algorithm_name,
-            "fpr_rate": self.fpr_rate,
-            "threshold": threshold,
-            "method_type": self.method_type,
-            "percentile": percentile,
-            "reverse": reverse
-        }])
-        
-        if os.path.exists(self.base_path):
-            existing = pd.read_csv(self.base_path)
             
-            # Check exicting columns
-            required_columns = ['algorithm', 'fpr_rate']
-            if all(col in existing.columns for col in required_columns):
-                # Delete
-                existing = existing[~((existing['algorithm'] == self.algorithm_name) & 
-                                    (existing['fpr_rate'] == self.fpr_rate))]
-                result_df = pd.concat([existing, result_df], ignore_index=True)
+            if self.method_type == "z":
+                scores.append(float(extracted))
             else:
-                # Rewrite
-                logger.warning(f"CSV file {self.base_path} missing required columns, overwriting...")
+                extracts.append(extracted.flatten().numpy() if torch.is_tensor(extracted) else extracted.flatten())
+        # Load existing cache
+        cache_data = self._loading() or {}
+        key = (self.algorithm_name, self.fpr_rate)
         
-        result_df.to_csv(self.base_path, index=False)
-        logger.info(f"Saved threshold to: {self.base_path}")   
-
+        if self.method_type == "zerobit":
+            percentile, reverse = self.get_percentile_and_reverse()
+            threshold = float(np.percentile(scores, percentile))
+            logger.info(f"Zerobit: threshold={threshold:.6f} at {percentile:.2f}% percentile")
+            
+            # Save to cache
+            if 'zerobit' not in cache_data:
+                cache_data['zerobit'] = {}
+            cache_data['zerobit'][key] = {
+                'threshold': threshold,
+                'percentile': percentile,
+                'reverse': reverse,
+                'scores': scores
+            }
+            self._saving(cache_data)
+            return threshold
+        else:
+            extracts_array = np.stack(extracts)
+            logger.info(f"Multibit: saved {len(extracts_array)} extracts, shape={extracts_array.shape}")
+            
+            # Save to cache
+            if 'multibit' not in cache_data:
+                cache_data['multibit'] = {}
+            cache_data['multibit'][key] = {
+                'extracts': extracts_array,
+                'shape': extracts_array.shape
+            }
+            self._saving(cache_data)
+            return extracts_array
+    
     def get_percentile_and_reverse(self) -> tuple:
         """
         Returns (percentile, reverse) for the given method.
@@ -335,30 +352,6 @@ class EmpiricalTPRxFPR(PostExtractMetric):
                     return self.fpr_rate * 100, True
         #Correlation-based methods        
         return (1 - self.fpr_rate) * 100, False
-   
-    def _load_or_generate_multibit_extracts(self):
-        try:
-            extracts = np.loadtxt(self.re_path, delimiter=",")
-            logger.info(f"Loaded multibit extracts from: {self.re_path}")
-            return extracts
-        except Exception:
-            return self._generate_multibit_extracts()
-        
-    def _generate_multibit_extracts(self):
-        extracts = []
-        total = len(self.dataset)
-        logger.info(f"Generate random extracts for dataset length: {total}")
-
-        for data_object in tqdm(self.dataset.generator(), total=total):
-            obj = getattr(data_object, data_object.get_object_alias())
-            watermark_data = self.method.watermark_data_gen()
-            extracted = self.method.extract(obj, watermark_data)
-            extracts.append(extracted.flatten())
-
-        extracts_array = torch.stack(extracts).numpy()
-        np.savetxt(self.re_path, extracts_array, delimiter=",")
-        logger.info(f"Saved multibit extracts to: {self.re_path}")
-        return extracts_array
     
     def __call__(
         self,
