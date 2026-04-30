@@ -234,20 +234,20 @@ class EmpiricalTPRxFPR(PostExtractMetric):
                  dataset_params: Dict[str, Any] = {},
                  fpr_rate: float = 0.1,
                  random_extracts_path: str = "./thresholds.csv",
-                 method_type: str = "z",
-                 results_csv_path: str = "./thresholds_results.csv"
+                 method_type: str = "z"
                  ) -> None:
         from wibench.base_objects import get_datasets, get_algorithms
         self.fpr_rate = fpr_rate
         self.method_type = method_type
         self.algorithm_name = algorithm.lower()
-        self.results_csv_path = results_csv_path
 
         self.dataset = get_datasets([(dataset, dataset_params)])[0]
         self.method = get_algorithms([(algorithm, algorithm_params)])[0]
+        self.base_path = str(Path(random_extracts_path))
 
-        path_obj = Path(random_extracts_path)
+        path_obj = Path(self.base_path)
         self.re_path = str(path_obj.parent / f"{path_obj.stem}_{method_type}{path_obj.suffix}")
+
         if method_type == "z":
             self.threshold = self._load_or_generate_threshold()
         else:
@@ -256,37 +256,59 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         super().__init__()
 
     def _load_or_generate_threshold(self) -> float:
-        """Load threshold from cache or generate new one."""
-        if os.path.exists(self.results_csv_path):
-            df = pd.read_csv(self.results_csv_path)
-            matching = df[
-                (df['algorithm'] == self.algorithm_name) & 
-                (df['fpr_rate'] == self.fpr_rate)
-            ]
-            if not matching.empty:
-                threshold = matching.iloc[0]['threshold']
-                logger.info(f"Loaded threshold from DataFrame: {threshold}")
-                return threshold
-        try:
-            scores = np.loadtxt(self.re_path, delimiter=",")
-            meta_path = self.re_path.replace('.csv', '_metadata.txt')
-            if os.path.exists(meta_path):
-                with open(meta_path, 'r') as f:
-                    metadata = {}
-                    for line in f:
-                        if '=' in line:
-                            key, value = line.strip().split('=', 1)
-                            metadata[key] = value
-                
-                if float(metadata.get('fpr_rate', 0)) == self.fpr_rate:
-                    threshold = float(metadata['threshold'])
-                    logger.info(f"Loaded zerobit threshold from cache: {threshold}")
+        """Load threshold from cache or generate new one for zerobit method"""
+        if os.path.exists(self.base_path):
+            try:
+                df = pd.read_csv(self.base_path)
+                matching = df[
+                    (df['algorithm'] == self.algorithm_name) & 
+                    (df['fpr_rate'] == self.fpr_rate)
+                ]
+                if not matching.empty:
+                    threshold = matching.iloc[0]['threshold']
+                    logger.info(f"Loaded threshold from DataFrame: {threshold}")
                     return threshold
-        except Exception as e:
-            logger.info(f"Cache not found or invalid: {e}")
-        
+            except Exception as e:
+                logger.warning(f"Error reading CSV: {e}")
+
         return self._generate_threshold()
-   
+    
+    def _generate_threshold(self)-> float:
+        scores = []
+        total = len(self.dataset)
+        logger.info(f"Generate random extracts for dataset length: {total}")
+
+        for data_object in tqdm(self.dataset.generator(), total=total):
+            obj = getattr(data_object, data_object.get_object_alias())
+            watermark_data = self.method.watermark_data_gen()
+            extracted = self.method.extract(obj, watermark_data)
+            scores.append(float(extracted))
+
+        percentile, reverse = EmpiricalTPRxFPR.get_percentile_and_reverse(self.method.__class__.__name__.lower(), self.fpr_rate, self.method)  
+        threshold = float(np.percentile(scores, percentile))  
+        logger.info(f"Zerobit: threshold={threshold:.6f} at {percentile:.2f}% percentile")
+       
+        self._save_to_csv(threshold, percentile, reverse)
+        return threshold
+    
+    def _save_to_csv(self, threshold: float, percentile: float, reverse: bool) -> None:
+        result_df = pd.DataFrame([{
+            "algorithm": self.algorithm_name,
+            "fpr_rate": self.fpr_rate,
+            "threshold": threshold,
+            "method_type": self.method_type,
+            "percentile": percentile,
+            "reverse": reverse
+         }])
+        if os.path.exists(self.base_path):
+            existing = pd.read_csv(self.base_path)
+            # Delete and rewrite
+            existing = existing[~((existing['algorithm'] == self.algorithm_name) & 
+                                (existing['fpr_rate'] == self.fpr_rate))]
+            result_df = pd.concat([existing, result_df], ignore_index=True)
+        
+        result_df.to_csv(self.base_path, index=False)
+        logger.info(f"Saved threshold to: {self.base_path}")
 
     def get_percentile_and_reverse(
             self,
@@ -294,75 +316,46 @@ class EmpiricalTPRxFPR(PostExtractMetric):
             target_fpr: float, 
             method_wrapper=None) -> tuple:
         """
-        Возвращает (percentile, reverse) для заданного метода.
-        Для DFT Circle: extract возвращает корреляцию (0-1), маркированные имеют БОЛЬШУЮ корреляцию
-        Для MaXsive: extract возвращает score (корреляция или L1)
-        Для RingID: extract возвращает расстояние, маркированные имеют МЕНЬШЕЕ расстояние
+        Returns (percentile, reverse) for the given method.
+        For RingID: returns distance (lower = watermarked)
+        For MaXsive: returns correlation (higher = watermarked) or L1 distance
+        For DFT Circle: returns correlation (higher = watermarked)
         """
-        if method_name == "ringid":
-            #меньшее расстояние = маркированное
-            return target_fpr * 100, True
+        #Distance-based methods: RingID, MAXSIVE with L1
+        if self.algorithm_name == "ringid":
+            return self.fpr_rate * 100, True
         
-        elif method_name == "maxsive":
-            if method_wrapper and hasattr(method_wrapper, 'params'):
-                distant_func = self.method.params.distant_func
-            else:
-                distant_func = "corr"
-            
-            if distant_func == "l1":
-                # L1: меньшее значение = маркированное
-                return target_fpr * 100, True
-            else:
-                # Корреляция: большее значение = маркированное
-                return (1 - target_fpr) * 100, False
-        
-        elif method_name == "dft_circle":
-            # DFT Circle: корреляция большее = маркированное
-            return (1 - target_fpr) * 100, False
-        
-        else:
-            return (1 - target_fpr) * 100, False
+        if self.algorithm_name == "maxsive":
+            if hasattr(self.method, 'params') and hasattr(self.method.params, 'distant_func'):
+                if self.method.params.distant_func == "l1":
+                    return self.fpr_rate * 100, True
+        #Correlation-based methods        
+        return (1 - self.fpr_rate) * 100, False
    
-    def get_random_extracts(self) -> List[torch.Tensor]: #Uniion
-        random_extracts = []
-        scores = [] if self.method_type =="z" else None
+    def _load_or_generate_multibit_extracts(self):
+        try:
+            extracts = np.loadtxt(self.re_path, delimiter=",")
+            logger.info(f"Loaded multibit extracts from: {self.re_path}")
+            return extracts
+        except Exception:
+            return self._generate_multibit_extracts()
+        
+    def _generate_multibit_extracts(self):
+        extracts = []
         total = len(self.dataset)
         logger.info(f"Generate random extracts for dataset length: {total}")
+
         for data_object in tqdm(self.dataset.generator(), total=total):
-            data_object: Object
             obj = getattr(data_object, data_object.get_object_alias())
             watermark_data = self.method.watermark_data_gen()
             extracted = self.method.extract(obj, watermark_data)
+            extracts.append(extracted.flatten())
 
-            if self.method_type == 'z':
-                score = float(extracted)
-                scores.append(score)
-            else:
-                random_extracts.append(extracted.flatten())
-
-        if self.method_type =="z":
-            percentile, reverse = EmpiricalTPRxFPR.get_percentile_and_reverse(self.method.__class__.__name__.lower(), fpr_rate, method_wrapper)  
-            threshold = float(np.percentile(scores, percentile))  
-            logger.info(f"Zerobit: threshold={threshold:.6f} at {percentile:.2f}% percentile")
-            np.savetxt(self.re_path, np.array(scores), delimiter=",")
-#менять КЭЩИРОВАТЬ ОДИНАКОВЫМ ОБРАЗОМ
-            meta_path = self.re_path.replace('.csv', '_metadata.txt')
-            with open(meta_path, 'w') as f:
-                            f.write(f"method_type=zerobit\n")
-                            f.write(f"threshold={threshold}\n")
-                            f.write(f"percentile={percentile}\n")
-                            f.write(f"reverse={reverse}\n")
-                            f.write(f"fpr_rate={self.fpr_rate}\n")
-
-            return threshold
-        else:
-
-            logger.info(f"Random extracts are saved along the path: {self.re_path}")
-            np.savetxt(self.re_path, torch.stack(random_extracts).numpy(), delimiter=",")
-            return random_extracts
-
-   
-
+        extracts_array = torch.stack(extracts).numpy()
+        np.savetxt(self.re_path, extracts_array, delimiter=",")
+        logger.info(f"Saved multibit extracts to: {self.re_path}")
+        return extracts_array
+    
     def __call__(
         self,
         img1: TorchImg,
@@ -373,20 +366,29 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         
         if self.method_type == 'z':
             score = float(extraction_result)
-            return int(score >= self.threshold)
-        else:
-            watermark = watermark_data.watermark
-            watermark = watermark.flatten()
-            extraction_result = extraction_result.flatten()
-            if isinstance(extraction_result, torch.Tensor):
-                extraction_result = extraction_result.numpy()
-            if isinstance(watermark, torch.Tensor):
-                watermark = watermark.numpy()
-            extract_threshold = np.sum(extraction_result != watermark)
-            thresholds = (extraction_result != self.random_extracts).sum(axis=1)
-            num_matches = np.sum(thresholds <= extract_threshold)
+            _, reverse = self.get_percentile_and_reverse()
+            if reverse:
+                # Distance-based: lower score = watermarked
+                return int(score <= self.threshold)
+            else:
+                # Correlation-based: higher score = watermarked
+                return int(score >= self.threshold)
 
-            return int(num_matches <= round(self.fpr_rate * len(thresholds)))
+        # Multibit evaluation
+        watermark = watermark_data.watermark
+        watermark = watermark.flatten()
+        extraction_result = extraction_result.flatten()
+
+        if isinstance(extraction_result, torch.Tensor):
+            extraction_result = extraction_result.numpy()
+        if isinstance(watermark, torch.Tensor):
+            watermark = watermark.numpy()
+            
+        extract_threshold = np.sum(extraction_result != watermark)
+        thresholds = (extraction_result != self.random_extracts).sum(axis=1)
+        num_matches = np.sum(thresholds <= extract_threshold)
+
+        return int(num_matches <= round(self.fpr_rate * len(thresholds)))
 
 
 class TPRxFPR(PostExtractMetric):
