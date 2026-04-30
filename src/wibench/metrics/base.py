@@ -284,7 +284,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
             extracted = self.method.extract(obj, watermark_data)
             scores.append(float(extracted))
 
-        percentile, reverse = EmpiricalTPRxFPR.get_percentile_and_reverse(self.method.__class__.__name__.lower(), self.fpr_rate, self.method)  
+        percentile, reverse = self.get_percentile_and_reverse()  
         threshold = float(np.percentile(scores, percentile))  
         logger.info(f"Zerobit: threshold={threshold:.6f} at {percentile:.2f}% percentile")
        
@@ -299,22 +299,26 @@ class EmpiricalTPRxFPR(PostExtractMetric):
             "method_type": self.method_type,
             "percentile": percentile,
             "reverse": reverse
-         }])
+        }])
+        
         if os.path.exists(self.base_path):
             existing = pd.read_csv(self.base_path)
-            # Delete and rewrite
-            existing = existing[~((existing['algorithm'] == self.algorithm_name) & 
-                                (existing['fpr_rate'] == self.fpr_rate))]
-            result_df = pd.concat([existing, result_df], ignore_index=True)
+            
+            # Check exicting columns
+            required_columns = ['algorithm', 'fpr_rate']
+            if all(col in existing.columns for col in required_columns):
+                # Delete
+                existing = existing[~((existing['algorithm'] == self.algorithm_name) & 
+                                    (existing['fpr_rate'] == self.fpr_rate))]
+                result_df = pd.concat([existing, result_df], ignore_index=True)
+            else:
+                # Rewrite
+                logger.warning(f"CSV file {self.base_path} missing required columns, overwriting...")
         
         result_df.to_csv(self.base_path, index=False)
-        logger.info(f"Saved threshold to: {self.base_path}")
+        logger.info(f"Saved threshold to: {self.base_path}")   
 
-    def get_percentile_and_reverse(
-            self,
-            method_name: str, 
-            target_fpr: float, 
-            method_wrapper=None) -> tuple:
+    def get_percentile_and_reverse(self) -> tuple:
         """
         Returns (percentile, reverse) for the given method.
         For RingID: returns distance (lower = watermarked)
@@ -383,7 +387,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
             extraction_result = extraction_result.numpy()
         if isinstance(watermark, torch.Tensor):
             watermark = watermark.numpy()
-            
+
         extract_threshold = np.sum(extraction_result != watermark)
         thresholds = (extraction_result != self.random_extracts).sum(axis=1)
         num_matches = np.sum(thresholds <= extract_threshold)
