@@ -22,6 +22,16 @@ def special_requirements(entity: str, config: dict[str, Any], entity_type: str):
                 result.update(special_requirements(name, config, "attacks"))
             else:
                 pass
+    if entity.lower() == "combination" and entity_type == "algorithms":
+        for alg in config["algorithms"]:
+            if isinstance(alg, str):
+                result.update(special_requirements(alg, {}, "algorithms"))
+            elif isinstance(alg, dict):
+                name = list(alg.keys())[0]
+                config = alg[name]
+                result.update(special_requirements(name, config, "algorithms"))
+            else:
+                pass
     if entity.lower() == "syncseal":
         params = config.get("params", {}) if isinstance(config, dict) else {}
         inner_result = special_requirements(params.get("method", "trustmark"), params.get("method_params", {}), "algorithms")
