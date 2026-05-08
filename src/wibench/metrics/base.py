@@ -198,7 +198,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
                  dataset: str = "diffusiondb",
                  dataset_params: Dict[str, Any] = {},
                  fpr_rate: float = 0.1,
-                 random_extracts_path: str = "./thresholds.pt",  # Используем .pt
+                 random_extracts_path: str = "./thresholds.pt",  
                  method_type: str = "zerobit"
                  ) -> None:
         from wibench.base_objects import get_datasets, get_algorithms
@@ -209,7 +209,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         
         self.dataset = get_datasets([(dataset, dataset_params)])[0]
         self.method = get_algorithms([(algorithm, algorithm_params)])[0]
-        self.cache_path = str(Path(random_extracts_path).with_suffix('.pt'))  # Принудительно .pt
+        self.cache_path = str(Path(random_extracts_path).with_suffix('.pt'))  
         
         result = self._load_or_generate()
         
@@ -264,7 +264,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
                 obj = getattr(data_object, data_object.get_object_alias())
                 watermark_data = self.method.watermark_data_gen()
                 extracted = self.method.extract(obj, watermark_data)
-                scores.append(float(extracted))  # Для zerobit - просто число
+                scores.append(float(extracted))  
             
             percentile, reverse = self.get_percentile_and_reverse()
             threshold = float(np.percentile(scores, percentile))
@@ -291,7 +291,6 @@ class EmpiricalTPRxFPR(PostExtractMetric):
                 watermark_data = self.method.watermark_data_gen()
                 extracted = self.method.extract(obj, watermark_data)
                 
-                # Для multibit - может быть тензор или numpy
                 if isinstance(extracted, torch.Tensor):
                     extracts.append(extracted.flatten().numpy())
                 elif isinstance(extracted, np.ndarray):
