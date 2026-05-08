@@ -206,7 +206,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         self.fpr_rate = fpr_rate
         self.method_type = method_type
         self.algorithm_name = algorithm.lower()
-        
+
         self.dataset = get_datasets([(dataset, dataset_params)])[0]
         self.method = get_algorithms([(algorithm, algorithm_params)])[0]
         self.cache_path = str(Path(random_extracts_path).with_suffix('.pt'))  
@@ -239,79 +239,48 @@ class EmpiricalTPRxFPR(PostExtractMetric):
     def _load_or_generate(self) -> Union[float, np.ndarray]:
         cache_data = self._loading()
         key = (self.algorithm_name, self.fpr_rate)
-        
+    
         if cache_data is not None:
+            result = cache_data[self.method_type][key]
+            logger.info(f"loaded result for :{self.method_type}")
             if self.method_type == "zerobit":
-                if key in cache_data.get('zerobit', {}):
-                    threshold = cache_data['zerobit'][key]['threshold']
-                    logger.info(f"Loaded zerobit threshold from cache: {threshold}")
-                    return threshold
+                return result['threshold']
             else:
-                if key in cache_data.get('multibit', {}):
-                    extracts = cache_data['multibit'][key]['extracts']
-                    logger.info(f"Loaded multibit extracts from cache: {len(extracts)} samples")
-                    return extracts
-        
+                return result['extracts']
+
         return self._generate()
     
     def _generate(self) -> Union[float, np.ndarray]:
         total = len(self.dataset)
         logger.info(f"Generating random data for dataset length: {total}")
         
-        if self.method_type == "zerobit":
-            scores = []
-            for data_object in tqdm(self.dataset.generator(), total=total):
-                obj = getattr(data_object, data_object.get_object_alias())
-                watermark_data = self.method.watermark_data_gen()
-                extracted = self.method.extract(obj, watermark_data)
-                scores.append(float(extracted))  
-            
-            percentile, reverse = self.get_percentile_and_reverse()
-            threshold = float(np.percentile(scores, percentile))
-            logger.info(f"Zerobit: threshold={threshold:.6f} at {percentile:.2f}% percentile")
-            
-            # Save to cache
-            cache_data = self._loading() or {}
-            if 'zerobit' not in cache_data:
-                cache_data['zerobit'] = {}
-            cache_data['zerobit'][(self.algorithm_name, self.fpr_rate)] = {
-                'threshold': threshold,
-                'percentile': percentile,
-                'reverse': reverse,
-                'scores': scores
-            }
-            self._saving(cache_data)
-            return threshold
+        is_zerobit = self.method_type == "zerobit"
+        data = []
         
+        for obj in tqdm(self.dataset.generator(), total=total):
+            extracted = self.method.extract(
+                getattr(obj, obj.get_object_alias()), 
+                self.method.watermark_data_gen()
+            )
+            data.append(float(extracted) if is_zerobit else np.asarray(extracted).flatten())
+        
+        cache_data = self._loading() or {}
+        target = cache_data.setdefault(self.method_type, {})
+        key = (self.algorithm_name, self.fpr_rate)
+        
+        if is_zerobit:
+            p, r = self.get_percentile_and_reverse()
+            res = float(np.percentile(data, p))
+            logger.info(f"Zerobit: threshold={res:.6f} at {p:.2f}% percentile")
+            target[key] = {'threshold': res, 'percentile': p, 'reverse': r, 'scores': data}
         else:
-            # Multibit
-            extracts = []
-            for data_object in tqdm(self.dataset.generator(), total=total):
-                obj = getattr(data_object, data_object.get_object_alias())
-                watermark_data = self.method.watermark_data_gen()
-                extracted = self.method.extract(obj, watermark_data)
-                
-                if isinstance(extracted, torch.Tensor):
-                    extracts.append(extracted.flatten().numpy())
-                elif isinstance(extracted, np.ndarray):
-                    extracts.append(extracted.flatten())
-                else:
-                    extracts.append(np.array([extracted]).flatten())
-            
-            extracts_array = np.stack(extracts)
-            logger.info(f"Multibit: saved {len(extracts_array)} extracts, shape={extracts_array.shape}")
-            
-            # Save to cache
-            cache_data = self._loading() or {}
-            if 'multibit' not in cache_data:
-                cache_data['multibit'] = {}
-            cache_data['multibit'][(self.algorithm_name, self.fpr_rate)] = {
-                'extracts': extracts_array,
-                'shape': extracts_array.shape
-            }
-            self._saving(cache_data)
-            return extracts_array
-    
+            res = np.stack(data)
+            logger.info(f"Multibit: saved {len(res)} extracts, shape={res.shape}")
+            target[key] = {'extracts': res, 'shape': res.shape}
+        
+        self._saving(cache_data)
+        return res
+
     def get_percentile_and_reverse(self) -> tuple:
         """Returns (percentile, reverse) for the given method."""
         if self.algorithm_name == "ringid":
@@ -343,7 +312,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         # Multibit evaluation
         watermark = watermark_data.watermark
         extraction_result = extraction_result
-
+#ЕСЛИ ТОРЧ ТО НАМПАЙ
         if isinstance(watermark, torch.Tensor):
             watermark = watermark.flatten().numpy()
         elif isinstance(watermark, np.mdarray):
@@ -353,9 +322,8 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         else:
             watermark = np.array([watermark]).flatten()
 
-        
         if isinstance(extraction_result, torch.Tensor):
-            extraction_result = extraction_result.flatten().numpy()
+            extraction_result = extraction_result.numpy()
         elif isinstance(extraction_result, np.ndarray):
             extraction_result = extraction_result.flatten()
         elif isinstance(extraction_result, list):
@@ -363,7 +331,6 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         else: 
             extraction_result = np.array(extraction_result).flatten()
        
-        
         extract_threshold = np.sum(extraction_result != watermark)
         thresholds = (extraction_result != self.random_extracts).sum(axis=1)
         num_matches = np.sum(thresholds <= extract_threshold)
