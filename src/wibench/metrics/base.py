@@ -312,25 +312,16 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         # Multibit evaluation
         watermark = watermark_data.watermark
         extraction_result = extraction_result
-#ЕСЛИ ТОРЧ ТО НАМПАЙ
+
         if isinstance(watermark, torch.Tensor):
             watermark = watermark.flatten().numpy()
-        elif isinstance(watermark, np.mdarray):
+        elif isinstance(watermark, np.ndarray):
             watermark = watermark.flatten()
         elif isinstance(watermark, list):
             watermark = np.array(watermark).flatten()
         else:
             watermark = np.array([watermark]).flatten()
 
-        if isinstance(extraction_result, torch.Tensor):
-            extraction_result = extraction_result.numpy()
-        elif isinstance(extraction_result, np.ndarray):
-            extraction_result = extraction_result.flatten()
-        elif isinstance(extraction_result, list):
-            extraction_result = np.array(extraction_result).flatten()
-        else: 
-            extraction_result = np.array(extraction_result).flatten()
-       
         extract_threshold = np.sum(extraction_result != watermark)
         thresholds = (extraction_result != self.random_extracts).sum(axis=1)
         num_matches = np.sum(thresholds <= extract_threshold)
