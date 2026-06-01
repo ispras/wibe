@@ -120,7 +120,6 @@ class ImageFolderDataset(RangeBaseDataset):
             self.images = [
                 self.transform(Image.open(img_path).convert("RGB")) for img_path in self.path_list[self.sample_range[0]: self.sample_range[1] + 1]
             ]
-        super().__init__(None, len(self))
         
     def __len__(self) -> int:
         """Return number of images in folder.
