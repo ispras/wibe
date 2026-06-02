@@ -74,8 +74,9 @@ class RoSteALSWrapper(BaseAlgorithmWrapper):
             with ModuleImporter("taming", TAMING_TRANSFORMERS_PATH):
                 from RoSteALS.ldm.util import instantiate_from_config
                 self.model = instantiate_from_config(config).to(self.device)
-        
-        state_dict = torch.load(weights_path, map_location=self.device)
+        import pytorch_lightning
+        torch.serialization.add_safe_globals([pytorch_lightning.callbacks.model_checkpoint.ModelCheckpoint])
+        state_dict = torch.load(weights_path, map_location=self.device, weights_only=True)
         if "state_dict" in state_dict:
             state_dict = state_dict["state_dict"]
         self.model.load_state_dict(state_dict, strict=False)

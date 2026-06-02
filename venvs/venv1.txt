@@ -51,3 +51,4 @@ requirements/metrics/clip_iqa.txt
 requirements/metrics/lpips.txt
 requirements/datasets/diffusiondb.txt
 requirements/datasets/mscoco.txt
+requirements/algorithms/rosteals.txt

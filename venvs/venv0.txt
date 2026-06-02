@@ -61,3 +61,4 @@ requirements/metrics/blip.txt
 requirements/metrics/dreamsim.txt
 requirements/datasets/diffusiondb.txt
 requirements/datasets/mscoco.txt
+requirements/algorithms/rosteals.txt

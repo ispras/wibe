@@ -1,7 +1,7 @@
-torch<2.6
+torch
 omegaconf
 einops
-pytorch-lightning<=1.9.5
+pytorch-lightning
 lpips
 matplotlib
 kornia

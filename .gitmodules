@@ -69,4 +69,4 @@
 	url = https://github.com/CompVis/taming-transformers.git
 [submodule "submodules/RoSteALS"]
 	path = submodules/RoSteALS
-	url = https://github.com/D3c3453d/RoSteALS.git
+	url = https://github.com/yakulex/RoSteALS.git
