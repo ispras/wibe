@@ -15,7 +15,7 @@ class InstagramAttacks(BaseAttack):
     def __init__(self, attack: str, module: Optional[str] = None) -> None:
         if module not in [None, "css"]:
             raise AttributeError(f"Module {module} not supported in pilgram!")
-        self.attack = getattr(pilgram if module is None else getattr(module, module), attack)
+        self.attack = getattr(pilgram if module is None else getattr(pilgram, module), attack)
         super().__init__()
 
     def __call__(self, image: TorchImg) -> TorchImg:
