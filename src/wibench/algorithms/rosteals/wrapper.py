@@ -102,7 +102,7 @@ class RoSteALSWrapper(BaseAlgorithmWrapper):
             stego = self.model.decode_first_stage(z_embed).clamp(-1, 1)
 
         residual = stego.squeeze(0) - resized_normalized_image
-        residual = resize_torch_img(residual, [image.shape[1], image.shape[2]], mode="bicubic")
+        residual = resize_torch_img(residual, [image.shape[1], image.shape[2]])
         encoded_image = normalized_image + residual
         encoded_image = denormalize_image(encoded_image)
         encoded_image = torch.clamp(encoded_image, 0, 1)
