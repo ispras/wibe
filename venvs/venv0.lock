@@ -233,6 +233,7 @@ kornia==0.8.2
     #   -r requirements/algorithms/maskwm.txt
     #   -r requirements/algorithms/mbrs.txt
     #   -r requirements/algorithms/pimog.txt
+    #   -r requirements/algorithms/sepmark.txt
     #   -r requirements/algorithms/sshidden.txt
     #   -r requirements/algorithms/stable_signature.txt
 kornia-rs==0.1.10
@@ -615,12 +616,13 @@ sentencepiece==0.2.1
     #   -r requirements/attacks/unieditfttackflux.txt
     #   -r requirements/attacks/uniinvfttackflux.txt
     #   -r requirements/attacks/vaeattack.txt
-setuptools==82.0.1
+setuptools==81.0.0
     # via
     #   compressai
     #   infi-clickhouse-orm
     #   json2clickhouse
     #   tensorboard
+    #   wibench
 shellingham==1.5.4
     # via typer
 six==1.17.0
