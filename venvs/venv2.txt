@@ -1,15 +1,10 @@
-requirements/algorithms/ringid.txt
+requirements/algorithms/metr.txt
 requirements/wibench.txt
 requirements/datasets/diffusiondb.txt
 requirements/datasets/mscoco.txt
 requirements/metrics/fid.txt
 requirements/metrics/clip_iqa.txt
 requirements/metrics/lpips.txt
-requirements/metrics/blip.txt
-requirements/metrics/clipscore.txt
-requirements/metrics/aesthetic.txt
-requirements/metrics/dreamsim.txt
-requirements/metrics/imagereward.txt
 requirements/attacks/vaeattack.txt
 requirements/attacks/vaeregeneration.txt
 requirements/attacks/trustmarkrm.txt
@@ -29,6 +24,7 @@ requirements/attacks/dip.txt
 requirements/algorithms/cin.txt
 requirements/algorithms/stega_stamp.txt
 requirements/algorithms/pimog.txt
+requirements/algorithms/ringid.txt
 requirements/algorithms/dft_circle.txt
 requirements/algorithms/rosteals.txt
 requirements/algorithms/robust_wide.txt
@@ -38,7 +34,6 @@ requirements/algorithms/treering.txt
 requirements/algorithms/fin.txt
 requirements/algorithms/sepmark.txt
 requirements/algorithms/dwt_dct_svd.txt
-requirements/algorithms/vine.txt
 requirements/algorithms/watermark_anything.txt
 requirements/algorithms/dwsf.txt
 requirements/algorithms/riva_gan.txt
