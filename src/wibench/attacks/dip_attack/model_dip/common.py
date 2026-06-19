@@ -6,7 +6,8 @@ from .downsampler import Downsampler
 def add_module(self, module):
     self.add_module(str(len(self) + 1), module)
     
-torch.nn.Module.add = add_module
+# https://gitlab.ispras.ru/watermarking/img-watermarking-test/-/work_items/79
+# torch.nn.Module.add = add_module
 
 class Concat(nn.Module):
     def __init__(self, dim, *args):

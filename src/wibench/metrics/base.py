@@ -9,11 +9,12 @@ from wibench.pipeline_type import PipelineType
 from wibench.registry import RegistryMeta
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.datasets.base import BaseDataset
-from wibench.typing import TorchImg
+from wibench.typing import TorchImg, TorchAudio
 from wibench.typing import Object
 from wibench.utils import resize_torch_img
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
+from torchmetrics.functional.audio import scale_invariant_signal_noise_ratio
 from scipy.stats import binom
 from loguru import logger
 
@@ -100,6 +101,38 @@ class PSNR(PostEmbedMetric):
             return float("inf")
         img2 = resize_torch_img(img2, list(img1.shape)[1:])
         return float(psnr(img1.numpy(), img2.numpy(), data_range=1))
+
+
+class SI_SNR(PostEmbedMetric):
+    """Scale Invariant Peak Signal-to-Noise Ratio between original and processed signal.
+    
+    Measures difference-level in decibels. Higher values indicate better quality.
+
+    Notes
+    -----  
+    - Range: Typically 20-50 dB for audios
+    - Infinite if images are identical
+    """
+    
+    pipeline_type = PipelineType.AUDIO
+
+    def __call__(
+        self,
+        audio1: TorchAudio,
+        audio2: TorchAudio,
+        *args,
+        **kwargs
+    ) -> float:
+        audio1 = TorchAudio(*audio1)
+        audio2 = TorchAudio(*audio2)
+
+        if audio1.rate != audio2.rate:
+            raise RuntimeError("Audios must have same sampling rate")
+
+        if audio1.data.shape[-1] != audio2.data.shape[-1]:
+            raise RuntimeError("Audios must have same length")
+
+        return scale_invariant_signal_noise_ratio(audio1.data, audio2.data).detach().item()
 
 
 class SSIM(PostEmbedMetric):

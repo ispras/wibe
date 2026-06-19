@@ -1,0 +1,24 @@
+algorithms:
+  audioseal:
+    params:
+      device: cpu
+
+post_embed_metrics:
+  - SI_SNR
+
+post_extract_metrics:
+  - BER
+
+datasets:
+  - AudioFolderDataset:
+      path: /home/do-op/Projects/docmarking/dm-audio/dataset/classic-v1/
+      sample_rate: 16000
+
+attacks:
+  - Identity
+
+pipeline:
+  result_path: ./test_results/audioseal
+  aggregators:
+    - CSV:
+        table_name: table
