@@ -1,4 +1,5 @@
-from typing import Any, Dict, List
+from statistics import mean
+from typing import Any, Dict, List, Literal
 from functools import lru_cache
 from abc import abstractmethod
 import numpy as np
@@ -15,6 +16,7 @@ from wibench.utils import resize_torch_img
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 from torchmetrics.functional.audio import scale_invariant_signal_noise_ratio
+from torchaudio.transforms import Resample
 from scipy.stats import binom
 from loguru import logger
 
@@ -160,6 +162,76 @@ class SSIM(PostEmbedMetric):
         return float(res)
 
 
+class PESQ(PostEmbedMetric):
+    """
+    `PESQ <https://ieeexplore.ieee.org/document/941023>`_: Perceptual evaluation of speech quality (PESQ)-a new method for speech quality assessment of telephone networks and codecs.
+    
+    The implementation is taken from the PyPI package `pesq` <https://pypi.org/project/pesq/>.
+
+    Notes
+    -----
+    - Please note that the sampling rate (frequency) should be 16000 or 8000 (Hz).
+      And using 8000Hz is supported for narrowband only.
+    """
+
+    name = "pesq"
+
+    def __init__(self, target_rate: int = 16_000):
+        """
+        Initialization Parameters
+        -------------------------
+            target_rate: int (16_000 or 8_000)
+                Target sampling rate (frequency).
+        """
+        self.target_rate = target_rate
+
+    def __call__(
+        self,
+        audio1: TorchAudio,
+        audio2: TorchAudio,
+        watermark_data: Any,
+    ) -> float:
+        audio1 = TorchAudio(*audio1)
+        audio2 = TorchAudio(*audio2)
+
+        from pesq import pesq
+
+        _ref = audio1.data.clone()
+        _deg = audio2.data.clone()
+
+        if audio1.rate != self.target_rate:
+            _ref = Resample(orig_freq=audio1.rate,
+                            new_freq=self.target_rate)(audio1.data)
+        if audio2.rate != self.target_rate:
+            _deg = Resample(orig_freq=audio2.rate,
+                            new_freq=self.target_rate)(audio2.data)
+
+        assert _ref.shape[-1] == _deg.shape[-1], "Audios must have same length"
+        assert _ref.shape[-2] == _deg.shape[-2], "Audios must have same number of channels"
+
+        _ref = _ref - torch.mean(_ref)
+        _deg = _deg - torch.mean(_deg)
+
+        max_val = max(torch.max(torch.abs(_ref)),
+                      torch.max(torch.abs(_deg)), 1e-8)
+        _ref = _ref / max_val
+        _deg = _deg / max_val
+
+        if _ref.shape[-2] == _deg.shape[-2] == 1:
+            # For one-channel audio
+            return float(pesq(self.target_rate, _ref.detach().squeeze(0).numpy(),
+                              _deg.detach().squeeze(0).numpy(), mode="wb"))
+        else:
+            # For multi-channel audio -> mean PESQ over all channels
+            channels = len(_ref.shape[-2])
+            pesq_per_channel = list()
+            for ch in range(channels):
+                pesq_per_channel.append(float(pesq(
+                    self.target_rate, _ref.detach().numpy()[ch, :],
+                    _deg.detach().numpy()[ch, :], mode="wb")))
+            return mean(pesq_per_channel)
+
+
 class EmbedWatermark(PostEmbedMetric):
     """Records the embedded watermark payload for reference.
     
@@ -168,8 +240,8 @@ class EmbedWatermark(PostEmbedMetric):
     name = "EmbWm"
 
     def __call__(self,
-                 img1: TorchImg,
-                 img2: TorchImg,
+                 watermark_object: Any,
+                 attacked_object: Any,
                  watermark_data: Any):
         str_watermark = ''.join(str(x) for x in np.array(watermark_data.watermark).astype(np.uint8).flatten().tolist())
         return str_watermark
@@ -183,8 +255,8 @@ class Result(PostExtractMetric):
 
     def __call__(
         self,
-        img1: TorchImg,
-        img2: TorchImg,
+        watermark_object: Any,
+        attacked_object: Any,
         watermark_data: Any,
         extraction_result: Any,
     ) -> float:
@@ -200,8 +272,8 @@ class BER(PostExtractMetric):
 
     def __call__(
         self,
-        img1: TorchImg,
-        img2: TorchImg,
+        watermark_object: Any,
+        attacked_object: Any,
         watermark_data: Any,
         extraction_result: Any,
     ) -> float:
@@ -217,8 +289,8 @@ class WER(PostExtractMetric):
 
     def __call__(
         self,
-        img1: TorchImg,
-        img2: TorchImg,
+        watermark_object: Any,
+        attacked_object: Any,
         watermark_data: Any,
         extraction_result: Any,
     ) -> float:
@@ -300,8 +372,8 @@ class EmpiricalTPRxFPR(PostExtractMetric):
 
     def __call__(
         self,
-        img1: TorchImg,
-        img2: TorchImg,
+        watermark_object: Any,
+        attacked_object: Any,
         watermark_data: Any,
         extraction_result: Any,
     ) -> int:
@@ -349,8 +421,8 @@ class TPRxFPR(PostExtractMetric):
 
     def __call__(
         self,
-        img1: TorchImg,
-        img2: TorchImg,
+        watermark_object: Any,
+        attacked_object: Any,
         watermark_data: Any,
         extraction_result: Any,
     ) -> int:
@@ -379,8 +451,8 @@ class PValue(PostExtractMetric):
     
     def __call__(
         self,
-        img1: TorchImg,
-        img2: TorchImg,
+        watermark_object: Any,
+        attacked_object: Any,
         watermark_data: Any,
         extraction_result: Any,
     ) -> float:
@@ -405,8 +477,8 @@ class ExtractedWatermark(PostExtractMetric):
     name = "ExtWm"
 
     def __call__(self,
-                 img1: TorchImg,
-                 img2: TorchImg,
+                 watermark_object: Any,
+                 attacked_object: Any,
                  watermark_data: Any,
                  extraction_result):
         str_extract_watermark = ''.join(str(x) for x in np.array(extraction_result).astype(np.uint8).flatten().tolist())

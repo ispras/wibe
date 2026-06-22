@@ -22,7 +22,7 @@ dependencies = [
     "pydantic",
     "opencv-python",
     "torchvision",
-    "torchaudio",
+    "torchaudio<2.11",
     "torchmetrics",
     "loguru",
     "huggingface_hub",

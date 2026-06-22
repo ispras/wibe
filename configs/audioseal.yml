@@ -5,9 +5,15 @@ algorithms:
 
 post_embed_metrics:
   - SI_SNR
+  - PESQ
 
 post_extract_metrics:
+  - ExtWm
   - BER
+  - WER
+  - TPR@xFPR:
+      report_name: tpr@10e-2fpr
+      fpr_rate: 0.01
 
 datasets:
   - AudioFolderDataset:

@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, Dict, Optional, Union, Literal
 
-import torch
 from torchaudio.transforms import Resample
 
 from wibench.config import Params
@@ -22,24 +20,6 @@ AudioSealModes = Literal["16bit", "streaming"]
 class AudioSealParams(Params):
     mode: AudioSealModes = field(default='16bit')
     threshold: float = field(default=0.5)
-
-
-@dataclass
-class AudioSealData:
-    """Watermark data for METR watermarking algorithm.
-
-    Attributes
-    ----------
-        watermark : torch.Tensor
-            Torch bit message
-        watermark_mask : torch.Tensor
-            Watermark noise pattern
-        init_latents_w : Dict[str, Any]
-            Latent noise with embedded watermark
-
-    """
-    watermark: TorchAudio
-    watermark_bits: torch.Tensor
 
 
 class AudioSealWrapper(BaseAlgorithmWrapper):
@@ -92,7 +72,7 @@ class AudioSealWrapper(BaseAlgorithmWrapper):
         ----------
         audio: TorchAudio
             Input empty audio from dataset
-        watermark_data: AudioSealData
+        watermark_data: TorchBitWatermarkData
             Watermark data for AudioSeal watermarking algorithm
 
         """
@@ -103,21 +83,22 @@ class AudioSealWrapper(BaseAlgorithmWrapper):
             _audio_data = Resample(audio.rate, self.SAMPLE_RATE)(_audio_data)
         _audio_data = _audio_data.unsqueeze(0)
         # Generate watermark
-        _watermark_data = self.generator(_audio_data, message=watermark_data.watermark)
+        _watermark_data = self.generator(
+            _audio_data, message=watermark_data.watermark)
         # Prepare output data
         wm_audio_data = (
             _audio_data + _watermark_data).clamp(min=-1.0, max=1.0)
         wm_audio_data = wm_audio_data.squeeze(0)
         return TorchAudio(data=wm_audio_data, rate=self.SAMPLE_RATE)
 
-    def extract(self, audio: TorchAudio, watermark_data: AudioSealData) -> bool:
+    def extract(self, audio: TorchAudio, watermark_data: TorchBitWatermarkData) -> bool:
         """Extract watermark from marked audio.
 
         Parameters
         ----------
         audio : TorchAudio
             Input audio tuple with tensor (C, T) format
-        watermark_data: AudioSealData
+        watermark_data: TorchBitWatermarkData
             Watermark data for AudioSeal watermarking algorithm
 
         """
@@ -127,13 +108,15 @@ class AudioSealWrapper(BaseAlgorithmWrapper):
             _audio_data = Resample(audio.rate, self.SAMPLE_RATE)(_audio_data)
         _audio_data = _audio_data.unsqueeze(0)
         # Extract watermark data
-        _, _extracted_msg = self.detector(_audio_data, self.SAMPLE_RATE)
+        result, _logit_msg = self.detector(_audio_data, self.SAMPLE_RATE)
+        bin_msg = (_logit_msg > self.params.threshold).numpy().astype(int)
         # TODO: save localization info
-        return (_extracted_msg > self.params.threshold).numpy().astype(int)
+        loc_info = result[:, 1, :]
+        return bin_msg
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """Generate watermark payload data for TrustMark watermarking algorithm.
-        
+        """Generate watermark payload data for AudioSeal watermarking algorithm.
+
         Returns
         -------
         TorchBitWatermarkData
