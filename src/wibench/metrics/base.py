@@ -105,38 +105,6 @@ class PSNR(PostEmbedMetric):
         return float(psnr(img1.numpy(), img2.numpy(), data_range=1))
 
 
-class SI_SNR(PostEmbedMetric):
-    """Scale Invariant Peak Signal-to-Noise Ratio between original and processed signal.
-    
-    Measures difference-level in decibels. Higher values indicate better quality.
-
-    Notes
-    -----  
-    - Range: Typically 20-50 dB for audios
-    - Infinite if images are identical
-    """
-    
-    pipeline_type = PipelineType.AUDIO
-
-    def __call__(
-        self,
-        audio1: TorchAudio,
-        audio2: TorchAudio,
-        *args,
-        **kwargs
-    ) -> float:
-        audio1 = TorchAudio(*audio1)
-        audio2 = TorchAudio(*audio2)
-
-        if audio1.rate != audio2.rate:
-            raise RuntimeError("Audios must have same sampling rate")
-
-        if audio1.data.shape[-1] != audio2.data.shape[-1]:
-            raise RuntimeError("Audios must have same length")
-
-        return scale_invariant_signal_noise_ratio(audio1.data, audio2.data).detach().item()
-
-
 class SSIM(PostEmbedMetric):
     """Structural Similarity Index Measure between images.
     
@@ -160,76 +128,6 @@ class SSIM(PostEmbedMetric):
             return float(ssim(img1.numpy(), img2.numpy(), data_range=1))
         res = ssim(img1.numpy(), img2.numpy(), data_range=1, channel_axis=0)
         return float(res)
-
-
-class PESQ(PostEmbedMetric):
-    """
-    `PESQ <https://ieeexplore.ieee.org/document/941023>`_: Perceptual evaluation of speech quality (PESQ)-a new method for speech quality assessment of telephone networks and codecs.
-    
-    The implementation is taken from the PyPI package `pesq` <https://pypi.org/project/pesq/>.
-
-    Notes
-    -----
-    - Please note that the sampling rate (frequency) should be 16000 or 8000 (Hz).
-      And using 8000Hz is supported for narrowband only.
-    """
-
-    name = "pesq"
-
-    def __init__(self, target_rate: int = 16_000):
-        """
-        Initialization Parameters
-        -------------------------
-            target_rate: int (16_000 or 8_000)
-                Target sampling rate (frequency).
-        """
-        self.target_rate = target_rate
-
-    def __call__(
-        self,
-        audio1: TorchAudio,
-        audio2: TorchAudio,
-        watermark_data: Any,
-    ) -> float:
-        audio1 = TorchAudio(*audio1)
-        audio2 = TorchAudio(*audio2)
-
-        from pesq import pesq
-
-        _ref = audio1.data.clone()
-        _deg = audio2.data.clone()
-
-        if audio1.rate != self.target_rate:
-            _ref = Resample(orig_freq=audio1.rate,
-                            new_freq=self.target_rate)(audio1.data)
-        if audio2.rate != self.target_rate:
-            _deg = Resample(orig_freq=audio2.rate,
-                            new_freq=self.target_rate)(audio2.data)
-
-        assert _ref.shape[-1] == _deg.shape[-1], "Audios must have same length"
-        assert _ref.shape[-2] == _deg.shape[-2], "Audios must have same number of channels"
-
-        _ref = _ref - torch.mean(_ref)
-        _deg = _deg - torch.mean(_deg)
-
-        max_val = max(torch.max(torch.abs(_ref)),
-                      torch.max(torch.abs(_deg)), 1e-8)
-        _ref = _ref / max_val
-        _deg = _deg / max_val
-
-        if _ref.shape[-2] == _deg.shape[-2] == 1:
-            # For one-channel audio
-            return float(pesq(self.target_rate, _ref.detach().squeeze(0).numpy(),
-                              _deg.detach().squeeze(0).numpy(), mode="wb"))
-        else:
-            # For multi-channel audio -> mean PESQ over all channels
-            channels = len(_ref.shape[-2])
-            pesq_per_channel = list()
-            for ch in range(channels):
-                pesq_per_channel.append(float(pesq(
-                    self.target_rate, _ref.detach().numpy()[ch, :],
-                    _deg.detach().numpy()[ch, :], mode="wb")))
-            return mean(pesq_per_channel)
 
 
 class EmbedWatermark(PostEmbedMetric):

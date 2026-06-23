@@ -6,6 +6,9 @@ algorithms:
 post_embed_metrics:
   - SI_SNR
   - PESQ
+  - STOI
+  - NISQA
+  - DNSMOS
 
 post_extract_metrics:
   - ExtWm
