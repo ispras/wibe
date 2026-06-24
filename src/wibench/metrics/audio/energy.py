@@ -1,3 +1,4 @@
+from torchaudio.transforms import Resample
 from torchmetrics.functional.audio import scale_invariant_signal_noise_ratio as si_snr
 from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchAudio
@@ -29,7 +30,25 @@ class SI_SNR(PostEmbedMetric):
         audio2 = TorchAudio(*audio2).clone()
 
         if audio1.rate != audio2.rate:
-            raise RuntimeError("Audios must have same sampling rate")
+            target_rate = min(audio1.rate, audio2.rate)
+
+            if audio1.rate != target_rate:
+                audio1 = TorchAudio(
+                    data=Resample(
+                        orig_freq=audio1.rate,
+                        new_freq=target_rate,
+                    )(audio1.data),
+                    rate=target_rate,
+                )
+
+            if audio2.rate != target_rate:
+                audio2 = TorchAudio(
+                    data=Resample(
+                        orig_freq=audio2.rate,
+                        new_freq=target_rate,
+                    )(audio2.data),
+                    rate=target_rate,
+                )
 
         aligned_audio1_data, aligned_audio2_data = align_pair(
             audio1.data, audio2.data, mono=False)
