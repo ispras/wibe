@@ -20,9 +20,13 @@ post_extract_metrics:
       fpr_rate: 0.01
 
 datasets:
-  - AudioFolderDataset:
-      path: /home/do-op/Projects/docmarking/dm-audio/dataset/classic-v1/
-      sample_rate: 16000
+  # - AudioFolderDataset:
+  #     path: /home/do-op/Projects/docmarking/dm-audio/dataset/classic-v1/
+  #     sample_rate: 16000
+  - AudioSet:
+      cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/AudioSet/
+      subset: balanced
+      split: test
 
 attacks:
   - Identity
