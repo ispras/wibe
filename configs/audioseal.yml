@@ -9,6 +9,7 @@ post_embed_metrics:
   - STOI
   - NISQA
   - DNSMOS
+  - SECS
 
 post_extract_metrics:
   - ExtWm
