@@ -177,7 +177,7 @@ class ChunkedNoReferenceMetric(PostEmbedMetric):
     ) -> float:
 
         if audio.shape[0] == 1:
-            return self._score_audio(audio.squeeze(0))
+            return self._score_audio(audio.detach().squeeze(0))
 
         scores = [
             self._score_audio(audio[ch])
