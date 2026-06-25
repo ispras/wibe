@@ -35,10 +35,10 @@ datasets:
 attacks:
   - Identity
   - Resampling:
-      report_name: scaling_8k
+      report_name: resample_8k
       target_rate: 8000
   - Resampling:
-      report_name: scaling_16k
+      report_name: resample_16k
       target_rate: 16000
   - Requantization:
       report_name: requantize_float16
@@ -59,6 +59,10 @@ attacks:
       report_name: noise_40
       snr_db: 40
   - Filter:
+      report_name: lowpass_2k
+      filter_type: lowpass
+      freq_1: 2000
+  - Filter:
       report_name: lowpass_4k
       filter_type: lowpass
       freq_1: 4000
@@ -66,10 +70,6 @@ attacks:
       report_name: lowpass_6k
       filter_type: lowpass
       freq_1: 6000
-  - Filter:
-      report_name: lowpass_8k
-      filter_type: lowpass
-      freq_1: 3000
   - Filter:
       report_name: highpass_250
       filter_type: highpass
