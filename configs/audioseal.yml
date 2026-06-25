@@ -34,6 +34,54 @@ datasets:
 
 attacks:
   - Identity
+  - Resampling:
+      report_name: scaling_8k
+      target_rate: 8000
+  - Resampling:
+      report_name: scaling_16k
+      target_rate: 16000
+  - Requantization:
+      report_name: requantize_float16
+      target_dtype: float16
+  - Scaling:
+      report_name: scaling_09
+      factor: 0.9
+  - Scaling:
+      report_name: scaling_11
+      factor: 1.1
+  - Noise:
+      report_name: noise_20
+      snr_db: 20
+  - Noise:
+      report_name: noise_30
+      snr_db: 30
+  - Noise:
+      report_name: noise_40
+      snr_db: 40
+  - Filter:
+      report_name: lowpass_4k
+      filter_type: lowpass
+      freq_1: 4000
+  - Filter:
+      report_name: lowpass_6k
+      filter_type: lowpass
+      freq_1: 6000
+  - Filter:
+      report_name: lowpass_8k
+      filter_type: lowpass
+      freq_1: 3000
+  - Filter:
+      report_name: highpass_250
+      filter_type: highpass
+      freq_1: 250
+  - Filter:
+      report_name: highpass_500
+      filter_type: highpass
+      freq_1: 500
+  - Filter:
+      report_name: highpass_1k
+      filter_type: highpass
+      freq_1: 1000
 
 pipeline:
   result_path: ./test_results/audioseal
