@@ -7,25 +7,38 @@ from wibench.typing import AudioObject, TorchAudio
 from wibench.datasets.base import RangeBaseDataset
 
 
-class AudioSet(RangeBaseDataset):
-    """Dataset loader for the 
-    `AudioSet <https://research.google.com/audioset/dataset/index.html>`_ 
-    large-scale collection of human-labeled 10-second sound clips drawn from 
-    YouTube videos.
+LS_SUBSETS = Literal["all", "clean", "other"]
+LS_SPLITS = Literal["test.clean", "test.other", "train.clean.100",
+                    "train.clean.360" "train.other.500",
+                    "validation.clean", "validation.other"]
 
-    The sound events in the dataset consist of a subset of the AudioSet ontology.
-    You can learn more about the dataset construction in our 
-    `ICASSP 2017 paper <https://research.google.com/pubs/pub45857.html>`_.
+
+class LibriSpeech(RangeBaseDataset):
+    """Dataset loader for the 
+    `LibriSpeech <https://www.danielpovey.com/files/2015_icassp_librispeech.pdf>`_ 
+    an ASR corpus based on public domain audio books.
 
     Implementation is provided by HuggingFace.
+
+    LibriSpeech is a corpus of approximately 1000 hours of 16kHz read English 
+    speech, prepared by Vassil Panayotov with the assistance of Daniel Povey. 
+    The data is derived from read audiobooks from the LibriVox project, and has
+    been carefully segmented and aligned.
+
+    The audio is in English. There are two configurations: clean and other. The
+    speakers in the corpus were ranked according to the WER of the transcripts
+    of a model trained on a different dataset, and were divided roughly in the
+    middle, with the lower-WER speakers designated as "clean" and the higher WER
+    speakers designated as "other".
     """
+
     pipeline_type = PipelineType.AUDIO
-    dataset_path = "agkphysics/AudioSet"
+    dataset_path = "openslr/librispeech_asr"
 
     def __init__(
         self,
-        subset: Literal["balanced", "full", "unbalanced"] = "balanced",
-        split: Literal["train", "test"] = "test",
+        subset: LS_SUBSETS = "all",
+        split: LS_SPLITS = "test.clean",
         sample_range: Optional[Tuple[int, int]] = None,
         cache_dir: Optional[str] = None
     ):
@@ -33,9 +46,9 @@ class AudioSet(RangeBaseDataset):
         Parameters
         ----------
         subset : str
-            Dataset subset name ("balanced", "full", "unbalanced")
+            Dataset subset name
         split: str
-            Dataset split name ("test", "train")
+            Dataset split name
         sample_range : Optional[Tuple[int, int]]
             Optional (start, end) index range to subset the dataset
         cache_dir : Optional[str]
