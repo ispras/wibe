@@ -15,22 +15,21 @@ post_extract_metrics:
   - ExtWm
   - BER
   - WER
-  - TPR@xFPR:
-      report_name: tpr@10e-2fpr
-      fpr_rate: 0.01
 
 datasets:
   # - AudioFolderDataset:
   #     path: /home/do-op/Projects/docmarking/dm-audio/dataset/classic-v1/
   #     sample_rate: 16000
-  # - AudioSet:
-  #     cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/AudioSet/
-  #     subset: balanced
-  #     split: test
+#   - AudioSet:
+#       cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/AudioSet/
+#       subset: balanced
+#       split: test
+#       sample_range: [0, 1000]
   - LibriSpeech:
       cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
       subset: all
       split: validation.clean
+      sample_range: [0, 1000]
 
 attacks:
   - Identity
@@ -82,6 +81,18 @@ attacks:
       report_name: highpass_1k
       filter_type: highpass
       freq_1: 1000
+  - Echo:
+        report_name: echo_01s
+        delay: 0.1
+  - Mpeg:
+        report_name: mpeg_128
+        bitrate: 128
+  - AAC:
+        report_name: aac_64
+        bitrate: 64
+  - Speed:
+        report_name: speed_1_05x
+        factor: 1.05
 
 pipeline:
   result_path: ./test_results/audioseal
