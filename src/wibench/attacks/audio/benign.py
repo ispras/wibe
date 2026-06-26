@@ -577,3 +577,50 @@ class Speed(FFmpegAttack):
             str(output_path),
             "-y",
         ]
+
+
+class Boost(FFmpegAttack):
+    """Apply gain to an audio signal."""
+
+    def __init__(
+        self,
+        gain_db: float,
+        tmp_folder: Path = Path("/tmp"),
+        cleanup: bool = True,
+    ):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        gain_db : float
+            Gain in decibels.
+        tmp_folder : Path, default=Path("/tmp")
+            Directory used for temporary files.
+        cleanup : bool, default=True
+            Whether to remove temporary files after processing.
+        """
+        super().__init__(tmp_folder, cleanup)
+        self.gain_db = gain_db
+
+    @property
+    def output_extension(self) -> str:
+        return "wav"
+
+    def ffmpeg_args(
+        self,
+        input_path: Path,
+        output_path: Path,
+        _: TorchAudio,
+    ) -> list[str]:
+        return [
+            "ffmpeg",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            str(input_path),
+            "-af",
+            f"volume={self.gain_db}dB",
+            str(output_path),
+            "-y",
+        ]

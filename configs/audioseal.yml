@@ -62,6 +62,10 @@ attacks:
       filter_type: lowpass
       freq_1: 2000
   - Filter:
+      report_name: lowpass_3k
+      filter_type: lowpass
+      freq_1: 3000
+  - Filter:
       report_name: lowpass_4k
       filter_type: lowpass
       freq_1: 4000
@@ -78,21 +82,76 @@ attacks:
       filter_type: highpass
       freq_1: 500
   - Filter:
+      report_name: highpass_750
+      filter_type: highpass
+      freq_1: 750
+  - Filter:
       report_name: highpass_1k
       filter_type: highpass
       freq_1: 1000
   - Echo:
+        report_name: echo_05s
+        delay: 0.05
+  - Echo:
         report_name: echo_01s
-        delay: 0.1
+        delay: 0.01
+  - Mpeg:
+        report_name: mpeg_16
+        bitrate: 16
+  - Mpeg:
+        report_name: mpeg_32
+        bitrate: 32
+  - Mpeg:
+        report_name: mpeg_64
+        bitrate: 64
+  - Mpeg:
+        report_name: mpeg_96
+        bitrate: 96
   - Mpeg:
         report_name: mpeg_128
         bitrate: 128
+  - Mpeg:
+        report_name: mpeg_256
+        bitrate: 256
+  - AAC:
+        report_name: aac_256
+        bitrate: 256
+  - AAC:
+        report_name: aac_128
+        bitrate: 128
+  - AAC:
+        report_name: aac_96
+        bitrate: 96
   - AAC:
         report_name: aac_64
         bitrate: 64
+  - AAC:
+        report_name: aac_32
+        bitrate: 32
+  - AAC:
+        report_name: aac_16
+        bitrate: 16
   - Speed:
-        report_name: speed_1_05x
+        report_name: speed_95x
+        factor: 0.95
+  - Speed:
+        report_name: speed_99x
+        factor: 0.99
+  - Speed:
+        report_name: speed_01x
+        factor: 1.01
+  - Speed:
+        report_name: speed_05x
         factor: 1.05
+  - Boost:
+        report_name: boost_05
+        gain_db: 5
+  - Boost:
+        report_name: boost_10
+        gain_db: 10
+  - Boost:
+        report_name: boost_20
+        gain_db: 20
 
 pipeline:
   result_path: ./test_results/audioseal
