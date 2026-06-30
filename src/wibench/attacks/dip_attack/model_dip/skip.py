@@ -2,6 +2,12 @@ import torch
 import torch.nn as nn
 from .common import *
 
+
+class DIPSequential(nn.Sequential):
+    def add(self, module):
+        self.add_module(str(len(self) + 1), module)
+
+
 def skip(
         num_input_channels=2, num_output_channels=3, 
         num_channels_down=[16, 32, 64, 128, 128], num_channels_up=[16, 32, 64, 128, 128], num_channels_skip=[4, 4, 4, 4, 4], 
@@ -38,14 +44,14 @@ def skip(
 
     cur_depth = None
 
-    model = nn.Sequential()
+    model = DIPSequential()
     model_tmp = model
 
     input_depth = num_input_channels
     for i in range(len(num_channels_down)):
 
-        deeper = nn.Sequential()
-        skip = nn.Sequential()
+        deeper = DIPSequential()
+        skip = DIPSequential()
 
         if num_channels_skip[i] != 0:
             model_tmp.add(Concat(1, skip, deeper))
@@ -69,7 +75,7 @@ def skip(
         deeper.add(bn(num_channels_down[i]))
         deeper.add(act(act_fun))
 
-        deeper_main = nn.Sequential()
+        deeper_main = DIPSequential()
 
         if i == len(num_channels_down) - 1:
             # The deepest
