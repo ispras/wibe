@@ -24,6 +24,7 @@ class RegistryMeta(type):
                 plugin_name = cls.name
             else:
                 plugin_name = cls.__name__
+                setattr(cls, "name", cls.__name__)
             plugin_name = plugin_name.lower()
             setattr(cls, "report_name", plugin_name)
             if "pipeline_type" not in cls.__dict__:

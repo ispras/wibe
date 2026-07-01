@@ -64,3 +64,9 @@
 [submodule "submodules/SepMark"]
 	path = submodules/SepMark
 	url = https://github.com/sh1newu/SepMark
+[submodule "submodules/taming-transformers"]
+	path = submodules/taming-transformers
+	url = https://github.com/CompVis/taming-transformers.git
+[submodule "submodules/RoSteALS"]
+	path = submodules/RoSteALS
+	url = https://github.com/yakulex/RoSteALS.git
