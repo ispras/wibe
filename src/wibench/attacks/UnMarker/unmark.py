@@ -4,21 +4,12 @@ import torch
 from torchvision import transforms
 from wibench.attacks.base import BaseAttack
 from wibench.download import requires_download
-from .cw import SpecialCWCoordinate
-from .losses import get_loss
 import yaml
 from typing import List
 from pathlib import Path
-import torchvision.transforms as T
-from wibench.download import requires_download
-# !! NOTE: в атаку встроен crop и resize. не стал их заменять, тк это вроде часть пайплайна
 
-# pip install kornia pytorch_forecasting lpips torch_dct piqa
 
-## for download models and losses:
-# bash download_data_and_models.sh
-
-# TODO: add download path
+# ToDo: crop + resize or resize -> attack -> resize difference back?
 
 URL_UNMARKER="https://nextcloud.ispras.ru/index.php/s/9BFzsLcpzJsLTFe"
 NAME_UNMARKER="unmarker"
@@ -53,8 +44,6 @@ class UnMarkerAttack(BaseAttack):
         preprocess_args = conf.get("preprocess_args", None)
         stage1_args =  conf.get("stage1_args", None)
         stage2_args = conf.get("stage2_args", None)
-
-        print(stage_selector)
 
         self.evaluator = None
         self.device = device
@@ -112,6 +101,8 @@ class UnMarkerAttack(BaseAttack):
         return super().calc_sim_loss(removed, wmd)
 
     def _load_stage(self, stage_args, stage_name):
+        from .cw import SpecialCWCoordinate
+        from .losses import get_loss
         assert stage_args is None or isinstance(stage_args, dict)
         if isinstance(stage_args, dict):
             for name in ["loss_fn", "dist_fn", "loss_thresh", "optimizer_args"]:

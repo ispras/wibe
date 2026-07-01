@@ -8,6 +8,7 @@ accelerate==1.14.0
     # via
     #   -r requirements/algorithms/maskwm.txt
     #   -r requirements/algorithms/vine.txt
+    #   -r requirements/attacks/vaeattack.txt
     #   -r requirements/attacks/wpwmattacker.txt
     #   image-reward
     #   peft
@@ -88,6 +89,7 @@ diffusers==0.21.4
     #   -r requirements/attacks/adversarialembedding.txt
     #   -r requirements/attacks/adversarialembeddingpsnr.txt
     #   -r requirements/attacks/diffusionregeneration.txt
+    #   -r requirements/attacks/vaeattack.txt
     #   -r requirements/attacks/wpwmattacker.txt
     #   image-reward
 dill==0.3.8
@@ -212,12 +214,15 @@ kornia==0.8.2
     #   -r requirements/algorithms/rosteals.txt
     #   -r requirements/algorithms/sepmark.txt
     #   -r requirements/algorithms/sshidden.txt
+    #   -r requirements/attacks/unmarkerattack.txt
 kornia-rs==0.1.14
     # via kornia
 lazy-loader==0.5
     # via scikit-image
 lightning==2.6.5
-    # via trustmark
+    # via
+    #   pytorch-forecasting
+    #   trustmark
 lightning-utilities==0.15.3
     # via
     #   lightning
@@ -233,6 +238,7 @@ lpips==0.1.4
     # via
     #   -r requirements/algorithms/rosteals.txt
     #   -r requirements/algorithms/syncseal.txt
+    #   -r requirements/attacks/unmarkerattack.txt
     #   -r requirements/metrics/lpips.txt
 markdown==3.10.2
     # via
@@ -312,6 +318,7 @@ numpy==1.26.4
     #   pandas
     #   peft
     #   pycocotools
+    #   pytorch-forecasting
     #   pywavelets
     #   scikit-image
     #   scikit-learn
@@ -427,6 +434,7 @@ pandas==2.3.3
     #   -r requirements/algorithms/syncseal.txt
     #   compressai
     #   datasets
+    #   pytorch-forecasting
     #   wibench
 peft==0.6.2
     # via
@@ -454,6 +462,8 @@ pillow==12.3.0
     #   torchvision
 piq==0.8.0
     # via torchmetrics
+piqa==1.3.2
+    # via -r requirements/attacks/unmarkerattack.txt
 platformdirs==4.10.0
     # via yapf
 plotly==6.8.0
@@ -471,6 +481,7 @@ propcache==0.5.2
     #   yarl
 protobuf==7.35.1
     # via
+    #   -r requirements/attacks/vaeattack.txt
     #   onnxruntime
     #   tb-nightly
     #   tensorboard
@@ -506,6 +517,8 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-magic==0.4.27
     # via augly
+pytorch-forecasting==1.8.0
+    # via -r requirements/attacks/unmarkerattack.txt
 pytorch-lightning==2.6.5
     # via
     #   -r requirements/algorithms/rosteals.txt
@@ -564,6 +577,8 @@ safetensors==0.8.0
     #   peft
     #   timm
     #   transformers
+scikit-base==1.0.2
+    # via pytorch-forecasting
 scikit-image==0.25.2
     # via
     #   -r requirements/algorithms/sshidden.txt
@@ -572,7 +587,9 @@ scikit-image==0.25.2
     #   basicsr
     #   wibench
 scikit-learn==1.7.2
-    # via -r requirements/algorithms/dwt_svm.txt
+    # via
+    #   -r requirements/algorithms/dwt_svm.txt
+    #   pytorch-forecasting
 scipy==1.15.3
     # via
     #   -r requirements/algorithms/dct_marker.txt
@@ -584,11 +601,14 @@ scipy==1.15.3
     #   compressai
     #   dreamsim
     #   lpips
+    #   pytorch-forecasting
     #   scikit-image
     #   scikit-learn
     #   torchdiffeq
     #   torchmetrics
     #   wibench
+sentencepiece==0.2.1
+    # via -r requirements/attacks/vaeattack.txt
 setuptools==81.0.0
     # via
     #   -r requirements/algorithms/rosteals.txt
@@ -662,6 +682,7 @@ torch==2.10.0
     #   -r requirements/attacks/dipnoise.txt
     #   -r requirements/attacks/discoattack.txt
     #   -r requirements/attacks/stegastampinversion.txt
+    #   -r requirements/attacks/vaeattack.txt
     #   -r requirements/attacks/vaeregeneration.txt
     #   -r requirements/attacks/wpwmattacker.txt
     #   accelerate
@@ -678,16 +699,21 @@ torch==2.10.0
     #   lpips
     #   open-clip-torch
     #   peft
+    #   piqa
     #   pretrainedmodels
+    #   pytorch-forecasting
     #   pytorch-lightning
     #   pytorch-msssim
     #   timm
+    #   torch-dct
     #   torch-fidelity
     #   torchdiffeq
     #   torchmetrics
     #   torchvision
     #   trustmark
     #   wibench
+torch-dct==0.1.6
+    # via -r requirements/attacks/unmarkerattack.txt
 torch-fidelity==0.4.0
     # via torchmetrics
 torch-geometric==2.8.0
@@ -718,6 +744,7 @@ torchvision==0.25.0
     #   -r requirements/algorithms/watermark_anything.txt
     #   -r requirements/attacks/adversarialembedding.txt
     #   -r requirements/attacks/adversarialembeddingpsnr.txt
+    #   -r requirements/attacks/unmarkerattack.txt
     #   -r requirements/attacks/wpwmattacker.txt
     #   -r requirements/datasets/mscoco.txt
     #   basicsr
@@ -727,6 +754,7 @@ torchvision==0.25.0
     #   lpips
     #   open-clip-torch
     #   piq
+    #   piqa
     #   pretrainedmodels
     #   timm
     #   torch-fidelity
@@ -767,6 +795,7 @@ transformers==4.48.3
     #   -r requirements/attacks/adversarialembedding.txt
     #   -r requirements/attacks/adversarialembeddingpsnr.txt
     #   -r requirements/attacks/diffusionregeneration.txt
+    #   -r requirements/attacks/vaeattack.txt
     #   -r requirements/attacks/wpwmattacker.txt
     #   -r requirements/metrics/aesthetic.txt
     #   -r requirements/metrics/blip.txt
