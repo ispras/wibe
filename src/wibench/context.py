@@ -14,9 +14,10 @@ import json
 import datetime
 from pathlib import Path
 import torch
+import soundfile
 import numpy as np
 import re
-from torchvision.utils import save_image, save_audio
+from torchvision.utils import save_image
 from torchvision.transforms.functional import to_tensor
 from PIL import Image
 from wibench.config import DumpType
@@ -93,7 +94,7 @@ class ContextEncoder:
         """
         safe_key = re.sub(r'[^\w\-_]', '_', key)
         audio_path = f"{safe_key}.wav"
-        save_audio(audio.data, audio.rate, save_dir / audio_path)
+        soundfile.write(save_dir / audio_path, data=audio.data.T, samplerate=audio.rate)
         return {"__type__": "torch_audio", "path": audio_path}
 
     @staticmethod

@@ -11,6 +11,7 @@ import numpy as np
 from torchaudio.transforms import Resample
 from wibench.attacks import BaseAttack
 from wibench.typing import TorchAudio
+from wibench.utils import HiddenWarnings
 
 
 class Resampling(BaseAttack):
@@ -345,22 +346,20 @@ class FFmpegAttack(BaseAttack):
         path: Path,
         reference: TorchAudio,
     ) -> TorchAudio:
-        signal, rate = librosa.load(
-            path,
-            sr=None,
-            mono=False,
-        )
-
-        signal = torch.as_tensor(
-            np.ascontiguousarray(signal),
-            dtype=reference.data.dtype,
-            device=reference.data.device,
-        )
-
-        if signal.ndim == 1:
-            signal = signal.unsqueeze(0)
-
-        return TorchAudio(signal, rate)
+        with HiddenWarnings():
+            signal, rate = librosa.load(
+                path,
+                sr=None,
+                mono=False,
+            )
+            signal = torch.as_tensor(
+                np.ascontiguousarray(signal),
+                dtype=reference.data.dtype,
+                device=reference.data.device,
+            )
+            if signal.ndim == 1:
+                signal = signal.unsqueeze(0)
+            return TorchAudio(signal, rate)
 
     @property
     @abstractmethod

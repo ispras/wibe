@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Union, Literal
 
+import numpy as np
 from torchaudio.transforms import Resample
 
 from wibench.config import Params
@@ -91,7 +92,7 @@ class AudioSealWrapper(BaseAlgorithmWrapper):
         wm_audio_data = wm_audio_data.squeeze(0)
         return TorchAudio(data=wm_audio_data, rate=self.SAMPLE_RATE)
 
-    def extract(self, audio: TorchAudio, watermark_data: TorchBitWatermarkData) -> bool:
+    def extract(self, audio: TorchAudio, watermark_data: TorchBitWatermarkData) -> np.ndarray:
         """Extract watermark from marked audio.
 
         Parameters

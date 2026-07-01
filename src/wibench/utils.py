@@ -6,6 +6,7 @@ import random
 import cv2
 import tempfile
 import os
+import sys
 import hashlib
 import secrets
 from typing_extensions import Dict, Any, List, Optional
@@ -410,3 +411,23 @@ class FactorCrop:
         left, top, right, bottom = self.crop_tuple
         result[..., top: bottom, left: right] = tensor
         return result
+
+
+class HiddenPrints:
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
+
+
+class HiddenWarnings:
+    def __enter__(self):
+        self._original_stdout = sys.stderr
+        sys.stderr = open(os.devnull, 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stderr.close()
+        sys.stderr = self._original_stdout
