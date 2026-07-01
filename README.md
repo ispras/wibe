@@ -94,8 +94,8 @@ The system architecture consists of a sequence of processing configurable stages
 | Uni inv attack FLUX | uniinvattackflux | Image Inversion and Reconstruction using Flux model |
 | Uni edit attack FLUX | unieditattackflux | Image Editing using Flux model |
 | DISCO | discoattack | [DISCO: Adversarial Defense with Local Implicit Functions](https://arxiv.org/abs/2212.05630) |
-| DiffPure | diffpureattack |  | 
-| RealESRGAN | realesrganattack |  | 
+| DiffPure | diffpureattack | [Diffusion Models for Adversarial Purification](https://arxiv.org/abs/2205.07460) | 
+| RealESRGAN | realesrganattack | [Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data](https://arxiv.org/abs/2107.10833) | 
 
 ### Datasets
 
