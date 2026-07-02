@@ -39,3 +39,5 @@
   - uniinvattackflux # Requires high VRAM
   - unieditattackflux # Requires high VRAM
   - discoattack
+  - diffpureattack
+  - realesrganattack
