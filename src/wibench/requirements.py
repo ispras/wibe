@@ -7,7 +7,7 @@ from wibench.config_loader import (
     DATASETS_FIELD,
     METRICS_FIELD,
 )
-from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR
+from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR, PROFILE
 
 
 def special_requirements(entity: str, config: dict[str, Any], entity_type: str):
@@ -78,7 +78,7 @@ def compatible_execs(
     def module_paths(entities: set[tuple[str, str]]):
         paths = set()
         for entity, entity_type in entities:
-            p = req_dir / entity_type / (entity.lower() + ".txt")
+            p = req_dir / PROFILE / entity_type / (entity.lower() + ".txt")
             if p.exists():
                 paths.add(p)
         return paths
@@ -97,8 +97,8 @@ def compatible_execs(
             
     current_req_paths = module_paths(all_special_requirements)
 
-    venvs_dir = Path(VENVS_DIR).resolve()
-    group_paths = list(venvs_dir.glob("*.txt"))
+    venvs_dir = Path(VENVS_DIR).resolve() / PROFILE
+    group_paths = list(venvs_dir.glob("venv*.txt"))
     exec_candidates = []
     missing_per_group: dict[str, set[Path]] = {}
     for group_path in group_paths:

@@ -1,11 +1,12 @@
 import sys
+import time
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from loguru import logger
 import typer
 
-from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR
+from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR, PROFILE
 
 logger.remove()
 logger.add(sys.stderr, level="INFO")
@@ -15,6 +16,7 @@ logger.add(sys.stderr, level="INFO")
 class Config:
     requirements_dir: Path
     venvs_dir: Path
+    profile: str
     group_prefix: str = "venv"
     txt_suffix: str = ".txt"
     lock_suffix: str = ".lock"
@@ -64,8 +66,12 @@ def compose(cfg: Config, req_paths: list[Path]) -> list[list[Path]]:
             continue
         group = [req_path]
         logger.info(f"{req_path} created new group")
-        for c in req_paths:
-            if c != req_path and _compatible(group + [c]):
+        candidates = sorted(
+            (c for c in req_paths if c != req_path),
+            key=lambda c: c in added,
+        )
+        for c in candidates:
+            if _compatible(group + [c]):
                 group.append(c)
         groups.append(group)
         added.update(group)
@@ -104,7 +110,7 @@ def install(cfg: Config) -> None:
         venv_path = lock_path.with_suffix("")
         subprocess.run(["uv", "venv", "--clear", str(venv_path)])
         subprocess.run(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)])
-
+        time.sleep(10)
 
 ALL_STAGES = "all"
 STAGES = (validate.__name__, compose.__name__, lock.__name__, install.__name__, ALL_STAGES)
@@ -129,12 +135,16 @@ def run(
 
     cfg = Config(
         requirements_dir=Path(REQUIREMENTS_DIR),
-        venvs_dir=Path(VENVS_DIR),
+        venvs_dir=Path(VENVS_DIR) / PROFILE,
+        profile=PROFILE,
     )
-    req_paths = list(cfg.requirements_dir.rglob(f"*{cfg.txt_suffix}"))
+    # Shared txts from the requirements root + txts of the current profile
+    req_paths = list(cfg.requirements_dir.glob(f"*{cfg.txt_suffix}"))
+    req_paths += list((cfg.requirements_dir / cfg.profile).rglob(f"*{cfg.txt_suffix}"))
+    logger.info(f"Profile: {cfg.profile}")
     logger.debug("\n".join(str(p) for p in req_paths))
 
-    cfg.venvs_dir.mkdir(exist_ok=True)
+    cfg.venvs_dir.mkdir(parents=True, exist_ok=True)
 
     if validate.__name__ in run_stages:
         req_paths = validate(req_paths)

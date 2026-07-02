@@ -117,7 +117,7 @@ from wibench.config_loader import (
 from wibench.config import PipeLineConfig, StageType
 import subprocess
 from wibench.aggregator import PandasAggregatorConfig
-from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR
+from wibench.settings import VENVS_DIR, PROFILE
 
 
 def clear_tables(config: PipeLineConfig, stages: List[str]):
@@ -271,7 +271,11 @@ def run(
     exec_candidates, missing_per_group = compatible_execs(stages, datasets, alg_wrappers, attacks, metrics)
 
     if exec_candidates == []:
-        parts = ["No venv group has all required requirements. Missing per group (remove from config to use that venv):"]
+        parts = [
+            f"No venv group in {VENVS_DIR}/{PROFILE}/ has all required requirements"
+            " (set WIBENCH_PROFILE to change the profile)."
+            " Missing per group (remove from config to use that venv):"
+        ]
         for group_name, missing in missing_per_group.items():
             if missing:
                 txt_content = "\n".join([str(p) for p in missing])
