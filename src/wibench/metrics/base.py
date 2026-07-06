@@ -15,8 +15,6 @@ from wibench.typing import Object
 from wibench.utils import resize_torch_img
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
-from torchmetrics.functional.audio import scale_invariant_signal_noise_ratio
-from torchaudio.transforms import Resample
 from scipy.stats import binom
 from loguru import logger
 

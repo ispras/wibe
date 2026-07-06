@@ -1,0 +1,17 @@
+numba
+datasets
+pyarrow
+torch
+torchaudio
+numpy
+librosa
+soundfile
+pydantic
+matplotlib
+scikit-learn
+resampy
+tqdm
+pesq
+pyyaml
+pystoi
+webrtcvad
