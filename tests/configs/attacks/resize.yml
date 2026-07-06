@@ -1,0 +1,15 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  resize
+
+pipeline:
+  result_path: ./test_results/tests/resize
+  aggregators:
+    - CSV:
+        table_name: table

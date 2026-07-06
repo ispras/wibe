@@ -20,7 +20,6 @@ requirements/attacks/dogblurdeblurfpninception.txt
 requirements/algorithms/chunkyseal.txt
 requirements/datasets/mscoco.txt
 requirements/attacks/vaeregeneration.txt
-requirements/attacks/vaeattack.txt
 requirements/algorithms/stega_stamp.txt
 requirements/attacks/discoattack.txt
 requirements/attacks/dip.txt

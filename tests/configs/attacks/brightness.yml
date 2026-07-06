@@ -1,0 +1,15 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  brightness
+
+pipeline:
+  result_path: ./test_results/tests/brightness
+  aggregators:
+    - CSV:
+        table_name: table

@@ -43,7 +43,6 @@ requirements/algorithms/ssl_watermarking.txt
 requirements/attacks/dogblurdeblurfpninception.txt
 requirements/datasets/mscoco.txt
 requirements/attacks/vaeregeneration.txt
-requirements/attacks/vaeattack.txt
 requirements/attacks/dip.txt
 requirements/attacks/adversarialembedding.txt
 requirements/attacks/trustmarkrm.txt

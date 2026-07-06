@@ -99,7 +99,7 @@ class Rotate(BaseAttack):
     """
 
     def __init__(
-        self, angle: float, interpolation: str = "bilinear", expand=False
+        self, angle: float = 30, interpolation: str = "bilinear", expand=False
     ):
         self.angle = angle
         self.interpolation = T.InterpolationMode(interpolation)
@@ -131,7 +131,7 @@ class GaussianBlur(BaseAttack):
         Size of Gaussian kernel (must be odd and positive)
     """
 
-    def __init__(self, kernel_size: int):
+    def __init__(self, kernel_size: int = 3):
         self.kernel_size = kernel_size
 
     def __call__(self, image: TorchImg) -> TorchImg:
@@ -159,7 +159,7 @@ class GaussianNoise(BaseAttack):
         Standard deviation of Gaussian noise distribution
     """
 
-    def __init__(self, sigma: float) -> None:
+    def __init__(self, sigma: float = 0.03) -> None:
         super().__init__()
         self.sigma = sigma
 
@@ -190,7 +190,7 @@ class CenterCrop(BaseAttack):
         Ratio of area to keep (0-1). For example, 0.5 keeps 50% of image area.
     """
 
-    def __init__(self, ratio: float):
+    def __init__(self, ratio: float = 0.8):
         self.dim_ratio = ratio ** (1 / 2)
 
     def __call__(self, image: TorchImg) -> TorchImg:
@@ -229,8 +229,8 @@ class Resize(BaseAttack):
 
     def __init__(
         self,
-        x_ratio: float = 1,
-        y_ratio: float = 1,
+        x_ratio: float = 0.5,
+        y_ratio: float = 0.5,
         interpolation: str = "bilinear",
     ):
         self.x_ratio = x_ratio
@@ -267,7 +267,7 @@ class RandomCrop(BaseAttack):
         Ratio of area to keep (0-1). For example, 0.8 keeps 80% of image area.
     """
 
-    def __init__(self, ratio: float):
+    def __init__(self, ratio: float = 0.8):
         self.ratio = ratio
 
     def __call__(self, image: TorchImg) -> TorchImg:
@@ -301,7 +301,7 @@ class RandomCropout(BaseAttack):
         Ratio of area to keep (0-1). For example, 0.8 keeps 80% of image area.
     """
 
-    def __init__(self, ratio: float):
+    def __init__(self, ratio: float = 0.8):
         self.ratio = ratio
 
     def __call__(self, image: TorchImg) -> TorchImg:
@@ -345,7 +345,7 @@ class Brightness(BaseAttack):
         * >1.0 brightens image
     """
 
-    def __init__(self, factor: float):
+    def __init__(self, factor: float = 1.2):
         self.factor = factor
 
     def __call__(self, image: TorchImg) -> TorchImg:
@@ -377,7 +377,7 @@ class Contrast(BaseAttack):
         * >1.0 increases contrast
     """
 
-    def __init__(self, factor: float):
+    def __init__(self, factor: float = 1.2):
         self.factor = factor
 
     def __call__(self, image: TorchImg) -> TorchImg:

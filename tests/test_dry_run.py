@@ -9,12 +9,12 @@ from wibench.pipeline import STAGE_CLASSES
 sys.path.append(str(Path(__file__).parent.parent))
 
 
-CONFIG_DIR = Path("configs")
+CONFIG_DIR = Path(__file__).parent / "configs"
 
-stems_with_stage_split = {"metr", "ringid", "treering", "maxsive", "gaussian_shading"}
-stems_without_dry_run = {"trustmark_fid_demo"}
+stems_with_stage_split = {} # {"metr", "ringid", "treering", "maxsive", "gaussian_shading"}
+stems_without_dry_run = {"fid"}
 
-config_files = list(CONFIG_DIR.glob("*.yml"))
+config_files = list(CONFIG_DIR.glob("**/*.yml"))
 configs_without_split: list[Path] = []
 configs_with_split: list[Path] = []
 
