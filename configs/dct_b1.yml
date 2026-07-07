@@ -1,0 +1,40 @@
+algorithms:
+  DCT-B1:
+    params:
+      sample_rate: 16000
+      watermark_length: 24
+      lt: 23
+      lw: 1486
+      band_size: 30
+      lG1: 24
+      seed: 12345
+
+post_embed_metrics:
+  - SI_SNR
+  - PESQ
+  - STOI
+  - NISQA
+  - DNSMOS
+  - SECS
+
+post_extract_metrics:
+  - ExtWm
+  - BER
+  - WER
+
+datasets:
+  - LibriSpeech:
+      report_name: ls_test_other
+      cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
+      subset: all
+      split: test.other
+      sample_range: [0, 10]
+
+attacks:
+{% include 'common/band_filters.yml' %}
+
+pipeline:
+  result_path: ./test_results/dct_b1
+  aggregators:
+    - CSV:
+        table_name: table_bands_search
