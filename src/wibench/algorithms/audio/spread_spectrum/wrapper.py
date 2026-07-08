@@ -7,10 +7,10 @@ from wibench.config import Params
 
 from wibench.algorithms.audio.base import ClassicWatermarkWrapper
 
+NAME = "SpreadSpectrum"
 
 @dataclass
 class SpreadSpectrumParams(Params):
-    mode: str = "SpreadSpectrum"
     sample_rate: int = 16000
     watermark_length: int = 40
 
@@ -22,7 +22,7 @@ class SpreadSpectrumParams(Params):
 
 
 class SpreadSpectrumWrapper(ClassicWatermarkWrapper):
-    name = "SpreadSpectrum"
+    name = NAME
 
     SAMPLE_RATE = 16000
     MESSAGE_LENGTH = 40

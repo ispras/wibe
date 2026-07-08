@@ -7,10 +7,10 @@ from wibench.config import Params
 
 from wibench.algorithms.audio.base import ClassicWatermarkWrapper
 
+NAME = "QIM"
 
 @dataclass
 class QimParams(Params):
-    mode: str = "QIM"
     sample_rate: int = 16000
     watermark_length: int = 40
 
@@ -20,7 +20,7 @@ class QimParams(Params):
 
 
 class QimWrapper(ClassicWatermarkWrapper):
-    name = "QIM"
+    name = NAME
 
     SAMPLE_RATE = 16000
     MESSAGE_LENGTH = 40

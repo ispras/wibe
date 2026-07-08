@@ -1,5 +1,3 @@
-from abc import ABC, abstractmethod
-
 import numpy as np
 import torch
 from torchaudio.transforms import Resample
@@ -10,7 +8,7 @@ from wibench.typing import TorchAudio
 from wibench.watermark_data import TorchBitWatermarkData
 
 
-class ClassicWatermarkWrapper(BaseAlgorithmWrapper, ABC):
+class ClassicWatermarkWrapper(BaseAlgorithmWrapper):
     CLIP_OUTPUT = True
     FORCE_MONO = True
 
@@ -136,18 +134,16 @@ class ClassicWatermarkWrapper(BaseAlgorithmWrapper, ABC):
             payloads.sum(axis=0) >= (payloads.shape[0] + 1) // 2
         ).astype(int)
 
-    @abstractmethod
     def _embed_channel(
         self,
         signal: np.ndarray,
         payload: np.ndarray,
     ) -> np.ndarray:
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def _extract_channel(
         self,
         signal: np.ndarray,
         payload_len: int,
     ) -> np.ndarray:
-        pass
+        raise NotImplementedError

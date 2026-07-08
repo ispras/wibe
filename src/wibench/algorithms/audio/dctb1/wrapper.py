@@ -8,10 +8,10 @@ from wibench.config import Params
 
 from wibench.algorithms.audio.base import ClassicWatermarkWrapper
 
+NAME = "DCT-B1"
 
 @dataclass
 class DctB1Params(Params):
-    mode: str = "DCT-B1"
     sample_rate: int = 16000
     watermark_length: int = 24
     lt: int = 23
@@ -22,7 +22,7 @@ class DctB1Params(Params):
 
 
 class DctB1Wrapper(ClassicWatermarkWrapper):
-    name = "DCT-B1"
+    name = NAME
 
     SAMPLE_RATE = 16000
     MESSAGE_LENGTH = 24

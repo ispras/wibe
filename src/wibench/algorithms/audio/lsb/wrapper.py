@@ -7,17 +7,17 @@ from wibench.config import Params
 
 from wibench.algorithms.audio.base import ClassicWatermarkWrapper
 
+NAME = "LSB"
 
 @dataclass
 class LsbParams(Params):
-    mode: str = "LSB"
     sample_rate: int = 16000
     watermark_length: int = 40
     repetitions: int = 1
 
 
 class LsbWrapper(ClassicWatermarkWrapper):
-    name = "LSB"
+    name = NAME
 
     SAMPLE_RATE = 16000
     MESSAGE_LENGTH = 40

@@ -8,10 +8,10 @@ from wibench.config import Params
 
 from wibench.algorithms.audio.base import ClassicWatermarkWrapper
 
+NAME = "Patchwork"
 
 @dataclass
 class PatchworkParams(Params):
-    mode: str = "Patchwork"
     sample_rate: int = 16000
     watermark_length: int = 40
     fs: int = 3000
@@ -21,7 +21,7 @@ class PatchworkParams(Params):
 
 
 class PatchworkWrapper(ClassicWatermarkWrapper):
-    name = "Patchwork"
+    name = NAME 
 
     SAMPLE_RATE = 16000
     MESSAGE_LENGTH = 40

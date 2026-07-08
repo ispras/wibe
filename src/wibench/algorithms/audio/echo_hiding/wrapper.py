@@ -9,10 +9,10 @@ from wibench.config import Params
 
 from wibench.algorithms.audio.base import ClassicWatermarkWrapper
 
+NAME = "EchoHiding"
 
 @dataclass
 class EchoHidingParams(Params):
-    mode: str = "EchoHiding"
     sample_rate: int = 16000
     watermark_length: int = 40
 

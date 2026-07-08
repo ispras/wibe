@@ -9,10 +9,10 @@ from wibench.config import Params
 
 from wibench.algorithms.audio.base import ClassicWatermarkWrapper
 
+NAME = "NormSpace"
 
 @dataclass
 class NormSpaceParams(Params):
-    mode: str = "NormSpace"
     sample_rate: int = 16000
     watermark_length: int = 40
     delta: float = 0.03
@@ -20,7 +20,7 @@ class NormSpaceParams(Params):
 
 
 class NormSpaceWrapper(ClassicWatermarkWrapper):
-    name = "NormSpace"
+    name = NAME 
 
     SAMPLE_RATE = 16000
     MESSAGE_LENGTH = 40
