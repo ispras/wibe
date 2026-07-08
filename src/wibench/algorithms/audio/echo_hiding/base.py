@@ -1,6 +1,5 @@
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Any
 
 import numpy as np
 from scipy.signal import windows
@@ -25,13 +24,15 @@ class EchoHidingParams(Params):
     delay01: int = 120
     delay00: int = 130
 
-    negative_delay: int = 4
-    log_floor: float = 1e-5
-
 
 class EchoHidingBase(ClassicWatermarkWrapper):
+    """
+    Based on:
+    https://gist.github.com/tam17aki/7ab44fdbc748ad387ab7e01b6fe9ccbf
+    """
     SAMPLE_RATE = 16000
     MESSAGE_LENGTH = 40
+    log_floor: float = 1e-5
 
     def __init__(self, params: EchoHidingParams):
         super().__init__(params, eps=1e-12)
@@ -103,7 +104,7 @@ class EchoHidingBase(ClassicWatermarkWrapper):
             frame = signal[pointer : pointer + p.frame_length]
 
             ceps = np.fft.ifft(
-                np.log(np.square(np.abs(np.fft.fft(frame))) + p.log_floor)
+                np.log(np.square(np.abs(np.fft.fft(frame))) + self.log_floor)
             ).real
 
             delay1, delay0 = self._delays_for_key(int(key_ext[i]))

@@ -10,6 +10,7 @@ NAME = "EchoHidingNegative"
 @dataclass
 class EchoNegativeParams(EchoHidingParams):
     mode: str = "EchoNegative"
+    negative_delay: int = 4
 
 
 class EchoNegativeWrapper(EchoHidingBase):

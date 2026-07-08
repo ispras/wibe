@@ -1,6 +1,6 @@
-# from .audioseal import AudioSealWrapper
-# from .silentcipher import SilentCipherWrapper
-# from .wavmark import WavMarkWrapper
+from .audioseal import AudioSealWrapper
+from .silentcipher import SilentCipherWrapper
+from .wavmark import WavMarkWrapper
 from .dctb1 import DctB1Wrapper
 from .fsvc import FsvcWrapper
 from .norm_space import NormSpaceWrapper

@@ -22,6 +22,10 @@ class SpreadSpectrumParams(Params):
 
 
 class SpreadSpectrumWrapper(ClassicWatermarkWrapper):
+    """
+    Based on:
+    https://gist.github.com/tam17aki/326cf8666338e39d4f5f9cb777e8c6c0
+    """
     name = NAME
 
     SAMPLE_RATE = 16000

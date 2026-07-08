@@ -20,6 +20,10 @@ class QimParams(Params):
 
 
 class QimWrapper(ClassicWatermarkWrapper):
+    """
+    Based on:
+    https://github.com/pl561/QuantizationIndexModulation
+    """
     name = NAME
 
     SAMPLE_RATE = 16000

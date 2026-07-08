@@ -20,6 +20,10 @@ class NormSpaceParams(Params):
 
 
 class NormSpaceWrapper(ClassicWatermarkWrapper):
+    """
+    Based on:
+    https://github.com/kosta-pmf/audio-watermarking/blob/main/
+    """
     name = NAME 
 
     SAMPLE_RATE = 16000

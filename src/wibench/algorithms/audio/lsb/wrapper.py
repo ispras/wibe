@@ -17,6 +17,10 @@ class LsbParams(Params):
 
 
 class LsbWrapper(ClassicWatermarkWrapper):
+    """
+    Based on:
+    https://github.com/shalom06/Audio-Stego
+    """
     name = NAME
 
     SAMPLE_RATE = 16000

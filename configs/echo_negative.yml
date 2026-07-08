@@ -13,7 +13,6 @@ algorithms:
       delay01: 120
       delay00: 130
       negative_delay: 4
-      log_floor: 1e-05
 
 post_embed_metrics:
   - SI_SNR
