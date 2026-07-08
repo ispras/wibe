@@ -4,13 +4,12 @@ import numpy as np
 import cv2
 
 from typing_extensions import Dict, Any
-from omegaconf import OmegaConf 
-from diffusers import StableDiffusionPipeline 
 from dataclasses import dataclass
 from pathlib import Path
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.utils import numpy_bgr2torch_img, normalize_image
 from wibench.watermark_data import TorchBitWatermarkData
@@ -70,10 +69,12 @@ class StableSignatureWrapper(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         StableSignature algorithm configuration parameters (default EmptyDict)
     """
-    
+    pipeline_type = PipelineType.PROMPT
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
+        from omegaconf import OmegaConf 
+        from diffusers import StableDiffusionPipeline 
         module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(StableSignatureParams(**params))
         self.params: StableSignatureParams

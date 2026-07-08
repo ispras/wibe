@@ -6,6 +6,7 @@ import torch
 import numpy as np
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
+from wibench.pipeline_type import PipelineType
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.typing import TorchImg
 from wibench.module_importer import ModuleImporter
@@ -59,7 +60,7 @@ class FINWrapper(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         FIN algorithm configuration parameters (default EmptyDict)
     """
-
+    pipeline_type = PipelineType.IMAGE
     name = NAME
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:

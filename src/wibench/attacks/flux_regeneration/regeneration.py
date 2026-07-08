@@ -1,5 +1,4 @@
 import torch
-from diffusers import FluxImg2ImgPipeline
 from wibench.attacks.base import BaseAttack
 
 
@@ -25,6 +24,7 @@ class FluxRegeneration(BaseAttack):
 
         self.device = device
         self.dtype = getattr(torch, dtype)
+        from diffusers import FluxImg2ImgPipeline
         self.flux_pipeline = FluxImg2ImgPipeline.from_pretrained("black-forest-labs/FLUX.1-dev",
                                                                  torch_dtype=self.dtype,
                                                                  cache_dir=cache_dir,

@@ -3,7 +3,7 @@ import torch
 
 from ..base import BaseAttack
 
-from .feature_extractors import ClipEmbedding, ResNet18Embedding, VAEEmbedding
+
 
 
 class AdversarialEmbedding(BaseAttack):
@@ -21,6 +21,7 @@ class AdversarialEmbedding(BaseAttack):
                  ) -> None:
         super().__init__()
 
+        from .feature_extractors import ClipEmbedding, ResNet18Embedding, VAEEmbedding
         # load embedding model
         if encoder == "resnet18":
             # we use last layer's state as the embedding
@@ -117,7 +118,7 @@ class AdversarialEmbeddingPSNR(BaseAttack):
                  n_steps: int = 100,
                  ) -> None:
         super().__init__()
-
+        from .feature_extractors import ClipEmbedding, ResNet18Embedding, VAEEmbedding
         # load embedding model
         if encoder == "resnet18":
             # we use last layer's state as the embedding

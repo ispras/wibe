@@ -58,6 +58,7 @@ The system architecture consists of a sequence of processing configurable stages
 | FIN | post-hoc | fin | 64 bits | [FIN: Flow-Based Robust Watermarking with Invertible Noise Layer for Black-Box Distortions](https://github.com/QQiuyp/FIN) |
 | VINE | post-hoc | vine | 100 bits | [Robust Watermarking Using Generative Priors Against Image Editing: From Benchmarking to Advances](https://github.com/Shilin-LU/VINE) |
 | SepMark | post-hoc | sepmark | 30/128 bits | [SepMark: Deep Separable Watermarking for Unified Source Tracing and Deepfake Detection](https://github.com/sh1newu/SepMark) |
+| RoSteALS | post-hoc | rosteals | 100 bits | [RoSteALS: Robust Steganography using Autoencoder Latent Space](https://github.com/TuBui/RoSteALS) |
 
 
 ### Attacks
@@ -93,6 +94,9 @@ The system architecture consists of a sequence of processing configurable stages
 | Uni inv attack FLUX | uniinvattackflux | Image Inversion and Reconstruction using Flux model |
 | Uni edit attack FLUX | unieditattackflux | Image Editing using Flux model |
 | DISCO | discoattack | [DISCO: Adversarial Defense with Local Implicit Functions](https://arxiv.org/abs/2212.05630) |
+| DiffPure | diffpureattack | [Diffusion Models for Adversarial Purification](https://arxiv.org/abs/2205.07460) | 
+| RealESRGAN | realesrganattack | [Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data](https://arxiv.org/abs/2107.10833) | 
+| UnMarkerAttack | unmarkerattack | [UnMarker: A Universal Attack on Defensive Image Watermarking](https://arxiv.org/abs/2405.08363) |
 
 ### Datasets
 
@@ -120,6 +124,7 @@ The system architecture consists of a sequence of processing configurable stages
 | BER | extraction success | post_extract_metrics | ber | Bit Error Rate (multi-bit)|
 | WER | extraction success | post_extract_metrics | wer | Word Error Rate (multi-bit)|
 | TPR at x% FPR | extraction success | post_extract_metrics | tpr@xfpr | True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit) |
+| Empirical TPR at x% FPR | extraction success | post_extract_metrics | empiricaltpr@xfpr | Empirical True Positive Rate at fixed False Positive Rate threshold (multi-bit only) |
 | P-value | extraction success | post_extract_metrics | p-value | P-value denotes probability to observe the same result as in case of extraction from not watermarked object. |
 | Result | auxiliary | post_extract_metrics | result | Records extraction result (zero-bit case) |
 | Embeded watermark | auxiliary | post_embed_metrics | embwm | Records embeded watermark (multi-bit case) |

@@ -6,9 +6,9 @@
 WIBE
 ====
 
-.. |number_of_algorithms| replace:: 31
-.. |number_of_attacks| replace:: 23
-.. |number_of_metrics| replace:: 13
+.. |number_of_algorithms| replace:: 33
+.. |number_of_attacks| replace:: 28
+.. |number_of_metrics| replace:: 14
 
 .. _DiffusionDB: https://poloclub.github.io/diffusiondb/
 .. _MS COCO: https://cocodataset.org/#home
@@ -21,7 +21,7 @@ evaluate watermarking techniques and attacks against them on both generated and 
 The framework architecture consists of a core module and a set of extensions. The core implements :ref:`Pipeline <pipeline-link>` orchestration functionality.
 The extensions implement:
 
-* Image watermarking :ref:`Algorithms <algorithms-link>`: currently |number_of_algorithms| supoprted, including `Watermark Anything <https://openreview.net/pdf?id=IkZVDzdC8M>`_, `TrustMark <https://arxiv.org/abs/2311.18297>`_, `StegaStamp <https://www.matthewtancik.com/stegastamp>`_, `Tree-Rings Watermarks <https://openreview.net/pdf?id=Z57JrmubNl>`_
+* Image watermarking :ref:`Algorithms <algorithms-link>`: currently |number_of_algorithms| supoprted, including `Watermark Anything <https://openreview.net/pdf?id=IkZVDzdC8M>`_, `TrustMark <https://arxiv.org/abs/2311.18297>`_, `StegaStamp <https://www.matthewtancik.com/stegastamp>`_, `Tree-Rings Watermarks <https://openreview.net/pdf?id=Z57JrmubNl>`_, `VideoSeal <https://github.com/facebookresearch/videoseal>`_
 * :ref:`Attacks <attacks-link>` on watermarks: both common distortions and |number_of_attacks| advanced attacks supported, including `SADRE <https://dl.acm.org/doi/pdf/10.1145/3701716.3715519>`_, `DIP-based <https://openreview.net/pdf?id=g85Vxlrq0O>`_
 * :ref:`Datasets <datasets-link>`: `DiffusionDB`_ and `MS COCO`_ supported
 * :ref:`Metrics <metrics-link>`: |number_of_metrics| supported, including BER (Bit Error Rate), `SSIM <https://ece.uwaterloo.ca/~z70wang/publications/ssim.pdf>`_ (Structural Similarity Index Measure), `LPIPS <https://github.com/richzhang/PerceptualSimilarity>`_ (Learned Perceptual Image Patch Similarity), `ImageReward <https://arxiv.org/abs/2304.05977>`_

@@ -1,5 +1,4 @@
 import numpy as np
-import onnxruntime as ort
 import torch
 import torch.nn.functional as F
 from ..base import BaseAttack
@@ -39,7 +38,7 @@ class StegastampInversion(BaseAttack):
                  device_id: int = 0,
                  ) -> None:
         super().__init__()
-
+        import onnxruntime as ort
         session_options = ort.SessionOptions()
         session_options.intra_op_num_threads = 1
         session_options.inter_op_num_threads = 1

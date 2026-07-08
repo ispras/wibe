@@ -1,5 +1,11 @@
 import sys
-import dfsrc_disco.models as inr_models
+#import dfsrc_disco.models as inr_models
+# dummy imports for dfsrc_disco.models.models.make to work
+from dfsrc_disco.models.liif import LIIF
+from dfsrc_disco.models.edsr import EDSR, make_edsr_baseline
+from dfsrc_disco.models.mlp import MLP
+# 
+from dfsrc_disco.models.models import register, make
 from dfsrc_disco.utils import make_coord
 from tqdm import tqdm
 import json
@@ -14,7 +20,7 @@ class INR(object):
         #self.inr_model = inr_models.make(torch.load(pretrain_inr_path)['model'], load_sd=True).to(self.device)
         self.inr_model = []
         for idx in range(len(pretrain_inr_path)):
-            self.inr_model.append(inr_models.make(torch.load(pretrain_inr_path[idx])['model'], load_sd=True).to(self.device))
+            self.inr_model.append(make(torch.load(pretrain_inr_path[idx])['model'], load_sd=True).to(self.device))
             self.inr_model[-1].eval()
 
         self.height = height

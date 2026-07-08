@@ -3,7 +3,8 @@ import numpy as np
 from typing_extensions import Any
 from dataclasses import dataclass
 
-from .dwtsvm_marker import DWTSVMMarker
+from wibench.pipeline_type import PipelineType
+
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.utils import torch_img2numpy_bgr, numpy_bgr2torch_img, FactorPad
 from wibench.typing import TorchImg
@@ -27,11 +28,13 @@ class DWTSVMWrapper(BaseAlgorithmWrapper):
         Contains value for "threshold" parameter of the algorithm. The higher is the threshold, the watermark is more robust to attacks, but less imperceptible (default EmptyDict)
 
     """
+    pipeline_type = PipelineType.IMAGE
     name = "dwt_svm"
 
     def __init__(self, params: dict[str, Any] = {}) -> None:
         super().__init__(params)
         threshold = params.get("threshold", 56)
+        from .dwtsvm_marker import DWTSVMMarker
         self.marker: DWTSVMMarker = DWTSVMMarker(threshold=threshold)
 
     def embed(self, image: TorchImg, watermark_data: WatermarkData) -> TorchImg:

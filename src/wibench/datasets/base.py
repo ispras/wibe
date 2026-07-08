@@ -16,6 +16,7 @@ from wibench.typing import (
     PromptObject
 )
 from wibench.registry import RegistryMeta
+from wibench.pipeline_type import PipelineType
 
 
 class BaseDataset(metaclass=RegistryMeta):
@@ -96,6 +97,8 @@ class ImageFolderDataset(RangeBaseDataset):
     sample_range : Optional[Tuple[int, int]]
         Optional (start, end) index range to subset the dataset (including both borders)
     """
+    pipeline_type = PipelineType.IMAGE
+
     def __init__(
         self,
         path: Union[Path, str],
@@ -117,7 +120,6 @@ class ImageFolderDataset(RangeBaseDataset):
             self.images = [
                 self.transform(Image.open(img_path).convert("RGB")) for img_path in self.path_list[self.sample_range[0]: self.sample_range[1] + 1]
             ]
-        super().__init__(None, len(self))
         
     def __len__(self) -> int:
         """Return number of images in folder.
@@ -158,8 +160,9 @@ class PromptFolderDataset(RangeBaseDataset):
     sample_range : Optional[Tuple[int, int]]
         Optional (start, end) index range to subset the dataset (including both borders). Default: None (full dataset)
     separator : str
-        Separator for prompts in one file, default "\n"
+        Separator for prompts in one file, default is line break
     """
+    pipeline_type = PipelineType.PROMPT
 
     def __init__(
         self,

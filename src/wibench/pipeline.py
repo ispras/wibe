@@ -30,7 +30,9 @@ from .aggregator import build_fanout_from_config
 import tqdm
 from time import perf_counter
 import datetime
-from itertools import islice
+from itertools import islice, product
+from wibench.pipeline_type import PipelineType
+from loguru import logger
 
 
 class Stage:
@@ -458,6 +460,7 @@ class StageRunner:
         attacks: List[Tuple[str, Dict[str, Any]]],
         metrics: Dict[str, List[Tuple[str, Dict[str, Any]]]],
         pipeline_config: PipeLineConfig,
+        pipeline_type: PipelineType,
         dry_run: bool = False
     ):
         self.stages: List[Stage] = []
@@ -465,9 +468,18 @@ class StageRunner:
         self.seed = pipeline_config.seed
         
         cache = {}
+        all_entities = []
+        
+        def add_entity(func, *args, **kwargs):
+            result = func(*args, **kwargs)
+            all_entities.extend(result)
+            return result
+        
         def cached_call(func, *args, **kwargs):
             if hash(func) not in cache:
-                cache[hash(func)] = func(*args, **kwargs)
+                result = func(*args, **kwargs)
+                cache[hash(func)] = result
+                all_entities.extend(result)
             return cache[hash(func)]
             
         for stage in stages:
@@ -475,28 +487,42 @@ class StageRunner:
             if (stage_class is None):
                 raise ValueError(f"Unknown stage: {stage}")
             if (stage in [StageType.embed, StageType.extract]):
-                self.stages.append(stage_class(cached_call(get_algorithms, [algorithm_wrapper])[0]))
+                wrapper = cached_call(get_algorithms, [algorithm_wrapper])[0]
+                self.stages.append(stage_class(wrapper))
             elif (stage == StageType.post_embed_metrics):
-                post_embed_metrics = get_metrics(metrics[stage])
+                post_embed_metrics = add_entity(get_metrics, metrics[stage])
                 self.stages.append(stage_class(post_embed_metrics))
             elif (stage == StageType.post_attack_metrics):
-                post_attack_metrics = get_metrics(metrics[stage])
+                post_attack_metrics = add_entity(get_metrics, metrics[stage])
+                for metric in post_attack_metrics:
+                    if metric.pipeline_type == PipelineType.IMAGE and pipeline_type == PipelineType.PROMPT:
+                        metric.pipeline_type = PipelineType.ALL# Hack for psnr, ssim, lpips as attack assessment metrics
+
                 self.stages.append(stage_class(post_attack_metrics))
             elif (stage == StageType.attack):
                 self.stages.append(stage_class(cached_call(get_attacks, attacks)))
             elif (stage == StageType.post_extract_metrics):
-                post_extract_metrics = get_metrics(metrics[stage])
+                post_extract_metrics = add_entity(get_metrics, metrics[stage])
                 self.stages.append(stage_class(post_extract_metrics))
             elif (stage == StageType.aggregate):
                 self.stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, pipeline_config.min_batch_size, dry_run))
             elif (stage == StageType.post_pipeline_aggregate) and (pipeline_config.workers == 1):
                 self.post_pipeline_stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, 0, dry_run, True))
             elif (stage == StageType.post_pipeline_embed_metrics) and (pipeline_config.workers == 1):
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), algorithm_wrapper, pipeline_config.dump_type))
+                self.post_pipeline_stages.append(stage_class(add_entity(get_metrics, metrics[stage]), algorithm_wrapper, pipeline_config.dump_type))
             elif (stage == StageType.post_pipeline_attack_metrics) and (pipeline_config.workers == 1):
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), attacks, algorithm_wrapper, pipeline_config.dump_type))
+                self.post_pipeline_stages.append(stage_class(add_entity(get_metrics, metrics[stage]), attacks, algorithm_wrapper, pipeline_config.dump_type))
 
-        pass
+        self.check_compatibility(all_entities, pipeline_type)
+
+    @staticmethod
+    def check_compatibility(entities: list[Any], pipeline_type: PipelineType):
+        compatibility_problems = [entity.report_name for entity in entities 
+                                  if (entity.pipeline_type & pipeline_type).value == 0]
+        if len(compatibility_problems) == 0:
+            logger.info(f"Running pipeline in {pipeline_type.name} mode")
+            return
+        raise ValueError(f"Incompatible pipeline configuration. These entities are not compatible with dataset type ({pipeline_type.name}): {compatibility_problems}")
 
     def run(self, context: Context):
         """Execute all stages on the given object context. Context is modified internally.
@@ -615,6 +641,10 @@ class Pipeline:
         - Flushes aggregators after processing
         - Supports partial stage execution
         """
+        pipeline_type = self.datasets[0].pipeline_type
+        for dataset in self.datasets:
+            if dataset.pipeline_type != pipeline_type:
+                raise ValueError(f"Incompatible datasets: expected {pipeline_type.name}, got {dataset.pipeline_type.name} for {dataset.report_name}")
         total_iters = None
         if "embed" in stages:
             dataset_iters = 0
@@ -653,7 +683,8 @@ class Pipeline:
                 self.attacks,
                 self.metrics,
                 self.config,
-                dry_run
+                pipeline_type,
+                dry_run,
             )
             dataset_stop = self.config.workers if dry_run else None
             

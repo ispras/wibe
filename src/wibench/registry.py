@@ -1,4 +1,5 @@
 from loguru import logger
+from wibench.pipeline_type import PipelineType
 
 
 class RegistryMeta(type):
@@ -23,8 +24,11 @@ class RegistryMeta(type):
                 plugin_name = cls.name
             else:
                 plugin_name = cls.__name__
+                setattr(cls, "name", cls.__name__)
             plugin_name = plugin_name.lower()
             setattr(cls, "report_name", plugin_name)
+            if "pipeline_type" not in cls.__dict__:
+                setattr(cls, "pipeline_type", PipelineType.ALL)
             for base in bases:
                 if hasattr(base, "_registry"):
                     if plugin_name in base._registry:

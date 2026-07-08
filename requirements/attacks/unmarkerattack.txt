@@ -1,0 +1,6 @@
+pytorch_forecasting
+kornia
+piqa
+lpips
+torchvision
+torch_dct

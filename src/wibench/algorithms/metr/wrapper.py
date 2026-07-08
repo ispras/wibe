@@ -7,6 +7,7 @@ from torchvision import transforms
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 
@@ -79,7 +80,7 @@ class METRWrapper(BaseAlgorithmWrapper):
         METR algorithm configuration parameters (default EmptyDict)
 
     """
-    
+    pipeline_type = PipelineType.PROMPT
     name = "metr"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:

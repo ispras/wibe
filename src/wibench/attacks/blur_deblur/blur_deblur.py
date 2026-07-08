@@ -7,7 +7,6 @@ from torchvision.transforms.functional import pad
 
 from ..base import BaseAttack
 
-from .fpn_inception import FPNInception
 from wibench.download import requires_download
 
 
@@ -130,6 +129,8 @@ class BlurDeblurFPNInception(BaseAttack):
         self.blur = _GaussianBlur(sigma=sigma, device=device)
 
         norm_layer = functools.partial(torch.nn.InstanceNorm2d, affine=False, track_running_stats=True)
+        from .fpn_inception import FPNInception
+        
         self.deblur = FPNInception(norm_layer=norm_layer)
         self.load_deblur_weights(weights_path)
         self.deblur.to(device)
@@ -170,6 +171,7 @@ class DoGBlurDeblurFPNInception(BaseAttack):
         self.blur = DoGBlur(alpha, sigma_1, sigma_2, device=device)
 
         norm_layer = functools.partial(torch.nn.InstanceNorm2d, affine=False, track_running_stats=True)
+        from .fpn_inception import FPNInception
         self.deblur = FPNInception(norm_layer=norm_layer)
         self.load_deblur_weights(weights_path)
         self.deblur.to(device)

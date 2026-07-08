@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from wibench.module_importer import ModuleImporter
+from wibench.pipeline_type import PipelineType
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
@@ -68,7 +69,7 @@ class HiddenWrapper(BaseAlgorithmWrapper):
     params : Dict[str, Any]
         HiDDeN algorithm configuration parameters (default EmptyDict)
     """
-
+    pipeline_type = PipelineType.IMAGE
     name = "hidden"
     
     def __init__(self, params: Dict[str, Any] = {}) -> None:

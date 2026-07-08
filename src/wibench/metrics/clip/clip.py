@@ -1,9 +1,9 @@
-import ImageReward as RM
 import torch
 
 from typing_extensions import Any
 from pathlib import Path
 
+from wibench.pipeline_type import PipelineType
 from wibench.utils import (
     torch_img2numpy_bgr,
     save_tmp_images,
@@ -45,10 +45,13 @@ class CLIPScore(PostEmbedMetric):
     - The watermark_data field is required for the pipeline to work correctly
     """
     
+    pipeline_type = PipelineType.PROMPT
+        
     def __init__(self,
                  device: str = "cuda" if torch.cuda.is_available() else "cpu",
                  download_root: str = DEFAULT_DOWNLOAD_ROOT):
         download_root = str(Path(download_root).resolve())
+        import ImageReward as RM
         self.model = RM.load_score("CLIP", device=device, download_root=download_root)
 
     def __call__(self,

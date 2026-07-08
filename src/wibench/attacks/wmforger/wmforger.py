@@ -1,13 +1,11 @@
 import os
 
-import omegaconf
 import torch
 import torchvision
 import tqdm
 
 from ..base import BaseAttack
 from wibench.download import requires_download
-from .models import build_extractor
 
 
 DEFAULT_WEIGHTS_PATH = "./model_files/wmforger/convnext_pref_model.pth"
@@ -64,6 +62,10 @@ class WMForger(BaseAttack):
         return (img + param).clip(0, 1)
 
     def get_artifact_discriminator(self, ckpt_path: str, device) -> torch.nn.Module:
+        import omegaconf
+        from .models import build_extractor
+        
+        
         model_type = "convnext_tiny"
         state_dict = torch.load(ckpt_path, weights_only=True, map_location="cpu")["model"]
 

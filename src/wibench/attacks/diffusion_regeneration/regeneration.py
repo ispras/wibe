@@ -1,4 +1,3 @@
-from ..SADRE import ReSDPipeline
 from ..base import BaseAttack
 import torch
 from wibench.typing import TorchImg
@@ -9,6 +8,7 @@ class DiffusionRegeneration(BaseAttack):
 
     def __init__(self, pipe=None, device="cuda" if torch.cuda.is_available() else "cpu", noise_step=60):
         self.device = device
+        from ..SADRE.regen_pipe import ReSDPipeline
         if pipe is None:
             pipe = ReSDPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", torch_dtype=torch.float16, revision="fp16")
             pipe.set_progress_bar_config(disable=True)

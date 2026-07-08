@@ -4,10 +4,10 @@ from dataclasses import dataclass
 import torch
 import scipy
 from torchvision import transforms
-from diffusers import DPMSolverMultistepScheduler
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.module_importer import ModuleImporter
 
@@ -79,13 +79,15 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         Tree-Ring algorithm configuration parameters (default EmptyDict)
 
     """
-    
+    pipeline_type = PipelineType.PROMPT
     name = "treering"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(TreeRingParams(**params))
         self.params: TreeRingParams
+        from diffusers import DPMSolverMultistepScheduler
+        
         with ModuleImporter("TreeRing", self.module_path):
             from TreeRing.inverse_stable_diffusion import InversableStableDiffusionPipeline
             from TreeRing.optim_utils import (eval_watermark,

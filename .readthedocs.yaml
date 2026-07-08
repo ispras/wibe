@@ -13,7 +13,7 @@ build:
     post_checkout:
       - git submodule update --init --recursive
     post_install:
-      - python install_requirements.py
+      - python -m pip install -e .
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:

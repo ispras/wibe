@@ -1,3 +1,4 @@
+from wibench.pipeline_type import PipelineType
 from .base import BaseAttack
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.typing import TorchImg
@@ -10,6 +11,8 @@ class Identity(BaseAttack):
     """
     Implementation of "no attack" case
     """
+    def __init__(self):
+        super().__init__()
 
     def __call__(self, watermark_object: TorchImg) -> TorchImg:
         """
@@ -30,7 +33,9 @@ class Identity(BaseAttack):
 class Combination(BaseAttack):
     """
     Combination of attacks. Any combination of registered attack is supported. For example, you may use combination of rotation and center crop as:
-    
+
+    .. code-block:: yaml
+
         - combination:
             report_name: rotate_crop
             attacks:
@@ -38,14 +43,19 @@ class Combination(BaseAttack):
                 angle: 30
             - centercrop:
                 ratio: 0.5
-              
+
     Parameters
     ----------
     attacks: list[dict[str, Any]]
         List of attacks with their parameters to apply one-by-one. 
     """
     def __init__(self, attacks: List[Dict[str, Any]]):
-        attack_tuples = [ tuple(attack_pair.items())[0] for attack_pair in attacks]
+        attack_tuples = []
+        for attack in attacks:
+            if isinstance(attack, str):
+                attack_tuples.append((attack, None))
+            else:
+                attack_tuples.append(tuple(attack.items())[0])
         self.attacks = get_attacks(attack_tuples)
 
     def __call__(self, watermark_object: TorchImg) -> TorchImg:
@@ -58,12 +68,16 @@ class ImageWatermark(BaseAttack):
     """
     Applies watermark as attack on another watermark. Watermark data (e.g. bit message) is chosen randomly. Example of configuration (default algorithm parameters):
 
+    .. code-block:: yaml
+
         - ImageWatermark:
             report_name: trustmark_attack
             algorithm: trustmark 
-          
+
     Or you may pass specified algorithm parameters via `config` field:
      
+    .. code-block:: yaml
+
         - ImageWatermark:
             report_name: trustmark_attack
             algorithm: trustmark 
@@ -73,7 +87,7 @@ class ImageWatermark(BaseAttack):
               model_type: Q
               wm_strength: 0.75
               device: cpu
-              
+
     Parameters
     ----------
     algorithm: str
@@ -84,6 +98,8 @@ class ImageWatermark(BaseAttack):
     def __init__(self, algorithm: str, config: Optional[Dict[str, Any]] = None):
         wrapper_tuples = [(algorithm, config)]
         self.algorithm_wrapper: BaseAlgorithmWrapper = get_algorithms(wrapper_tuples)[0]
+        if self.algorithm_wrapper.pipeline_type != PipelineType.IMAGE:
+            raise ValueError(f"ImageWatermark attack: only post-hoc image watermarking methods are allowed, got {self.algorithm_wrapper.pipeline_type.name} type instead ({self.algorithm_wrapper.report_name})")
 
     def __call__(self, watermark_object: TorchImg) -> TorchImg:
         watermark_data = self.algorithm_wrapper.watermark_data_gen()
