@@ -1,11 +1,13 @@
 from typing import Any, Dict, List, Union, Optional
 from functools import lru_cache
 from abc import abstractmethod
+from fractions import Fraction
 import numpy as np
 import torch
 import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
+from wibench.pipeline_type import PipelineType
 from wibench.registry import RegistryMeta
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.datasets.base import BaseDataset
@@ -86,6 +88,8 @@ class PSNR(PostEmbedMetric):
     - Range: Typically 20-50 dB for images
     - Infinite if images are identical
     """
+    
+    pipeline_type = PipelineType.IMAGE
 
     def __call__(
         self,
@@ -109,6 +113,8 @@ class SSIM(PostEmbedMetric):
     -----
     - value 1 indicates perfect similarity
     """
+    
+    pipeline_type = PipelineType.IMAGE
 
     def __call__(
         self,
@@ -243,13 +249,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         self.method = get_algorithms([(algorithm, algorithm_params)])[0]
         self.cache_path = str(Path(random_extracts_path).with_suffix('.pt'))  
         
-        result = self._load_or_generate()
-    
-        if method_type == "zerobit":
-            self.threshold = result
-        else:
-            self.random_extracts = result
-        
+        self.statistic = self._load_or_generate()
         super().__init__()
 
     def _loading(self) -> Optional[Dict]:
@@ -270,18 +270,24 @@ class EmpiricalTPRxFPR(PostExtractMetric):
 
     def _load_or_generate(self) -> Union[float, np.ndarray]:
         cache_data = self._loading()
-        key = (self.algorithm_name, self.fpr_rate)
+        key = self.algorithm_name
         
         if cache_data is not None:
             if self.method_type in cache_data and key in cache_data[self.method_type]:
-                result = cache_data[self.method_type][key]
-                logger.info(f"loaded result for: {self.method_type}")
-                if self.method_type == "zerobit":
-                    return result['threshold']
+                statistic = cache_data[self.method_type][key].get("extracts", [])
+                if Fraction(str(self.fpr_rate)).denominator * 10 < len(statistic):
+                    result = cache_data[self.method_type][key]
+                    logger.info(f"loaded result for: {self.method_type}")
+                    if self.method_type == "zerobit":
+                        p, _ = self.get_percentile_and_reverse()
+                        return float(np.percentile(statistic, p))
+                    else:
+                        return result['extracts']
                 else:
-                    return result['extracts']
+                    pass
         
         return self._generate()
+    
     def _generate(self) -> Union[float, np.ndarray]:
         total = len(self.dataset)
         logger.info(f"Generating random data for dataset length: {total}")
@@ -315,7 +321,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
 
     def get_percentile_and_reverse(self) -> tuple:
         """Returns (percentile, reverse) for the given method."""
-        if self.algorithm_name == "ringid":
+        if (self.algorithm_name == "ringid" or self.algorithm_name == "sfwmark"):
             return self.fpr_rate * 100, True
         
         if self.algorithm_name == "maxsive":
@@ -337,9 +343,9 @@ class EmpiricalTPRxFPR(PostExtractMetric):
             score = float(extraction_result)
             _, reverse = self.get_percentile_and_reverse()
             if reverse:
-                return int(score <= self.threshold)
+                return int(score <= self.statistic)
             else:
-                return int(score >= self.threshold)
+                return int(score >= self.statistic)
         
         # Multibit evaluation
         watermark = watermark_data.watermark
@@ -353,7 +359,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         extraction_result = np.array(extraction_result).flatten()
            
         extract_threshold = np.sum(extraction_result != watermark)
-        thresholds = (extraction_result != self.random_extracts).sum(axis=1)
+        thresholds = (extraction_result != self.statistic).sum(axis=1)
         num_matches = np.sum(thresholds <= extract_threshold)
         
         return int(num_matches <= round(self.fpr_rate * len(thresholds)))
@@ -434,6 +440,7 @@ class PValue(PostExtractMetric):
             num_bits = len(wm)
         
         return 1 - binom.cdf(matched_bits - 1, num_bits, 0.5)
+
 
 class ExtractedWatermark(PostExtractMetric):
     """Records the extracted watermark payload for analysis.
