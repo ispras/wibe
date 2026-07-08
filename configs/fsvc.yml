@@ -25,7 +25,7 @@ datasets:
       cache_dir: /fast-drive/redkin.d/hf_cache/librispeech
       subset: clean
       split: test
-      sample_range: [0, 10]
+      sample_range: [0, 2]
 
 attacks:
 {% include 'common/band_filters.yml' %}

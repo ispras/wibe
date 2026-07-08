@@ -9,11 +9,11 @@ algorithms:
 
 post_embed_metrics:
   - SI_SNR
-  - PESQ
-  - STOI
-  - NISQA
-  - DNSMOS
-  - SECS
+  # - PESQ
+  # - STOI
+  # - NISQA
+  # - DNSMOS
+  # - SECS
 
 post_extract_metrics:
   - ExtWm
@@ -22,11 +22,10 @@ post_extract_metrics:
 
 datasets:
   - LibriSpeech:
-      report_name: ls_test_other
-      cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
-      subset: all
-      split: test.other
-      sample_range: [0, 10]
+      cache_dir: /fast-drive/redkin.d/hf_cache/librispeech
+      subset: clean
+      split: test
+      sample_range: [0, 2]
 
 attacks:
 {% include 'common/band_filters.yml' %}
