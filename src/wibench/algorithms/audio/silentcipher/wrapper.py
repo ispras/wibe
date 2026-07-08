@@ -144,7 +144,7 @@ class SilentCipherWrapper(BaseAlgorithmWrapper):
                 self.params.msg_sdr
             )
             return TorchAudio(
-                data=torch.Tensor(wm_signal).to(self.device).unsqueeze(0),
+                data=torch.Tensor(wm_signal).cpu().unsqueeze(0),
                 rate=self.SAMPLE_RATE,
             )
 
