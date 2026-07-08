@@ -2,8 +2,8 @@ algorithms:
   SpreadSpectrum:
     params:
       sample_rate: 16000
-      watermark_length: 40
-      frame_length: 1024
+      watermark_length: 10
+      frame_length: 512
       overlap: 0.0
       control_strength: 0.1
       num_reps: 3
@@ -13,9 +13,9 @@ post_embed_metrics:
   - SI_SNR
   - PESQ
   - STOI
-  - NISQA
-  - DNSMOS
-  - SECS
+  # - NISQA
+  # - DNSMOS
+  # - SECS
 
 post_extract_metrics:
   - ExtWm
@@ -24,14 +24,18 @@ post_extract_metrics:
 
 datasets:
   - LibriSpeech:
-      report_name: ls_test_other
-      cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
-      subset: all
-      split: test.other
-      sample_range: [0, 10]
+      cache_dir: /fast-drive/redkin.d/hf_cache/librispeech
+      subset: other
+      split: test
+      sample_range: [0, 2500]
+  - LibriSpeech:
+      cache_dir: /fast-drive/redkin.d/hf_cache/librispeech
+      subset: clean
+      split: test
+      sample_range: [0, 2500]
 
 attacks:
-{% include 'common/band_filters.yml' %}
+{% include 'common/audio_distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/spread_spectrum

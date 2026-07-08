@@ -7,8 +7,8 @@ algorithms:
 
 post_embed_metrics:
   - SI_SNR
-  # - PESQ
-  # - STOI
+  - PESQ
+  - STOI
   # - NISQA
   # - DNSMOS
   # - SECS
@@ -21,12 +21,17 @@ post_extract_metrics:
 datasets:
   - LibriSpeech:
       cache_dir: /fast-drive/redkin.d/hf_cache/librispeech
+      subset: other
+      split: test
+      sample_range: [0, 2500]
+  - LibriSpeech:
+      cache_dir: /fast-drive/redkin.d/hf_cache/librispeech
       subset: clean
       split: test
-      sample_range: [0, 2]
+      sample_range: [0, 2500]
 
 attacks:
-{% include 'common/band_filters.yml' %}
+{% include 'common/audio_distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/lsb
