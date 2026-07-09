@@ -3,7 +3,6 @@ from .silentcipher import SilentCipherWrapper
 from .wavmark import WavMarkWrapper
 from .aware import AwareWrapper
 from .perth import PerthWrapper
-<<<<<<< src/wibench/algorithms/audio/__init__.py
 from .dctb1 import DctB1Wrapper
 from .fsvc import FsvcWrapper
 from .norm_space import NormSpaceWrapper
