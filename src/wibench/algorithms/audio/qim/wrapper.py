@@ -1,3 +1,12 @@
+# This file incorporates code from QuantizationIndexModulation.
+# https://github.com/pl561/QuantizationIndexModulation
+#
+# Original code:
+# Copyright (c) 2019 plefevre
+#
+# Licensed under the MIT License.
+# See the LICENSE file for details.
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -20,14 +29,8 @@ class QimParams(Params):
 
 
 class QimWrapper(ClassicWatermarkWrapper):
-    """
-    Based on:
-    https://github.com/pl561/QuantizationIndexModulation
-    """
+    
     name = NAME
-
-    SAMPLE_RATE = 16000
-    MESSAGE_LENGTH = 40
 
     def __init__(self, params: dict[str, Any] | None = None):
         super().__init__(

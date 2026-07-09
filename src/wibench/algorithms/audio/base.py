@@ -12,9 +12,6 @@ class ClassicWatermarkWrapper(BaseAlgorithmWrapper):
     CLIP_OUTPUT = True
     FORCE_MONO = True
 
-    SAMPLE_RATE: int
-    MESSAGE_LENGTH: int
-
     def __init__(
         self,
         params: Params,

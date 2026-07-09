@@ -1,3 +1,26 @@
+"""
+Direct-sequence spread spectrum audio watermarking.
+
+This file is based on code originally written by Akira TAMAMORI:
+https://gist.github.com/tam17aki/7ab44fdbc748ad387ab7e01b6fe9ccbf
+
+Original copyright:
+Copyright (C) 2020 Akira TAMAMORI
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 from abc import abstractmethod
 from dataclasses import dataclass
 
@@ -26,12 +49,7 @@ class EchoHidingParams(Params):
 
 
 class EchoHidingBase(ClassicWatermarkWrapper):
-    """
-    Based on:
-    https://gist.github.com/tam17aki/7ab44fdbc748ad387ab7e01b6fe9ccbf
-    """
-    SAMPLE_RATE = 16000
-    MESSAGE_LENGTH = 40
+
     log_floor: float = 1e-5
 
     def __init__(self, params: EchoHidingParams):

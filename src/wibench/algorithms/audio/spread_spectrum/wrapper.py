@@ -1,3 +1,26 @@
+"""
+Direct-sequence spread spectrum audio watermarking.
+
+This file is based on code originally written by Akira TAMAMORI:
+https://gist.github.com/tam17aki/326cf8666338e39d4f5f9cb777e8c6c0
+
+Original copyright:
+Copyright (C) 2020 Akira TAMAMORI
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -27,9 +50,6 @@ class SpreadSpectrumWrapper(ClassicWatermarkWrapper):
     https://gist.github.com/tam17aki/326cf8666338e39d4f5f9cb777e8c6c0
     """
     name = NAME
-
-    SAMPLE_RATE = 16000
-    MESSAGE_LENGTH = 40
 
     def __init__(self, params: dict[str, Any] | None = None):
         super().__init__(

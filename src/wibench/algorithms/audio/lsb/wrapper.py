@@ -1,3 +1,12 @@
+# This file incorporates code from Audio-Steganography.
+# https://github.com/shalom06/Audio-Stego
+#
+# Original code:
+# Copyright (c) 2020 Shalom Mathews
+#
+# Licensed under the MIT License.
+# See the LICENSE file for details.
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -17,14 +26,8 @@ class LsbParams(Params):
 
 
 class LsbWrapper(ClassicWatermarkWrapper):
-    """
-    Based on:
-    https://github.com/shalom06/Audio-Stego
-    """
-    name = NAME
 
-    SAMPLE_RATE = 16000
-    MESSAGE_LENGTH = 40
+    name = NAME
 
     def __init__(self, params: dict[str, Any] | None = None):
         super().__init__(

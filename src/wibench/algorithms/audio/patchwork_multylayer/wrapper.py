@@ -1,3 +1,12 @@
+# This file incorporates code from Audio watermarking.
+# https://github.com/kosta-pmf/audio-watermarking
+#
+# Original code:
+# Copyright (c) 2021 kosta994
+#
+# Licensed under the MIT License.
+# See the LICENSE file for details.
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -21,14 +30,8 @@ class PatchworkParams(Params):
 
 
 class PatchworkWrapper(ClassicWatermarkWrapper):
-    """
-    Based on:
-    https://github.com/kosta-pmf/audio-watermarking/blob/main/
-    """
-    name = NAME 
 
-    SAMPLE_RATE = 16000
-    MESSAGE_LENGTH = 40
+    name = NAME 
 
     def __init__(self, params: dict[str, Any] | None = None):
         super().__init__(
