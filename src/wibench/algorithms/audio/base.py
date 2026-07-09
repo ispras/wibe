@@ -22,7 +22,7 @@ class ClassicWatermarkWrapper(BaseAlgorithmWrapper):
         self._eps = eps
 
         self.sample_rate = int(params.sample_rate)
-        self.MESSAGE_LENGTH = int(params.watermark_length)
+        self.message_length = int(params.watermark_length)
 
     @torch.inference_mode()
     def embed(
@@ -72,7 +72,7 @@ class ClassicWatermarkWrapper(BaseAlgorithmWrapper):
         return self._vote_payloads(payloads)
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        return TorchBitWatermarkData.get_random(self.MESSAGE_LENGTH)
+        return TorchBitWatermarkData.get_random(self.message_length)
 
     def _prepare_audio(
         self,
