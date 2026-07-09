@@ -82,14 +82,14 @@ class AudioSealWrapper(BaseAlgorithmWrapper):
         _audio_data = audio.data.clone()
         if audio.rate != self.SAMPLE_RATE:
             _audio_data = Resample(audio.rate, self.SAMPLE_RATE)(_audio_data)
-        _audio_data = _audio_data.unsqueeze(0)
+        _audio_data = _audio_data.unsqueeze(0).to(self.device)
+        _watermark = watermark_data.watermark.to(self.device)
         # Generate watermark
-        _watermark_data = self.generator(
-            _audio_data, message=watermark_data.watermark)
+        _watermark_data = self.generator(_audio_data, message=_watermark)
         # Prepare output data
         wm_audio_data = (
             _audio_data + _watermark_data).clamp(min=-1.0, max=1.0)
-        wm_audio_data = wm_audio_data.squeeze(0)
+        wm_audio_data = wm_audio_data.squeeze(0).cpu()
         return TorchAudio(data=wm_audio_data, rate=self.SAMPLE_RATE)
 
     def extract(self, audio: TorchAudio, watermark_data: TorchBitWatermarkData) -> np.ndarray:
@@ -107,10 +107,10 @@ class AudioSealWrapper(BaseAlgorithmWrapper):
         _audio_data = audio.data.clone()
         if audio.rate != self.SAMPLE_RATE:
             _audio_data = Resample(audio.rate, self.SAMPLE_RATE)(_audio_data)
-        _audio_data = _audio_data.unsqueeze(0)
+        _audio_data = _audio_data.unsqueeze(0).to(self.device)
         # Extract watermark data
         result, _logit_msg = self.detector(_audio_data, self.SAMPLE_RATE)
-        bin_msg = (_logit_msg > self.params.threshold).numpy().astype(int)
+        bin_msg = (_logit_msg.cpu() > self.params.threshold).numpy().astype(int)
         # TODO: save localization info
         loc_info = result[:, 1, :]
         return bin_msg
