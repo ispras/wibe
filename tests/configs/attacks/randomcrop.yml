@@ -6,12 +6,9 @@ datasets:
     path: tests/data
 
 attacks:
-  - rotate90
-  - rotate90:
-      report_name: counter
-      direction: counter
+  - randomcrop
 pipeline:
-  result_path: ./test_results/tests/rotate90
+  result_path: ./test_results/tests/randomcrop
   aggregators:
     - CSV:
         table_name: table

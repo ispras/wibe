@@ -26,13 +26,13 @@ dependencies = [
     "huggingface_hub",
     "json2clickhouse @ git+https://gitlab.ispras.ru/opentools/jsons2clickhouse",
     "plotly",
+    "pytest",
+    "pytest-cov",
+    "pytest-forked",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest",
-    "pytest-cov",
-    "pytest-forked",
     "flake8",
     "flake8-commas",
     "flake8-continuation",
@@ -89,6 +89,8 @@ addopts = "--cov=src/wibench --cov-report=term --cov-report=html --cov-append"
 source = ["src/wibench"]
 parallel = true
 branch = true
+patch = ["subprocess"]
+relative_files = true
 
 [tool.coverage.report]
 exclude_lines = [

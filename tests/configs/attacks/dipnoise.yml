@@ -6,12 +6,10 @@ datasets:
     path: tests/data
 
 attacks:
-  - rotate90
-  - rotate90:
-      report_name: counter
-      direction: counter
+  dipnoise
+
 pipeline:
-  result_path: ./test_results/tests/rotate90
+  result_path: ./test_results/tests/dipnoise
   aggregators:
     - CSV:
         table_name: table

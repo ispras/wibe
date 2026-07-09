@@ -6,15 +6,10 @@ datasets:
     path: tests/data
 
 attacks:
-  - JPEG:
-      quality: 80
-  
-post_extract_metrics:
-  tpr@xfpr:
-    fpr_rate: 0.001
+  discoattack
 
 pipeline:
-  result_path: ./test_results/tests/tpr@xfpr
+  result_path: ./test_results/tests/discoattack
   aggregators:
     - CSV:
         table_name: table

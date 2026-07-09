@@ -1,17 +1,18 @@
 algorithms:
-  dct_marker
+  - combination:
+      algorithms:
+        - mbrs
+        - videoseal
 
 datasets:
   ImageFolderDataset:
     path: tests/data
 
 attacks:
-  - rotate90
-  - rotate90:
-      report_name: counter
-      direction: counter
+  Identity
+
 pipeline:
-  result_path: ./test_results/tests/rotate90
+  result_path: ./test_results/tests/combination
   aggregators:
     - CSV:
         table_name: table

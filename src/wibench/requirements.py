@@ -37,12 +37,14 @@ def special_requirements(entity: str, config: dict[str, Any], entity_type: str):
         inner_result = special_requirements(params.get("method", "trustmark"), params.get("method_params", {}), "algorithms")
         result.update(inner_result)
     if entity.lower() == "imagewatermark":
-        algorithm = config.get("algorithm", "trustmark")
+        if config is None:
+            config = {}
+        algorithm = config.get("algorithm", "dct_marker")
         algorithm_config = config.get("config", {})
         inner_result = special_requirements(algorithm, algorithm_config, "algorithms")
         result.update(inner_result)
     if entity.lower() == "empiricaltpr@xfpr":
-        algorithm = config.get("algorithm", "trustmark")
+        algorithm = config.get("algorithm", "dct_marker")
         algorithm_config = config.get("algorithm_params", {})
         dataset = config.get("dataset", "diffusiondb")
         dataset_config = config.get("dataset_params", {})

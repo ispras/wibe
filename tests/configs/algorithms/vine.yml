@@ -1,17 +1,15 @@
 algorithms:
-  dct_marker
+  vine
 
 datasets:
   ImageFolderDataset:
     path: tests/data
 
 attacks:
-  - rotate90
-  - rotate90:
-      report_name: counter
-      direction: counter
+  Identity
+
 pipeline:
-  result_path: ./test_results/tests/rotate90
+  result_path: ./test_results/tests/vine
   aggregators:
     - CSV:
         table_name: table
