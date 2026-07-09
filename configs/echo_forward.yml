@@ -2,7 +2,7 @@ algorithms:
   EchoHidingForward:
     params:
       sample_rate: 16000
-      watermark_length: 30
+      watermark_length: 16
       frame_length: 512
       overlap: 0.5
       control_strength: 0.2

@@ -172,8 +172,8 @@ class DctB1Wrapper(ClassicWatermarkWrapper):
         band_size: int,
         num_coeffs: int,
     ) -> float:
-        start_freq = band_index * band_size * self.SAMPLE_RATE / (2 * num_coeffs)
-        end_freq = (band_index + 1) * band_size * self.SAMPLE_RATE / (2 * num_coeffs)
+        start_freq = band_index * band_size * self.sample_rate / (2 * num_coeffs)
+        end_freq = (band_index + 1) * band_size * self.sample_rate / (2 * num_coeffs)
         freq = (start_freq + end_freq) / 2.0
 
         bark = 13 * np.arctan(0.00076 * freq) + 3.5 * np.arctan((freq / 7500) ** 2)

@@ -21,7 +21,7 @@ class ClassicWatermarkWrapper(BaseAlgorithmWrapper):
         self.params = params
         self._eps = eps
 
-        self.SAMPLE_RATE = int(params.sample_rate)
+        self.sample_rate = int(params.sample_rate)
         self.MESSAGE_LENGTH = int(params.watermark_length)
 
     @torch.inference_mode()
@@ -46,7 +46,7 @@ class ClassicWatermarkWrapper(BaseAlgorithmWrapper):
 
         return TorchAudio(
             data=torch.stack(wm_channels, dim=0),
-            rate=self.SAMPLE_RATE,
+            rate=self.sample_rate,
         )
 
     @torch.inference_mode()
@@ -86,10 +86,10 @@ class ClassicWatermarkWrapper(BaseAlgorithmWrapper):
         if self.FORCE_MONO and signal.shape[0] > 1:
             signal = signal.mean(dim=0, keepdim=True)
 
-        if audio.rate != self.SAMPLE_RATE:
+        if audio.rate != self.sample_rate:
             signal = Resample(
                 orig_freq=int(audio.rate),
-                new_freq=int(self.SAMPLE_RATE),
+                new_freq=int(self.sample_rate),
             ).to(signal.device)(signal)
 
         return signal

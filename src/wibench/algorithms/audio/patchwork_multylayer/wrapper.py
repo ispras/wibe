@@ -127,8 +127,8 @@ class PatchworkWrapper(ClassicWatermarkWrapper):
         self,
         signal_len: int,
     ) -> tuple[int, int]:
-        si = int(self.params.fs / (self.SAMPLE_RATE / signal_len))
-        ei = int(self.params.fe / (self.SAMPLE_RATE / signal_len))
+        si = int(self.params.fs / (self.sample_rate / signal_len))
+        ei = int(self.params.fe / (self.sample_rate / signal_len))
 
         si = max(0, min(si, signal_len - 1))
         ei = max(si + 1, min(ei, signal_len - 1))

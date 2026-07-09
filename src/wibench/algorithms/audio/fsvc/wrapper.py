@@ -134,8 +134,8 @@ class FsvcWrapper(ClassicWatermarkWrapper):
         self,
         frame_len: int,
     ) -> tuple[int, int]:
-        gamma1 = self.params.gamma1 * self.SAMPLE_RATE / 44100.0
-        gamma2 = self.params.gamma2 * self.SAMPLE_RATE / 44100.0
+        gamma1 = self.params.gamma1 * self.sample_rate / 44100.0
+        gamma2 = self.params.gamma2 * self.sample_rate / 44100.0
 
         low = int(gamma1 * frame_len)
         high = int(gamma2 * frame_len + 1)
