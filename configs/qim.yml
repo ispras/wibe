@@ -1,0 +1,42 @@
+algorithms:
+  QIM:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      delta: 0.01
+      repetitions: 64
+      seed: 12345
+
+post_embed_metrics:
+  - SI_SNR
+  - PESQ
+  - STOI
+  # - NISQA
+  # - DNSMOS
+  # - SECS
+
+post_extract_metrics:
+  - ExtWm
+  - BER
+  - WER
+
+datasets:
+  - LibriSpeech:
+      cache_dir: /fast-drive/redkin.d/hf_cache/librispeech
+      subset: other
+      split: test
+      sample_range: [0, 2500]
+  - LibriSpeech:
+      cache_dir: /fast-drive/redkin.d/hf_cache/librispeech
+      subset: clean
+      split: test
+      sample_range: [0, 2500]
+
+attacks:
+{% include 'common/audio_distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/qim
+  aggregators:
+    - CSV:
+        table_name: table_bands_search

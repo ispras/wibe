@@ -1,0 +1,44 @@
+algorithms:
+  DCT-B1:
+    params:
+      sample_rate: 16000
+      watermark_length: 24
+      lt: 23
+      lw: 1486
+      band_size: 30
+      lG1: 24
+      seed: 12345
+
+post_embed_metrics:
+  - SI_SNR
+  - PESQ
+  - STOI
+  # - NISQA
+  # - DNSMOS
+  # - SECS
+
+post_extract_metrics:
+  - ExtWm
+  - BER
+  - WER
+
+datasets:
+  - LibriSpeech:
+      cache_dir: /fast-drive/redkin.d/hf_cache/librispeech
+      subset: other
+      split: test
+      sample_range: [0, 2500]
+  - LibriSpeech:
+      cache_dir: /fast-drive/redkin.d/hf_cache/librispeech
+      subset: clean
+      split: test
+      sample_range: [0, 2500]
+
+attacks:
+{% include 'common/audio_distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/dct_b1
+  aggregators:
+    - CSV:
+        table_name: table_bands_search
