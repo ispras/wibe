@@ -1,0 +1,5 @@
+datasets
+torch>=2.9,<2.10
+torchaudio>=2.9,<2.10
+torchvision>=0.24,<0.25
+torchcodec>=0.8,<0.10
