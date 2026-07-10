@@ -15,3 +15,5 @@ pesq
 pyyaml
 pystoi
 webrtcvad
+
+setuptools<81

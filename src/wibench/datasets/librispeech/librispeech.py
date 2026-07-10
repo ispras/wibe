@@ -1,6 +1,8 @@
 from typing import Optional, Tuple, Generator, Literal
 from packaging import version
+import io
 import datasets
+import torch
 from torch import Tensor
 from wibench.pipeline_type import PipelineType
 from wibench.typing import AudioObject, TorchAudio
@@ -58,7 +60,19 @@ class LibriSpeech(RangeBaseDataset):
                         "name": subset, "cache_dir": cache_dir}
         if (version.parse(datasets.__version__) >= version.parse("2.16.0")):
             dataset_args["trust_remote_code"] = True
+        
+        self.manual_audio_decode = (
+            version.parse(torch.__version__.split("+")[0]) < version.parse("2.4.0")
+        )
+
         self.dataset = datasets.load_dataset(**dataset_args)[split]
+
+        if self.manual_audio_decode:
+            self.dataset = self.dataset.cast_column(
+                "audio",
+                datasets.Audio(decode=False),
+            )
+
         dataset_len = self.dataset.num_rows
 
         self.dataset_len = dataset_len
@@ -66,6 +80,34 @@ class LibriSpeech(RangeBaseDataset):
 
     def __len__(self):
         return self.len
+    
+    @staticmethod
+    def _read_audio_with_soundfile(audio_obj) -> Tuple[Tensor, int]:
+        import soundfile as sf
+
+        if audio_obj.get("bytes") is not None:
+            audio, rate = sf.read(
+                io.BytesIO(audio_obj["bytes"]),
+                dtype="float32",
+                always_2d=False,
+            )
+        elif audio_obj.get("path") is not None:
+            audio, rate = sf.read(
+                audio_obj["path"],
+                dtype="float32",
+                always_2d=False,
+            )
+        else:
+            raise ValueError(f"Unsupported audio object: {audio_obj.keys()}")
+
+        data = Tensor(audio)
+
+        if data.ndim == 1:
+            data = data.unsqueeze(0)
+        else:
+            data = data.T
+
+        return data, int(rate)
 
     def generator(
         self,
@@ -84,7 +126,12 @@ class LibriSpeech(RangeBaseDataset):
             if (len_idx >= self.len):
                 break
             item = self.dataset[start_idx]
-            data = Tensor(item["audio"]["array"]).unsqueeze(0)
-            rate = item["audio"]["sampling_rate"]
+
+            if self.manual_audio_decode:
+                data, rate = self._read_audio_with_soundfile(item["audio"])
+            else:
+                data = Tensor(item["audio"]["array"]).unsqueeze(0)
+                rate = item["audio"]["sampling_rate"]
+
             yield AudioObject(str(start_idx), TorchAudio(data, rate))
             len_idx += 1

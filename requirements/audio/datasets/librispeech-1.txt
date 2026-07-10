@@ -1,4 +1,8 @@
-datasets
+datasets==2.14.4
+huggingface-hub==0.36.2
+fsspec==2026.6.0
+pyarrow==20.0.0
+
 torch>=2.10,<2.11
 torchaudio>=2.10,<2.11
 torchvision>=0.25,<0.26
