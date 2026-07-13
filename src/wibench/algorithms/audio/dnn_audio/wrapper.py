@@ -53,38 +53,16 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
         with ModuleImporter("dnn", self.module_path):
             import tensorflow as tf
 
-            from dnn.config import (
-                FS,
-                HOP_LENGTH,
-                MESSAGE_POOL,
-                MESSAGE_SHAPE,
-                NUM_BITS,
-                SIGNAL_SHAPE,
-                WINDOW_LENGTH,
-            )
-
+            message_pool = np.load(DEFAULT_MODULE_PATH / "samples/message_pool.npy")
             self.tf = tf
 
-            self.FS = int(FS)
-            self.HOP_LENGTH = int(HOP_LENGTH)
-            self.WINDOW_LENGTH = int(WINDOW_LENGTH)
+            self.hop_length = 511
+            self.window_length = 1023
 
-            self.MESSAGE_POOL = np.asarray(MESSAGE_POOL, dtype=np.float32)
-            self.MESSAGE_SHAPE = tuple(MESSAGE_SHAPE)
-            self.NUM_BITS = int(NUM_BITS)
-            self.SIGNAL_SHAPE = tuple(SIGNAL_SHAPE)
-
-        if self.FS != self.SAMPLE_RATE:
-            raise RuntimeError(
-                f"Wrapper SAMPLE_RATE={self.SAMPLE_RATE}, "
-                f"but DNN config FS={self.FS}"
-            )
-
-        if self.NUM_BITS != self.MESSAGE_LENGTH:
-            raise RuntimeError(
-                f"Wrapper MESSAGE_LENGTH={self.MESSAGE_LENGTH}, "
-                f"but DNN config NUM_BITS={self.NUM_BITS}"
-            )
+            self.message_pool = np.asarray(message_pool, dtype=np.float32)
+            self.signal_shape = (512, 64, 2)
+            self.message_shape = (16, 2 , 512)
+            self.num_bits = 512
 
         embedder_path = self._resolve_model_path(self.params.embedder_path)
         detector_path = self._resolve_model_path(self.params.detector_path)
@@ -203,22 +181,22 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
 
     def _random_message(self) -> np.ndarray:
         """
-        Return one 512-bit message from MESSAGE_POOL.
+        Return one 512-bit message from message_pool.
 
         This matches the original authors' logic better than generating
         arbitrary random 512-bit messages.
         """
 
-        idx = random.randint(0, len(self.MESSAGE_POOL) - 1)
+        idx = random.randint(0, len(self.message_pool) - 1)
 
         return np.asarray(
-            self.MESSAGE_POOL[idx],
+            self.message_pool[idx],
             dtype=np.float32,
-        ).reshape(self.NUM_BITS)
+        ).reshape(self.num_bits)
 
     def _message_to_bits(self, message: np.ndarray) -> np.ndarray:
         """
-        Convert message to shape (NUM_BITS,).
+        Convert message to shape (num_bits,).
 
         Supported shapes:
         - (512,)
@@ -232,23 +210,23 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
 
         message = np.asarray(message, dtype=np.float32)
 
-        if message.shape == (self.NUM_BITS,):
+        if message.shape == (self.num_bits,):
             return message
 
-        if message.shape == (1, self.NUM_BITS):
+        if message.shape == (1, self.num_bits):
             return message[0]
 
-        if message.shape == self.MESSAGE_SHAPE:
+        if message.shape == self.message_shape:
             return message[0, 0, :]
 
-        if message.shape == (1,) + self.MESSAGE_SHAPE:
+        if message.shape == (1,) + self.message_shape:
             return message[0, 0, 0, :]
 
         raise ValueError(
             f"Unsupported message shape: {message.shape}. "
             f"Expected one of: "
-            f"{(self.NUM_BITS,)}, {(1, self.NUM_BITS)}, "
-            f"{self.MESSAGE_SHAPE}, {(1,) + self.MESSAGE_SHAPE}"
+            f"{(self.num_bits,)}, {(1, self.num_bits)}, "
+            f"{self.message_shape}, {(1,) + self.message_shape}"
         )
 
     def _expand_message_for_batch(
@@ -260,16 +238,16 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
         message_bits = self._message_to_bits(message_bits)
 
         expanded = np.broadcast_to(
-            message_bits.reshape(1, 1, 1, self.NUM_BITS),
-            (batch_size,) + self.MESSAGE_SHAPE,
+            message_bits.reshape(1, 1, 1, self.num_bits),
+            (batch_size,) + self.message_shape,
         )
 
         return np.array(expanded, dtype=np.float32, copy=True)
 
     def _required_chunk_len(self) -> int:
 
-        return self.WINDOW_LENGTH + self.HOP_LENGTH * (
-            self.SIGNAL_SHAPE[1] - 1
+        return self.window_length + self.hop_length * (
+            self.signal_shape[1] - 1
         )
 
     def _split_signal_into_chunks(
@@ -304,9 +282,9 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
 
         stft = self.tf.signal.stft(
             chunks,
-            frame_length=self.WINDOW_LENGTH,
-            frame_step=self.HOP_LENGTH,
-            fft_length=self.WINDOW_LENGTH,
+            frame_length=self.window_length,
+            frame_step=self.hop_length,
+            fft_length=self.window_length,
             pad_end=False,
         )
 
@@ -320,7 +298,7 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
             axis=-1,
         )
 
-        expected_shape_suffix = self.SIGNAL_SHAPE
+        expected_shape_suffix = self.signal_shape
 
         if tuple(stft_ri.shape[1:]) != expected_shape_suffix:
             raise RuntimeError(
@@ -346,11 +324,11 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
 
         chunks = self.tf.signal.inverse_stft(
             stft_complex,
-            frame_length=self.WINDOW_LENGTH,
-            frame_step=self.HOP_LENGTH,
-            fft_length=self.WINDOW_LENGTH,
+            frame_length=self.window_length,
+            frame_step=self.hop_length,
+            fft_length=self.window_length,
             window_fn=self.tf.signal.inverse_stft_window_fn(
-                self.HOP_LENGTH
+                self.hop_length
             ),
         )
 
