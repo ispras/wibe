@@ -46,8 +46,8 @@ NAME = "dnn_audio"
 class DnnAudioWatermarkingParams(Params):
     embedder_path: Path = DEFAULT_MODULE_PATH / "embedder_model"
     detector_path: Path = DEFAULT_MODULE_PATH / "detector_model"
+    message_pool_path: Path = DEFAULT_MODULE_PATH / "samples" / "message_pool.npy"
 
-    device: str = "cuda"
     threshold: float = 0.5
     tf_allow_growth: bool = True
 
@@ -83,8 +83,7 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
             self.num_bits = 512
 
             self.message_pool = np.load(
-                self.module_path / "samples" / "message_pool.npy"
-            ).astype(np.float32)
+                self.params.message_pool_path).astype(np.float32)
 
             self.embedder = self.tf.keras.models.load_model(
                 self._resolve_model_path(self.params.embedder_path),
