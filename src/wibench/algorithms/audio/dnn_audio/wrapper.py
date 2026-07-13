@@ -49,7 +49,6 @@ class DnnAudioWatermarkingParams(Params):
 
     device: str = "cuda"
     threshold: float = 0.5
-    infer_batch_size: int = 64
     tf_allow_growth: bool = True
 
 
@@ -63,7 +62,7 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
         super().__init__(DnnAudioWatermarkingParams(**params))
         self.params: DnnAudioWatermarkingParams
         self.device = self.params.device
-
+        self.infer_batch_size: int = 64
         module_path = ModuleImporter.pop_resolve_module_path(
             params,
             DEFAULT_MODULE_PATH,
@@ -244,7 +243,7 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
         chunks, original_len = self._split_signal_into_chunks(signal)
         watermarked_chunks = []
 
-        infer_batch_size = int(self.params.infer_batch_size)
+        infer_batch_size = int(self.infer_batch_size)
 
         for start in range(0, len(chunks), infer_batch_size):
             chunk_batch = chunks[start:start + infer_batch_size]
@@ -282,7 +281,7 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
         chunks, _ = self._split_signal_into_chunks(signal)
 
         all_probs = []
-        infer_batch_size = int(self.params.infer_batch_size)
+        infer_batch_size = int(self.infer_batch_size)
 
         for start in range(0, len(chunks), infer_batch_size):
             chunk_batch = chunks[start:start + infer_batch_size]
