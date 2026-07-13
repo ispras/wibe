@@ -1,5 +1,5 @@
 """
-Direct-sequence spread spectrum audio watermarking.
+DNN-audio-watermarking
 
 This file is based on code originally written by kosta-pmf:
 https://github.com/kosta-pmf/dnn-audio-watermarking/tree/b6fda3e0d32326dbde111141ab402346b03db7d3?tab=readme-ov-file
