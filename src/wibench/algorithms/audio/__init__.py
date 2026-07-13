@@ -3,6 +3,7 @@ from .silentcipher import SilentCipherWrapper
 from .wavmark import WavMarkWrapper
 from .aware import AwareWrapper
 from .perth import PerthWrapper
+from .dnn_audio import DnnAudioWatermarkingWrapper
 from .dctb1 import DctB1Wrapper
 from .fsvc import FsvcWrapper
 from .norm_space import NormSpaceWrapper

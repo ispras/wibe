@@ -1,6 +1,7 @@
 import torch
 from dataclasses import dataclass
 from typing import Any
+import numpy as np
 
 
 WatermarkData = Any
@@ -34,4 +35,10 @@ class TorchBitWatermarkData:
         """
         return TorchBitWatermarkData(
             watermark=torch.randint(0, 2, size=(1, length))
+        )
+
+    @classmethod
+    def from_numpy(cls, data: np.ndarray) -> "TorchBitWatermarkData":
+        return TorchBitWatermarkData(
+            watermark=torch.from_numpy(data)
         )
