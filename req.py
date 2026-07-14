@@ -2,7 +2,6 @@ import sys
 import time
 import subprocess
 from dataclasses import dataclass
-from functools import lru_cache
 from itertools import combinations
 from pathlib import Path
 from loguru import logger
@@ -55,21 +54,25 @@ def _is_transient(stderr: str) -> bool:
     return any(marker in stderr for marker in TRANSIENT_MARKERS)
 
 
-@lru_cache(maxsize=None)
-def _compatible_cached(paths: tuple[Path, ...]) -> bool:
-    args = ["uv", "pip", "compile", "--quiet", "--no-header", "--no-annotate"] + [str(p) for p in paths]
+def _run_retrying(args: list[str], timeout: float | None = None) -> subprocess.CompletedProcess | None:
+    """Run a command, retrying transient network failures with exponential backoff.
+
+    Returns the last completed process (caller checks returncode), or None if
+    every attempt timed out."""
     logger.debug(" ".join(args))
+    r = None
     for attempt in range(MAX_RETRIES + 1):
         try:
-            r = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=COMPILE_TIMEOUT)
+            r = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=timeout)
         except subprocess.TimeoutExpired:
+            r = None
             error = f"Command timed out: {' '.join(args)}"
         else:
             if r.returncode == 0:
-                return True
+                return r
             stderr = r.stderr.decode(errors="replace")
             if not _is_transient(stderr):
-                return False
+                return r
             error = stderr.strip().splitlines()[-1] if stderr.strip() else "unknown error"
         if attempt < MAX_RETRIES:
             delay = RETRY_BASE ** (attempt + 1)
@@ -77,19 +80,24 @@ def _compatible_cached(paths: tuple[Path, ...]) -> bool:
                 f"Transient error (attempt {attempt + 1}/{MAX_RETRIES + 1}), retrying in {delay}s: {error}"
             )
             time.sleep(delay)
-    logger.warning(
-        f"Transient error persists after {MAX_RETRIES + 1} attempts, "
-        f"treating as incompatible: {', '.join(str(p) for p in paths)} ({error})"
-    )
-    return False
+    logger.warning(f"Transient error persists after {MAX_RETRIES + 1} attempts: {' '.join(args)} ({error})")
+    return r
+
+
+_compatible_cache: dict[tuple[Path, ...], bool] = {}
 
 
 def _compatible(paths: list[Path]) -> bool:
-    """Return True if uv pip compile succeeds for the given requirement files."""
+    """Return True if uv pip compile succeeds for the given requirement files (cached)."""
     if not paths:
         return True
     # File order doesn't affect resolvability, so sort for better cache hits
-    return _compatible_cached(tuple(sorted(paths)))
+    key = tuple(sorted(paths))
+    if key not in _compatible_cache:
+        args = ["uv", "pip", "compile", "--quiet", "--no-header", "--no-annotate"] + [str(p) for p in key]
+        r = _run_retrying(args, timeout=COMPILE_TIMEOUT)
+        _compatible_cache[key] = r is not None and r.returncode == 0
+    return _compatible_cache[key]
 
 
 def validate(base_paths: list[Path], req_paths: list[Path]) -> list[Path]:
@@ -240,8 +248,12 @@ def install(cfg: Config) -> None:
     for lock_path in sorted(cfg.glob_locks()):
         venv_path = lock_path.with_suffix("")
         subprocess.run(["uv", "venv", "--clear", str(venv_path)])
-        subprocess.run(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)])
-        time.sleep(10)
+        r = _run_retrying(["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)])
+        if r is None or r.returncode != 0:
+            logger.error(f"Failed to install {lock_path.stem}")
+            if r is not None:
+                sys.stderr.write(r.stderr.decode(errors="replace"))
+            raise typer.Exit(1)
 
 ALL_STAGES = "all"
 STAGES = (validate.__name__, compose.__name__, extend.__name__, lock.__name__, install.__name__, ALL_STAGES)
