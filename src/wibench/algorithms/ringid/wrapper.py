@@ -110,7 +110,6 @@ class RingIDWrapper(BaseAlgorithmWrapper):
             torch_dtype=torch.float16
         )
         self.pipe = pipe.to(self.device)
-
         self.tester_prompt = '' # assume at the detection time, the original prompt is unknown
         self.text_embeddings = pipe.get_text_embedding(self.tester_prompt)
 
@@ -186,7 +185,7 @@ class RingIDWrapper(BaseAlgorithmWrapper):
                             p=self.params.p,
                             mode=self.params.mode,
                             channel_min=self.params.channel_min)
-        return dist < self.params.threshold
+        return dist 
     
     def watermark_data_gen(self) -> RignIDWatermarkData:
         """Get watermark payload data for RingID watermarking algorithm.
