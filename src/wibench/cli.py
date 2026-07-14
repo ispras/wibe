@@ -117,7 +117,7 @@ from wibench.config_loader import (
 from wibench.config import PipeLineConfig, StageType
 import subprocess
 from wibench.aggregator import PandasAggregatorConfig
-from wibench.settings import VENVS_DIR, PROFILE
+from wibench.settings import VENVS_DIR, DEFAULT_PROFILE, get_profile
 
 
 def clear_tables(config: PipeLineConfig, stages: List[str]):
@@ -213,6 +213,9 @@ def run(
         False, "--dump-context", "-d", help="If enabled, execution contexts and pipeline config are saved. Useful for debug or stage-by-stage execution (in case of different environments for algorithms/metrics/attacks)"
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Quick run on a few samples to check everything working"),
+    profile: Optional[str] = typer.Option(
+        None, "--profile", "-p", help=f"Venvs profile (overrides WIBENCH_PROFILE; default: {DEFAULT_PROFILE})"
+    ),
     stages: Optional[str] = typer.Argument(None,
                                            help=f"Stages to execute (e.g., embed,attack,extract), if 'all' or not provided - executes all stages. Stages can be specified as intervals (embed-extract), pointwise (embed,attack,extract) and jointly (embed-attack,extract,post_pipeline_embed_metrics-post_pipeline_aggregate). Available stages are:{list(STAGE_CLASSES.keys())}"),
 
@@ -249,6 +252,9 @@ def run(
 
     stages = parse_stage_expression(stages)
 
+    # Resolved once here; env makes it survive re-exec and reach worker subprocesses
+    os.environ["WIBENCH_PROFILE"] = (profile := get_profile(profile))
+
     run_id = str(uuid.uuid1()) if RUN_ID_ENV_NAME not in os.environ else os.environ[RUN_ID_ENV_NAME]
     os.environ[RUN_ID_ENV_NAME] = run_id
     loaded_config = load_pipeline_config_yaml(config)
@@ -272,8 +278,8 @@ def run(
 
     if exec_candidates == []:
         parts = [
-            f"No venv group in {VENVS_DIR}/{PROFILE}/ has all required requirements"
-            " (set WIBENCH_PROFILE to change the profile)."
+            f"No venv group in {VENVS_DIR}/{profile}/ has all required requirements"
+            " (use --profile or WIBENCH_PROFILE to change the profile)."
             " Missing per group (remove from config to use that venv):"
         ]
         for group_name, missing in missing_per_group.items():

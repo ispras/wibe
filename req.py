@@ -7,7 +7,7 @@ from pathlib import Path
 from loguru import logger
 import typer
 
-from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR, PROFILE
+from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR, DEFAULT_PROFILE, get_profile
 
 logger.remove()
 logger.add(sys.stderr, level="DEBUG")
@@ -273,6 +273,12 @@ def run(
         "-b",
         help='Requirements included in every group, relative to the requirements dir. Pass --base "" to disable.',
     ),
+    profile: str = typer.Option(
+        None,
+        "--profile",
+        "-p",
+        help=f"Profile (overrides WIBENCH_PROFILE; default: {DEFAULT_PROFILE})",
+    ),
 ):
     run_stages = {install.__name__}
     if stages:
@@ -292,10 +298,11 @@ def run(
         )
         raise typer.Exit(1)
 
+    profile = get_profile(profile)
     cfg = Config(
         requirements_dir=Path(REQUIREMENTS_DIR),
-        venvs_dir=Path(VENVS_DIR) / PROFILE,
-        profile=PROFILE,
+        venvs_dir=Path(VENVS_DIR) / profile,
+        profile=profile,
     )
     base_paths = [cfg.requirements_dir / b for b in base if b]
     missing = [p for p in base_paths if not p.is_file()]
