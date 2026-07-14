@@ -49,6 +49,7 @@ build-backend = "setuptools.build_meta"
 
 [project.scripts]
 wibench = "wibench.cli:app"
+wibench-venv = "wibench.venv_manager:app"
 
 [tool.uv]
 package = true
