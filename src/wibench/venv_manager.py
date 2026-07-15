@@ -203,7 +203,7 @@ async def _greedy_groups(
             (c for c in req_paths if c != req_path),
             key=lambda c: (c in added, c),
         )
-        for c in tqdm(candidates, desc=f"group {len(groups)}", unit="file", leave=False):
+        for c in tqdm(candidates, desc=f"group {len(groups)}", unit="file"):
             if conflicts[c] & set(group):
                 continue
             if await _compatible(base_paths + group + [c]):
