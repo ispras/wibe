@@ -251,8 +251,8 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         self.algorithm_name = algorithm.lower()
         self.larger_is_better = larger_is_better
 
-        self.dataset = get_datasets([(dataset, dataset_params)])[0]
-        self.method = get_algorithms([(algorithm, algorithm_params)])[0]
+        # self.dataset = get_datasets([(dataset, dataset_params)])[0]
+        # self.method = get_algorithms([(algorithm, algorithm_params)])[0]
         self.cache_path = str(Path(random_extracts_path).with_suffix(".pt"))
 
         self.statistic = self._load_or_generate()
@@ -301,7 +301,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         """Compute zerobit threshold from null scores."""
         scores = np.asarray(scores, dtype=np.float64)
         q = self._zerobit_quantile()
-        return float(np.quantile(scores, q))
+        return float(np.nanquantile(scores, q))
 
     def _load_or_generate(self) -> Union[float, np.ndarray]:
         cache_data = self._loading()
