@@ -5,7 +5,7 @@
 #   WIBENCH_PROFILE=audio ./prepare.sh # builds audio venvs
 
 rm -rf .venv
-rm -rf "venvs/${WIBENCH_PROFILE:-image}"
+rm -rf "profiles/${WIBENCH_PROFILE:-image}/venvs"
 rm -rf uv.lock
 git submodule update --init --recursive # installs submodules
 python3 -m venv .venv                   # installs base venv

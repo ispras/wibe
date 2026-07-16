@@ -12,7 +12,7 @@ from loguru import logger
 from tqdm import tqdm
 import typer
 
-from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR, DEFAULT_PROFILE, get_profile
+from wibench.settings import PROFILES_DIR, COMMON_PROFILE, DEFAULT_PROFILE, get_profile
 
 logger.remove()
 # Route logs through tqdm so progress bars are not torn by log lines
@@ -376,12 +376,6 @@ def run(
         None,
         help=f"Stages to run: {STAGES}. Default: {install.__name__}",
     ),
-    base: list[str] = typer.Option(
-        ["wibench.txt"],
-        "--base",
-        "-b",
-        help='Requirements included in every group, relative to the requirements dir. Pass --base "" to disable.',
-    ),
     profile: str = typer.Option(
         None,
         "--profile",
@@ -414,22 +408,24 @@ def run(
         raise typer.Exit(1)
 
     profile = get_profile(profile)
+    if profile == COMMON_PROFILE:
+        typer.echo(f"'{COMMON_PROFILE}' is not a profile: it holds requirements shared by all profiles", err=True)
+        raise typer.Exit(1)
     cfg = Config(
-        requirements_dir=Path(REQUIREMENTS_DIR),
-        venvs_dir=Path(VENVS_DIR) / profile,
+        requirements_dir=Path(PROFILES_DIR) / profile / "requirements",
+        venvs_dir=Path(PROFILES_DIR) / profile / "venvs",
         profile=profile,
     )
-    base_paths = [cfg.requirements_dir / b for b in base if b]
-    missing = [p for p in base_paths if not p.is_file()]
-    if missing:
-        typer.echo(f"Base requirements not found: {', '.join(str(p) for p in missing)}", err=True)
-        raise typer.Exit(1)
+    common_dir = Path(PROFILES_DIR) / COMMON_PROFILE
 
-    # Shared txts from the requirements root + txts of the current profile;
-    # the base is kept separate and implicitly joins every group
-    all_paths = sorted(cfg.requirements_dir.glob(f"*{cfg.txt_suffix}"))
-    all_paths += sorted((cfg.requirements_dir / cfg.profile).rglob(f"*{cfg.txt_suffix}"))
-    req_paths = [p for p in all_paths if p not in set(base_paths)]
+    # Mandatory part of every group
+    base_paths = sorted((common_dir / "base").glob(f"*{cfg.txt_suffix}"))
+    if not base_paths:
+        logger.warning(f"No base requirements in {common_dir / 'base'}, groups get no mandatory part")
+
+    # Shared txts join every profile's composition as ordinary (optional) files
+    req_paths = sorted(common_dir.glob(f"*{cfg.txt_suffix}"))
+    req_paths += sorted(cfg.requirements_dir.rglob(f"*{cfg.txt_suffix}"))
     logger.info(f"Profile: {cfg.profile}")
     logger.info(f"Base: {', '.join(str(p) for p in base_paths) or '(none)'}")
     logger.debug("\n".join(str(p) for p in req_paths))

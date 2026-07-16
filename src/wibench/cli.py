@@ -117,7 +117,7 @@ from wibench.config_loader import (
 from wibench.config import PipeLineConfig, StageType
 import subprocess
 from wibench.aggregator import PandasAggregatorConfig
-from wibench.settings import VENVS_DIR, get_profile
+from wibench.settings import PROFILES_DIR, get_profile
 
 
 def clear_tables(config: PipeLineConfig, stages: List[str]):
@@ -279,7 +279,7 @@ def run(
 
     if exec_candidates == []:
         parts = [
-            f"No venv group in {VENVS_DIR}/{profile or '*'}/ has all required requirements"
+            f"No venv group in {PROFILES_DIR}/{profile or '*'}/venvs/ has all required requirements"
             " (use --profile or WIBENCH_PROFILE to change the profile)."
             " Missing per group (remove from config to use that venv):"
         ]
@@ -290,8 +290,9 @@ def run(
         raise ValueError("".join(parts))
 
     chosen_exec = Path(sys.executable) if Path(sys.executable) in exec_candidates else next(iter(exec_candidates))
-    # Pin the matched profile; env makes it survive re-exec and reach worker subprocesses
-    os.environ["WIBENCH_PROFILE"] = chosen_exec.parents[2].name
+    # Pin the matched profile (profiles/<profile>/venvs/venvN/bin/python);
+    # env makes it survive re-exec and reach worker subprocesses
+    os.environ["WIBENCH_PROFILE"] = chosen_exec.parents[3].name
 
     if Path(sys.executable) not in exec_candidates:
         subprocess_run(pipeline_config, python_exec=chosen_exec)
