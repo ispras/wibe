@@ -7,7 +7,7 @@ from wibench.config_loader import (
     DATASETS_FIELD,
     METRICS_FIELD,
 )
-from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR
+from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR, DEFAULT_PROFILE, get_profile
 
 
 def special_requirements(entity: str, config: dict[str, Any], entity_type: str):
@@ -62,7 +62,12 @@ def compatible_execs(
     alg_wrappers: list[tuple[str, dict[str, Any]]],
     attacks: list[tuple[str, dict[str, Any]]],
     metrics: dict[str, list[tuple[str, dict[str, Any]]]],
+    profile: str | None = None,
 ) -> tuple[list[Path], dict[str, set[Path]]]:
+    """Find venv pythons whose groups cover all config requirements.
+
+    Without an explicit profile (argument or WIBENCH_PROFILE), venvs of all
+    profiles are searched, the default profile first."""
     alg_wrappers = (
         alg_wrappers
         if (StageType.embed or StageType.extract) in stages
@@ -74,19 +79,12 @@ def compatible_execs(
             metrics[metric_field] if metric_field in stages else []
         )
 
+    profile = get_profile(profile, default=None)
+
     req_dir = Path(REQUIREMENTS_DIR).resolve()
 
-    
-    def module_paths(entities: set[tuple[str, str]]):
-        paths = set()
-        for entity, entity_type in entities:
-            p = req_dir / entity_type / (entity.lower() + ".txt")
-            if p.exists():
-                paths.add(p)
-        return paths
-
     all_special_requirements = set()
-    
+
     for items, field in [
         (alg_wrappers, ALGORITHMS_FIELD),
         *[(metrics[field], METRICS_FIELD) for field in metrics.keys()],
@@ -96,22 +94,26 @@ def compatible_execs(
         for n, config in items:
             reqs = special_requirements(n, config, field)
             all_special_requirements.update(reqs)
-            
-    current_req_paths = module_paths(all_special_requirements)
 
-    venvs_dir = Path(VENVS_DIR).resolve()
-    group_paths = list(venvs_dir.glob("*.txt"))
+    def required_paths(profile: str) -> set[Path]:
+        return {
+            p
+            for entity, entity_type in all_special_requirements
+            if (p := req_dir / profile / entity_type / (entity.lower() + ".txt")).exists()
+        }
+
+    group_paths = sorted(
+        Path(VENVS_DIR).resolve().glob(f"{profile or '*'}/venv*.txt"),
+        key=lambda p: (p.parent.name != DEFAULT_PROFILE, p),
+    )
     exec_candidates = []
     missing_per_group: dict[str, set[Path]] = {}
     for group_path in group_paths:
-        with open(group_path, mode="r") as fp:
-            group_req_paths = {
-                Path(line).resolve() for line in fp.read().splitlines()
-            }
-        missing = current_req_paths - group_req_paths
-        missing_per_group[group_path.stem] = missing
+        group_req_paths = {
+            Path(line).resolve() for line in group_path.read_text().splitlines()
+        }
+        missing = required_paths(group_path.parent.name) - group_req_paths
+        missing_per_group[f"{group_path.parent.name}/{group_path.stem}"] = missing
         if not missing:
-            exec_candidates.append(
-                group_path.with_suffix("") / "bin" / "python"
-            )
+            exec_candidates.append(group_path.with_suffix("") / "bin" / "python")
     return exec_candidates, missing_per_group

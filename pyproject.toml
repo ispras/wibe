@@ -24,7 +24,7 @@ dependencies = [
     "torchvision",
     "loguru",
     "huggingface_hub",
-    "json2clickhouse @ git+https://gitlab.ispras.ru/opentools/jsons2clickhouse",
+    "json2clickhouse @ git+https://gitlab.ispras.ru/opentools/jsons2clickhouse@7ca5f7bf3dac3307e6f63d46b4a592b4ce40b933",
     "plotly",
     "pytest",
     "pytest-cov",
@@ -49,6 +49,7 @@ build-backend = "setuptools.build_meta"
 
 [project.scripts]
 wibench = "wibench.cli:app"
+wibench-venv = "wibench.venv_manager:app"
 
 [tool.uv]
 package = true
