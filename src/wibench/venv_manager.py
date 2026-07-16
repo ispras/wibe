@@ -1,4 +1,5 @@
 import asyncio
+import shutil
 import subprocess
 import sys
 import time
@@ -155,17 +156,11 @@ async def validate(base_paths: list[Path], req_paths: list[Path]) -> list[Path]:
 
 
 async def _conflict_graph(
-    base_paths: list[Path], req_paths: list[Path], targets: list[Path] | None = None
+    base_paths: list[Path], req_paths: list[Path]
 ) -> dict[Path, set[Path]]:
-    """Pairwise incompatibilities (in the context of the base).
-
-    If targets is given, only pairs touching a target are checked."""
-    target_set = set(req_paths if targets is None else targets)
+    """Pairwise incompatibilities (in the context of the base)."""
     conflicts: dict[Path, set[Path]] = {p: set() for p in req_paths}
-    pairs = [
-        (a, b) for a, b in combinations(req_paths, 2)
-        if a in target_set or b in target_set
-    ]
+    pairs = list(combinations(req_paths, 2))
 
     found = 0
     with tqdm(total=len(pairs), desc="conflict graph", unit="pair") as bar:
@@ -185,31 +180,43 @@ async def _conflict_graph(
 
 
 async def _greedy_groups(
-    base_paths: list[Path], req_paths: list[Path], conflicts: dict[Path, set[Path]]
+    base_paths: list[Path],
+    req_paths: list[Path],
+    conflicts: dict[Path, set[Path]],
+    groups: list[list[Path]] | None = None,
 ) -> list[list[Path]]:
-    """Group req_paths greedily; returned groups do not include the base.
+    """Pack every compatible file into every group (existing ones first, then
+    new ones seeded by unassigned files); returned groups do not include the base.
 
     Inherently sequential: every decision depends on the current group."""
-    # Welsh-Powell style: seed groups with the most conflicting files first.
-    # Ties are broken by path so the result doesn't depend on the input order.
-    order = sorted(req_paths, key=lambda p: (-len(conflicts[p]), p))
-    groups, added = [], set()
-    for req_path in order:
-        if req_path in added:
-            continue
-        group = [req_path]
-        logger.info(f"{req_path} created new group")
-        candidates = sorted(
-            (c for c in req_paths if c != req_path),
-            key=lambda c: (c in added, c),
-        )
-        for c in tqdm(candidates, desc=f"group {len(groups)}", unit="file"):
+    groups = groups or []
+    added = {p for g in groups for p in g}
+
+    async def fill(group: list[Path], desc: str) -> None:
+        # Files not assigned anywhere first, so they get a seat before duplicates
+        candidates = sorted(set(req_paths) - set(group), key=lambda c: (c in added, c))
+        for c in tqdm(candidates, desc=desc, unit="file"):
             if conflicts[c] & set(group):
                 continue
             if await _compatible(base_paths + group + [c]):
                 group.append(c)
+                added.add(c)
+                logger.info(f"{c} added to {desc}")
+
+    for i, group in enumerate(groups):
+        await fill(group, f"group {i}")
+
+    # Welsh-Powell style: seed new groups with the most conflicting files first.
+    # Ties are broken by path so the result doesn't depend on the input order.
+    order = sorted(req_paths, key=lambda p: (-len(conflicts[p]), p))
+    for req_path in order:
+        if req_path in added:
+            continue
+        logger.info(f"{req_path} created new group")
+        group = [req_path]
+        added.add(req_path)
         groups.append(group)
-        added.update(group)
+        await fill(group, f"group {len(groups) - 1}")
     return groups
 
 
@@ -219,11 +226,14 @@ def _write_groups(cfg: Config, groups: list[list[Path]]) -> None:
         txt_content = "\n".join(str(p) for p in group)
         txt_path.write_text(txt_content)
         logger.info(f"\n------ {txt_path.stem} ------\n" + txt_content)
-    # Drop leftovers from previous runs with more groups
-    for stale in list(cfg.glob_txts()) + list(cfg.glob_locks()):
+    # Drop leftovers (txts, locks and venv dirs) from previous runs with more groups
+    for stale in cfg.venvs_dir.glob(f"{cfg.group_prefix}*"):
         suffix = stale.name[len(cfg.group_prefix):len(stale.name) - len(stale.suffix)]
         if suffix.isdigit() and int(suffix) >= len(groups):
-            stale.unlink()
+            if stale.is_dir():
+                shutil.rmtree(stale)
+            else:
+                stale.unlink()
             logger.info(f"Removed stale {stale.name}")
 
 
@@ -243,7 +253,8 @@ async def compose(cfg: Config, base_paths: list[Path], req_paths: list[Path]) ->
 
 
 async def extend(cfg: Config, base_paths: list[Path], req_paths: list[Path]) -> list[list[Path]]:
-    """Update existing groups in place: keep them if still compatible, slot in new files."""
+    """Update existing groups: keep them if still compatible, then pack every
+    compatible file into every group; files that fit nowhere form new groups."""
     valid = set(req_paths)
     base_set = set(base_paths)
     groups: list[list[Path]] = []
@@ -262,24 +273,9 @@ async def extend(cfg: Config, base_paths: list[Path], req_paths: list[Path]) -> 
             groups.append(group)
 
     assigned = {p for g in groups for p in g}
-    unassigned = [p for p in req_paths if p not in assigned]
-    logger.info(f"Extending {len(groups)} existing groups with {len(unassigned)} unassigned files")
-    if unassigned:
-        conflicts = await _conflict_graph(base_paths, req_paths, targets=unassigned)
-        leftovers = []
-        for p in tqdm(unassigned, desc="extend", unit="file"):
-            for group in groups:
-                if conflicts[p] & set(group):
-                    continue
-                if await _compatible(base_paths + group + [p]):
-                    group.append(p)
-                    logger.info(f"{p} added to existing group")
-                    break
-            else:
-                leftovers.append(p)
-        if leftovers:
-            logger.info(f"{len(leftovers)} files don't fit existing groups, composing new ones")
-            groups += await _greedy_groups(base_paths, leftovers, conflicts)
+    logger.info(f"Extending {len(groups)} existing groups ({len(valid - assigned)} files unassigned)")
+    conflicts = await _conflict_graph(base_paths, req_paths)
+    groups = await _greedy_groups(base_paths, req_paths, conflicts, groups)
 
     groups = [base_paths + g for g in groups]
     _log_group_summary("Extended to", groups)
