@@ -186,26 +186,14 @@ source prepare.sh
 5. Install other required virtual environments:
 
     ```console
-    (.venv) python req.py
+    (.venv) wibench-venv all
     ```
 
-    <details>
-    <summary> Details of requirements-management script </summary>
-
-    This command will run 4 stages:
-    * validate - checks each requirements file individually, filters invalid files for next stages
-    * compose - сombines all verified (or not) files into large compatible groups and saves them to a .txt files
-    * lock - creates .lock files from compatible groups
-    * install - creates venvs and installs dependencies for every compatible groups
-
-    You can run each stage individually by passing the stage name:
-
-    ```console
-    (.venv) python req.py compose lock
-    ```
-
-    </details>
-    <br>
+    Algorithms, attacks, datasets and metrics often pin conflicting package versions,
+    so `wibench-venv` groups their requirements into a few compatible sets and builds
+    one venv per group; at run time `wibench` automatically picks a venv that covers
+    your config. See [docs/venv_manager.md](docs/venv_manager.md) for stages, profiles,
+    per-profile Python versions and troubleshooting.
 
 6. (Optional) Download the pre-trained model weights:
 
