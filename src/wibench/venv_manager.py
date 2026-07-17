@@ -24,6 +24,7 @@ class Config:
     requirements_dir: Path
     venvs_dir: Path
     profile: str
+    python: str | None = None  # from profiles/<profile>/.python-version
     group_prefix: str = "venv"
     txt_suffix: str = ".txt"
     lock_suffix: str = ".lock"
@@ -57,6 +58,12 @@ TRANSIENT_MARKERS = (
 
 # Limits the number of concurrent uv subprocesses; created in _pipeline
 _semaphore: asyncio.Semaphore
+# Profile's Python version for every uv call; set in _pipeline
+_python: str | None = None
+
+
+def _python_args() -> list[str]:
+    return ["--python", _python] if _python else []
 
 
 def _is_transient(stderr: str) -> bool:
@@ -109,13 +116,13 @@ async def _run_retrying(args: list[str], timeout: float | None = None) -> tuple[
     return result
 
 
-# Maps a sorted path tuple to the task computing its compatibility, so
+# Maps (python version, sorted paths) to the task computing compatibility, so
 # concurrent misses on the same key share one uv run
-_compatible_cache: dict[tuple[Path, ...], asyncio.Task] = {}
+_compatible_cache: dict[tuple, asyncio.Task] = {}
 
 
 async def _check_compatible(paths: tuple[Path, ...]) -> bool:
-    args = ["uv", "pip", "compile", "--quiet", "--no-header", "--no-annotate"] + [str(p) for p in paths]
+    args = ["uv", "pip", "compile", "--quiet", "--no-header", "--no-annotate", *_python_args()] + [str(p) for p in paths]
     result = await _run_retrying(args, timeout=COMPILE_TIMEOUT)
     return result is not None and result[0] == 0
 
@@ -124,11 +131,12 @@ async def _compatible(paths: list[Path]) -> bool:
     """Return True if uv pip compile succeeds for the given requirement files (cached)."""
     if not paths:
         return True
-    # File order doesn't affect resolvability, so sort for better cache hits
-    key = tuple(sorted(paths))
+    # File order doesn't affect resolvability, so sort for better cache hits;
+    # the Python version changes resolvability, so it is part of the key
+    key = (_python, *sorted(paths))
     task = _compatible_cache.get(key)
     if task is None:
-        task = asyncio.ensure_future(_check_compatible(key))
+        task = asyncio.ensure_future(_check_compatible(tuple(sorted(paths))))
         _compatible_cache[key] = task
     return await task
 
@@ -201,7 +209,7 @@ async def _greedy_groups(
             if await _compatible(base_paths + group + [c]):
                 group.append(c)
                 added.add(c)
-                logger.info(f"{c} added to {desc}")
+                logger.debug(f"{c} added to {desc}")
 
     for i, group in enumerate(groups):
         await fill(group, f"group {i}")
@@ -300,7 +308,7 @@ async def lock(cfg: Config, groups: list[list[Path]] | None = None) -> None:
     with tqdm(total=len(pairs), desc="lock", unit="group") as bar:
         async def compile_lock(lock_path: Path, group: list[Path]) -> None:
             args = (
-                ["uv", "pip", "compile", "--quiet", "--no-header", "--output-file", str(lock_path)]
+                ["uv", "pip", "compile", "--quiet", "--no-header", *_python_args(), "--output-file", str(lock_path)]
                 + [str(p) for p in group]
             )
             result = await _run_retrying(args)
@@ -319,7 +327,7 @@ async def install(cfg: Config) -> None:
     lock_paths = sorted(cfg.glob_locks())
     for lock_path in tqdm(lock_paths, desc="install", unit="venv"):
         venv_path = lock_path.with_suffix("")
-        await _run_retrying(["uv", "venv", "--clear", str(venv_path)])
+        await _run_retrying(["uv", "venv", "--clear", *_python_args(), str(venv_path)])
         result = await _run_retrying(
             ["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)]
         )
@@ -340,8 +348,9 @@ app = typer.Typer(pretty_exceptions_enable=False)
 async def _pipeline(
     cfg: Config, base_paths: list[Path], req_paths: list[Path], run_stages: set[str], jobs: int
 ) -> None:
-    global _semaphore
+    global _semaphore, _python
     _semaphore = asyncio.Semaphore(jobs)
+    _python = cfg.python
     logger.info(f"Concurrency: up to {jobs} parallel uv processes")
     t0 = time.monotonic()
 
@@ -411,10 +420,12 @@ def run(
     if profile == COMMON_PROFILE:
         typer.echo(f"'{COMMON_PROFILE}' is not a profile: it holds requirements shared by all profiles", err=True)
         raise typer.Exit(1)
+    py_file = Path(PROFILES_DIR) / profile / ".python-version"
     cfg = Config(
         requirements_dir=Path(PROFILES_DIR) / profile / "requirements",
         venvs_dir=Path(PROFILES_DIR) / profile / "venvs",
         profile=profile,
+        python=py_file.read_text().strip() if py_file.is_file() else None,
     )
     common_dir = Path(PROFILES_DIR) / COMMON_PROFILE
 
@@ -427,6 +438,7 @@ def run(
     req_paths = sorted(common_dir.glob(f"*{cfg.txt_suffix}"))
     req_paths += sorted(cfg.requirements_dir.rglob(f"*{cfg.txt_suffix}"))
     logger.info(f"Profile: {cfg.profile}")
+    logger.info(f"Python: {cfg.python or '(uv default)'}")
     logger.info(f"Base: {', '.join(str(p) for p in base_paths) or '(none)'}")
     logger.debug("\n".join(str(p) for p in req_paths))
 
