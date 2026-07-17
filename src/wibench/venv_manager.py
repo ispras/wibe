@@ -1,4 +1,5 @@
 import asyncio
+import shutil
 import subprocess
 import sys
 import time
@@ -11,7 +12,7 @@ from loguru import logger
 from tqdm import tqdm
 import typer
 
-from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR, DEFAULT_PROFILE, get_profile
+from wibench.settings import PROFILES_DIR, COMMON_PROFILE, DEFAULT_PROFILE, get_profile
 
 logger.remove()
 # Route logs through tqdm so progress bars are not torn by log lines
@@ -23,6 +24,7 @@ class Config:
     requirements_dir: Path
     venvs_dir: Path
     profile: str
+    python: str | None = None  # from profiles/<profile>/.python-version
     group_prefix: str = "venv"
     txt_suffix: str = ".txt"
     lock_suffix: str = ".lock"
@@ -56,6 +58,12 @@ TRANSIENT_MARKERS = (
 
 # Limits the number of concurrent uv subprocesses; created in _pipeline
 _semaphore: asyncio.Semaphore
+# Profile's Python version for every uv call; set in _pipeline
+_python: str | None = None
+
+
+def _python_args() -> list[str]:
+    return ["--python", _python] if _python else []
 
 
 def _is_transient(stderr: str) -> bool:
@@ -108,13 +116,13 @@ async def _run_retrying(args: list[str], timeout: float | None = None) -> tuple[
     return result
 
 
-# Maps a sorted path tuple to the task computing its compatibility, so
+# Maps (python version, sorted paths) to the task computing compatibility, so
 # concurrent misses on the same key share one uv run
-_compatible_cache: dict[tuple[Path, ...], asyncio.Task] = {}
+_compatible_cache: dict[tuple, asyncio.Task] = {}
 
 
 async def _check_compatible(paths: tuple[Path, ...]) -> bool:
-    args = ["uv", "pip", "compile", "--quiet", "--no-header", "--no-annotate"] + [str(p) for p in paths]
+    args = ["uv", "pip", "compile", "--quiet", "--no-header", "--no-annotate", *_python_args()] + [str(p) for p in paths]
     result = await _run_retrying(args, timeout=COMPILE_TIMEOUT)
     return result is not None and result[0] == 0
 
@@ -123,11 +131,12 @@ async def _compatible(paths: list[Path]) -> bool:
     """Return True if uv pip compile succeeds for the given requirement files (cached)."""
     if not paths:
         return True
-    # File order doesn't affect resolvability, so sort for better cache hits
-    key = tuple(sorted(paths))
+    # File order doesn't affect resolvability, so sort for better cache hits;
+    # the Python version changes resolvability, so it is part of the key
+    key = (_python, *sorted(paths))
     task = _compatible_cache.get(key)
     if task is None:
-        task = asyncio.ensure_future(_check_compatible(key))
+        task = asyncio.ensure_future(_check_compatible(tuple(sorted(paths))))
         _compatible_cache[key] = task
     return await task
 
@@ -155,17 +164,11 @@ async def validate(base_paths: list[Path], req_paths: list[Path]) -> list[Path]:
 
 
 async def _conflict_graph(
-    base_paths: list[Path], req_paths: list[Path], targets: list[Path] | None = None
+    base_paths: list[Path], req_paths: list[Path]
 ) -> dict[Path, set[Path]]:
-    """Pairwise incompatibilities (in the context of the base).
-
-    If targets is given, only pairs touching a target are checked."""
-    target_set = set(req_paths if targets is None else targets)
+    """Pairwise incompatibilities (in the context of the base)."""
     conflicts: dict[Path, set[Path]] = {p: set() for p in req_paths}
-    pairs = [
-        (a, b) for a, b in combinations(req_paths, 2)
-        if a in target_set or b in target_set
-    ]
+    pairs = list(combinations(req_paths, 2))
 
     found = 0
     with tqdm(total=len(pairs), desc="conflict graph", unit="pair") as bar:
@@ -185,31 +188,43 @@ async def _conflict_graph(
 
 
 async def _greedy_groups(
-    base_paths: list[Path], req_paths: list[Path], conflicts: dict[Path, set[Path]]
+    base_paths: list[Path],
+    req_paths: list[Path],
+    conflicts: dict[Path, set[Path]],
+    groups: list[list[Path]] | None = None,
 ) -> list[list[Path]]:
-    """Group req_paths greedily; returned groups do not include the base.
+    """Pack every compatible file into every group (existing ones first, then
+    new ones seeded by unassigned files); returned groups do not include the base.
 
     Inherently sequential: every decision depends on the current group."""
-    # Welsh-Powell style: seed groups with the most conflicting files first.
-    # Ties are broken by path so the result doesn't depend on the input order.
-    order = sorted(req_paths, key=lambda p: (-len(conflicts[p]), p))
-    groups, added = [], set()
-    for req_path in order:
-        if req_path in added:
-            continue
-        group = [req_path]
-        logger.info(f"{req_path} created new group")
-        candidates = sorted(
-            (c for c in req_paths if c != req_path),
-            key=lambda c: (c in added, c),
-        )
-        for c in tqdm(candidates, desc=f"group {len(groups)}", unit="file"):
+    groups = groups or []
+    added = {p for g in groups for p in g}
+
+    async def fill(group: list[Path], desc: str) -> None:
+        # Files not assigned anywhere first, so they get a seat before duplicates
+        candidates = sorted(set(req_paths) - set(group), key=lambda c: (c in added, c))
+        for c in tqdm(candidates, desc=desc, unit="file"):
             if conflicts[c] & set(group):
                 continue
             if await _compatible(base_paths + group + [c]):
                 group.append(c)
+                added.add(c)
+                logger.debug(f"{c} added to {desc}")
+
+    for i, group in enumerate(groups):
+        await fill(group, f"group {i}")
+
+    # Welsh-Powell style: seed new groups with the most conflicting files first.
+    # Ties are broken by path so the result doesn't depend on the input order.
+    order = sorted(req_paths, key=lambda p: (-len(conflicts[p]), p))
+    for req_path in order:
+        if req_path in added:
+            continue
+        logger.info(f"{req_path} created new group")
+        group = [req_path]
+        added.add(req_path)
         groups.append(group)
-        added.update(group)
+        await fill(group, f"group {len(groups) - 1}")
     return groups
 
 
@@ -219,11 +234,14 @@ def _write_groups(cfg: Config, groups: list[list[Path]]) -> None:
         txt_content = "\n".join(str(p) for p in group)
         txt_path.write_text(txt_content)
         logger.info(f"\n------ {txt_path.stem} ------\n" + txt_content)
-    # Drop leftovers from previous runs with more groups
-    for stale in list(cfg.glob_txts()) + list(cfg.glob_locks()):
+    # Drop leftovers (txts, locks and venv dirs) from previous runs with more groups
+    for stale in cfg.venvs_dir.glob(f"{cfg.group_prefix}*"):
         suffix = stale.name[len(cfg.group_prefix):len(stale.name) - len(stale.suffix)]
         if suffix.isdigit() and int(suffix) >= len(groups):
-            stale.unlink()
+            if stale.is_dir():
+                shutil.rmtree(stale)
+            else:
+                stale.unlink()
             logger.info(f"Removed stale {stale.name}")
 
 
@@ -243,7 +261,8 @@ async def compose(cfg: Config, base_paths: list[Path], req_paths: list[Path]) ->
 
 
 async def extend(cfg: Config, base_paths: list[Path], req_paths: list[Path]) -> list[list[Path]]:
-    """Update existing groups in place: keep them if still compatible, slot in new files."""
+    """Update existing groups: keep them if still compatible, then pack every
+    compatible file into every group; files that fit nowhere form new groups."""
     valid = set(req_paths)
     base_set = set(base_paths)
     groups: list[list[Path]] = []
@@ -262,24 +281,9 @@ async def extend(cfg: Config, base_paths: list[Path], req_paths: list[Path]) -> 
             groups.append(group)
 
     assigned = {p for g in groups for p in g}
-    unassigned = [p for p in req_paths if p not in assigned]
-    logger.info(f"Extending {len(groups)} existing groups with {len(unassigned)} unassigned files")
-    if unassigned:
-        conflicts = await _conflict_graph(base_paths, req_paths, targets=unassigned)
-        leftovers = []
-        for p in tqdm(unassigned, desc="extend", unit="file"):
-            for group in groups:
-                if conflicts[p] & set(group):
-                    continue
-                if await _compatible(base_paths + group + [p]):
-                    group.append(p)
-                    logger.info(f"{p} added to existing group")
-                    break
-            else:
-                leftovers.append(p)
-        if leftovers:
-            logger.info(f"{len(leftovers)} files don't fit existing groups, composing new ones")
-            groups += await _greedy_groups(base_paths, leftovers, conflicts)
+    logger.info(f"Extending {len(groups)} existing groups ({len(valid - assigned)} files unassigned)")
+    conflicts = await _conflict_graph(base_paths, req_paths)
+    groups = await _greedy_groups(base_paths, req_paths, conflicts, groups)
 
     groups = [base_paths + g for g in groups]
     _log_group_summary("Extended to", groups)
@@ -304,7 +308,7 @@ async def lock(cfg: Config, groups: list[list[Path]] | None = None) -> None:
     with tqdm(total=len(pairs), desc="lock", unit="group") as bar:
         async def compile_lock(lock_path: Path, group: list[Path]) -> None:
             args = (
-                ["uv", "pip", "compile", "--quiet", "--no-header", "--output-file", str(lock_path)]
+                ["uv", "pip", "compile", "--quiet", "--no-header", *_python_args(), "--output-file", str(lock_path)]
                 + [str(p) for p in group]
             )
             result = await _run_retrying(args)
@@ -323,7 +327,7 @@ async def install(cfg: Config) -> None:
     lock_paths = sorted(cfg.glob_locks())
     for lock_path in tqdm(lock_paths, desc="install", unit="venv"):
         venv_path = lock_path.with_suffix("")
-        await _run_retrying(["uv", "venv", "--clear", str(venv_path)])
+        await _run_retrying(["uv", "venv", "--clear", *_python_args(), str(venv_path)])
         result = await _run_retrying(
             ["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)]
         )
@@ -344,8 +348,9 @@ app = typer.Typer(pretty_exceptions_enable=False)
 async def _pipeline(
     cfg: Config, base_paths: list[Path], req_paths: list[Path], run_stages: set[str], jobs: int
 ) -> None:
-    global _semaphore
+    global _semaphore, _python
     _semaphore = asyncio.Semaphore(jobs)
+    _python = cfg.python
     logger.info(f"Concurrency: up to {jobs} parallel uv processes")
     t0 = time.monotonic()
 
@@ -380,12 +385,6 @@ def run(
         None,
         help=f"Stages to run: {STAGES}. Default: {install.__name__}",
     ),
-    base: list[str] = typer.Option(
-        ["wibench.txt"],
-        "--base",
-        "-b",
-        help='Requirements included in every group, relative to the requirements dir. Pass --base "" to disable.',
-    ),
     profile: str = typer.Option(
         None,
         "--profile",
@@ -418,23 +417,28 @@ def run(
         raise typer.Exit(1)
 
     profile = get_profile(profile)
-    cfg = Config(
-        requirements_dir=Path(REQUIREMENTS_DIR),
-        venvs_dir=Path(VENVS_DIR) / profile,
-        profile=profile,
-    )
-    base_paths = [cfg.requirements_dir / b for b in base if b]
-    missing = [p for p in base_paths if not p.is_file()]
-    if missing:
-        typer.echo(f"Base requirements not found: {', '.join(str(p) for p in missing)}", err=True)
+    if profile == COMMON_PROFILE:
+        typer.echo(f"'{COMMON_PROFILE}' is not a profile: it holds requirements shared by all profiles", err=True)
         raise typer.Exit(1)
+    py_file = Path(PROFILES_DIR) / profile / ".python-version"
+    cfg = Config(
+        requirements_dir=Path(PROFILES_DIR) / profile / "requirements",
+        venvs_dir=Path(PROFILES_DIR) / profile / "venvs",
+        profile=profile,
+        python=py_file.read_text().strip() if py_file.is_file() else None,
+    )
+    common_dir = Path(PROFILES_DIR) / COMMON_PROFILE
 
-    # Shared txts from the requirements root + txts of the current profile;
-    # the base is kept separate and implicitly joins every group
-    all_paths = sorted(cfg.requirements_dir.glob(f"*{cfg.txt_suffix}"))
-    all_paths += sorted((cfg.requirements_dir / cfg.profile).rglob(f"*{cfg.txt_suffix}"))
-    req_paths = [p for p in all_paths if p not in set(base_paths)]
+    # Mandatory part of every group
+    base_paths = sorted((common_dir / "base").glob(f"*{cfg.txt_suffix}"))
+    if not base_paths:
+        logger.warning(f"No base requirements in {common_dir / 'base'}, groups get no mandatory part")
+
+    # Shared txts join every profile's composition as ordinary (optional) files
+    req_paths = sorted(common_dir.glob(f"*{cfg.txt_suffix}"))
+    req_paths += sorted(cfg.requirements_dir.rglob(f"*{cfg.txt_suffix}"))
     logger.info(f"Profile: {cfg.profile}")
+    logger.info(f"Python: {cfg.python or '(uv default)'}")
     logger.info(f"Base: {', '.join(str(p) for p in base_paths) or '(none)'}")
     logger.debug("\n".join(str(p) for p in req_paths))
 

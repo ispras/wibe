@@ -7,7 +7,7 @@ from wibench.config_loader import (
     DATASETS_FIELD,
     METRICS_FIELD,
 )
-from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR, DEFAULT_PROFILE, get_profile
+from wibench.settings import PROFILES_DIR, COMMON_PROFILE, DEFAULT_PROFILE, get_profile
 
 
 def special_requirements(entity: str, config: dict[str, Any], entity_type: str):
@@ -81,7 +81,7 @@ def compatible_execs(
 
     profile = get_profile(profile, default=None)
 
-    req_dir = Path(REQUIREMENTS_DIR).resolve()
+    profiles_dir = Path(PROFILES_DIR).resolve()
 
     all_special_requirements = set()
 
@@ -99,21 +99,26 @@ def compatible_execs(
         return {
             p
             for entity, entity_type in all_special_requirements
-            if (p := req_dir / profile / entity_type / (entity.lower() + ".txt")).exists()
+            if (p := profiles_dir / profile / "requirements" / entity_type / (entity.lower() + ".txt")).exists()
         }
 
     group_paths = sorted(
-        Path(VENVS_DIR).resolve().glob(f"{profile or '*'}/venv*.txt"),
-        key=lambda p: (p.parent.name != DEFAULT_PROFILE, p),
+        (
+            p
+            for p in profiles_dir.glob(f"{profile or '*'}/venvs/venv*.txt")
+            if p.parent.parent.name != COMMON_PROFILE
+        ),
+        key=lambda p: (p.parent.parent.name != DEFAULT_PROFILE, p),
     )
     exec_candidates = []
     missing_per_group: dict[str, set[Path]] = {}
     for group_path in group_paths:
+        group_profile = group_path.parent.parent.name
         group_req_paths = {
             Path(line).resolve() for line in group_path.read_text().splitlines()
         }
-        missing = required_paths(group_path.parent.name) - group_req_paths
-        missing_per_group[f"{group_path.parent.name}/{group_path.stem}"] = missing
+        missing = required_paths(group_profile) - group_req_paths
+        missing_per_group[f"{group_profile}/{group_path.stem}"] = missing
         if not missing:
             exec_candidates.append(group_path.with_suffix("") / "bin" / "python")
     return exec_candidates, missing_per_group

@@ -1,7 +1,9 @@
 import os
 
-REQUIREMENTS_DIR = "./requirements"
-VENVS_DIR = "./venvs"
+PROFILES_DIR = "./profiles"
+# Not a profile: profiles/common/base/*.txt are mandatory in every group,
+# profiles/common/*.txt join every profile's composition as ordinary files
+COMMON_PROFILE = "common"
 DEFAULT_PROFILE = "image"
 
 
