@@ -54,17 +54,18 @@ Requirement file roles:
 | `extend` | Updates existing groups instead of rebuilding: keeps current members, packs new files into every group where they fit, creates new groups only for files that fit nowhere |
 | `lock` | Compiles each `venvN.txt` into a fully pinned `venvN.lock` (`uv pip compile`) |
 | `install` | Creates/recreates `venvN/` from each lock (`uv venv --clear` + `uv pip install`) |
-| `all` | `validate compose lock install` |
+| `rebuild` | Shortcut for `validate compose lock install` — full pipeline, groups built from scratch |
+| `update` | Shortcut for `validate extend lock install` — full pipeline, existing groups updated in place |
 
 Running without arguments executes `install` only. Stages can be combined:
 
 ```console
-(.venv) wibench-venv all                      # full rebuild of the default profile
+(.venv) wibench-venv rebuild                  # rebuild the default profile from scratch
+(.venv) wibench-venv update -p audio          # refresh audio venvs after adding a requirement
 (.venv) wibench-venv compose lock             # regroup and lock, don't install
-(.venv) wibench-venv validate extend lock install -p audio
 ```
 
-`compose` and `extend` are mutually exclusive: use `compose` for a clean rebuild and `extend` to update existing groups in place (e.g. after adding a new requirement file). `extend` never removes a file from a group unless it no longer resolves or its requirement file was deleted, so group membership stays stable across runs.
+`compose` and `extend` (and therefore `rebuild` and `update`) are mutually exclusive: use `compose` for a clean rebuild and `extend` to update existing groups in place (e.g. after adding a new requirement file). `extend` never removes a file from a group unless it no longer resolves or its requirement file was deleted, so group membership stays stable across runs.
 
 Options:
 
@@ -76,7 +77,7 @@ Options:
 
 ## Per-profile Python version
 
-Put the desired version into `profiles/<profile>/.python-version` (a single line, e.g. `3.11`). It is passed to every `uv pip compile` and `uv venv` call, so both resolution and the built venvs use that version. Without the file, `uv` picks the interpreter as usual (including the repository-level `.python-version`). After changing the version, rerun `wibench-venv all -p <profile>` — resolution results may differ.
+Put the desired version into `profiles/<profile>/.python-version` (a single line, e.g. `3.11`). It is passed to every `uv pip compile` and `uv venv` call, so both resolution and the built venvs use that version. Without the file, `uv` picks the interpreter as usual (including the repository-level `.python-version`). After changing the version, rerun `wibench-venv rebuild -p <profile>` — resolution results may differ.
 
 ## How the pipeline picks a venv
 

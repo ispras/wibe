@@ -170,7 +170,7 @@ python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 (.venv) pip install uv
 (.venv) uv sync
-(.venv) wibench-venv all    # builds the per-algorithm / per-attack venvs
+(.venv) wibench-venv rebuild   # builds additional venvs
 ```
 
 > Conflicting dependency pins mean one shared venv is not enough:
