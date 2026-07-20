@@ -171,13 +171,17 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install uv
 uv sync
 wibench-venv all                   # builds the per-algorithm / per-attack venvs
-python download_models.py          # optional: download pre-trained weights
 ```
 
 > Conflicting dependency pins mean one shared venv is not enough:
 > `wibench-venv` builds several compatible ones, and `wibench` picks among them automatically.
 > If you plan to add your own algorithm, attack, dataset or metric,
 > read **[docs/venv_manager.md](docs/venv_manager.md)** first.
+
+**Optional (not recommended)** — download all pre-trained weights
+```console
+python download_models.py   # no need to use: weights download automatically on demand
+```
 
 ### 3. Authenticate with HuggingFace
 
