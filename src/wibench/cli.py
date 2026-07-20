@@ -109,7 +109,6 @@ from wibench.config_loader import (
     load_pipeline_config_yaml,
     ALGORITHMS_FIELD,
     METRICS_FIELDS,
-    METRICS_FIELD,
     DATASETS_FIELD,
     ATTACKS_FIELD,
     PIPELINE_FIELD,
@@ -117,7 +116,7 @@ from wibench.config_loader import (
 from wibench.config import PipeLineConfig, StageType
 import subprocess
 from wibench.aggregator import PandasAggregatorConfig
-from wibench.settings import PROFILES_DIR, get_profile
+from wibench.settings import PROFILES_DIR, VENVS_SUBDIR, get_profile, profile_of
 
 
 def clear_tables(config: PipeLineConfig, stages: List[str]):
@@ -269,17 +268,15 @@ def run(
 
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
     alg_wrappers = loaded_config[ALGORITHMS_FIELD]
-    metrics = {}
-    for metric_field in METRICS_FIELDS:
-        metrics[metric_field] = loaded_config[metric_field]
+    metrics = {metric_field: loaded_config[metric_field] for metric_field in METRICS_FIELDS}
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
 
-    exec_candidates, missing_per_group = compatible_execs(stages, datasets, alg_wrappers, attacks, metrics, profile)
+    exec_candidates, missing_per_group = compatible_execs(stages, loaded_config, profile)
 
     if exec_candidates == []:
         parts = [
-            f"No venv group in {PROFILES_DIR}/{profile or '*'}/venvs/ has all required requirements"
+            f"No venv group in {PROFILES_DIR}/{profile or '*'}/{VENVS_SUBDIR}/ has all required requirements"
             " (use --profile or WIBENCH_PROFILE to change the profile)."
             " Missing per group (remove from config to use that venv):"
         ]
@@ -290,9 +287,8 @@ def run(
         raise ValueError("".join(parts))
 
     chosen_exec = Path(sys.executable) if Path(sys.executable) in exec_candidates else next(iter(exec_candidates))
-    # Pin the matched profile (profiles/<profile>/venvs/venvN/bin/python);
-    # env makes it survive re-exec and reach worker subprocesses
-    os.environ["WIBENCH_PROFILE"] = chosen_exec.parents[3].name
+    # Pin the matched profile; env makes it survive re-exec and reach worker subprocesses
+    os.environ["WIBENCH_PROFILE"] = profile_of(chosen_exec)
 
     if Path(sys.executable) not in exec_candidates:
         subprocess_run(pipeline_config, python_exec=chosen_exec)

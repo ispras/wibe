@@ -13,23 +13,24 @@ from loguru import logger
 from tqdm import tqdm
 import typer
 
-from wibench.settings import PROFILES_DIR, COMMON_PROFILE, DEFAULT_PROFILE, get_profile
+from wibench.settings import (
+    BASE_SUBDIR,
+    COMMON_PROFILE,
+    DEFAULT_PROFILE,
+    GROUP_PREFIX,
+    LOCK_SUFFIX,
+    PROFILES_DIR,
+    PYTHON_VERSION_FILE,
+    REQUIREMENTS_SUBDIR,
+    TXT_SUFFIX,
+    VENVS_SUBDIR,
+    get_profile,
+    venv_python,
+)
 
 logger.remove()
 # Route logs through tqdm so progress bars are not torn by log lines
 logger.add(lambda m: tqdm.write(m, end="", file=sys.stderr), colorize=True, level="INFO")
-
-
-# Layout of profiles/<profile>/
-REQUIREMENTS_SUBDIR = "requirements"
-VENVS_SUBDIR = "venvs"
-BASE_SUBDIR = "base"  # under profiles/<COMMON_PROFILE>/
-PYTHON_VERSION_FILE = ".python-version"
-
-# Group artifacts inside the venvs dir: venv0.txt, venv0.lock, venv0/
-GROUP_PREFIX = "venv"
-TXT_SUFFIX = ".txt"
-LOCK_SUFFIX = ".lock"
 
 
 @dataclass(frozen=True)
@@ -351,7 +352,7 @@ async def install(cfg: Config) -> None:
         venv_path = lock_path.with_suffix("")
         await _run_retrying(["uv", "venv", "--clear", *_python_args(), str(venv_path)])
         result = await _run_retrying(
-            ["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)]
+            ["uv", "pip", "install", "-p", str(venv_python(venv_path)), "-r", str(lock_path)]
         )
         _exit_unless_ok(result, f"install {lock_path.stem}")
         logger.info(f"Installed {venv_path.name}")
