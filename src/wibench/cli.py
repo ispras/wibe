@@ -8,6 +8,7 @@ from typing_extensions import (
     get_args
 )
 from loguru import logger
+import tqdm
 
 from wibench.config_loader import load_pipeline_config_yaml
 from wibench.config import LogLevel, PipeLineConfig
@@ -59,28 +60,54 @@ def setup_cuda_visible_devices(pipeline_config: PipeLineConfig):
 class StreamToLogger:
     def __init__(self, level="INFO"):
         self.level = level
-    
+
     def write(self, message):
-        logger.log(self.level, message.strip())
-    
+        if message.startswith("\r"):
+            # progress-bar redraw (e.g. a third-party tqdm attached to the
+            # redirected stream), not a real message
+            return
+        message = message.strip()
+        if message:
+            # depth=1: report the print/write call site, not this wrapper
+            logger.opt(depth=1).log(self.level, message)
+
     def flush(self):
         pass
 
+    def isatty(self):
+        return False
+
 
 def setup_logging_level(pipeline_config: PipeLineConfig, verbosity: int = 0):
-    # -v flags only escalate logging relative to the config: -v: backtrace,
-    # -vv: +diagnose, -vvv and beyond: log level one step more verbose each
+    # -v flags only escalate logging relative to the config:
+    # -v: backtrace,
+    # -vv: +diagnose,
+    # -vvv and beyond: log level one step more verbose each
     log_levels = list(get_args(LogLevel))
     level_idx = log_levels.index(pipeline_config.log_level) - max(0, verbosity - 2)
+    # The progress bar and the logs share one real stream:
+    # routing log lines through tqdm.write makes tqdm clear the bar, print them and redraw the bar below, instead of tearing it
+    real_stderr = sys.stderr
+    progress.progress_file = real_stderr
+    # Third-party tqdm bars are created with file=None and would resolve it to the redirected sys.stderr;
+    # give them the real terminal instead, so they render as normal bars and get cleared/redrawn around each log line
+    tqdm_init = tqdm.tqdm.__init__
+
+    def tqdm_init_to_real_stderr(self, *args, **kwargs):
+        if kwargs.get("file") is None:
+            kwargs["file"] = real_stderr
+        tqdm_init(self, *args, **kwargs)
+
+    tqdm.tqdm.__init__ = tqdm_init_to_real_stderr
     logger.remove()
     logger.add(
-        sys.stderr,
+        lambda m: tqdm.tqdm.write(m, end="", file=real_stderr),
         level=log_levels[max(0, level_idx)],
         format=pipeline_config.log_format,
+        colorize=real_stderr.isatty(),
         backtrace=pipeline_config.log_backtrace or verbosity >= 1,
         diagnose=pipeline_config.log_diagnose or verbosity >= 2,
     )
-    progress.progress_file = sys.stdout
     sys.stdout = StreamToLogger("INFO")
     sys.stderr = StreamToLogger("WARNING")
 
