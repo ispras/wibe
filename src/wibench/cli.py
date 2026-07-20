@@ -6,6 +6,7 @@ from typing_extensions import (
     List
 )
 from loguru import logger
+import tqdm
 
 from wibench.config_loader import load_pipeline_config_yaml
 from wibench.config import PipeLineConfig
@@ -47,19 +48,34 @@ def setup_cuda_visible_devices(pipeline_config: PipeLineConfig):
 class StreamToLogger:
     def __init__(self, level="INFO"):
         self.level = level
-    
+
     def write(self, message):
-        logger.log(self.level, message.strip())
-    
+        message = message.strip()
+        if message:
+            # depth=1: report the print/write call site, not this wrapper
+            logger.opt(depth=1).log(self.level, message)
+
     def flush(self):
         pass
+
+    def isatty(self):
+        return False
 
 
 def setup_logging_level(pipeline_config: PipeLineConfig):
     logger.remove()
     log_format = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-    logger.add(sys.stderr, format=log_format, level=pipeline_config.logging_level)
-    progress.progress_file = sys.stdout
+    # The progress bar and the logs share one real stream: routing log lines
+    # through tqdm.write makes tqdm clear the bar, print them and redraw the
+    # bar below, instead of tearing it
+    real_stderr = sys.stderr
+    progress.progress_file = real_stderr
+    logger.add(
+        lambda m: tqdm.tqdm.write(m, end="", file=real_stderr),
+        format=log_format,
+        level=pipeline_config.logging_level,
+        colorize=real_stderr.isatty(),
+    )
     sys.stdout = StreamToLogger("INFO")
     sys.stderr = StreamToLogger("WARNING")
 
