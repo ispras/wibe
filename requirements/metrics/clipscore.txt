@@ -1,2 +1,0 @@
-image-reward @ git+https://github.com/zai-org/ImageReward.git   # contains "clip @ git+https://github.com/openai/CLIP.git"
-transformers<=4.55.4

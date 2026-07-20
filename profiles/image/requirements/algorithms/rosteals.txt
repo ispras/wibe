@@ -1,0 +1,8 @@
+torch
+omegaconf
+einops
+pytorch-lightning
+lpips
+matplotlib
+kornia
+setuptools<82.0

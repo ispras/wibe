@@ -1,0 +1,15 @@
+algorithms:
+  pimog
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/pimog
+  aggregators:
+    - CSV:
+        table_name: table
