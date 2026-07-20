@@ -167,10 +167,10 @@ source prepare.sh
 ```console
 git submodule update --init --recursive
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install uv
-uv sync
-wibench-venv all                   # builds the per-algorithm / per-attack venvs
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+(.venv) pip install uv
+(.venv) uv sync
+(.venv) wibench-venv all    # builds the per-algorithm / per-attack venvs
 ```
 
 > Conflicting dependency pins mean one shared venv is not enough:
@@ -180,7 +180,7 @@ wibench-venv all                   # builds the per-algorithm / per-attack venvs
 
 **Optional (not recommended)** — download all pre-trained weights
 ```console
-python download_models.py   # no need to use: weights download automatically on demand
+(.venv) python download_models.py   # no need to use: weights download automatically on demand
 ```
 
 ### 3. Authenticate with HuggingFace
