@@ -1,0 +1,15 @@
+algorithms:
+  ssl_watermarking
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/ssl_watermarking
+  aggregators:
+    - CSV:
+        table_name: table

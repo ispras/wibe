@@ -1,0 +1,15 @@
+algorithms:
+  trustmark
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/trustmark
+  aggregators:
+    - CSV:
+        table_name: table

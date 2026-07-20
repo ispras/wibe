@@ -1,0 +1,22 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  - JPEG:
+      quality: 80
+  
+post_embed_metrics:
+  psnr
+
+post_attack_metrics:
+  psnr
+
+pipeline:
+  result_path: ./test_results/tests/psnr
+  aggregators:
+    - CSV:
+        table_name: table

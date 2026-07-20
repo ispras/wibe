@@ -7,7 +7,7 @@ from wibench.config_loader import (
     DATASETS_FIELD,
     METRICS_FIELD,
 )
-from wibench.settings import REQUIREMENTS_DIR, VENVS_DIR
+from wibench.settings import PROFILES_DIR, COMMON_PROFILE, DEFAULT_PROFILE, get_profile
 
 
 def special_requirements(entity: str, config: dict[str, Any], entity_type: str):
@@ -37,12 +37,14 @@ def special_requirements(entity: str, config: dict[str, Any], entity_type: str):
         inner_result = special_requirements(params.get("method", "trustmark"), params.get("method_params", {}), "algorithms")
         result.update(inner_result)
     if entity.lower() == "imagewatermark":
-        algorithm = config.get("algorithm", "trustmark")
+        if config is None:
+            config = {}
+        algorithm = config.get("algorithm", "dct_marker")
         algorithm_config = config.get("config", {})
         inner_result = special_requirements(algorithm, algorithm_config, "algorithms")
         result.update(inner_result)
     if entity.lower() == "empiricaltpr@xfpr":
-        algorithm = config.get("algorithm", "trustmark")
+        algorithm = config.get("algorithm", "dct_marker")
         algorithm_config = config.get("algorithm_params", {})
         dataset = config.get("dataset", "diffusiondb")
         dataset_config = config.get("dataset_params", {})
@@ -60,7 +62,12 @@ def compatible_execs(
     alg_wrappers: list[tuple[str, dict[str, Any]]],
     attacks: list[tuple[str, dict[str, Any]]],
     metrics: dict[str, list[tuple[str, dict[str, Any]]]],
+    profile: str | None = None,
 ) -> tuple[list[Path], dict[str, set[Path]]]:
+    """Find venv pythons whose groups cover all config requirements.
+
+    Without an explicit profile (argument or WIBENCH_PROFILE), venvs of all
+    profiles are searched, the default profile first."""
     alg_wrappers = (
         alg_wrappers
         if (StageType.embed or StageType.extract) in stages
@@ -72,19 +79,12 @@ def compatible_execs(
             metrics[metric_field] if metric_field in stages else []
         )
 
-    req_dir = Path(REQUIREMENTS_DIR).resolve()
+    profile = get_profile(profile, default=None)
 
-    
-    def module_paths(entities: set[tuple[str, str]]):
-        paths = set()
-        for entity, entity_type in entities:
-            p = req_dir / entity_type / (entity.lower() + ".txt")
-            if p.exists():
-                paths.add(p)
-        return paths
+    profiles_dir = Path(PROFILES_DIR).resolve()
 
     all_special_requirements = set()
-    
+
     for items, field in [
         (alg_wrappers, ALGORITHMS_FIELD),
         *[(metrics[field], METRICS_FIELD) for field in metrics.keys()],
@@ -94,22 +94,31 @@ def compatible_execs(
         for n, config in items:
             reqs = special_requirements(n, config, field)
             all_special_requirements.update(reqs)
-            
-    current_req_paths = module_paths(all_special_requirements)
 
-    venvs_dir = Path(VENVS_DIR).resolve()
-    group_paths = list(venvs_dir.glob("*.txt"))
+    def required_paths(profile: str) -> set[Path]:
+        return {
+            p
+            for entity, entity_type in all_special_requirements
+            if (p := profiles_dir / profile / "requirements" / entity_type / (entity.lower() + ".txt")).exists()
+        }
+
+    group_paths = sorted(
+        (
+            p
+            for p in profiles_dir.glob(f"{profile or '*'}/venvs/venv*.txt")
+            if p.parent.parent.name != COMMON_PROFILE
+        ),
+        key=lambda p: (p.parent.parent.name != DEFAULT_PROFILE, p),
+    )
     exec_candidates = []
     missing_per_group: dict[str, set[Path]] = {}
     for group_path in group_paths:
-        with open(group_path, mode="r") as fp:
-            group_req_paths = {
-                Path(line).resolve() for line in fp.read().splitlines()
-            }
-        missing = current_req_paths - group_req_paths
-        missing_per_group[group_path.stem] = missing
+        group_profile = group_path.parent.parent.name
+        group_req_paths = {
+            Path(line).resolve() for line in group_path.read_text().splitlines()
+        }
+        missing = required_paths(group_profile) - group_req_paths
+        missing_per_group[f"{group_profile}/{group_path.stem}"] = missing
         if not missing:
-            exec_candidates.append(
-                group_path.with_suffix("") / "bin" / "python"
-            )
+            exec_candidates.append(group_path.with_suffix("") / "bin" / "python")
     return exec_candidates, missing_per_group

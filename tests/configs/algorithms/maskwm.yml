@@ -1,0 +1,15 @@
+algorithms:
+  maskwm
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/maskwm
+  aggregators:
+    - CSV:
+        table_name: table

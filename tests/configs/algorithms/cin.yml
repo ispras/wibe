@@ -1,0 +1,15 @@
+algorithms:
+  cin
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/cin
+  aggregators:
+    - CSV:
+        table_name: table
