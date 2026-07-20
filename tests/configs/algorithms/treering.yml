@@ -1,0 +1,15 @@
+algorithms:
+  treering
+
+datasets:
+  PromptFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/treering
+  aggregators:
+    - CSV:
+        table_name: table

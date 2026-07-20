@@ -1,0 +1,19 @@
+algorithms:
+  stable_signature
+
+datasets:
+  PromptFolderDataset:
+    path: tests/data
+
+attacks:
+  - JPEG:
+      quality: 80
+  
+post_embed_metrics:
+  imagereward
+
+pipeline:
+  result_path: ./test_results/tests/imagereward
+  aggregators:
+    - CSV:
+        table_name: table

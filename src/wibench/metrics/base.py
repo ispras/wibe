@@ -247,7 +247,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         return random_extracts
 
     def __init__(self,
-                 algorithm: str,
+                 algorithm: str = "dct_marker",
                  algorithm_params: Dict[str, Any] = {},
                  dataset: str = "diffusiondb",
                  dataset_params: Dict[str, Any] = {},
@@ -351,9 +351,9 @@ class PValue(PostExtractMetric):
         watermark_data: Any,
         extraction_result: Any,
     ) -> float:
-        wm = watermark_data.watermark
         if isinstance(extraction_result, float): # zero-bit method returns p-value
             return extraction_result
+        wm = watermark_data.watermark
         matched_bits = int((np.array(wm).flatten() == np.array(extraction_result).flatten()).sum())
         if isinstance(wm, torch.Tensor) or isinstance(wm, np.ndarray):
             num_bits = len(wm.flatten())

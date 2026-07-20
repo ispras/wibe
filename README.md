@@ -50,10 +50,10 @@ The system architecture consists of a sequence of processing configurable stages
 | Watermark Anything | post-hoc | watermark_anything | 32 bits | [Watermark Anything with Localized Messages - Image Watermarking Algorithm](https://github.com/facebookresearch/watermark-anything) |
 | MaskWM | post-hoc | maskwm | 32/64/128 bits | [Mask Image Watermarking](https://github.com/hurunyi/MaskWM) |
 | SyncSeal | post-hoc | syncseal | method-dependent | [GEOMETRIC IMAGE SYNCHRONIZATION WITH DEEP WATERMARKING](https://github.com/facebookresearch/wmar/tree/main/syncseal) |
-| Gaussian Shading | build-in | gaussian_shading | 256 bits | [Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models](https://github.com/bsmhmmlf/Gaussian-Shading) |
-| Ring-ID | build-in | ringid | zero-bit | [RingID: Rethinking Tree-Ring Watermarking for Enhanced Multi-Key Identification - Image Watermarking Algorithm](https://github.com/showlab/RingID) |
-| MaXsive | build-in | maxsive | zero-bit | [MaXsive: High-Capacity and Robust Training-Free Generative Image Watermarking in Diffusion Models](https://github.com/Mao718/MaXsive) |
-| METR | build-in | metr | 10 bits | [METR: Image Watermarking with Large Number of Unique Messages](https://github.com/deepvk/metr) |
+| Gaussian Shading | built-in | gaussian_shading | 256 bits | [Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models](https://github.com/bsmhmmlf/Gaussian-Shading) |
+| Ring-ID | built-in | ringid | zero-bit | [RingID: Rethinking Tree-Ring Watermarking for Enhanced Multi-Key Identification - Image Watermarking Algorithm](https://github.com/showlab/RingID) |
+| MaXsive | built-in | maxsive | zero-bit | [MaXsive: High-Capacity and Robust Training-Free Generative Image Watermarking in Diffusion Models](https://github.com/Mao718/MaXsive) |
+| METR | built-in | metr | 10 bits | [METR: Image Watermarking with Large Number of Unique Messages](https://github.com/deepvk/metr) |
 | PIMoG | post-hoc | pimog | 30 bits | [PIMoG: An Effective Screen-shooting Noise-Layer Simulation for Deep-Learning-Based Watermarking Network](https://github.com/FangHanNUS/PIMoG-An-Effective-Screen-shooting-Noise-Layer-Simulation-for-Deep-Learning-Based-Watermarking-Netw) |
 | Robust-Wide | post-hoc | robust_wide | 64 bits | [Robust-Wide: Robust Watermarking Against Instruction-Driven Image Editing](https://github.com/hurunyi/Robust-Wide) |
 | FIN | post-hoc | fin | 64 bits | [FIN: Flow-Based Robust Watermarking with Invertible Noise Layer for Black-Box Distortions](https://github.com/QQiuyp/FIN) |
@@ -69,7 +69,7 @@ The system architecture consists of a sequence of processing configurable stages
 | Attack | Config name | Description |
 |--------|-------------|-------------|
 | Distortions | identity, jpeg, rotate90, rotate, gaussianblur, gaussiannoise, centercrop, resize, randomcropout, brightness, contrast, pixelshift, colorinversion | Common distortions like JPEG, blur, noise, rotation, etc |
-| WPWMAttacker | wpmattacker | [Saliency-Aware Diffusion Reconstruction for Effective Invisible Watermark Removal](https://github.com/inzamamulDU/SADRE) |
+| WPWMAttacker | wpwmattacker | [Saliency-Aware Diffusion Reconstruction for Effective Invisible Watermark Removal](https://github.com/inzamamulDU/SADRE) |
 | DIP | dip | DIP-based watermark evasion attack adopted from the github [repository](https://github.com/sun-umn/DIP_Watermark_Evasion_TMLR) |
 | Adversarial | adversarialembedding | Adversarial embedding attack from [WAVES](https://github.com/umd-huang-lab/WAVES) |
 | Adversarial PSNR | adversarialembeddingpsnr | Modification of adversarial embedding attack that uses PSNR |
@@ -126,9 +126,9 @@ The system architecture consists of a sequence of processing configurable stages
 | DreamSim | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | dreamsim | [DreamSim: Learning New Dimensions of Human Visual Similarity using Synthetic Data.](https://arxiv.org/abs/2306.09344) |
 | Aesthetic | single image quality | post_embed_metrics, post_attack_metrics | aesthetic | [Aesthetic score predictor](https://github.com/christophschuhmann/improved-aesthetic-predictor) |
 | CLIP IQA | single image quality | post_embed_metrics, post_attack_metrics | clip_iqa | [Exploring CLIP for Assessing the Look and Feel of Images](https://lightning.ai/docs/torchmetrics/stable/multimodal/clip_iqa.html) |
-| BLIP | image quality, compare image with text prompt | post_embed_metrics, post_attack_metrics | blip | [BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation](https://github.com/salesforce/BLIP) |
-| CLIP Score | image quality, compare image with text prompt | post_embed_metrics, post_attack_metrics | clipscore | [CLIPScore: A Reference-free Evaluation Metric for Image Captioning](https://github.com/openai/CLIP) |
-| Image Reward | image quality, compare image with text prompt | post_embed_metrics, post_attack_metrics | imagereward | [Learning and Evaluating Human Preferences for Text-to-Image Generation](https://github.com/zai-org/ImageReward/tree/main) |
+| BLIP | image quality, compare image with text prompt | post_embed_metrics | blip | [BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation](https://github.com/salesforce/BLIP) |
+| CLIP Score | image quality, compare image with text prompt | post_embed_metrics | clipscore | [CLIPScore: A Reference-free Evaluation Metric for Image Captioning](https://github.com/openai/CLIP) |
+| Image Reward | image quality, compare image with text prompt | post_embed_metrics | imagereward | [Learning and Evaluating Human Preferences for Text-to-Image Generation](https://github.com/zai-org/ImageReward/tree/main) |
 | FID | image quality, compare two sets of images | post_pipeline_embed_metrics, post_pipeline_attack_metrics | fid | FID metric from [GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium](https://arxiv.org/abs/1706.08500) |
 | BER | extraction success | post_extract_metrics | ber | Bit Error Rate (multi-bit) |
 | WER | extraction success | post_extract_metrics | wer | Word Error Rate (multi-bit) |

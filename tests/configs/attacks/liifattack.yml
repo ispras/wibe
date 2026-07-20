@@ -1,0 +1,15 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  liifattack
+
+pipeline:
+  result_path: ./test_results/tests/liifattack
+  aggregators:
+    - CSV:
+        table_name: table

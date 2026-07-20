@@ -95,7 +95,7 @@ class ImageWatermark(BaseAttack):
     config: Optional[Dict[str, Any]]
         Configuration for AlgorithmWrapper  
     """
-    def __init__(self, algorithm: str, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, algorithm: str = "dct_marker", config: Optional[Dict[str, Any]] = None):
         wrapper_tuples = [(algorithm, config)]
         self.algorithm_wrapper: BaseAlgorithmWrapper = get_algorithms(wrapper_tuples)[0]
         if self.algorithm_wrapper.pipeline_type != PipelineType.IMAGE:

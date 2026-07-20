@@ -1,0 +1,15 @@
+algorithms:
+  robust_wide
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/robust_wide
+  aggregators:
+    - CSV:
+        table_name: table

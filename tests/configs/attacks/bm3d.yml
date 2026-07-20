@@ -1,0 +1,15 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  bm3d
+
+pipeline:
+  result_path: ./test_results/tests/bm3d
+  aggregators:
+    - CSV:
+        table_name: table
