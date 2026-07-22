@@ -58,7 +58,7 @@ class StreamToLogger:
 def setup_logging_level(pipeline_config: PipeLineConfig):
     logger.remove()
     log_format = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-    logger.add(sys.stderr, format=log_format, level=pipeline_config.logging_level)
+    logger.add(sys.stderr, format=log_format, level=pipeline_config.logging_level, backtrace=True, diagnose=False)
     progress.progress_file = sys.stdout
     sys.stdout = StreamToLogger("INFO")
     sys.stderr = StreamToLogger("WARNING")

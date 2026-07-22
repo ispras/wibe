@@ -121,6 +121,10 @@ class PipeLineConfig(BaseModel):
     cuda_visible_devices : list[int]
         List of GPU device IDs to use. If workers > 1, each worker will use one of visible cuda devices (distributed evenly)
         Default is empty list (all devices are visible for all subprocesses)
+    skip_errors : bool
+        If True (default), an error in any stage is logged, the failed result
+        is recorded as None and processing continues; if False, the exception
+        is raised and the pipeline stops
     """
 
     result_path: Path
@@ -129,6 +133,7 @@ class PipeLineConfig(BaseModel):
     seed: Optional[int] = None
     dump_type: DumpType = DumpType.serialized
     workers: int = 1
+    skip_errors: bool = True
     cuda_visible_devices: List[int] = Field(default_factory=list)
     logging_level: Literal["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
