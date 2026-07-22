@@ -122,9 +122,8 @@ class PipeLineConfig(BaseModel):
         List of GPU device IDs to use. If workers > 1, each worker will use one of visible cuda devices (distributed evenly)
         Default is empty list (all devices are visible for all subprocesses)
     skip_errors : bool
-        If True (default), an error in any stage is logged, the failed result
-        is recorded as None and processing continues; if False, the exception
-        is raised and the pipeline stops
+        If True (default), an error in any stage is logged, the failed result is recorded as None and processing continues;
+        if False, the exception is raised and the pipeline stops
     """
 
     result_path: Path

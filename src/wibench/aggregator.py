@@ -91,9 +91,8 @@ class PandasAggregator(Aggregator):
         -----
         - Uses FileLock for multiprocess-safe operations
         - Handles header writing for new files
-        - Aligns batch columns with the existing CSV header (missing columns
-          are filled with NaN); if the batch brings new columns, the file is
-          rewritten with the extended header so no data is lost
+        - Aligns batch columns with the existing CSV header (missing columns are filled with NaN);
+          if the batch brings new columns, the file is rewritten with the extended header so no data is lost
         - Silently skips on lock timeout
         """
         lock_path = path.parent / (path.name + ".lock")
