@@ -17,6 +17,10 @@ from enum import Enum
 import torch
 
 
+LogLevel = Literal["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"]
+"""Loguru log levels ordered from the most verbose to the most severe."""
+
+
 class DumpType(str, Enum):
     """Enumeration of supported context serialization formats.
     
@@ -122,8 +126,21 @@ class PipeLineConfig(BaseModel):
         List of GPU device IDs to use. If workers > 1, each worker will use one of visible cuda devices (distributed evenly)
         Default is empty list (all devices are visible for all subprocesses)
     skip_errors : bool
-        If True (default), an error in any stage is logged, the failed result is recorded as None and processing continues;
-        if False, the exception is raised and the pipeline stops
+        If True, an error in any stage is logged, the failed result is recorded as None, and processing continues
+        If False, the exception is raised and the pipeline stops
+        Default is True
+    log_level : LogLevel
+        Base log level for pipeline logs (loguru)
+        Can be escalated toward TRACE by -vvv and each additional -v CLI flag
+        Default is "INFO"
+    log_backtrace : bool
+        If True, error tracebacks in logs are extended beyond the catching point (loguru backtrace)
+        Can be escalated to True by the -v CLI flag
+        Default is False
+    log_diagnose : bool
+        If True, error tracebacks in logs include variable values (loguru diagnose)
+        Can be escalated to True by the -vv CLI flag
+        Default is False
     """
 
     result_path: Path
@@ -134,7 +151,9 @@ class PipeLineConfig(BaseModel):
     workers: int = 1
     skip_errors: bool = True
     cuda_visible_devices: List[int] = Field(default_factory=list)
-    logging_level: Literal["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    log_level: LogLevel = "INFO"
+    log_backtrace: bool = False
+    log_diagnose: bool = False
 
     @model_validator(mode="before")
     @classmethod

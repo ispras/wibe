@@ -1,14 +1,16 @@
 from pathlib import Path
 import os
+import re
 import sys
 from typing_extensions import (
     Optional,
-    List
+    List,
+    get_args
 )
 from loguru import logger
 
 from wibench.config_loader import load_pipeline_config_yaml
-from wibench.config import PipeLineConfig
+from wibench.config import LogLevel, PipeLineConfig
 import wibench.progress as progress
 from wibench.requirements import compatible_execs
 
@@ -29,6 +31,16 @@ def get_config_path_from_argv():
         if arg.startswith("--config="):
             return arg.split("=", 1)[1]
     return None
+
+
+def get_verbosity_from_argv() -> int:
+    verbosity = 0
+    for arg in sys.argv[1:]:
+        if arg == "--verbose":
+            verbosity += 1
+        elif re.fullmatch(r"-v+", arg):
+            verbosity += len(arg) - 1
+    return verbosity
 
 
 def setup_cuda_visible_devices(pipeline_config: PipeLineConfig):
@@ -55,10 +67,17 @@ class StreamToLogger:
         pass
 
 
-def setup_logging_level(pipeline_config: PipeLineConfig):
+def setup_logging_level(pipeline_config: PipeLineConfig, verbosity: int = 0):
+    # -v flags only escalate logging relative to the config: -v: backtrace,
+    # -vv: +diagnose, -vvv and beyond: log level one step more verbose each
+    backtrace = pipeline_config.log_backtrace or verbosity >= 1
+    diagnose = pipeline_config.log_diagnose or verbosity >= 2
+    log_levels = list(get_args(LogLevel))
+    level_idx = log_levels.index(pipeline_config.log_level) - max(0, verbosity - 2)
+    level = log_levels[max(0, level_idx)]
     logger.remove()
     log_format = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-    logger.add(sys.stderr, format=log_format, level=pipeline_config.logging_level, backtrace=True, diagnose=False)
+    logger.add(sys.stderr, format=log_format, level=level, backtrace=backtrace, diagnose=diagnose)
     progress.progress_file = sys.stdout
     sys.stdout = StreamToLogger("INFO")
     sys.stderr = StreamToLogger("WARNING")
@@ -72,7 +91,7 @@ def prerun():
     config = load_pipeline_config_yaml(config_path)
     pipeline_config: PipeLineConfig = config["pipeline"]
 
-    setup_logging_level(pipeline_config)
+    setup_logging_level(pipeline_config, get_verbosity_from_argv())
     setup_cuda_visible_devices(pipeline_config)
 
 
@@ -216,6 +235,10 @@ def run(
     profile: Optional[str] = typer.Option(
         None, "--profile", "-p", help="Venvs profile (overrides WIBENCH_PROFILE; if neither is set, all profiles are searched)"
     ),
+    verbose: int = typer.Option(
+        0, "--verbose", "-v", count=True,
+        help="Verbose logging, escalates over config: -v extended tracebacks (backtrace), -vv +variable diagnostics (diagnose), -vvv and beyond raise the config log level one step towards TRACE per extra v"
+    ),
     stages: Optional[str] = typer.Argument(None,
                                            help=f"Stages to execute (e.g., embed,attack,extract), if 'all' or not provided - executes all stages. Stages can be specified as intervals (embed-extract), pointwise (embed,attack,extract) and jointly (embed-attack,extract,post_pipeline_embed_metrics-post_pipeline_aggregate). Available stages are:{list(STAGE_CLASSES.keys())}"),
 
@@ -230,6 +253,10 @@ def run(
         Whether to save intermediate contexts
     dry_run: bool
         Run on a few samples
+    verbose : int
+        Verbosity level (consumed in prerun before argument parsing):
+        -v enables backtrace, -vv also diagnose, each extra v starting
+        from -vvv raises the config log level one step towards TRACE
     stages : Optional[str]
         Pipeline stages to execute. Available stages:
         - embed: Watermark embedding
