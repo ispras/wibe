@@ -76,3 +76,6 @@
 [submodule "submodules/dnn-audio-watermarking"]
 	path = submodules/dnn-audio-watermarking
 	url = https://github.com/kosta-pmf/dnn-audio-watermarking.git
+[submodule "submodules/cryptomark"]
+	path = submodules/cryptomark
+	url = git@gitlab.ispras.ru:watermarking/dm-audio.git

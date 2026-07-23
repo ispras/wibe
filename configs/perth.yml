@@ -13,6 +13,17 @@ post_embed_metrics:
 
 post_extract_metrics:
   - Result
+  - EmpiricalTPR@xFPR:
+      report_name: etpr@10e-1fpr
+      fpr_rate: 0.1
+      algorithm: perth
+      dataset: librispeech
+      dataset_params:
+        cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
+        subset: all
+        split: test.clean
+        sample_range: [0, 50]
+      random_extracts_path: "./random_extracts_0.1.csv"
 
 datasets:
   # - AudioFolderDataset:
@@ -29,18 +40,18 @@ datasets:
       subset: all
       split: test.clean
       sample_range: [0, 50]
-  - LibriSpeech:
-      report_name: ls_test_other
-      cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
-      subset: all
-      split: test.other
-      sample_range: [0, 50]
+  # - LibriSpeech:
+  #     report_name: ls_test_other
+  #     cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
+  #     subset: all
+  #     split: test.other
+  #     sample_range: [0, 50]
 
 attacks:
-{% include 'common/band_filters.yml' %}
+{% include 'common/audio_distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/perth
   aggregators:
     - CSV:
-        table_name: table_band_search
+        table_name: table_epm

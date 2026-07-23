@@ -31,13 +31,13 @@ datasets:
       cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
       subset: all
       split: test.clean
-      sample_range: [0, 10]
+      sample_range: [0, 20]
   - LibriSpeech:
       report_name: ls_test_other
       cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
       subset: all
       split: test.other
-      sample_range: [0, 10]
+      sample_range: [0, 20]
 
 attacks:
 {% include 'common/band_filters.yml' %}

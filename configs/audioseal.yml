@@ -3,16 +3,16 @@ algorithms:
     params:
       device: cpu
 
-post_embed_metrics:
-  - SI_SNR
-  - PESQ
-  - STOI
-  - NISQA
-  - DNSMOS
-  - SECS
+# post_embed_metrics:
+#   - SI_SNR
+#   - PESQ
+#   - STOI
+#   - NISQA
+#   - DNSMOS
+#   - SECS
 
 post_extract_metrics:
-  - ExtWm
+#   - ExtWm
   - BER
   - WER
 
@@ -26,135 +26,23 @@ datasets:
 #       split: test
 #       sample_range: [0, 1000]
   - LibriSpeech:
+      report_name: ls_test_clean
       cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
       subset: all
-      split: validation.clean
-      sample_range: [0, 1000]
+      split: test.clean
+      sample_range: [0, 500]
+  - LibriSpeech:
+      report_name: ls_test_other
+      cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
+      subset: all
+      split: test.other
+      sample_range: [0, 500]
 
 attacks:
-  - Identity
-  - Resampling:
-      report_name: resample_8k
-      target_rate: 8000
-  - Resampling:
-      report_name: resample_16k
-      target_rate: 16000
-  - Requantization:
-      report_name: requantize_float16
-      target_dtype: float16
-  - Scaling:
-      report_name: scaling_09
-      factor: 0.9
-  - Scaling:
-      report_name: scaling_11
-      factor: 1.1
-  - Noise:
-      report_name: noise_20
-      snr_db: 20
-  - Noise:
-      report_name: noise_30
-      snr_db: 30
-  - Noise:
-      report_name: noise_40
-      snr_db: 40
-  - Filter:
-      report_name: lowpass_2k
-      filter_type: lowpass
-      freq_1: 2000
-  - Filter:
-      report_name: lowpass_3k
-      filter_type: lowpass
-      freq_1: 3000
-  - Filter:
-      report_name: lowpass_4k
-      filter_type: lowpass
-      freq_1: 4000
-  - Filter:
-      report_name: lowpass_6k
-      filter_type: lowpass
-      freq_1: 6000
-  - Filter:
-      report_name: highpass_250
-      filter_type: highpass
-      freq_1: 250
-  - Filter:
-      report_name: highpass_500
-      filter_type: highpass
-      freq_1: 500
-  - Filter:
-      report_name: highpass_750
-      filter_type: highpass
-      freq_1: 750
-  - Filter:
-      report_name: highpass_1k
-      filter_type: highpass
-      freq_1: 1000
-  - Echo:
-        report_name: echo_05s
-        delay: 0.05
-  - Echo:
-        report_name: echo_01s
-        delay: 0.01
-  - Mpeg:
-        report_name: mpeg_16
-        bitrate: 16
-  - Mpeg:
-        report_name: mpeg_32
-        bitrate: 32
-  - Mpeg:
-        report_name: mpeg_64
-        bitrate: 64
-  - Mpeg:
-        report_name: mpeg_96
-        bitrate: 96
-  - Mpeg:
-        report_name: mpeg_128
-        bitrate: 128
-  - Mpeg:
-        report_name: mpeg_256
-        bitrate: 256
-  - AAC:
-        report_name: aac_256
-        bitrate: 256
-  - AAC:
-        report_name: aac_128
-        bitrate: 128
-  - AAC:
-        report_name: aac_96
-        bitrate: 96
-  - AAC:
-        report_name: aac_64
-        bitrate: 64
-  - AAC:
-        report_name: aac_32
-        bitrate: 32
-  - AAC:
-        report_name: aac_16
-        bitrate: 16
-  - Speed:
-        report_name: speed_95x
-        factor: 0.95
-  - Speed:
-        report_name: speed_99x
-        factor: 0.99
-  - Speed:
-        report_name: speed_01x
-        factor: 1.01
-  - Speed:
-        report_name: speed_05x
-        factor: 1.05
-  - Boost:
-        report_name: boost_05
-        gain_db: 5
-  - Boost:
-        report_name: boost_10
-        gain_db: 10
-  - Boost:
-        report_name: boost_20
-        gain_db: 20
+{% include 'common/band_filters.yml' %}
 
 pipeline:
   result_path: ./test_results/audioseal
   aggregators:
     - CSV:
-        table_name: table
+        table_name: table_bands
