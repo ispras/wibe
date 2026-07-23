@@ -133,6 +133,9 @@ class PipeLineConfig(BaseModel):
         Base log level for pipeline logs (loguru)
         Can be escalated toward TRACE by -vvv and each additional -v CLI flag
         Default is "INFO"
+    log_format : str
+        Loguru format string for pipeline log records written to stderr
+        Default is "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
     log_backtrace : bool
         If True, error tracebacks in logs are extended beyond the catching point (loguru backtrace)
         Can be escalated to True by the -v CLI flag
@@ -149,9 +152,10 @@ class PipeLineConfig(BaseModel):
     seed: Optional[int] = None
     dump_type: DumpType = DumpType.serialized
     workers: int = 1
-    skip_errors: bool = True
     cuda_visible_devices: List[int] = Field(default_factory=list)
+    skip_errors: bool = True
     log_level: LogLevel = "INFO"
+    log_format: str = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
     log_backtrace: bool = False
     log_diagnose: bool = False
 

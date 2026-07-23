@@ -70,14 +70,16 @@ class StreamToLogger:
 def setup_logging_level(pipeline_config: PipeLineConfig, verbosity: int = 0):
     # -v flags only escalate logging relative to the config: -v: backtrace,
     # -vv: +diagnose, -vvv and beyond: log level one step more verbose each
-    backtrace = pipeline_config.log_backtrace or verbosity >= 1
-    diagnose = pipeline_config.log_diagnose or verbosity >= 2
     log_levels = list(get_args(LogLevel))
     level_idx = log_levels.index(pipeline_config.log_level) - max(0, verbosity - 2)
-    level = log_levels[max(0, level_idx)]
     logger.remove()
-    log_format = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-    logger.add(sys.stderr, format=log_format, level=level, backtrace=backtrace, diagnose=diagnose)
+    logger.add(
+        sys.stderr,
+        level=log_levels[max(0, level_idx)],
+        format=pipeline_config.log_format,
+        backtrace=pipeline_config.log_backtrace or verbosity >= 1,
+        diagnose=pipeline_config.log_diagnose or verbosity >= 2,
+    )
     progress.progress_file = sys.stdout
     sys.stdout = StreamToLogger("INFO")
     sys.stderr = StreamToLogger("WARNING")
