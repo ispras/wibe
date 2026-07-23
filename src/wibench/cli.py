@@ -85,6 +85,9 @@ def setup_logging_level(pipeline_config: PipeLineConfig, verbosity: int = 0):
     # -vvv and beyond: log level one step more verbose each
     log_levels = list(get_args(LogLevel))
     level_idx = log_levels.index(pipeline_config.log_level) - max(0, verbosity - 2)
+    level = log_levels[max(0, level_idx)]
+    backtrace = pipeline_config.log_backtrace or verbosity >= 1
+    diagnose = pipeline_config.log_diagnose or verbosity >= 2
     # The progress bar and the logs share one real stream:
     # routing log lines through tqdm.write makes tqdm clear the bar, print them and redraw the bar below, instead of tearing it
     real_stderr = sys.stderr
@@ -99,15 +102,40 @@ def setup_logging_level(pipeline_config: PipeLineConfig, verbosity: int = 0):
         tqdm_init(self, *args, **kwargs)
 
     tqdm.tqdm.__init__ = tqdm_init_to_real_stderr
+
+    # sink for the real console
     logger.remove()
     logger.add(
         lambda m: tqdm.tqdm.write(m, end="", file=real_stderr),
-        level=log_levels[max(0, level_idx)],
+        level=level,
         format=pipeline_config.log_format,
         colorize=real_stderr.isatty(),
-        backtrace=pipeline_config.log_backtrace or verbosity >= 1,
-        diagnose=pipeline_config.log_diagnose or verbosity >= 2,
+        backtrace=backtrace,
+        diagnose=diagnose,
     )
+    # file sink that mirrors the real console
+    pipeline_config.result_path.mkdir(parents=True, exist_ok=True)
+    logger.add(
+        pipeline_config.result_path / "console.log",
+        level=level,
+        format=pipeline_config.log_format,
+        colorize=False,
+        backtrace=backtrace,
+        diagnose=diagnose,
+        enqueue=True,
+    )
+    # file sink that logs errors
+    if pipeline_config.skip_errors:
+        logger.add(
+            pipeline_config.result_path / "errors.log",
+            level="ERROR",
+            format=pipeline_config.log_format,
+            colorize=False,
+            backtrace=backtrace,
+            diagnose=diagnose,
+            enqueue=True,
+        )
+
     sys.stdout = StreamToLogger("INFO")
     sys.stderr = StreamToLogger("WARNING")
 
@@ -119,6 +147,9 @@ def prerun():
 
     config = load_pipeline_config_yaml(config_path)
     pipeline_config: PipeLineConfig = config["pipeline"]
+    
+    if "--dry-run" in sys.argv[1:]:
+        pipeline_config.result_path /= "dry"
 
     setup_logging_level(pipeline_config, get_verbosity_from_argv())
     setup_cuda_visible_devices(pipeline_config)
