@@ -16,6 +16,7 @@ from typing import (
     Dict,
     Type,
     Any,
+    Callable,
 )
 from wibench.typing import Object
 from dataclasses import is_dataclass
@@ -66,7 +67,7 @@ class Stage:
         """
         raise NotImplementedError()
 
-    def safe_call(self, object_context: Context, details: Dict[str, Any], func, *args, **kwargs):
+    def safe_call(self, object_context: Context, details: Dict[str, Any], func: Callable, *args: Any, **kwargs: Any) -> Any:
         """Call func with given arguments; on failure return None if skip_errors is set.
 
         Parameters
@@ -356,6 +357,8 @@ class PostPipelineEmbedMetricsStage(PostPipelineStage):
         ids = list(Context.glob(self.context_dir, self.dump_type))
         for metric in self.metrics:
             def compute(metric=metric):
+                # resetting first guarantees a clean state even if the previous compute failed midway
+                metric.reset()
                 for img_id in ids:
                     context = Context.load(self.context_dir, img_id, self.dump_type)
                     if context.dataset != object_context.dataset or context.marked_object is None:
@@ -363,12 +366,9 @@ class PostPipelineEmbedMetricsStage(PostPipelineStage):
                     object_context.param_hash = context.param_hash
                     metric.update(context.object_data, context.marked_object)
                 return metric()
-            try:
-                object_context.marked_object_metrics[metric.report_name] = self.safe_call(
-                    object_context, {"metric": metric.report_name}, compute
-                )
-            finally:
-                metric.reset()
+            object_context.marked_object_metrics[metric.report_name] = self.safe_call(
+                object_context, {"metric": metric.report_name}, compute
+            )
         return object_context
 
 
@@ -394,6 +394,8 @@ class PostPipelineAttackMetricsStage(PostPipelineStage):
         for metric in self.metrics:
             for attack in self.attacks:
                 def compute(metric=metric, attack=attack):
+                    # resetting first guarantees a clean state even if the previous compute failed midway
+                    metric.reset()
                     for img_id in ids:
                         context = Context.load(self.context_dir, img_id, self.dump_type)
                         if context.dataset != object_context.dataset:
@@ -405,15 +407,12 @@ class PostPipelineAttackMetricsStage(PostPipelineStage):
                         object_context.param_hash = context.param_hash
                         metric.update(marked_object, attacked_object)
                     return metric()
-                try:
-                    object_context.attacked_object_metrics.setdefault(attack, {})[
-                        metric.report_name
-                    ] = self.safe_call(
-                        object_context, {"attack": attack, "metric": metric.report_name},
-                        compute,
-                    )
-                finally:
-                    metric.reset()
+                object_context.attacked_object_metrics.setdefault(attack, {})[
+                    metric.report_name
+                ] = self.safe_call(
+                    object_context, {"attack": attack, "metric": metric.report_name},
+                    compute,
+                )
         return object_context
 
 
