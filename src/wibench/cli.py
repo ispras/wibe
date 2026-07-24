@@ -1,9 +1,10 @@
 from pathlib import Path
 from datetime import datetime
+import atexit
 import os
 import re
 import sys
-import time
+import threading
 from typing_extensions import (
     Optional,
     List,
@@ -82,13 +83,15 @@ class StreamToLogger:
 
 
 class TqdmFileMirror:
-    """In-memory tqdm bar states, flushed to disk at most once per min_interval (atomic replace + fsync) so the file survives a hard crash."""
+    """In-memory tqdm bar states, flushed to disk by a timer at most once per min_interval (atomic replace + fsync), so the file survives a hard crash."""
 
     def __init__(self, path: Path, min_interval: float = 1.0):
         self.path = path
         self.min_interval = min_interval
         self.lines = []
-        self.last_write = 0.0
+        self.lock = threading.Lock()  # serializes timer and atexit flushes
+        self.timer = None
+        atexit.register(self.flush)
 
     def update(self, bar, text: str):
         if not hasattr(bar, "_mirror_line"):
@@ -96,16 +99,22 @@ class TqdmFileMirror:
             self.lines.append("")
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.lines[bar._mirror_line] = f"{timestamp} | {text}"
-        now = time.monotonic()
-        if now - self.last_write < self.min_interval:
-            return
-        self.last_write = now
-        tmp = self.path.with_name(self.path.name + ".tmp")
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.write("\n".join(self.lines) + "\n")
-            f.flush()
-            os.fsync(f.fileno())
-        os.replace(tmp, self.path)
+        if self.timer is None:
+            self.timer = threading.Timer(self.min_interval, self.flush)
+            self.timer.daemon = True
+            self.timer.start()
+
+    def flush(self):
+        with self.lock:
+            self.timer = None
+            if not self.lines:
+                return
+            tmp = self.path.with_name(self.path.name + ".tmp")
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write("\n".join(self.lines) + "\n")
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp, self.path)
 
 
 def setup_logger(pipeline_config: PipeLineConfig, verbosity: int = 0):
