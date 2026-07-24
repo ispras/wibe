@@ -246,6 +246,49 @@ from wibench.aggregator import PandasAggregatorConfig
 from wibench.settings import PROFILES_DIR, get_profile
 
 
+def warn_about_dump_reads(stages: List[str], metrics: dict, pipeline_config: PipeLineConfig,
+                          dump_context: bool, num_wrappers: int):
+    """Stages reading dumped contexts silently rely on what is on disk;
+    warn when the dumps are missing or do not correspond to this run."""
+    if CHILD_NUM_ENV_NAME in os.environ:
+        return  # warn once, from the root process
+    result_path = pipeline_config.result_path
+    post_metrics = any(stage in stages and metrics.get(stage) for stage in
+                       (StageType.post_pipeline_embed_metrics, StageType.post_pipeline_attack_metrics))
+    context_dirs = [result_path / f"context_{num}" for num in range(num_wrappers)]
+    missing_dirs = [d.name for d in context_dirs if not d.is_dir()]
+
+    if StageType.embed in stages:
+        if post_metrics and not dump_context:
+            details = (
+                f"No dumped contexts exist in {result_path}, so the metrics will fail"
+                if len(missing_dirs) == num_wrappers else
+                f"Stale contexts of previous runs remain in {result_path}/context_*, so the metrics will silently be computed from them"
+            )
+            logger.warning(
+                "\nPost-pipeline metrics are computed from dumped contexts, but --dump-context is disabled: this run will not save its contexts"
+                f"\n{details}"
+                "\n-> Add -d/--dump-context to compute the metrics from this run's results"
+            )
+    elif post_metrics or any(not stage.startswith("post_pipeline") for stage in stages):
+        if missing_dirs:
+            logger.warning(
+                f"\nSelected stages read dumped contexts, but {missing_dirs} do not exist in {result_path}"
+                "\nThe corresponding algorithms will have nothing to process"
+                "\n-> Run the embed stage with -d/--dump-context first"
+            )
+        else:
+            last_dump = max((f.stat().st_mtime for d in context_dirs
+                             for f in d.rglob("*") if f.is_file()), default=None)
+            last_dump = (datetime.fromtimestamp(last_dump).strftime("%Y-%m-%d %H:%M:%S")
+                         if last_dump else "unknown")
+            logger.warning(
+                f"\nSelected stages will process contexts previously dumped to {result_path}/context_*"
+                f"\nThe latest dump is from {last_dump}"
+                "\n-> Make sure these are the contexts you intend to process"
+            )
+
+
 def clear_tables(config: PipeLineConfig, stages: List[str]):
     for aggregator_config in config.aggregators:
         if not isinstance(aggregator_config, PandasAggregatorConfig):
@@ -408,6 +451,8 @@ def run(
         metrics[metric_field] = loaded_config[metric_field]
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
+
+    warn_about_dump_reads(stages, metrics, pipeline_config, dump_context, len(alg_wrappers))
 
     exec_candidates, missing_per_group = compatible_execs(stages, datasets, alg_wrappers, attacks, metrics, profile)
 
