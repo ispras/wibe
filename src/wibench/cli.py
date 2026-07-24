@@ -1,7 +1,9 @@
 from pathlib import Path
+from datetime import datetime
 import os
 import re
 import sys
+import time
 from typing_extensions import (
     Optional,
     List,
@@ -17,6 +19,7 @@ from wibench.requirements import compatible_execs
 
 
 REEXEC_DONE = "_REEXEC_DONE"
+CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
 
 
 def set_cuda_devices(environ, device_list: List[int]):
@@ -78,7 +81,34 @@ class StreamToLogger:
         return False
 
 
-def setup_logging_level(pipeline_config: PipeLineConfig, verbosity: int = 0):
+class TqdmFileMirror:
+    """In-memory tqdm bar states, flushed to disk at most once per min_interval (atomic replace + fsync) so the file survives a hard crash."""
+
+    def __init__(self, path: Path, min_interval: float = 1.0):
+        self.path = path
+        self.min_interval = min_interval
+        self.lines = []
+        self.last_write = 0.0
+
+    def update(self, bar, text: str):
+        if not hasattr(bar, "_mirror_line"):
+            bar._mirror_line = len(self.lines)
+            self.lines.append("")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        self.lines[bar._mirror_line] = f"{timestamp} | {text}"
+        now = time.monotonic()
+        if now - self.last_write < self.min_interval:
+            return
+        self.last_write = now
+        tmp = self.path.with_name(self.path.name + ".tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write("\n".join(self.lines) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, self.path)
+
+
+def setup_logger(pipeline_config: PipeLineConfig, verbosity: int = 0):
     # -v flags only escalate logging relative to the config:
     # -v: backtrace,
     # -vv: +diagnose,
@@ -113,10 +143,11 @@ def setup_logging_level(pipeline_config: PipeLineConfig, verbosity: int = 0):
         backtrace=backtrace,
         diagnose=diagnose,
     )
-    # file sink that mirrors the real console
-    pipeline_config.result_path.mkdir(parents=True, exist_ok=True)
+    # file sinks under {result_path}/logs
+    logs_dir = pipeline_config.result_path / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
     logger.add(
-        pipeline_config.result_path / "console.log",
+        logs_dir / "console.log",
         level=level,
         format=pipeline_config.log_format,
         colorize=False,
@@ -127,7 +158,7 @@ def setup_logging_level(pipeline_config: PipeLineConfig, verbosity: int = 0):
     # file sink that logs errors
     if pipeline_config.skip_errors:
         logger.add(
-            pipeline_config.result_path / "errors.log",
+            logs_dir / "errors.log",
             level="ERROR",
             format=pipeline_config.log_format,
             colorize=False,
@@ -135,6 +166,23 @@ def setup_logging_level(pipeline_config: PipeLineConfig, verbosity: int = 0):
             diagnose=diagnose,
             enqueue=True,
         )
+
+    # file that mirrors tqdm bars: every bar update goes through tqdm.display,
+    # so hooking it keeps one in-place-updated line per bar in the file
+    child_num = os.environ.get(CHILD_NUM_ENV_NAME)
+    mirror_name = "progress.log" if child_num is None else f"progress_{child_num}.log"
+    bars_mirror = TqdmFileMirror(logs_dir / mirror_name)
+    tqdm_display = tqdm.tqdm.display
+
+    def display_to_file(self, msg=None, pos=None):
+        if msg == "":  # a closing bar erases itself with an empty msg; keep its last state instead
+            return tqdm_display(self, msg=msg, pos=pos)
+        if msg is None:
+            msg = str(self)  # render once; passing the text down saves tqdm re-rendering it
+        bars_mirror.update(self, msg)
+        return tqdm_display(self, msg=msg, pos=pos)
+
+    tqdm.tqdm.display = display_to_file
 
     sys.stdout = StreamToLogger("INFO")
     sys.stderr = StreamToLogger("WARNING")
@@ -151,7 +199,7 @@ def prerun():
     if "--dry-run" in sys.argv[1:]:
         pipeline_config.result_path /= "dry"
 
-    setup_logging_level(pipeline_config, get_verbosity_from_argv())
+    setup_logger(pipeline_config, get_verbosity_from_argv())
     setup_cuda_visible_devices(pipeline_config)
 
 
@@ -161,7 +209,6 @@ prerun()
 import wibench
 
 
-CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
 RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
 
 

@@ -128,14 +128,14 @@ class PipeLineConfig(BaseModel):
     skip_errors : bool
         If True, an error in any stage is logged, the failed result is recorded as None, and processing continues
         If False, the exception is raised and the pipeline stops
-        Also controls whether {result_path}/errors.log (ERROR level and above) is written
+        Also controls whether {result_path}/logs/errors.log (ERROR level and above) is written
         Default is True
     log_level : LogLevel
         Base log level for pipeline logs (loguru)
         Can be escalated toward TRACE by -vvv and each additional -v CLI flag
         Default is "INFO"
     log_format : str
-        Loguru format string for pipeline log records, written to stderr, {result_path}/console.log and {result_path}/errors.log
+        Loguru format string for pipeline log records, written to stderr and to {result_path}/logs/console.log (and errors.log when skip_errors is True)
         Default is "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
     log_backtrace : bool
         If True, error tracebacks in logs are extended beyond the catching point (loguru backtrace)
