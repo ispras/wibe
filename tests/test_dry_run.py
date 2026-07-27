@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 from wibench.cli import compatible_execs
-from wibench.config_loader import ALGORITHMS_FIELD, ATTACKS_FIELD, DATASETS_FIELD, METRICS_FIELDS, load_pipeline_config_yaml
+from wibench.config_loader import load_pipeline_config_yaml
 from wibench.pipeline import STAGE_CLASSES
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -26,13 +26,7 @@ for config_file in config_files:
 
 
 def run_wibench(config_file: Path, loaded_config: dict, stages: list[str]):
-    exec_candidates, missing_per_group = compatible_execs(
-        stages,
-        loaded_config[DATASETS_FIELD],
-        loaded_config[ALGORITHMS_FIELD],
-        loaded_config[ATTACKS_FIELD],
-        {metric_field: loaded_config[metric_field] for metric_field in METRICS_FIELDS},
-    )
+    exec_candidates, missing_per_group = compatible_execs(stages, loaded_config)
     assert exec_candidates != [], f"No venv has all required requirements for {config_file}\nmissing: {missing_per_group}"
 
     exec_path = next(iter(exec_candidates))

@@ -5,6 +5,7 @@ import sys
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import cached_property
 from itertools import combinations
 from pathlib import Path
 
@@ -12,7 +13,20 @@ from loguru import logger
 from tqdm import tqdm
 import typer
 
-from wibench.settings import PROFILES_DIR, COMMON_PROFILE, DEFAULT_PROFILE, get_profile
+from wibench.settings import (
+    BASE_SUBDIR,
+    COMMON_PROFILE,
+    DEFAULT_PROFILE,
+    GROUP_PREFIX,
+    LOCK_SUFFIX,
+    PROFILES_DIR,
+    PYTHON_VERSION_FILE,
+    REQUIREMENTS_SUBDIR,
+    TXT_SUFFIX,
+    VENVS_SUBDIR,
+    get_profile,
+    venv_python,
+)
 
 logger.remove()
 # Route logs through tqdm so progress bars are not torn by log lines
@@ -21,31 +35,48 @@ logger.add(lambda m: tqdm.write(m, end="", file=sys.stderr), colorize=True, leve
 
 @dataclass(frozen=True)
 class Config:
-    requirements_dir: Path
-    venvs_dir: Path
+    """Everything about a profile is derived from its name."""
     profile: str
-    python: str | None = None  # from profiles/<profile>/.python-version
-    group_prefix: str = "venv"
-    txt_suffix: str = ".txt"
-    lock_suffix: str = ".lock"
+
+    @property
+    def root(self) -> Path:
+        return Path(PROFILES_DIR) / self.profile
+
+    @property
+    def requirements_dir(self) -> Path:
+        return self.root / REQUIREMENTS_SUBDIR
+
+    @property
+    def venvs_dir(self) -> Path:
+        return self.root / VENVS_SUBDIR
+
+    @cached_property
+    def python(self) -> str | None:
+        py_file = self.root / PYTHON_VERSION_FILE
+        return py_file.read_text().strip() if py_file.is_file() else None
 
     def group_txt_path(self, i: int) -> Path:
-        return self.venvs_dir / f"{self.group_prefix}{i}{self.txt_suffix}"
+        return self.venvs_dir / f"{GROUP_PREFIX}{i}{TXT_SUFFIX}"
 
-    def group_lock_path(self, i: int) -> Path:
-        return self.venvs_dir / f"{self.group_prefix}{i}{self.lock_suffix}"
+    @staticmethod
+    def group_index(path: Path) -> int | None:
+        """venv7 / venv7.txt / venv7.lock -> 7; None for foreign files."""
+        s = path.stem[len(GROUP_PREFIX):]
+        return int(s) if path.stem.startswith(GROUP_PREFIX) and s.isdigit() else None
 
     def glob_txts(self):
-        return self.venvs_dir.glob(f"{self.group_prefix}*{self.txt_suffix}")
+        return self.venvs_dir.glob(f"{GROUP_PREFIX}*{TXT_SUFFIX}")
 
     def glob_locks(self):
-        return self.venvs_dir.glob(f"{self.group_prefix}*{self.lock_suffix}")
+        return self.venvs_dir.glob(f"{GROUP_PREFIX}*{LOCK_SUFFIX}")
 
 
 RETRY_BASE = 4
 MAX_RETRIES = 4  # retry delays: RETRY_BASE ** (attempt + 1) seconds
 COMPILE_TIMEOUT = 180  # seconds; cold uv cache with git deps can take minutes
 DEFAULT_JOBS = 8
+
+UV_COMPILE = ("uv", "pip", "compile", "--quiet", "--no-header")
 
 # Network/rate-limit failures worth retrying, as opposed to real resolver conflicts
 TRANSIENT_MARKERS = (
@@ -122,7 +153,7 @@ _compatible_cache: dict[tuple, asyncio.Task] = {}
 
 
 async def _check_compatible(paths: tuple[Path, ...]) -> bool:
-    args = ["uv", "pip", "compile", "--quiet", "--no-header", "--no-annotate", *_python_args()] + [str(p) for p in paths]
+    args = [*UV_COMPILE, "--no-annotate", *_python_args(), *map(str, paths)]
     result = await _run_retrying(args, timeout=COMPILE_TIMEOUT)
     return result is not None and result[0] == 0
 
@@ -134,9 +165,8 @@ async def _compatible(paths: list[Path]) -> bool:
     # File order doesn't affect resolvability, so sort for better cache hits;
     # the Python version changes resolvability, so it is part of the key
     key = (_python, *sorted(paths))
-    task = _compatible_cache.get(key)
-    if task is None:
-        task = asyncio.ensure_future(_check_compatible(tuple(sorted(paths))))
+    if (task := _compatible_cache.get(key)) is None:
+        task = asyncio.ensure_future(_check_compatible(key[1:]))
         _compatible_cache[key] = task
     return await task
 
@@ -228,16 +258,22 @@ async def _greedy_groups(
     return groups
 
 
-def _write_groups(cfg: Config, groups: list[list[Path]]) -> None:
+def _read_group(txt_path: Path) -> list[Path]:
+    return [Path(line.strip()) for line in txt_path.read_text().splitlines() if line.strip()]
+
+
+def _write_groups(cfg: Config, groups: list[list[Path]], action: str) -> None:
+    sizes = ", ".join(str(len(g)) for g in groups)
+    logger.info(f"{action} {len(groups)} groups (sizes: {sizes})")
     for i, group in enumerate(groups):
         txt_path = cfg.group_txt_path(i)
         txt_content = "\n".join(str(p) for p in group)
         txt_path.write_text(txt_content)
         logger.info(f"\n------ {txt_path.stem} ------\n" + txt_content)
     # Drop leftovers (txts, locks and venv dirs) from previous runs with more groups
-    for stale in cfg.venvs_dir.glob(f"{cfg.group_prefix}*"):
-        suffix = stale.name[len(cfg.group_prefix):len(stale.name) - len(stale.suffix)]
-        if suffix.isdigit() and int(suffix) >= len(groups):
+    for stale in cfg.venvs_dir.glob(f"{GROUP_PREFIX}*"):
+        index = cfg.group_index(stale)
+        if index is not None and index >= len(groups):
             if stale.is_dir():
                 shutil.rmtree(stale)
             else:
@@ -245,18 +281,12 @@ def _write_groups(cfg: Config, groups: list[list[Path]]) -> None:
             logger.info(f"Removed stale {stale.name}")
 
 
-def _log_group_summary(action: str, groups: list[list[Path]]) -> None:
-    sizes = ", ".join(str(len(g)) for g in groups)
-    logger.info(f"{action} {len(groups)} groups (sizes: {sizes})")
-
-
 async def compose(cfg: Config, base_paths: list[Path], req_paths: list[Path]) -> list[list[Path]]:
     conflicts = await _conflict_graph(base_paths, req_paths)
     max_degree = max((len(c) for c in conflicts.values()), default=0)
     logger.debug(f"Max conflict degree: {max_degree}")
     groups = [base_paths + g for g in await _greedy_groups(base_paths, req_paths, conflicts)]
-    _log_group_summary("Composed", groups)
-    _write_groups(cfg, groups)
+    _write_groups(cfg, groups, "Composed")
     return groups
 
 
@@ -268,12 +298,11 @@ async def extend(cfg: Config, base_paths: list[Path], req_paths: list[Path]) -> 
     groups: list[list[Path]] = []
 
     def index_key(p: Path):
-        s = p.stem[len(cfg.group_prefix):]
-        return (0, int(s)) if s.isdigit() else (1, 0)
+        index = cfg.group_index(p)
+        return (index is None, index or 0)
 
     for txt_path in sorted(cfg.glob_txts(), key=index_key):
-        group = [Path(line.strip()) for line in txt_path.read_text().splitlines() if line.strip()]
-        group = [p for p in group if p in valid and p not in base_set]
+        group = [p for p in _read_group(txt_path) if p in valid and p not in base_set]
         while group and not await _compatible(base_paths + group):
             dropped = group.pop()
             logger.warning(f"{dropped} no longer fits {txt_path.stem}, unassigning")
@@ -286,37 +315,31 @@ async def extend(cfg: Config, base_paths: list[Path], req_paths: list[Path]) -> 
     groups = await _greedy_groups(base_paths, req_paths, conflicts, groups)
 
     groups = [base_paths + g for g in groups]
-    _log_group_summary("Extended to", groups)
-    _write_groups(cfg, groups)
+    _write_groups(cfg, groups, "Extended to")
     return groups
 
 
-async def lock(cfg: Config, groups: list[list[Path]] | None = None) -> None:
-    if groups is not None:
-        pairs = [
-            (cfg.group_lock_path(i), group)
-            for i, group in enumerate(groups)
-            if group
-        ]
-    else:
-        pairs = []
-        for txt_path in sorted(cfg.glob_txts()):
-            group = [Path(line.strip()) for line in txt_path.read_text().splitlines() if line.strip()]
-            if group:
-                pairs.append((txt_path.with_suffix(cfg.lock_suffix), group))
+def _exit_unless_ok(result: tuple[int, str] | None, action: str) -> None:
+    if result is not None and result[0] == 0:
+        return
+    logger.error(f"Failed to {action}")
+    if result is not None:
+        sys.stderr.write(result[1])
+    raise typer.Exit(1)
+
+
+async def lock(cfg: Config) -> None:
+    # The group txts on disk are the source of truth (compose/extend just wrote them)
+    pairs = [
+        (txt_path.with_suffix(LOCK_SUFFIX), group)
+        for txt_path in sorted(cfg.glob_txts())
+        if (group := _read_group(txt_path))
+    ]
 
     with tqdm(total=len(pairs), desc="lock", unit="group") as bar:
         async def compile_lock(lock_path: Path, group: list[Path]) -> None:
-            args = (
-                ["uv", "pip", "compile", "--quiet", "--no-header", *_python_args(), "--output-file", str(lock_path)]
-                + [str(p) for p in group]
-            )
-            result = await _run_retrying(args)
-            if result is None or result[0] != 0:
-                logger.error(f"Failed to lock {lock_path.stem}")
-                if result is not None:
-                    sys.stderr.write(result[1])
-                raise typer.Exit(1)
+            args = [*UV_COMPILE, *_python_args(), "--output-file", str(lock_path), *map(str, group)]
+            _exit_unless_ok(await _run_retrying(args), f"lock {lock_path.stem}")
             logger.info(f"Locked {lock_path.stem} ({len(group)} requirement files)")
             bar.update(1)
 
@@ -329,18 +352,18 @@ async def install(cfg: Config) -> None:
         venv_path = lock_path.with_suffix("")
         await _run_retrying(["uv", "venv", "--clear", *_python_args(), str(venv_path)])
         result = await _run_retrying(
-            ["uv", "pip", "install", "-p", str(venv_path / "bin" / "python"), "-r", str(lock_path)]
+            ["uv", "pip", "install", "-p", str(venv_python(venv_path)), "-r", str(lock_path)]
         )
-        if result is None or result[0] != 0:
-            logger.error(f"Failed to install {lock_path.stem}")
-            if result is not None:
-                sys.stderr.write(result[1])
-            raise typer.Exit(1)
+        _exit_unless_ok(result, f"install {lock_path.stem}")
         logger.info(f"Installed {venv_path.name}")
 
 
-ALL_STAGES = "all"
-STAGES = (validate.__name__, compose.__name__, extend.__name__, lock.__name__, install.__name__, ALL_STAGES)
+# Full-pipeline shortcuts: groups built from scratch (compose) or updated in place (extend)
+BUNDLES = {
+    "rebuild": (validate.__name__, compose.__name__, lock.__name__, install.__name__),
+    "update": (validate.__name__, extend.__name__, lock.__name__, install.__name__),
+}
+STAGES = (validate.__name__, compose.__name__, extend.__name__, lock.__name__, install.__name__, *BUNDLES)
 
 app = typer.Typer(pretty_exceptions_enable=False)
 
@@ -358,18 +381,17 @@ async def _pipeline(
         with _stage_timer(validate.__name__):
             req_paths = await validate(base_paths, req_paths)
 
-    groups = None
     if compose.__name__ in run_stages:
         with _stage_timer(compose.__name__):
-            groups = await compose(cfg, base_paths, req_paths)
+            await compose(cfg, base_paths, req_paths)
 
     if extend.__name__ in run_stages:
         with _stage_timer(extend.__name__):
-            groups = await extend(cfg, base_paths, req_paths)
+            await extend(cfg, base_paths, req_paths)
 
     if lock.__name__ in run_stages:
         with _stage_timer(lock.__name__):
-            await lock(cfg, groups)
+            await lock(cfg)
 
     if install.__name__ in run_stages:
         with _stage_timer(install.__name__):
@@ -383,7 +405,8 @@ async def _pipeline(
 def run(
     stages: list[str] = typer.Argument(
         None,
-        help=f"Stages to run: {STAGES}. Default: {install.__name__}",
+        help=f"Stages to run: {STAGES}. Default: {install.__name__}. "
+        + "; ".join(f"'{name}' = {' '.join(bundle)}" for name, bundle in BUNDLES.items()),
     ),
     profile: str = typer.Option(
         None,
@@ -398,12 +421,11 @@ def run(
         help="Max number of concurrent uv processes",
     ),
 ):
-    run_stages = {install.__name__}
-    if stages:
-        if ALL_STAGES in stages:
-            run_stages = {validate.__name__, compose.__name__, lock.__name__, install.__name__}
-        else:
-            run_stages = set(stages)
+    run_stages = set(stages or [install.__name__])
+    for name, bundle in BUNDLES.items():
+        if name in run_stages:
+            run_stages.remove(name)
+            run_stages.update(bundle)
     invalid = run_stages - set(STAGES)
     if invalid:
         typer.echo(f"Unknown stages: {invalid}. Valid: {STAGES}", err=True)
@@ -420,23 +442,18 @@ def run(
     if profile == COMMON_PROFILE:
         typer.echo(f"'{COMMON_PROFILE}' is not a profile: it holds requirements shared by all profiles", err=True)
         raise typer.Exit(1)
-    py_file = Path(PROFILES_DIR) / profile / ".python-version"
-    cfg = Config(
-        requirements_dir=Path(PROFILES_DIR) / profile / "requirements",
-        venvs_dir=Path(PROFILES_DIR) / profile / "venvs",
-        profile=profile,
-        python=py_file.read_text().strip() if py_file.is_file() else None,
-    )
+    cfg = Config(profile)
     common_dir = Path(PROFILES_DIR) / COMMON_PROFILE
+    base_dir = common_dir / BASE_SUBDIR
 
     # Mandatory part of every group
-    base_paths = sorted((common_dir / "base").glob(f"*{cfg.txt_suffix}"))
+    base_paths = sorted(base_dir.glob(f"*{TXT_SUFFIX}"))
     if not base_paths:
-        logger.warning(f"No base requirements in {common_dir / 'base'}, groups get no mandatory part")
+        logger.warning(f"No base requirements in {base_dir}, groups get no mandatory part")
 
     # Shared txts join every profile's composition as ordinary (optional) files
-    req_paths = sorted(common_dir.glob(f"*{cfg.txt_suffix}"))
-    req_paths += sorted(cfg.requirements_dir.rglob(f"*{cfg.txt_suffix}"))
+    req_paths = sorted(common_dir.glob(f"*{TXT_SUFFIX}"))
+    req_paths += sorted(cfg.requirements_dir.rglob(f"*{TXT_SUFFIX}"))
     logger.info(f"Profile: {cfg.profile}")
     logger.info(f"Python: {cfg.python or '(uv default)'}")
     logger.info(f"Base: {', '.join(str(p) for p in base_paths) or '(none)'}")

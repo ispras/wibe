@@ -12,4 +12,4 @@ python3 -m venv .venv                   # installs base venv
 source .venv/bin/activate               # activates base venv
 pip install uv                          # installs uv package manager
 uv sync                                 # installs packages for base venv with uv
-wibench-venv all                        # installs other venvs with required packages
+wibench-venv rebuild                    # installs other venvs with required packages
