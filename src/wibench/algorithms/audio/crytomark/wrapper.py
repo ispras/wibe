@@ -10,8 +10,8 @@ from wibench.watermark_data import TorchBitWatermarkData
 from wibench.module_importer import ModuleImporter
 
 
-
 DEFAULT_MODULE_PATH = "./submodules/cryptomark/src/dm_audio"
+
 
 @dataclass
 class CryptoMarkParams(Params):
@@ -78,13 +78,18 @@ class CryptoMarkWrapper(BaseAlgorithmWrapper):
         from bitarray import bitarray
         msg = bitarray(list(watermark_data.watermark.numpy().flatten()))
 
+        channel_len =signal.shape[1]
+        min_len = self.settings.framer.frame_length
+        if channel_len < min_len:
+            raise Exception("Too short signal to embed watermark")
+
         wm_channels = list()
         for ch_num in range(signal.shape[0]):
-            res = self.embed_task.embed(signal[ch_num, :].numpy(), msg,
-                                        sr=self.params.target_rate)
-            if len(res.wm_frames) == 0:
-                raise Exception("Too short signal to embed watermark")
-            wm_channels.append(res.wm_audio)
+            emb_res = self.embed_task.embed(signal[ch_num, :].numpy(), msg,
+                                            sr=self.params.target_rate)
+            if len(emb_res.wm_frames) == 0:
+                raise Exception("Unable to embed watermark")
+            wm_channels.append(emb_res.wm_audio)
         return TorchAudio(torch.tensor(np.stack(wm_channels)),
                           self.params.target_rate)
 
@@ -110,7 +115,12 @@ class CryptoMarkWrapper(BaseAlgorithmWrapper):
         if audio.rate != self.params.target_rate:
             signal = Resample(orig_freq=audio.rate,
                               new_freq=self.params.target_rate)(signal)
-        
+
+        channel_len = signal.shape[1]
+        min_len = self.settings.framer.frame_length
+        if channel_len < min_len:
+            raise Exception("Too short signal to extract watermark")
+
         wm_len = len(watermark_data.watermark[0])
         wm_zeros = np.zeros(wm_len, dtype=int)
         wm_ones = np.ones(wm_len, dtype=int)
@@ -118,7 +128,7 @@ class CryptoMarkWrapper(BaseAlgorithmWrapper):
             res = self.extract_task.extract(signal[ch_num, :].numpy(),
                                             self.params.target_rate)
             if len(res.wm_frames) == 0:
-                raise Exception("Too short signal to extract watermark")
+                raise Exception("Unable to extract watermark")
             for var, freq in res.data.items():
                 msg_bin_str = bin(int(var[2:], 16))[2:]
                 msg_bin_lst = list(map(int, msg_bin_str))

@@ -27,7 +27,8 @@ class AudioSet(RangeBaseDataset):
         subset: Literal["balanced", "full", "unbalanced"] = "balanced",
         split: Literal["train", "test"] = "test",
         sample_range: Optional[Tuple[int, int]] = None,
-        cache_dir: Optional[str] = None
+        cache_dir: Optional[str] = None,
+        min_duration: Optional[float] = None,
     ):
         """
         Parameters
@@ -40,6 +41,8 @@ class AudioSet(RangeBaseDataset):
             Optional (start, end) index range to subset the dataset
         cache_dir : Optional[str]
             Directory to cache downloaded dataset files
+        min_duration: Optional[float]
+            Minimal duration of audio
         """
         dataset_args = {"path": self.dataset_path,
                         "name": subset, "cache_dir": cache_dir}
@@ -50,6 +53,7 @@ class AudioSet(RangeBaseDataset):
 
         self.dataset_len = dataset_len
         super().__init__(sample_range, self.dataset_len)
+        self.min_duration = min_duration
 
     def __len__(self):
         return self.len
@@ -73,5 +77,9 @@ class AudioSet(RangeBaseDataset):
             item = self.dataset[start_idx]
             data = Tensor(item["audio"]["array"]).unsqueeze(0)
             rate = item["audio"]["sampling_rate"]
+            if self.min_duration is not None:
+                duration = data.shape[1] / rate
+                if duration < self.min_duration:
+                    continue
             yield AudioObject(str(start_idx), TorchAudio(data, rate))
             len_idx += 1
