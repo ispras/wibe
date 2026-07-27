@@ -100,6 +100,10 @@ class TqdmFileMirror:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.lines[bar._mirror_line] = f"{timestamp} | {text}"
         if self.timer is None:
+            if sys.is_finalizing():
+                # interpreter shutdown (e.g. a bar closed by its __del__ after an uncaught exception): 
+                # threads cannot start anymore and Thread.start() would hang forever, so write synchronously
+                return self.flush()
             self.timer = threading.Timer(self.min_interval, self.flush)
             self.timer.daemon = True
             self.timer.start()
@@ -337,6 +341,9 @@ def subprocess_run(pipeline_config: PipeLineConfig, python_exec = sys.executable
     for proc in procs:
         logger.info("\n----- subprocess-run -----\n" + " ".join(args))
         proc.wait()
+    failed = [proc.returncode for proc in procs if proc.returncode != 0]
+    if failed:
+        sys.exit(failed[0])
 
 
 def parse_stage_expression(expr: str) -> List[str]:
