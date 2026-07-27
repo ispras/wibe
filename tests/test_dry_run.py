@@ -34,15 +34,13 @@ for config_file in config_files:
         configs_without_split.append(config_file)
 
 
-def config_with_skip_errors_false(config_file: Path, tmp_path: Path) -> Path:
+def run_wibench(config_file: Path, stages: list[str], tmp_path: Path):
     cfg = yaml.load(render_jinja2_config(config_file), Loader=loader)
     cfg.setdefault("pipeline", {})["skip_errors"] = False
-    path = tmp_path / f"{config_file.stem}.yml"
-    path.write_text(yaml.dump(cfg, sort_keys=False))
-    return path
+    run_config = tmp_path / config_file.name
+    run_config.write_text(yaml.dump(cfg, sort_keys=False))
 
-
-def run_wibench(config_file: Path, loaded_config: dict, stages: list[str], tmp_path: Path):
+    loaded_config = load_pipeline_config_yaml(run_config)
     exec_candidates, missing_per_group = compatible_execs(
         stages,
         loaded_config[DATASETS_FIELD],
@@ -52,7 +50,6 @@ def run_wibench(config_file: Path, loaded_config: dict, stages: list[str], tmp_p
     )
     assert exec_candidates != [], f"No venv has all required requirements for {config_file}\nmissing: {missing_per_group}"
 
-    run_config = config_with_skip_errors_false(config_file, tmp_path)
     exec_path = next(iter(exec_candidates))
     wibench_path = exec_path.parent / "wibench"
     args = [
@@ -78,10 +75,7 @@ def run_wibench(config_file: Path, loaded_config: dict, stages: list[str], tmp_p
 )
 def test_configs_without_stage_split(config_file: Path, tmp_path: Path):
     assert config_file.exists(), f"Config file {config_file} does not exist!"
-
-    loaded_config = load_pipeline_config_yaml(config_file)
-    stages = list(STAGE_CLASSES.keys())
-    run_wibench(config_file, loaded_config, stages, tmp_path)
+    run_wibench(config_file, list(STAGE_CLASSES.keys()), tmp_path)
 
 
 @pytest.mark.forked
@@ -90,11 +84,9 @@ def test_configs_without_stage_split(config_file: Path, tmp_path: Path):
 )
 def test_configs_with_stage_split(config_file: Path, tmp_path: Path):
     assert config_file.exists(), f"Config file {config_file} does not exist!"
-
-    loaded_config = load_pipeline_config_yaml(config_file)
-    
-    stages = ["embed", "attack", "extract"]
-    run_wibench(config_file, loaded_config, stages, tmp_path)
-    
-    stages = ["post_embed_metrics", "post_attack_metrics", "post_extract_metrics", "aggregate"]
-    run_wibench(config_file, loaded_config, stages, tmp_path)
+    run_wibench(config_file, ["embed", "attack", "extract"], tmp_path)
+    run_wibench(
+        config_file,
+        ["post_embed_metrics", "post_attack_metrics", "post_extract_metrics", "aggregate"],
+        tmp_path,
+    )
