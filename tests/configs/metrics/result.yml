@@ -1,0 +1,19 @@
+algorithms:
+  dft_circle
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  - JPEG:
+      quality: 80
+  
+post_extract_metrics:
+  result
+
+pipeline:
+  result_path: ./test_results/tests/result
+  aggregators:
+    - CSV:
+        table_name: table

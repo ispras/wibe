@@ -1,0 +1,17 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  - rotate90
+  - rotate90:
+      report_name: counter
+      direction: counter
+pipeline:
+  result_path: ./test_results/tests/rotate90
+  aggregators:
+    - CSV:
+        table_name: table

@@ -1,6 +1,0 @@
-torch
-diffusers>=0.31.0
-transformers>=4.48.0
-accelerate
-protobuf
-sentencepiece

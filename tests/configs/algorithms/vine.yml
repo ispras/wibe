@@ -1,0 +1,15 @@
+algorithms:
+  vine
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/vine
+  aggregators:
+    - CSV:
+        table_name: table

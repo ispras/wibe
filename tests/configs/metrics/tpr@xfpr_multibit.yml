@@ -1,0 +1,20 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  - JPEG:
+      quality: 80
+  
+post_extract_metrics:
+  tpr@xfpr:
+    fpr_rate: 0.001
+
+pipeline:
+  result_path: ./test_results/tests/tpr@xfpr_multibit
+  aggregators:
+    - CSV:
+        table_name: table

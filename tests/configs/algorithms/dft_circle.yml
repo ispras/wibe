@@ -1,0 +1,15 @@
+algorithms:
+  dft_circle
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/dft_circle
+  aggregators:
+    - CSV:
+        table_name: table

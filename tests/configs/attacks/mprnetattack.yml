@@ -1,0 +1,15 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  mprnetattack
+
+pipeline:
+  result_path: ./test_results/tests/mprnetattack
+  aggregators:
+    - CSV:
+        table_name: table

@@ -1,0 +1,18 @@
+algorithms:
+  - combination:
+      algorithms:
+        - mbrs
+        - videoseal
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/combination
+  aggregators:
+    - CSV:
+        table_name: table

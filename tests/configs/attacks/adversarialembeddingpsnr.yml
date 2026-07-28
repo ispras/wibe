@@ -1,0 +1,15 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  adversarialembeddingpsnr
+
+pipeline:
+  result_path: ./test_results/tests/adversarialembeddingpsnr
+  aggregators:
+    - CSV:
+        table_name: table

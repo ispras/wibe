@@ -1,0 +1,15 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  stegastampinversion
+
+pipeline:
+  result_path: ./test_results/tests/stegastampinversion
+  aggregators:
+    - CSV:
+        table_name: table

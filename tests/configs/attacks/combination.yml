@@ -1,0 +1,18 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  combination:
+    attacks:
+      - gaussianblur
+      - JPEG
+
+pipeline:
+  result_path: ./test_results/tests/combination
+  aggregators:
+    - CSV:
+        table_name: table

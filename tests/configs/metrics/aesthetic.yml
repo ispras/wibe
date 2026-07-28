@@ -1,0 +1,22 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  - JPEG:
+      quality: 80
+  
+post_embed_metrics:
+  aesthetic
+
+post_attack_metrics:
+  aesthetic
+
+pipeline:
+  result_path: ./test_results/tests/aesthetic
+  aggregators:
+    - CSV:
+        table_name: table
