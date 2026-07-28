@@ -1,1 +1,6 @@
 trustmark
+einops
+kornia
+lightning
+omegaconf
+torchmetrics

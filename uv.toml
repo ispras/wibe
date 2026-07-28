@@ -1,0 +1,49 @@
+# uv.toml takes precedence over the [tool.uv] section in pyproject.toml,
+# so configuration settings (extra-build-dependencies, dependency-metadata, ...) must live here,
+# while project-level settings (package = true) stay in pyproject.toml.
+
+[extra-build-dependencies]
+image-reward = ["setuptools<82"]
+
+# The packages below are installed only for their code: 
+# their declared dependencies are frozen at ancient versions or wildly excessive,
+# so we blank them out (requires-dist = [])
+# and curate the actual runtime dependencies by hand in profiles/<profile>/requirements/**/*.txt
+#
+# For packages installed from git the `version` field is mandatory:
+# it must match the version declared in the package's setup.py/pyproject.toml at the pinned commit,
+# otherwise uv silently ignores the override and falls back to building the package for its real metadata
+
+# curated in profiles/image/requirements/attacks/realesrganattack.txt
+[[dependency-metadata]]
+name = "basicsr"
+requires-dist = []
+
+# curated in profiles/image/requirements/algorithms/videoseal.txt
+[[dependency-metadata]]
+name = "videoseal"
+version = "1.0"
+requires-dist = []
+
+# curated in profiles/image/requirements/algorithms/syncseal.txt
+[[dependency-metadata]]
+name = "syncseal"
+version = "0.1.0"
+requires-dist = []
+
+# curated in profiles/image/requirements/algorithms/vine.txt
+[[dependency-metadata]]
+name = "vine"
+version = "0.1.0"
+requires-dist = []
+
+# curated in profiles/image/requirements/algorithms/trustmark.txt and profiles/image/requirements/attacks/trustmarkrm.txt
+[[dependency-metadata]]
+name = "trustmark"
+requires-dist = []
+
+# curated in profiles/image/requirements/algorithms/metr.txt
+[[dependency-metadata]]
+name = "metr"
+version = "1.0.0"
+requires-dist = []

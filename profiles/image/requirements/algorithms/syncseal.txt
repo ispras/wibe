@@ -1,3 +1,4 @@
+syncseal @ git+https://github.com/facebookresearch/wmar@00e45892ca87839bc33b2a323d9b7d7aecbb9ec3#subdirectory=syncseal
 omegaconf
 einops
 lpips

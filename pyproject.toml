@@ -51,34 +51,10 @@ build-backend = "setuptools.build_meta"
 wibench = "wibench.cli:app"
 wibench-venv = "wibench.venv_manager:app"
 
+# uv configuration settings (extra-build-dependencies, dependency-metadata, ...) live in uv.toml:
+# it takes precedence over [tool.uv] and would shadow them here
 [tool.uv]
 package = true
-
-[tool.uv.extra-build-dependencies]
-image-reward = ["setuptools<82"]
-
-# basicsr 1.4.2 ships only an sdist and declares torch in setup_requires, so resolving it on a cold cache builds the sdist and pulls the whole CUDA stack (~5 GB) just to learn its dependencies
-# declaring them statically (copied from the sdist's requirements.txt) lets validate/compose/lock skip the build; the sdist is still built once during install
-[[tool.uv.dependency-metadata]]
-name = "basicsr"
-version = "1.4.2"
-requires-dist = [
-    "addict",
-    "future",
-    "lmdb",
-    "numpy>=1.17",
-    "opencv-python",
-    "Pillow",
-    "pyyaml",
-    "requests",
-    "scikit-image",
-    "scipy",
-    "tb-nightly",
-    "torch>=1.7",
-    "torchvision",
-    "tqdm",
-    "yapf",
-]
 
 [tool.black]
 line-length = 79

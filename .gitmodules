@@ -28,9 +28,6 @@
 [submodule "submodules/mbrs"]
 	path = submodules/mbrs
 	url = https://github.com/jzyustc/MBRS.git
-[submodule "submodules/videoseal"]
-	path = submodules/videoseal
-	url = https://github.com/facebookresearch/videoseal.git
 [submodule "submodules/FIN"]
 	path = submodules/FIN
 	url = https://github.com/QQiuyp/FIN.git
@@ -49,18 +46,12 @@
 [submodule "submodules/PIMoG"]
 	path = submodules/PIMoG
 	url = https://github.com/FangHanNUS/PIMoG-An-Effective-Screen-shooting-Noise-Layer-Simulation-for-Deep-Learning-Based-Watermarking-Netw.git
-[submodule "submodules/WMAR"]
-	path = submodules/WMAR
-	url = https://github.com/facebookresearch/wmar.git
 [submodule "submodules/MaskWM"]
 	path = submodules/MaskWM
 	url = https://github.com/hurunyi/MaskWM.git
 [submodule "submodules/METR"]
 	path = submodules/METR
 	url = https://github.com/deepvk/metr.git
-[submodule "submodules/VINE"]
-	path = submodules/VINE
-	url = https://github.com/Shilin-LU/VINE.git
 [submodule "submodules/SepMark"]
 	path = submodules/SepMark
 	url = https://github.com/sh1newu/SepMark
