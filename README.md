@@ -152,7 +152,7 @@ git clone https://github.com/ispras/wibe.git
 cd wibe
 ```
 
-All later commands are run from this directory.
+All subsequent commands are run from this directory.
 
 ### 2. Set up the environment
 
