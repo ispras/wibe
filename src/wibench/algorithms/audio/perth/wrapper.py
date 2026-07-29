@@ -74,6 +74,8 @@ class PerthWrapper(BaseAlgorithmWrapper):
         TorchAudio
             Watermarked audio.
         """
+        audio = TorchAudio(*audio)
+
         channels = []
         for channel in audio.data:
             wm_channel = self.watermarker.apply_watermark(

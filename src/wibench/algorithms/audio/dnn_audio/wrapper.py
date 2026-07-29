@@ -119,6 +119,8 @@ class DnnAudioWatermarkingWrapper(BaseAlgorithmWrapper):
         return str(path)
 
     def _prepare_audio(self, audio: TorchAudio) -> torch.Tensor:
+        audio = TorchAudio(*audio)
+
         signal = audio.data
 
         if signal.ndim == 1:

@@ -1,0 +1,31 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - Filter:
+      filter_type: lowpass
+      freq_1: 2000
+  - Filter:
+      filter_type: highpass
+      freq_1: 6000
+  - Filter:
+      filter_type: bandpass
+      freq_1: 2000
+      freq_2: 6000
+
+pipeline:
+  result_path: ./test_results/tests/filter
+  aggregators:
+    - CSV:
+        table_name: table

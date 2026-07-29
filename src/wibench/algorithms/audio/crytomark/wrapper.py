@@ -70,6 +70,8 @@ class CryptoMarkWrapper(BaseAlgorithmWrapper):
         TorchAudio
             Watermarked audio.
         """
+        audio = TorchAudio(*audio)
+
         signal = audio.data.clone()
         if audio.rate != self.params.target_rate:
             signal = Resample(orig_freq=audio.rate,

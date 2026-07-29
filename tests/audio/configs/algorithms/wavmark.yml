@@ -1,0 +1,18 @@
+algorithms:
+  wavmark:
+    params:
+      device: cpu
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - Identity
+
+pipeline:
+  result_path: ./test_results/tests/wavmark
+  aggregators:
+    - CSV:
+        table_name: table

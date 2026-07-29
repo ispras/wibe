@@ -94,7 +94,9 @@ class ContextEncoder:
         """
         safe_key = re.sub(r'[^\w\-_]', '_', key)
         audio_path = f"{safe_key}.wav"
-        soundfile.write(save_dir / audio_path, data=audio.data.T, samplerate=audio.rate)
+        soundfile.write(save_dir / audio_path,
+                        data=audio.data.T.detach().cpu(),
+                        samplerate=audio.rate)
         return {"__type__": "torch_audio", "path": audio_path}
 
     @staticmethod

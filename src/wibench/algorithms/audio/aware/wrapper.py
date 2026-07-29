@@ -74,6 +74,7 @@ class AwareWrapper(BaseAlgorithmWrapper):
         torch.Tensor
             Audio tensor with shape (C, T).
         """
+        audio = TorchAudio(*audio)
         signal = audio.data
         if audio.rate != self.SAMPLE_RATE:
             signal = Resample(
