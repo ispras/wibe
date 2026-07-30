@@ -24,6 +24,8 @@ The system architecture consists of a sequence of processing configurable stages
 <details>
 <summary><b>Algorithms</b></summary>
 
+### Images domain
+
 | Algorithm | Type | Config name | Default capacity | Reference |
 |-----------|------|-------------|------------------|-----------|
 | ARWGAN | post-hoc | arwgan | 30 bits | [ARWGAN: Attention-Guided Robust Image Watermarking Model Based on GAN](https://ieeexplore.ieee.org/document/10155247) |
@@ -60,6 +62,26 @@ The system architecture consists of a sequence of processing configurable stages
 | VINE | post-hoc | vine | 100 bits | [Robust Watermarking Using Generative Priors Against Image Editing: From Benchmarking to Advances](https://github.com/Shilin-LU/VINE) |
 | SepMark | post-hoc | sepmark | 30/128 bits | [SepMark: Deep Separable Watermarking for Unified Source Tracing and Deepfake Detection](https://github.com/sh1newu/SepMark) |
 | RoSteALS | post-hoc | rosteals | 100 bits | [RoSteALS: Robust Steganography using Autoencoder Latent Space](https://github.com/TuBui/RoSteALS) |
+
+### Audio domain
+
+| Algorithm                     | Type     | Config name                                  | Default capacity         | Reference                                                                                                                                                                                            |
+|-------------------------------|----------|----------------------------------------------|--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| AudioSeal                     | post-hoc | audioseal                                    | 16 bits                  | [AudioSeal: Efficient Localized Audio Watermarking](https://github.com/facebookresearch/audioseal)                                                                                                   |
+| SilentCipher                  | post-hoc | silent_cipher                                | 40 bits                  | [SilentCipher: Deep Audio Watermarking](https://github.com/sony/silentcipher)                                                                                                                        |
+| WavMark                       | post-hoc | wavmark                                      | 16 bits                  | [WavMark: Watermarking for Audio Generation](https://github.com/sony/silentcipher)                                                                                                                   |
+| AWARE                         | post-hoc | aware                                        | 20 bits                  | [AWARE: Audio Watermarking via Adversarial Resistance to Edits](https://github.com/deepmark/aware)                                                                                                   |
+| RobustDNN                     | post-hoc | dnn_audio                                    | 512 bits (6 keys)        | [Robust speech watermarking by a jointly trained embedder and detector using a DNN](https://github.com/kosta-pmf/dnn-audio-watermarking)                                                             |
+| Perth                         | post-hoc | perth                                        | zero-bit                 | [Perth: Open Source AI Watermarking Model](https://github.com/resemble-ai/perth)                                                                                                                     |
+| CryptoMark                    | post-hoc | cryptomark                                   | 256 bits                 | [CryptoMark: Cryptographically Enforced and Perceptually Invisible Audio Watermarking](https://gitlab.ispras.ru/watermarking/dm-audio)                                                               |
+| FSVC                          | post-hoc | fsvc                                         | 40 bits (default params) | [Desynchronization Attacks Resilient Watermarking Method Based on Frequency Singular Value Coefficient Modification](https://github.com/kosta-pmf/audio-watermarking/blob/main/fsvc_watermarking.py) |
+| Patchwork                     | post-hoc | patchwork                                    | 40 bits (default params) | [Patchwork-Based Multilayer Audio Watermarking](https://github.com/kosta-pmf/audio-watermarking/blob/main/patchwork_multylayer_watermarking.py)                                                      |
+| DCT-b1                        | post-hoc | dct_b1                                       | 24 bits (default params) | [Robust, transparent and high-capacity audio watermarking in DCT domain](https://github.com/kosta-pmf/audio-watermarking/blob/main/dct_watermarking.py)                                              |
+| Norm space                    | post-hoc | norm_space                                   | 40 bits (default params) | [Novel secured scheme for blind audio/speech norm-space watermarking by Arnold algorithm](https://github.com/kosta-pmf/audio-watermarking/blob/main/norm_space_watermarking.py)                      |
+| Spread Spectrum               | post-hoc | spread_spectrum                              | 10 bits (default params) | [Spread-Spectrum Watermarking of Audio Signals](https://gist.github.com/tam17aki/326cf8666338e39d4f5f9cb777e8c6c0)                                                                                   |
+| Quantization Index Modulation | post-hoc | qim                                          | 40 bits (default params) | [Quantization Index Modulation: A Class of Provably Good Methods for Digital Watermarking and Information Embedding](https://github.com/pl561/QuantizationIndexModulation)                           |
+| Echo Hiding Watermarking      | post-hoc | echo-positive,  echo-negative,  echo-forward | 16 bits (default params) | [Echo hiding](https://github.com/ktekeli/audio-steganography-algorithms/tree/master/02-Echo-Hiding)                                                                                                  |
+| Least Significant Bit         | post-hoc | lsb                                          | 40 bits (default params) | [Audio Steganography Method Using Least Significant Bit (LSB) Encoding Technique](https://github.com/shalom06/Audio-Stego)                                                                           |
 
 </details>
 
