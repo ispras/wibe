@@ -128,12 +128,15 @@ The system architecture consists of a sequence of processing configurable stages
 <details>
 <summary><b>Datasets</b></summary>
 
-| Dataset | Config name | Description |
-|---------|-------------|-------------|
-| Image folder | imagefolderdataset | Loading images from a directory |
-| Prompt folder | promptfolderdataset | Loading text prompts from a directory with .txt files |
-| DiffusionDB | diffusiondb | https://github.com/poloclub/diffusiondb, both images and prompts |
-| MSCOCO | mscoco | https://cocodataset.org/, both images and prompts |
+| Dataset       | Config name         | Description                                                                                                                                 |
+|---------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| Image folder  | imagefolderdataset  | Loading images from a directory                                                                                                             |
+| Prompt folder | promptfolderdataset | Loading text prompts from a directory with .txt files                                                                                       |
+| Audio Folder  | audiofolderdataset  | Loading audio from a directory                                                                                                              |
+| DiffusionDB   | diffusiondb         | https://github.com/poloclub/diffusiondb, both images and prompts                                                                            |
+| MSCOCO        | mscoco              | https://cocodataset.org/, both images and prompts                                                                                           |
+| LibriSpeech   | librispeech         | [ASR corpus](https://huggingface.co/datasets/openslr/librispeech_asr) based on public domain audio books, audio and transcription           |
+| AudioSet      | audioset            | [Dataset](https://huggingface.co/datasets/agkphysics/AudioSet) of 10-second clips from YouTube, annotated into one or more sound categories |
 
 </details>
 
