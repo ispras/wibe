@@ -143,26 +143,44 @@ The system architecture consists of a sequence of processing configurable stages
 <details>
 <summary><b>Metrics</b></summary>
 
-| Metric | Type | Stage | Config name | Description |
-|--------|------|-------|-------------|-------------|
-| PSNR | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | psnr | peak signal-to-noise ratio |
-| SSIM | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | ssim | structural similarity index |
-| LPIPS | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | lpips | [The Unreasonable Effectiveness of Deep Features as a Perceptual Metric](https://github.com/richzhang/PerceptualSimilarity) |
-| DreamSim | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | dreamsim | [DreamSim: Learning New Dimensions of Human Visual Similarity using Synthetic Data.](https://arxiv.org/abs/2306.09344) |
-| Aesthetic | single image quality | post_embed_metrics, post_attack_metrics | aesthetic | [Aesthetic score predictor](https://github.com/christophschuhmann/improved-aesthetic-predictor) |
-| CLIP IQA | single image quality | post_embed_metrics, post_attack_metrics | clip_iqa | [Exploring CLIP for Assessing the Look and Feel of Images](https://lightning.ai/docs/torchmetrics/stable/multimodal/clip_iqa.html) |
-| BLIP | image quality, compare image with text prompt | post_embed_metrics | blip | [BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation](https://github.com/salesforce/BLIP) |
-| CLIP Score | image quality, compare image with text prompt | post_embed_metrics | clipscore | [CLIPScore: A Reference-free Evaluation Metric for Image Captioning](https://github.com/openai/CLIP) |
-| Image Reward | image quality, compare image with text prompt | post_embed_metrics | imagereward | [Learning and Evaluating Human Preferences for Text-to-Image Generation](https://github.com/zai-org/ImageReward/tree/main) |
-| FID | image quality, compare two sets of images | post_pipeline_embed_metrics, post_pipeline_attack_metrics | fid | FID metric from [GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium](https://arxiv.org/abs/1706.08500) |
-| BER | extraction success | post_extract_metrics | ber | Bit Error Rate (multi-bit) |
-| WER | extraction success | post_extract_metrics | wer | Word Error Rate (multi-bit) |
-| TPR at x% FPR | extraction success | post_extract_metrics | tpr@xfpr | True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit) |
-| Empirical TPR at x% FPR | extraction success | post_extract_metrics | empiricaltpr@xfpr | Empirical True Positive Rate at fixed False Positive Rate threshold (multi-bit only) |
-| P-value | extraction success | post_extract_metrics | p-value | P-value denotes probability to observe the same result as in case of extraction from not watermarked object. |
-| Result | auxiliary | post_extract_metrics | result | Records extraction result (zero-bit case) |
-| Embeded watermark | auxiliary | post_embed_metrics | embwm | Records embeded watermark (multi-bit case) |
-| Extracted watermark | auxiliary | post_extract_metrics | extwm | Records extracted watermark (multi-bit case) |
+### Image domain
+
+| Metric       | Type                                          | Stage                                                     | Config name | Description                                                                                                                                    |
+|--------------|-----------------------------------------------|-----------------------------------------------------------|-------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| PSNR         | image quality, compare with not marked image  | post_embed_metrics, post_attack_metrics                   | psnr        | peak signal-to-noise ratio                                                                                                                     |
+| SSIM         | image quality, compare with not marked image  | post_embed_metrics, post_attack_metrics                   | ssim        | structural similarity index                                                                                                                    |
+| LPIPS        | image quality, compare with not marked image  | post_embed_metrics, post_attack_metrics                   | lpips       | [The Unreasonable Effectiveness of Deep Features as a Perceptual Metric](https://github.com/richzhang/PerceptualSimilarity)                    |
+| DreamSim     | image quality, compare with not marked image  | post_embed_metrics, post_attack_metrics                   | dreamsim    | [DreamSim: Learning New Dimensions of Human Visual Similarity using Synthetic Data.](https://arxiv.org/abs/2306.09344)                         |
+| Aesthetic    | single image quality                          | post_embed_metrics, post_attack_metrics                   | aesthetic   | [Aesthetic score predictor](https://github.com/christophschuhmann/improved-aesthetic-predictor)                                                |
+| CLIP IQA     | single image quality                          | post_embed_metrics, post_attack_metrics                   | clip_iqa    | [Exploring CLIP for Assessing the Look and Feel of Images](https://lightning.ai/docs/torchmetrics/stable/multimodal/clip_iqa.html)             |
+| BLIP         | image quality, compare image with text prompt | post_embed_metrics                                        | blip        | [BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation](https://github.com/salesforce/BLIP) |
+| CLIP Score   | image quality, compare image with text prompt | post_embed_metrics                                        | clipscore   | [CLIPScore: A Reference-free Evaluation Metric for Image Captioning](https://github.com/openai/CLIP)                                           |
+| Image Reward | image quality, compare image with text prompt | post_embed_metrics                                        | imagereward | [Learning and Evaluating Human Preferences for Text-to-Image Generation](https://github.com/zai-org/ImageReward/tree/main)                     |
+| FID          | image quality, compare two sets of images     | post_pipeline_embed_metrics, post_pipeline_attack_metrics | fid         | FID metric from [GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium](https://arxiv.org/abs/1706.08500)          |
+
+### Audio domain
+
+| Metric | Type                                                         | Stage              | Config name | Description                                                                                                                                                               |
+|--------|--------------------------------------------------------------|--------------------|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SI-SNR | audio quality, compare with not marked image                 | post_embed_metrics | si_snr      | Scale-Invariant Signal-to-Noise Ratio                                                                                                                                     |
+| PESQ   | audio quality, compare with not marked image                 | post_embed_metrics | pesq        | [Perceptual evaluation of speech quality (PESQ)-a new method for speech quality assessment of telephone networks and codecs](https://ieeexplore.ieee.org/document/941023) |
+| STOI   | audio quality, compare with not marked image                 | post_embed_metrics | stoi        | [A short-time objective intelligibility measure for time-frequency weighted noisy speech](https://ieeexplore.ieee.org/document/5495701)                                   |
+| NISQA  | audio quality assesment delta, compare with not marked image | post_embed_metrics | nisqa       | [NISQA: A Deep CNN-Self-Attention Model for Multidimensional Speech Quality Prediction with Crowdsourced Datasets](https://arxiv.org/abs/2104.09494)                      |
+| DNSMOS | audio quality assesment delta, compare with not marked image | post_embed_metrics | dnsmos      | [DNSMOS: A Non-Intrusive Perceptual Objective Speech Quality metric to evaluate Noise Suppressors](https://arxiv.org/abs/2010.15258)                                      |
+| SECS   | audio quality, compare with not marked image                 | post_embed_metrics | secs        | Speaker Encoder Cosine Similarity                                                                                                                                         |
+
+### Common
+
+| Metric                  | Type               | Stage                | Config name       | Description                                                                                                  |
+|-------------------------|--------------------|----------------------|-------------------|--------------------------------------------------------------------------------------------------------------|
+| BER                     | extraction success | post_extract_metrics | ber               | Bit Error Rate (multi-bit)                                                                                   |
+| WER                     | extraction success | post_extract_metrics | wer               | Word Error Rate (multi-bit)                                                                                  |
+| TPR at x% FPR           | extraction success | post_extract_metrics | tpr@xfpr          | True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit)                      |
+| Empirical TPR at x% FPR | extraction success | post_extract_metrics | empiricaltpr@xfpr | Empirical True Positive Rate at fixed False Positive Rate threshold (multi-bit only)                         |
+| P-value                 | extraction success | post_extract_metrics | p-value           | P-value denotes probability to observe the same result as in case of extraction from not watermarked object. |
+| Result                  | auxiliary          | post_extract_metrics | result            | Records extraction result (zero-bit case)                                                                    |
+| Embeded watermark       | auxiliary          | post_embed_metrics   | embwm             | Records embeded watermark (multi-bit case)                                                                   |
+| Extracted watermark     | auxiliary          | post_extract_metrics | extwm             | Records extracted watermark (multi-bit case)                                                                 |
 
 </details>
 
