@@ -34,7 +34,7 @@ datasets:
       sample_range: [0, 2500]
 
 attacks:
-{% include 'common/audio_distortions.yml' %}
+{% include 'audio/distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/patchwork

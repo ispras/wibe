@@ -1,11 +1,13 @@
 algorithms:
-  FSVC:
+  SpreadSpectrum:
     params:
       sample_rate: 16000
-      watermark_length: 40
-      alpha: 0.04
-      gamma1: 0.16
-      gamma2: 0.4
+      watermark_length: 10
+      frame_length: 512
+      overlap: 0.0
+      control_strength: 0.1
+      num_reps: 3
+      seed: 12345
 
 post_embed_metrics:
   - SI_SNR
@@ -36,7 +38,7 @@ attacks:
 {% include 'audio/distortions.yml' %}
 
 pipeline:
-  result_path: ./test_results/fsvc
+  result_path: ./test_results/spread_spectrum
   aggregators:
     - CSV:
         table_name: table_bands_search

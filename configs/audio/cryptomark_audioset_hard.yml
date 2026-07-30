@@ -1,12 +1,12 @@
 algorithms:
   cryptomark:
     params:
-      profile: medium
+      profile: hard
       target_rate: 16000
 
 post_embed_metrics:
   - SI_SNR
-  - PESQ
+  # - PESQ
   - STOI
   - NISQA
   - DNSMOS
@@ -22,7 +22,7 @@ post_extract_metrics:
       algorithm: cryptomark
       algorithm_params:
         params:
-          profile: medium
+          profile: hard
           target_rate: 16000
       dataset: audioset
       dataset_params:
@@ -30,8 +30,8 @@ post_extract_metrics:
         subset: balanced
         split: test
         sample_range: [0, 99]
-        min_duration: 2
-      random_extracts_path: "./random_cmm_audioset_extracts_0.1.csv"
+        min_duration: 3.5
+      random_extracts_path: "./random_cmh_audioset_extracts_0.1.csv"
       method_type: multibit
   - EmpiricalTPR@xFPR:
       report_name: etpr@10e-2fpr
@@ -39,7 +39,7 @@ post_extract_metrics:
       algorithm: cryptomark
       algorithm_params:
         params:
-          profile: medium
+          profile: hard
           target_rate: 16000
       dataset: audioset
       dataset_params:
@@ -47,8 +47,8 @@ post_extract_metrics:
         subset: balanced
         split: test
         sample_range: [0, 999]
-        min_duration: 2
-      random_extracts_path: "./random_cmm_audioset_extracts_0.01.csv"
+        min_duration: 3.5
+      random_extracts_path: "./random_cmh_audioset_extracts_0.01.csv"
       method_type: multibit
   - EmpiricalTPR@xFPR:
       report_name: etpr@10e-3fpr
@@ -56,7 +56,7 @@ post_extract_metrics:
       algorithm: cryptomark
       algorithm_params:
         params:
-          profile: medium
+          profile: hard
           target_rate: 16000
       dataset: audioset
       dataset_params:
@@ -64,8 +64,8 @@ post_extract_metrics:
         subset: balanced
         split: test
         sample_range: [0, 9999]
-        min_duration: 2
-      random_extracts_path: "./random_cmm_audioset_extracts_0.001.csv"
+        min_duration: 3.5
+      random_extracts_path: "./random_cmh_audioset_extracts_0.001.csv"
       method_type: multibit
 
 datasets:
@@ -74,7 +74,7 @@ datasets:
       subset: balanced
       split: test
       sample_range: [0, 2500]
-      min_duration: 2
+      min_duration: 3.5
 
 attacks:
 {% include 'audio/distortions.yml' %}
@@ -83,4 +83,4 @@ pipeline:
   result_path: ./test_results/cryptomark
   aggregators:
     - CSV:
-        table_name: table_audioset_medium
+        table_name: table_audioset_hard
