@@ -2,7 +2,7 @@
 
 ![Documentation Status](https://readthedocs.org/projects/example-sphinx-basic/badge/?version=latest)
 
-**WIBE** is a modular and extensible framework for automated testing of invisible image watermarking methods under various attack scenarios.
+**WIBE** is a modular and extensible framework for automated testing of invisible image and audio watermarking methods under various attack scenarios.
 The system is designed to support research and development of robust watermarking techniques by enabling systematic evaluation
 through a customizable processing pipeline.
 
