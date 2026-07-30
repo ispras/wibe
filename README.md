@@ -24,7 +24,7 @@ The system architecture consists of a sequence of processing configurable stages
 <details>
 <summary><b>Algorithms</b></summary>
 
-### Images domain
+### Image domain
 
 | Algorithm | Type | Config name | Default capacity | Reference |
 |-----------|------|-------------|------------------|-----------|
@@ -81,16 +81,18 @@ The system architecture consists of a sequence of processing configurable stages
 | Spread Spectrum               | post-hoc | spread_spectrum                              | 10 bits (default params) | [Spread-Spectrum Watermarking of Audio Signals](https://gist.github.com/tam17aki/326cf8666338e39d4f5f9cb777e8c6c0)                                                                                   |
 | Quantization Index Modulation | post-hoc | qim                                          | 40 bits (default params) | [Quantization Index Modulation: A Class of Provably Good Methods for Digital Watermarking and Information Embedding](https://github.com/pl561/QuantizationIndexModulation)                           |
 | Echo Hiding Watermarking      | post-hoc | echo-positive,  echo-negative,  echo-forward | 16 bits (default params) | [Echo hiding](https://github.com/ktekeli/audio-steganography-algorithms/tree/master/02-Echo-Hiding)                                                                                                  |
-| Least Significant Bit         | post-hoc | lsb                                          | 40 bits (default params) | [Audio Steganography Method Using Least Significant Bit (LSB) Encoding Technique](https://github.com/shalom06/Audio-Stego)                                                                           |
+| Least Significant Bit         | post-hoc | lsb                                          | 40 bits (default params) | [Audio Steganography Method Using Least Significant Bit (LSB) Encoding Technique](https://github.com/shalom06/Audio-Stego)          
 
 </details>
 
 <details>
 <summary><b>Attacks</b></summary>
 
+### Image domain
+
 | Attack | Config name | Description |
 |--------|-------------|-------------|
-| Distortions | identity, jpeg, rotate90, rotate, gaussianblur, gaussiannoise, centercrop, resize, randomcropout, brightness, contrast, pixelshift, colorinversion | Common distortions like JPEG, blur, noise, rotation, etc |
+| Distortions | jpeg, rotate90, rotate, gaussianblur, gaussiannoise, centercrop, resize, randomcropout, brightness, contrast, pixelshift, colorinversion | Common distortions like JPEG, blur, noise, rotation, etc |
 | WPWMAttacker | wpwmattacker | [Saliency-Aware Diffusion Reconstruction for Effective Invisible Watermark Removal](https://github.com/inzamamulDU/SADRE) |
 | DIP | dip | DIP-based watermark evasion attack adopted from the github [repository](https://github.com/sun-umn/DIP_Watermark_Evasion_TMLR) |
 | Adversarial | adversarialembedding | Adversarial embedding attack from [WAVES](https://github.com/umd-huang-lab/WAVES) |
@@ -122,6 +124,19 @@ The system architecture consists of a sequence of processing configurable stages
 | DiffPure | diffpureattack | [Diffusion Models for Adversarial Purification](https://arxiv.org/abs/2205.07460) |
 | RealESRGAN | realesrganattack | [Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data](https://arxiv.org/abs/2107.10833) |
 | UnMarkerAttack | unmarkerattack | [UnMarker: A Universal Attack on Defensive Image Watermarking](https://arxiv.org/abs/2405.08363) |
+
+### Audio domain
+
+| Attack      | Config name                                                                       | Description                                                                                                                                             |
+|-------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Distortions | resampling, requantization, scaling, noise, filter, echo, mpeg, aac, speed, boost | Common distortions like resampling, requantization, scaling, noise (Gaussian noise), band filtering, echo, MPEG/AAC transcoding, speed, volume boosting |
+| Vocos       | vocos                                                                             | [Vocos: Closing the gap between time-domain and Fourier-based neural vocoders for high-quality audio synthesis](https://github.com/gemelo-ai/vocos)     |
+
+### Common
+
+| Attack | Config name | Description |
+|--------|-------------|-------------|
+| Distortions | identity | No attack applied |
 
 </details>
 
