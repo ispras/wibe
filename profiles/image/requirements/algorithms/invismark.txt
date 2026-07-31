@@ -1,4 +1,6 @@
 bchlib
 focal_frequency_loss
 tensorboard
-torchvision>=0.21.0
+lpips
+kornia
+torchvision>=0.18.0
