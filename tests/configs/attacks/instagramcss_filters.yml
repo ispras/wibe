@@ -1,0 +1,112 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+ - instagramcss_filters:
+    report_name: _1977 
+    attack: _1977
+ - instagramcss_filters:
+    report_name: aden
+    attack: aden
+ - instagramcss_filters:
+    report_name: brannan
+    attack: brannan
+ - instagramcss_filters:
+    report_name: brooklyn
+    attack: brooklyn
+ - instagramcss_filters:
+    report_name: clarendon
+    attack: clarendon
+ - instagramcss_filters:
+    report_name: earlybird
+    attack: earlybird
+ - instagramcss_filters:
+    report_name: gingham
+    attack: gingham
+ - instagramcss_filters:
+    report_name: hudson
+    attack: hudson
+ - instagramcss_filters:
+    report_name: inkwell
+    attack: inkwell
+ - instagramcss_filters:
+    report_name: kelvin
+    attack: kelvin
+ - instagramcss_filters:
+    report_name: lark
+    attack: lark
+ - instagramcss_filters:
+    report_name: lofi
+    attack: lofi
+ - instagramcss_filters:
+    report_name: maven
+    attack: maven
+ - instagramcss_filters:
+    report_name: mayfair
+    attack: mayfair
+ - instagramcss_filters:
+    report_name: moon
+    attack: moon
+ - instagramcss_filters:
+    report_name: nashville
+    attack: nashville
+ - instagramcss_filters:
+    report_name: perpetua
+    attack: perpetua
+ - instagramcss_filters:
+    report_name: reyes
+    attack: reyes
+ - instagramcss_filters:
+    report_name: rise
+    attack: rise
+ - instagramcss_filters:
+    report_name: slumber
+    attack: slumber
+ - instagramcss_filters:
+    report_name: stinson
+    attack: stinson
+ - instagramcss_filters:
+    report_name: toaster
+    attack: toaster
+ - instagramcss_filters:
+    report_name: valencia
+    attack: valencia
+ - instagramcss_filters:
+    report_name: walden
+    attack: walden
+ - instagramcss_filters:
+    report_name: willow
+    attack: willow
+ - instagramcss_filters:
+    report_name: xpro2
+    attack: xpro2
+ - instagramcss_filters:
+    report_name: contrast
+    attack: contrast
+    module: css
+ - instagramcss_filters:
+    report_name: grayscale
+    attack: grayscale
+    module: css
+ - instagramcss_filters:
+    report_name: hue_rotate
+    attack: hue_rotate
+    module: css
+ - instagramcss_filters:
+    report_name: saturate
+    attack: saturate
+    module: css
+ - instagramcss_filters:
+    report_name: sepia
+    attack: sepia
+    module: css
+
+pipeline:
+  result_path: ./test_results/tests/instagramcss_filters
+  aggregators:
+    - CSV:
+        table_name: table
