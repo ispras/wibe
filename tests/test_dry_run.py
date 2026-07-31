@@ -1,10 +1,15 @@
 import subprocess
 import pytest
 import sys
+import yaml
 from pathlib import Path
 
 from wibench.cli import compatible_execs
-from wibench.config_loader import ALGORITHMS_FIELD, ATTACKS_FIELD, DATASETS_FIELD, METRICS_FIELDS, load_pipeline_config_yaml
+from wibench.config_loader import (
+    load_pipeline_config_yaml,
+    loader,
+    render_jinja2_config,
+)
 from wibench.pipeline import STAGE_CLASSES
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -25,13 +30,16 @@ for config_file in config_files:
         configs_without_split.append(config_file)
 
 
-def run_wibench(config_file: Path, loaded_config: dict, stages: list[str]):
+def run_wibench(config_file: Path, stages: list[str], tmp_path: Path):
+    cfg = yaml.load(render_jinja2_config(config_file), Loader=loader)
+    cfg.setdefault("pipeline", {})["skip_errors"] = False
+    run_config = tmp_path / config_file.name
+    run_config.write_text(yaml.dump(cfg, sort_keys=False))
+
+    loaded_config = load_pipeline_config_yaml(run_config)
     exec_candidates, missing_per_group = compatible_execs(
         stages,
-        loaded_config[DATASETS_FIELD],
-        loaded_config[ALGORITHMS_FIELD],
-        loaded_config[ATTACKS_FIELD],
-        {metric_field: loaded_config[metric_field] for metric_field in METRICS_FIELDS},
+        loaded_config
     )
     assert exec_candidates != [], f"No venv has all required requirements for {config_file}\nmissing: {missing_per_group}"
 
@@ -40,7 +48,7 @@ def run_wibench(config_file: Path, loaded_config: dict, stages: list[str]):
     args = [
         str(exec_path),
         str(wibench_path),
-        "-c", str(config_file),
+        "-c", str(run_config),
         "-d",
     ]
     if config_file.stem not in stems_without_dry_run:
@@ -58,25 +66,20 @@ def run_wibench(config_file: Path, loaded_config: dict, stages: list[str]):
 @pytest.mark.parametrize(
     "config_file", configs_without_split, ids=[f.name for f in configs_without_split]
 )
-def test_configs_without_stage_split(config_file: Path):
+def test_configs_without_stage_split(config_file: Path, tmp_path: Path):
     assert config_file.exists(), f"Config file {config_file} does not exist!"
-
-    loaded_config = load_pipeline_config_yaml(config_file)
-    stages = list(STAGE_CLASSES.keys())
-    run_wibench(config_file, loaded_config, stages)
+    run_wibench(config_file, list(STAGE_CLASSES.keys()), tmp_path)
 
 
 @pytest.mark.forked
 @pytest.mark.parametrize(
     "config_file", configs_with_split, ids=[f.name for f in configs_with_split]
 )
-def test_configs_with_stage_split(config_file: Path):
+def test_configs_with_stage_split(config_file: Path, tmp_path: Path):
     assert config_file.exists(), f"Config file {config_file} does not exist!"
-
-    loaded_config = load_pipeline_config_yaml(config_file)
-    
-    stages = ["embed", "attack", "extract"]
-    run_wibench(config_file, loaded_config, stages)
-    
-    stages = ["post_embed_metrics", "post_attack_metrics", "post_extract_metrics", "aggregate"]
-    run_wibench(config_file, loaded_config, stages)
+    run_wibench(config_file, ["embed", "attack", "extract"], tmp_path)
+    run_wibench(
+        config_file,
+        ["post_embed_metrics", "post_attack_metrics", "post_extract_metrics", "aggregate"],
+        tmp_path,
+    )

@@ -17,6 +17,10 @@ from enum import Enum
 import torch
 
 
+LogLevel = Literal["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"]
+"""Loguru log levels ordered from the most verbose to the most severe."""
+
+
 class DumpType(str, Enum):
     """Enumeration of supported context serialization formats.
     
@@ -121,6 +125,26 @@ class PipeLineConfig(BaseModel):
     cuda_visible_devices : list[int]
         List of GPU device IDs to use. If workers > 1, each worker will use one of visible cuda devices (distributed evenly)
         Default is empty list (all devices are visible for all subprocesses)
+    skip_errors : bool
+        If True, an error in any stage is logged, the failed result is recorded as None, and processing continues
+        If False, the exception is raised and the pipeline stops
+        Also controls whether {result_path}/logs/errors.log (ERROR level and above) is written
+        Default is True
+    log_level : LogLevel
+        Base log level for pipeline logs (loguru)
+        Can be escalated toward TRACE by -vvv and each additional -v CLI flag
+        Default is "INFO"
+    log_format : str
+        Loguru format string for pipeline log records, written to stderr and to {result_path}/logs/console.log (and errors.log when skip_errors is True)
+        Default is "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    log_backtrace : bool
+        If True, error tracebacks in logs are extended beyond the catching point (loguru backtrace)
+        Can be escalated to True by the -v CLI flag
+        Default is False
+    log_diagnose : bool
+        If True, error tracebacks in logs include variable values (loguru diagnose)
+        Can be escalated to True by the -vv CLI flag
+        Default is False
     """
 
     result_path: Path
@@ -130,7 +154,11 @@ class PipeLineConfig(BaseModel):
     dump_type: DumpType = DumpType.serialized
     workers: int = 1
     cuda_visible_devices: List[int] = Field(default_factory=list)
-    logging_level: Literal["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    skip_errors: bool = True
+    log_level: LogLevel = "INFO"
+    log_format: str = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    log_backtrace: bool = False
+    log_diagnose: bool = False
 
     @model_validator(mode="before")
     @classmethod

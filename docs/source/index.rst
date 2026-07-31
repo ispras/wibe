@@ -26,6 +26,7 @@ The extensions implement:
 * :ref:`Datasets <datasets-link>`: `DiffusionDB`_ and `MS COCO`_ supported
 * :ref:`Metrics <metrics-link>`: |number_of_metrics| supported, including BER (Bit Error Rate), `SSIM <https://ece.uwaterloo.ca/~z70wang/publications/ssim.pdf>`_ (Structural Similarity Index Measure), `LPIPS <https://github.com/richzhang/PerceptualSimilarity>`_ (Learned Perceptual Image Patch Similarity), `ImageReward <https://arxiv.org/abs/2304.05977>`_
 
+:ref:`adv <venvs-link>`
 
 .. toctree::
    :maxdepth: 2
@@ -33,6 +34,7 @@ The extensions implement:
 
    quick_start
    system_requirements
+   venvs
    pipeline
    algorithms
    attacks

@@ -1,19 +1,26 @@
 from pathlib import Path
+from datetime import datetime
+import atexit
 import os
+import re
 import sys
+import threading
 from typing_extensions import (
     Optional,
-    List
+    List,
+    get_args
 )
 from loguru import logger
+import tqdm
 
 from wibench.config_loader import load_pipeline_config_yaml
-from wibench.config import PipeLineConfig
+from wibench.config import LogLevel, PipeLineConfig
 import wibench.progress as progress
 from wibench.requirements import compatible_execs
 
 
 REEXEC_DONE = "_REEXEC_DONE"
+CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
 
 
 def set_cuda_devices(environ, device_list: List[int]):
@@ -29,6 +36,16 @@ def get_config_path_from_argv():
         if arg.startswith("--config="):
             return arg.split("=", 1)[1]
     return None
+
+
+def get_verbosity_from_argv() -> int:
+    verbosity = 0
+    for arg in sys.argv[1:]:
+        if arg == "--verbose":
+            verbosity += 1
+        elif re.fullmatch(r"-v+", arg):
+            verbosity += len(arg) - 1
+    return verbosity
 
 
 def setup_cuda_visible_devices(pipeline_config: PipeLineConfig):
@@ -47,19 +64,139 @@ def setup_cuda_visible_devices(pipeline_config: PipeLineConfig):
 class StreamToLogger:
     def __init__(self, level="INFO"):
         self.level = level
-    
+
     def write(self, message):
-        logger.log(self.level, message.strip())
-    
+        if message.startswith("\r"):
+            # progress-bar redraw (e.g. a third-party tqdm attached to the
+            # redirected stream), not a real message
+            return
+        message = message.strip()
+        if message:
+            # depth=1: report the print/write call site, not this wrapper
+            logger.opt(depth=1).log(self.level, message)
+
     def flush(self):
         pass
 
+    def isatty(self):
+        return False
 
-def setup_logging_level(pipeline_config: PipeLineConfig):
+
+class TqdmFileMirror:
+    """In-memory tqdm bar states, flushed to disk by a timer at most once per min_interval (atomic replace + fsync), so the file survives a hard crash."""
+
+    def __init__(self, path: Path, min_interval: float = 1.0):
+        self.path = path
+        self.min_interval = min_interval
+        self.lines = []
+        self.lock = threading.Lock()  # serializes timer and atexit flushes
+        self.timer = None
+        atexit.register(self.flush)
+
+    def update(self, bar, text: str):
+        if not hasattr(bar, "_mirror_line"):
+            bar._mirror_line = len(self.lines)
+            self.lines.append("")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        self.lines[bar._mirror_line] = f"{timestamp} | {text}"
+        if self.timer is None:
+            if sys.is_finalizing():
+                # interpreter shutdown (e.g. a bar closed by its __del__ after an uncaught exception): 
+                # threads cannot start anymore and Thread.start() would hang forever, so write synchronously
+                return self.flush()
+            self.timer = threading.Timer(self.min_interval, self.flush)
+            self.timer.daemon = True
+            self.timer.start()
+
+    def flush(self):
+        with self.lock:
+            self.timer = None
+            if not self.lines:
+                return
+            tmp = self.path.with_name(self.path.name + ".tmp")
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write("\n".join(self.lines) + "\n")
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp, self.path)
+
+
+def setup_logger(pipeline_config: PipeLineConfig, verbosity: int = 0):
+    # -v flags only escalate logging relative to the config:
+    # -v: backtrace,
+    # -vv: +diagnose,
+    # -vvv and beyond: log level one step more verbose each
+    log_levels = list(get_args(LogLevel))
+    level_idx = log_levels.index(pipeline_config.log_level) - max(0, verbosity - 2)
+    level = log_levels[max(0, level_idx)]
+    backtrace = pipeline_config.log_backtrace or verbosity >= 1
+    diagnose = pipeline_config.log_diagnose or verbosity >= 2
+    # The progress bar and the logs share one real stream:
+    # routing log lines through tqdm.write makes tqdm clear the bar, print them and redraw the bar below, instead of tearing it
+    real_stderr = sys.stderr
+    progress.progress_file = real_stderr
+    # Third-party tqdm bars are created with file=None and would resolve it to the redirected sys.stderr;
+    # give them the real terminal instead, so they render as normal bars and get cleared/redrawn around each log line
+    tqdm_init = tqdm.tqdm.__init__
+
+    def tqdm_init_to_real_stderr(self, *args, **kwargs):
+        if kwargs.get("file") is None:
+            kwargs["file"] = real_stderr
+        tqdm_init(self, *args, **kwargs)
+
+    tqdm.tqdm.__init__ = tqdm_init_to_real_stderr
+
+    # sink for the real console
     logger.remove()
-    log_format = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-    logger.add(sys.stderr, format=log_format, level=pipeline_config.logging_level)
-    progress.progress_file = sys.stdout
+    logger.add(
+        lambda m: tqdm.tqdm.write(m, end="", file=real_stderr),
+        level=level,
+        format=pipeline_config.log_format,
+        colorize=real_stderr.isatty(),
+        backtrace=backtrace,
+        diagnose=diagnose,
+    )
+    # file sinks under {result_path}/logs
+    logs_dir = pipeline_config.result_path / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    logger.add(
+        logs_dir / "console.log",
+        level=level,
+        format=pipeline_config.log_format,
+        colorize=False,
+        backtrace=backtrace,
+        diagnose=diagnose,
+        enqueue=True,
+    )
+    # file sink that logs errors
+    if pipeline_config.skip_errors:
+        logger.add(
+            logs_dir / "errors.log",
+            level="ERROR",
+            format=pipeline_config.log_format,
+            colorize=False,
+            backtrace=backtrace,
+            diagnose=diagnose,
+            enqueue=True,
+        )
+
+    # file that mirrors tqdm bars: every bar update goes through tqdm.display,
+    # so hooking it keeps one in-place-updated line per bar in the file
+    child_num = os.environ.get(CHILD_NUM_ENV_NAME)
+    mirror_name = "progress.log" if child_num is None else f"progress_{child_num}.log"
+    bars_mirror = TqdmFileMirror(logs_dir / mirror_name)
+    tqdm_display = tqdm.tqdm.display
+
+    def display_to_file(self, msg=None, pos=None):
+        if msg == "":  # a closing bar erases itself with an empty msg; keep its last state instead
+            return tqdm_display(self, msg=msg, pos=pos)
+        if msg is None:
+            msg = str(self)  # render once; passing the text down saves tqdm re-rendering it
+        bars_mirror.update(self, msg)
+        return tqdm_display(self, msg=msg, pos=pos)
+
+    tqdm.tqdm.display = display_to_file
+
     sys.stdout = StreamToLogger("INFO")
     sys.stderr = StreamToLogger("WARNING")
 
@@ -71,8 +208,11 @@ def prerun():
 
     config = load_pipeline_config_yaml(config_path)
     pipeline_config: PipeLineConfig = config["pipeline"]
+    
+    if "--dry-run" in sys.argv[1:]:
+        pipeline_config.result_path /= "dry"
 
-    setup_logging_level(pipeline_config)
+    setup_logger(pipeline_config, get_verbosity_from_argv())
     setup_cuda_visible_devices(pipeline_config)
 
 
@@ -82,7 +222,6 @@ prerun()
 import wibench
 
 
-CHILD_NUM_ENV_NAME = "WIBENCH_CHILD_PROCESS_NUM"
 RUN_ID_ENV_NAME = "WIBENCH_RUN_ID"
 
 
@@ -109,7 +248,6 @@ from wibench.config_loader import (
     load_pipeline_config_yaml,
     ALGORITHMS_FIELD,
     METRICS_FIELDS,
-    METRICS_FIELD,
     DATASETS_FIELD,
     ATTACKS_FIELD,
     PIPELINE_FIELD,
@@ -117,7 +255,50 @@ from wibench.config_loader import (
 from wibench.config import PipeLineConfig, StageType
 import subprocess
 from wibench.aggregator import PandasAggregatorConfig
-from wibench.settings import PROFILES_DIR, get_profile
+from wibench.settings import PROFILES_DIR, VENVS_SUBDIR, get_profile, profile_of
+
+
+def warn_about_dump_reads(stages: List[str], metrics: dict, pipeline_config: PipeLineConfig,
+                          dump_context: bool, num_wrappers: int):
+    """Stages reading dumped contexts silently rely on what is on disk;
+    warn when the dumps are missing or do not correspond to this run."""
+    if CHILD_NUM_ENV_NAME in os.environ:
+        return  # warn once, from the root process
+    result_path = pipeline_config.result_path
+    post_metrics = any(stage in stages and metrics.get(stage) for stage in
+                       (StageType.post_pipeline_embed_metrics, StageType.post_pipeline_attack_metrics))
+    context_dirs = [result_path / f"context_{num}" for num in range(num_wrappers)]
+    missing_dirs = [d.name for d in context_dirs if not d.is_dir()]
+
+    if StageType.embed in stages:
+        if post_metrics and not dump_context:
+            details = (
+                f"No dumped contexts exist in {result_path}, so the metrics will fail"
+                if len(missing_dirs) == num_wrappers else
+                f"Stale contexts of previous runs remain in {result_path}/context_*, so the metrics will silently be computed from them"
+            )
+            logger.warning(
+                "\nPost-pipeline metrics are computed from dumped contexts, but --dump-context is disabled: this run will not save its contexts"
+                f"\n{details}"
+                "\n-> Add -d/--dump-context to compute the metrics from this run's results"
+            )
+    elif post_metrics or any(not stage.startswith("post_pipeline") for stage in stages):
+        if missing_dirs:
+            logger.warning(
+                f"\nSelected stages read dumped contexts, but {missing_dirs} do not exist in {result_path}"
+                "\nThe corresponding algorithms will have nothing to process"
+                "\n-> Run the embed stage with -d/--dump-context first"
+            )
+        else:
+            last_dump = max((f.stat().st_mtime for d in context_dirs
+                             for f in d.rglob("*") if f.is_file()), default=None)
+            last_dump = (datetime.fromtimestamp(last_dump).strftime("%Y-%m-%d %H:%M:%S")
+                         if last_dump else "unknown")
+            logger.warning(
+                f"\nSelected stages will process contexts previously dumped to {result_path}/context_*"
+                f"\nThe latest dump is from {last_dump}"
+                "\n-> Make sure these are the contexts you intend to process"
+            )
 
 
 def clear_tables(config: PipeLineConfig, stages: List[str]):
@@ -159,6 +340,9 @@ def subprocess_run(pipeline_config: PipeLineConfig, python_exec = sys.executable
     for proc in procs:
         logger.info("\n----- subprocess-run -----\n" + " ".join(args))
         proc.wait()
+    failed = [proc.returncode for proc in procs if proc.returncode != 0]
+    if failed:
+        sys.exit(failed[0])
 
 
 def parse_stage_expression(expr: str) -> List[str]:
@@ -216,6 +400,10 @@ def run(
     profile: Optional[str] = typer.Option(
         None, "--profile", "-p", help="Venvs profile (overrides WIBENCH_PROFILE; if neither is set, all profiles are searched)"
     ),
+    verbose: int = typer.Option(
+        0, "--verbose", "-v", count=True,
+        help="Verbose logging, escalates over config: -v extended tracebacks (backtrace), -vv +variable diagnostics (diagnose), -vvv and beyond raise the config log level one step towards TRACE per extra v"
+    ),
     stages: Optional[str] = typer.Argument(None,
                                            help=f"Stages to execute (e.g., embed,attack,extract), if 'all' or not provided - executes all stages. Stages can be specified as intervals (embed-extract), pointwise (embed,attack,extract) and jointly (embed-attack,extract,post_pipeline_embed_metrics-post_pipeline_aggregate). Available stages are:{list(STAGE_CLASSES.keys())}"),
 
@@ -230,6 +418,10 @@ def run(
         Whether to save intermediate contexts
     dry_run: bool
         Run on a few samples
+    verbose : int
+        Verbosity level (consumed in prerun before argument parsing):
+        -v enables backtrace, -vv also diagnose, each extra v starting
+        from -vvv raises the config log level one step towards TRACE
     stages : Optional[str]
         Pipeline stages to execute. Available stages:
         - embed: Watermark embedding
@@ -269,17 +461,17 @@ def run(
 
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
     alg_wrappers = loaded_config[ALGORITHMS_FIELD]
-    metrics = {}
-    for metric_field in METRICS_FIELDS:
-        metrics[metric_field] = loaded_config[metric_field]
+    metrics = {metric_field: loaded_config[metric_field] for metric_field in METRICS_FIELDS}
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
 
-    exec_candidates, missing_per_group = compatible_execs(stages, datasets, alg_wrappers, attacks, metrics, profile)
+    warn_about_dump_reads(stages, metrics, pipeline_config, dump_context, len(alg_wrappers))
+
+    exec_candidates, missing_per_group = compatible_execs(stages, loaded_config, profile)
 
     if exec_candidates == []:
         parts = [
-            f"No venv group in {PROFILES_DIR}/{profile or '*'}/venvs/ has all required requirements"
+            f"No venv group in {PROFILES_DIR}/{profile or '*'}/{VENVS_SUBDIR}/ has all required requirements"
             " (use --profile or WIBENCH_PROFILE to change the profile)."
             " Missing per group (remove from config to use that venv):"
         ]
@@ -290,9 +482,8 @@ def run(
         raise ValueError("".join(parts))
 
     chosen_exec = Path(sys.executable) if Path(sys.executable) in exec_candidates else next(iter(exec_candidates))
-    # Pin the matched profile (profiles/<profile>/venvs/venvN/bin/python);
-    # env makes it survive re-exec and reach worker subprocesses
-    os.environ["WIBENCH_PROFILE"] = chosen_exec.parents[3].name
+    # Pin the matched profile; env makes it survive re-exec and reach worker subprocesses
+    os.environ["WIBENCH_PROFILE"] = profile_of(chosen_exec)
 
     if Path(sys.executable) not in exec_candidates:
         subprocess_run(pipeline_config, python_exec=chosen_exec)

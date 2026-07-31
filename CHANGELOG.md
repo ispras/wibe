@@ -13,7 +13,7 @@ Added:
 
 Features:
 
-- Smart dependencies managements with uv
+- Smart dependencies management with uv
 - Logging
 - Cuda visible devices for post pipeline metrics fix
 - Some more bugfixes

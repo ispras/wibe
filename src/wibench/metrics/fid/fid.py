@@ -44,7 +44,7 @@ class FID(PostPipelineMetric):
             self.metric.reset_real_features = True
             self.update_real = True
             return
-        dataset_class = BaseDataset._registry.get(dataset_type, None)
+        dataset_class = BaseDataset._registry.get(dataset_type.lower(), None)
         if dataset_class is None:
             raise NotImplementedError("")
         self.dataset = dataset_class(**dataset_args)

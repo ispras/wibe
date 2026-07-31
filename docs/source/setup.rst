@@ -34,22 +34,11 @@ Manual setup
 
       .. code-block:: console
 
-         (.venv) python req.py
+         (.venv) wibench-venv rebuild 
 
-    This command will run 4 stages:
+    See :ref:`venvs <venvs-link>` for more details
 
-        - ``validate`` - checks each requirements file individually, filters invalid files for next stages
-        - ``compose`` - combines all verified (or not) files into large compatible groups and saves them to a .txt files
-        - ``lock`` - creates .lock files from compatible groups
-        - ``install`` - creates venvs and installs dependencies for every compatible groups
-
-    You can run each stage individually by passing the stage name:
-
-    .. code-block:: console
-
-        (.venv) python req.py compose lock
-
-   6. (Optional) Download the pre-trained model weights:
+   6. (Optional) Download the pre-trained model weights (if not, weights will be downloaded automatically on first run):
 
       .. code-block:: console
 
