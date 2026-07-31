@@ -15,7 +15,7 @@ import typer
 
 from wibench.settings import (
     BASE_SUBDIR,
-    COMMON_PROFILE,
+    COMMON_SUBDIR,
     DEFAULT_PROFILE,
     GROUP_PREFIX,
     LOCK_SUFFIX,
@@ -439,21 +439,22 @@ def run(
         raise typer.Exit(1)
 
     profile = get_profile(profile)
-    if profile == COMMON_PROFILE:
-        typer.echo(f"'{COMMON_PROFILE}' is not a profile: it holds requirements shared by all profiles", err=True)
+    if profile == COMMON_SUBDIR:
+        typer.echo(f"'{COMMON_SUBDIR}' is not a profile: it holds requirements shared by all profiles", err=True)
         raise typer.Exit(1)
     cfg = Config(profile)
-    common_dir = Path(PROFILES_DIR) / COMMON_PROFILE
-    base_dir = common_dir / BASE_SUBDIR
+    common_dir = Path(PROFILES_DIR) / COMMON_SUBDIR
 
-    # Mandatory part of every group
-    base_paths = sorted(base_dir.glob(f"*{TXT_SUFFIX}"))
+    # Mandatory part of every group: the shared base plus the profile's own base
+    base_dirs = (common_dir / BASE_SUBDIR, cfg.requirements_dir / COMMON_SUBDIR / BASE_SUBDIR)
+    base_paths = [p for d in base_dirs for p in sorted(d.glob(f"*{TXT_SUFFIX}"))]
     if not base_paths:
-        logger.warning(f"No base requirements in {base_dir}, groups get no mandatory part")
+        logger.warning(f"No base requirements in {' or '.join(map(str, base_dirs))}, groups get no mandatory part")
 
-    # Shared txts join every profile's composition as ordinary (optional) files
+    # Shared txts (cross-profile and profile-level) join the composition as ordinary (optional) files;
+    # the profile's base files are mandatory, not optional, so they are excluded from the recursive glob
     req_paths = sorted(common_dir.glob(f"*{TXT_SUFFIX}"))
-    req_paths += sorted(cfg.requirements_dir.rglob(f"*{TXT_SUFFIX}"))
+    req_paths += sorted(set(cfg.requirements_dir.rglob(f"*{TXT_SUFFIX}")) - set(base_paths))
     logger.info(f"Profile: {cfg.profile}")
     logger.info(f"Python: {cfg.python or '(uv default)'}")
     logger.info(f"Base: {', '.join(str(p) for p in base_paths) or '(none)'}")

@@ -2,15 +2,14 @@ import os
 from pathlib import Path
 
 PROFILES_DIR = "./profiles"
-# Not a profile: profiles/common/base/*.txt are mandatory in every group,
-# profiles/common/*.txt join every profile's composition as ordinary files
-COMMON_PROFILE = "common"
 DEFAULT_PROFILE = "image"
 
 # Layout of profiles/<profile>/
 REQUIREMENTS_SUBDIR = "requirements"
 VENVS_SUBDIR = "venvs"
-BASE_SUBDIR = "base"  # under profiles/<COMMON_PROFILE>/
+
+COMMON_SUBDIR = "common"    # Not a profile or entity: common/*.txt join profile's composition as ordinary files
+BASE_SUBDIR = "base"        # Not a profile or entity: common/base/*.txt are mandatory in profile's groups
 PYTHON_VERSION_FILE = ".python-version"
 
 # Group artifacts inside the venvs dir: venv0.txt, venv0.lock, venv0/
