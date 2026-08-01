@@ -56,7 +56,7 @@ Commands
 
 .. code-block:: console
 
-   (.venv) wibench-venv [STAGES]... [-p PROFILE] [-j JOBS]
+   (.venv) wibench-venv [STAGES]... [-p PROFILE] [-j JOBS] [-v]
 
 .. list-table:: Stages
    :header-rows: 1
@@ -96,6 +96,8 @@ Options:
   The name ``common`` is rejected since it is not a profile.
 * ``-j, --jobs`` — maximum number of concurrent ``uv`` processes (default 8).
   Compatibility checks and locking run concurrently; results are cached, so repeated checks of the same file combination cost nothing.
+* ``-v, --verbose`` — show DEBUG logs.
+  Failed resolutions during ``compose``/``extend`` are logged at DEBUG (conflicts there are expected and numerous), so this is the way to see why two files don't fit into one venv; failures on the other stages are visible without it.
 
 Per‑profile Python version
 --------------------------

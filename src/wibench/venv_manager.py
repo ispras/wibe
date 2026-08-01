@@ -1,7 +1,6 @@
 import asyncio
 import shutil
 import subprocess
-import sys
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -13,6 +12,7 @@ from loguru import logger
 from tqdm import tqdm
 import typer
 
+from wibench.log import setup_console_logger
 from wibench.settings import (
     BASE_SUBDIR,
     COMMON_SUBDIR,
@@ -28,9 +28,7 @@ from wibench.settings import (
     venv_python,
 )
 
-logger.remove()
-# Route logs through tqdm so progress bars are not torn by log lines
-logger.add(lambda m: tqdm.write(m, end="", file=sys.stderr), colorize=True, level="INFO")
+setup_console_logger()
 
 
 @dataclass(frozen=True)
@@ -147,18 +145,26 @@ async def _run_retrying(args: list[str], timeout: float | None = None) -> tuple[
     return result
 
 
+def _failure_reason(result: tuple[int, str] | None) -> str:
+    return result[1].strip() if result is not None else f"uv did not finish within {COMPILE_TIMEOUT}s"
+
+
 # Maps (python version, sorted paths) to the task computing compatibility, so
 # concurrent misses on the same key share one uv run
 _compatible_cache: dict[tuple, asyncio.Task] = {}
 
 
-async def _check_compatible(paths: tuple[Path, ...]) -> bool:
+async def _check_compatible(paths: tuple[Path, ...], fail_level: str) -> bool:
     args = [*UV_COMPILE, "--no-annotate", *_python_args(), *map(str, paths)]
     result = await _run_retrying(args, timeout=COMPILE_TIMEOUT)
-    return result is not None and result[0] == 0
+    if result is not None and result[0] == 0:
+        return True
+    reason = _failure_reason(result)
+    logger.log(fail_level, f"Resolution failed for {', '.join(p.name for p in paths)}:\n{reason}")
+    return False
 
 
-async def _compatible(paths: list[Path]) -> bool:
+async def _compatible(paths: list[Path], fail_level: str = "DEBUG") -> bool:
     """Return True if uv pip compile succeeds for the given requirement files (cached)."""
     if not paths:
         return True
@@ -166,19 +172,19 @@ async def _compatible(paths: list[Path]) -> bool:
     # the Python version changes resolvability, so it is part of the key
     key = (_python, *sorted(paths))
     if (task := _compatible_cache.get(key)) is None:
-        task = asyncio.ensure_future(_check_compatible(key[1:]))
+        task = asyncio.ensure_future(_check_compatible(key[1:], fail_level))
         _compatible_cache[key] = task
     return await task
 
 
 async def validate(base_paths: list[Path], req_paths: list[Path]) -> list[Path]:
-    if not await _compatible(base_paths):
+    if not await _compatible(base_paths, fail_level="ERROR"):
         logger.error(f"Base requirements are not compatible: {', '.join(str(p) for p in base_paths)}")
         raise typer.Exit(1)
 
     with tqdm(total=len(req_paths), desc="validate", unit="file") as bar:
         async def check(p: Path) -> bool:
-            ok = await _compatible(base_paths + [p])
+            ok = await _compatible(base_paths + [p], fail_level="WARNING")
             if ok:
                 logger.info(f"{p} valid")
             else:
@@ -322,9 +328,7 @@ async def extend(cfg: Config, base_paths: list[Path], req_paths: list[Path]) -> 
 def _exit_unless_ok(result: tuple[int, str] | None, action: str) -> None:
     if result is not None and result[0] == 0:
         return
-    logger.error(f"Failed to {action}")
-    if result is not None:
-        sys.stderr.write(result[1])
+    logger.error(f"Failed to {action}:\n{_failure_reason(result)}")
     raise typer.Exit(1)
 
 
@@ -350,7 +354,8 @@ async def install(cfg: Config) -> None:
     lock_paths = sorted(cfg.glob_locks())
     for lock_path in tqdm(lock_paths, desc="install", unit="venv"):
         venv_path = lock_path.with_suffix("")
-        await _run_retrying(["uv", "venv", "--clear", *_python_args(), str(venv_path)])
+        result = await _run_retrying(["uv", "venv", "--clear", *_python_args(), str(venv_path)])
+        _exit_unless_ok(result, f"create venv {venv_path.name}")
         result = await _run_retrying(
             ["uv", "pip", "install", "-p", str(venv_python(venv_path)), "-r", str(lock_path)]
         )
@@ -420,7 +425,15 @@ def run(
         "-j",
         help="Max number of concurrent uv processes",
     ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help=f"Show DEBUG logs, e.g. resolution conflicts during {compose.__name__}/{extend.__name__}",
+    ),
 ):
+    if verbose:
+        setup_console_logger("DEBUG")
     run_stages = set(stages or [install.__name__])
     for name, bundle in BUNDLES.items():
         if name in run_stages:
