@@ -96,8 +96,8 @@ Options:
   The name ``common`` is rejected since it is not a profile.
 * ``-j, --jobs`` — maximum number of concurrent ``uv`` processes (default 8).
   Compatibility checks and locking run concurrently; results are cached, so repeated checks of the same file combination cost nothing.
-* ``-v, --verbose`` — show DEBUG logs.
-  Failed resolutions during ``compose``/``extend`` are logged at DEBUG (conflicts there are expected and numerous), so this is the way to see why two files don't fit into one venv; failures on the other stages are visible without it.
+* ``-v, --verbose`` — escalate logging, same scheme as the main CLI: ``-v`` extended tracebacks (backtrace), ``-vv`` adds variable diagnostics (diagnose), ``-vvv`` and beyond lower the log level one step per extra ``v`` (``-vvv`` = DEBUG).
+  Failed resolutions during ``compose``/``extend`` are logged at DEBUG (conflicts there are expected and numerous), so use ``-vvv`` to see why two files don't fit into one venv; failures on the other stages are visible without it.
 
 Per‑profile Python version
 --------------------------

@@ -12,7 +12,7 @@ from loguru import logger
 from tqdm import tqdm
 import typer
 
-from wibench.log import setup_console_logger
+from wibench.log import escalate, setup_console_logger
 from wibench.settings import (
     BASE_SUBDIR,
     COMMON_SUBDIR,
@@ -425,15 +425,19 @@ def run(
         "-j",
         help="Max number of concurrent uv processes",
     ),
-    verbose: bool = typer.Option(
-        False,
+    verbose: int = typer.Option(
+        0,
         "--verbose",
         "-v",
-        help=f"Show DEBUG logs, e.g. resolution conflicts during {compose.__name__}/{extend.__name__}",
+        count=True,
+        help="Escalate logging: -v extended tracebacks (backtrace), -vv +variable diagnostics (diagnose), "
+        "-vvv and beyond lower the log level one step per extra v "
+        f"(-vvv = DEBUG, e.g. resolution conflicts during {compose.__name__}/{extend.__name__})",
     ),
 ):
     if verbose:
-        setup_console_logger("DEBUG")
+        level, backtrace, diagnose = escalate("INFO", verbose)
+        setup_console_logger(level, backtrace=backtrace, diagnose=diagnose)
     run_stages = set(stages or [install.__name__])
     for name, bundle in BUNDLES.items():
         if name in run_stages:

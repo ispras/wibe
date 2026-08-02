@@ -83,16 +83,21 @@ class TqdmFileMirror:
             os.replace(tmp, self.path)
 
 
-def setup_logger(pipeline_config: PipeLineConfig, verbosity: int = 0, child_num: str | None = None):
+def escalate(level: str, verbosity: int, backtrace: bool = False, diagnose: bool = False) -> tuple[str, bool, bool]:
     # -v flags only escalate logging relative to the config:
     # -v: backtrace,
     # -vv: +diagnose,
     # -vvv and beyond: log level one step more verbose each
     log_levels = list(get_args(LogLevel))
-    level_idx = log_levels.index(pipeline_config.log_level) - max(0, verbosity - 2)
-    level = log_levels[max(0, level_idx)]
-    backtrace = pipeline_config.log_backtrace or verbosity >= 1
-    diagnose = pipeline_config.log_diagnose or verbosity >= 2
+    level = log_levels[max(0, log_levels.index(level) - max(0, verbosity - 2))]
+    return level, backtrace or verbosity >= 1, diagnose or verbosity >= 2
+
+
+def setup_logger(pipeline_config: PipeLineConfig, verbosity: int = 0, child_num: str | None = None):
+    level, backtrace, diagnose = escalate(
+        pipeline_config.log_level, verbosity,
+        pipeline_config.log_backtrace, pipeline_config.log_diagnose,
+    )
     real_stderr = sys.stderr
     progress.progress_file = real_stderr
     # Third-party tqdm bars are created with file=None and would resolve it to the redirected sys.stderr;
