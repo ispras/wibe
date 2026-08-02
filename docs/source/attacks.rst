@@ -237,3 +237,10 @@ DISCO
 .. autoclass:: wibench.attacks.disco.defence.DISCOAttack
    :members:
    :special-members: __call__
+
+Instagram/CSS filters
+~~~~~
+
+.. autoclass:: wibench.attacks.instagramcss_filters.instagramcss_filters.InstagramCSSFilters
+   :members:
+   :special-members: __call__

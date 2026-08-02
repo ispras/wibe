@@ -100,6 +100,7 @@ The system architecture consists of a sequence of processing configurable stages
 | DiffPure | diffpureattack | [Diffusion Models for Adversarial Purification](https://arxiv.org/abs/2205.07460) |
 | RealESRGAN | realesrganattack | [Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data](https://arxiv.org/abs/2107.10833) |
 | UnMarkerAttack | unmarkerattack | [UnMarker: A Universal Attack on Defensive Image Watermarking](https://arxiv.org/abs/2405.08363) |
+| Instagram/CSS filters | instagramcss_filters | [Instagram/CSS filters for image editing](https://github.com/akiomik/pilgram) |
 
 </details>
 
