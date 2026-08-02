@@ -1,9 +1,6 @@
 numpy
-tqdm
 kornia
 crc8
 opencv-python
 Pillow
-torch
 torchsummary
-torchvision

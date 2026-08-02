@@ -5,12 +5,10 @@ lpips
 timm
 scikit-image
 pandas
-tqdm
 pytorch_msssim
 tensorboard
 pycocotools
 opencv-python
 scipy
 matplotlib
-loguru
 torchmetrics

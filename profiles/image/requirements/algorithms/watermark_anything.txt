@@ -1,7 +1,6 @@
 numpy
-torch
 pycocotools
-torchvision
 omegaconf
 matplotlib
 Pillow
+scikit-learn
