@@ -6,7 +6,8 @@ datasets:
     path: tests/data
 
 attacks:
-  imageeditingfluxcontext
+  imageeditingfluxcontext:
+    num_inference_steps: 1
 
 pipeline:
   result_path: ./test_results/tests/imageeditingfluxcontext

@@ -6,7 +6,8 @@ datasets:
     path: tests/data
 
 attacks:
-  dip
+  dip:
+    total_iters: 1
 
 pipeline:
   result_path: ./test_results/tests/dip

@@ -6,7 +6,9 @@ datasets:
     path: tests/data
 
 attacks:
-  fluxrinsing
+  fluxrinsing:
+    num_inference_steps: 1
+    rinsing_times: 1
 
 pipeline:
   result_path: ./test_results/tests/fluxrinsing
