@@ -1,7 +1,5 @@
 algorithms:
-  syncseal:
-    params:
-      method: dct_marker
+  syncseal
 
 datasets:
   ImageFolderDataset:

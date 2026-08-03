@@ -1,5 +1,5 @@
 algorithms:
-  dct_marker
+  stable_signature
 
 datasets:
   PromptFolderDataset:
