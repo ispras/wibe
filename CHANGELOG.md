@@ -6,7 +6,7 @@ WARP paper release
 
 Added:
 
-- Attacks: NRP, MPRNet, UniEditFlux, DISCO, TrustMarkRM, DiffPure, RealESRGAN, support for any attack combination and embedding watermark as an attack
+- Attacks: Instagram filters, NRP, MPRNet, UniEditFlux, DISCO, TrustMarkRM, DiffPure, RealESRGAN, support for any attack combination and embedding watermark as an attack
 - Methods: VINE, SepMark, Rosteals
 - Metrics: WER, Empirical TPR@xFPR
 - MSCOCO with captions
