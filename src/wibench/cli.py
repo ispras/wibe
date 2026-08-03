@@ -404,6 +404,9 @@ def run(
         0, "--verbose", "-v", count=True,
         help="Verbose logging, escalates over config: -v extended tracebacks (backtrace), -vv +variable diagnostics (diagnose), -vvv and beyond raise the config log level one step towards TRACE per extra v"
     ),
+    debug: bool = typer.Option(
+        False, "--debug", help="Activate debug mode - stop pipeline on import error"
+    ),
     stages: Optional[str] = typer.Argument(None,
                                            help=f"Stages to execute (e.g., embed,attack,extract), if 'all' or not provided - executes all stages. Stages can be specified as intervals (embed-extract), pointwise (embed,attack,extract) and jointly (embed-attack,extract,post_pipeline_embed_metrics-post_pipeline_aggregate). Available stages are:{list(STAGE_CLASSES.keys())}"),
 
@@ -422,6 +425,8 @@ def run(
         Verbosity level (consumed in prerun before argument parsing):
         -v enables backtrace, -vv also diagnose, each extra v starting
         from -vvv raises the config log level one step towards TRACE
+    debug : bool
+        Activate debug mode - stop pipeline on import error
     stages : Optional[str]
         Pipeline stages to execute. Available stages:
         - embed: Watermark embedding
@@ -488,11 +493,10 @@ def run(
     if Path(sys.executable) not in exec_candidates:
         subprocess_run(pipeline_config, python_exec=chosen_exec)
         return
-    import_modules("wibench.algorithms")
-    import_modules("wibench.datasets")
-    import_modules("wibench.metrics")
-    import_modules("wibench.attacks")
-    import_modules("user_plugins")
+    import_modules("wibench.common", debug)
+    import_modules("wibench.image", debug)
+    import_modules("wibench.audio", debug)
+    import_modules("user_plugins", debug)
     
     if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
         subprocess_run(pipeline_config)
