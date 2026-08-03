@@ -6,8 +6,7 @@ datasets:
     path: tests/data
 
 attacks:
-  fluxregeneration:
-    num_inference_steps: 1
+  fluxregeneration
 
 pipeline:
   result_path: ./test_results/tests/fluxregeneration

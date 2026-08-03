@@ -6,9 +6,7 @@ datasets:
     path: tests/data
 
 attacks:
-  semattack:
-    num_inference_steps_attacker: 1
-    steps: 1
+  semattack
 
 pipeline:
   result_path: ./test_results/tests/semattack

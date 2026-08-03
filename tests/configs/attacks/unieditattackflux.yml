@@ -6,8 +6,7 @@ datasets:
     path: tests/data
 
 attacks:
-  UniEditAttackFlux:
-    num_steps: 1
+  UniEditAttackFlux
 
 pipeline:
   result_path: ./test_results/tests/unieditattackflux

@@ -6,8 +6,7 @@ datasets:
     path: tests/data
 
 attacks:
-  wmforger:
-    num_steps: 1
+  wmforger
 
 pipeline:
   result_path: ./test_results/tests/wmforger

@@ -6,8 +6,7 @@ datasets:
     path: tests/data
 
 attacks:
-  UniInvAttackFlux:
-    num_steps: 1
+  UniInvAttackFlux
 
 pipeline:
   result_path: ./test_results/tests/uniinvattackflux
