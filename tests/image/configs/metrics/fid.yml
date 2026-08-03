@@ -4,7 +4,7 @@ algorithms:
 
 datasets:
   ImageFolderDataset:
-    path: tests/data
+    path: tests/image/data
 
 post_pipeline_embed_metrics:
   - FID:

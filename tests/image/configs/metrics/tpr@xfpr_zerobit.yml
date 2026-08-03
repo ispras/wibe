@@ -5,7 +5,7 @@ algorithms:
 
 datasets:
   ImageFolderDataset:
-    path: tests/data
+    path: tests/image/data
 
 attacks:
   - JPEG:

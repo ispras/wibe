@@ -3,7 +3,7 @@ algorithms:
 
 datasets:
   PromptFolderDataset:
-    path: tests/data
+    path: tests/image/data
 
 attacks:
   - JPEG:
