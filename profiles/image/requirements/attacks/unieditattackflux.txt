@@ -4,4 +4,3 @@ accelerate
 protobuf
 sentencepiece==0.2.1
 einops
-invisible-watermark
