@@ -1,4 +1,3 @@
-numpy
 kornia
 crc8
 opencv-python

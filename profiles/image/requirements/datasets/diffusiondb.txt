@@ -1,3 +1,2 @@
 datasets>=2.20.0,<=3.6.0
 Pillow>=9.4.0
-numpy

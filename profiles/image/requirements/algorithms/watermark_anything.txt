@@ -1,4 +1,3 @@
-numpy
 pycocotools
 omegaconf
 matplotlib

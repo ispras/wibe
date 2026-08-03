@@ -1,4 +1,3 @@
 kornia
 natsort
-numpy
 pandas
