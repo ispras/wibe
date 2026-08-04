@@ -131,8 +131,6 @@ class SilentCipherWrapper(BaseAlgorithmWrapper):
         TorchAudio
             Watermarked audio.
         """
-        audio = TorchAudio(*audio)
-
         assert audio.data.shape[0] == 1, 'Only one-channel supported'
         # TODO: Support multi-channel
         signal = self._prepare_audio(audio)

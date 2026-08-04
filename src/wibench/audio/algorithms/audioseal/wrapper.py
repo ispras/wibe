@@ -74,7 +74,6 @@ class AudioSealWrapper(BaseAlgorithmWrapper):
             Watermark data for AudioSeal watermarking algorithm
 
         """
-        audio = TorchAudio(*audio)
         # Prepare input data
         _audio_data = audio.data.clone()
         if audio.rate != self.SAMPLE_RATE:

@@ -42,8 +42,6 @@ class Resampling(BaseAttack):
             Audio resampled to ``target_rate`` and then restored to the
             original sampling rate.
         """
-        audio = TorchAudio(*audio)
-
         if audio.rate == self.target_rate:
             return audio.clone()
         signal = Resample(
@@ -150,8 +148,6 @@ class Scaling(BaseAttack):
         TorchAudio
             Audio with scaled amplitude.
         """
-        audio = TorchAudio(*audio)
-
         return TorchAudio(
             data=audio.data * self.factor,
             rate=audio.rate,
@@ -184,8 +180,6 @@ class Noise(BaseAttack):
         TorchAudio
             Audio corrupted by additive white Gaussian noise.
         """
-        audio = TorchAudio(*audio)
-
         signal = audio.data
         signal_power = signal.square().mean(dim=-1, keepdim=True)
         noise_power = signal_power / (10 ** (self.snr_db / 10))

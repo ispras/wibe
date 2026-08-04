@@ -78,8 +78,6 @@ class ClassicWatermarkWrapper(BaseAlgorithmWrapper):
         self,
         audio: TorchAudio,
     ) -> torch.Tensor:
-        audio = TorchAudio(*audio)
-
         signal = audio.data.detach()
 
         if signal.ndim == 1:
