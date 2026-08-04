@@ -3,7 +3,7 @@ from typing import Any, Dict, Literal
 import numpy as np
 from torchaudio.transforms import Resample
 from wibench.config import Params
-from wibench.typing import TorchAudio
+from wibench.audio.typing import TorchAudio
 from wibench.common.algorithms import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
 

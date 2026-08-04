@@ -3,7 +3,7 @@ from statistics import mean
 from typing import Any
 import torch
 from torchaudio.transforms import Resample
-from wibench.typing import TorchAudio
+from wibench.audio.typing import TorchAudio
 from wibench.common.metrics import PostEmbedMetric
 from wibench.audio.metrics.utils import align_pair, _iter_aligned_chunks, \
     _safe_chunk_call, _mean_tuple3

@@ -9,7 +9,7 @@ import scipy.signal
 import torch
 import numpy as np
 from torchaudio.transforms import Resample
-from wibench.typing import TorchAudio
+from wibench.audio.typing import TorchAudio
 from wibench.utils import HiddenWarnings
 from wibench.common.attacks import BaseAttack
 

@@ -1,7 +1,7 @@
 from torchaudio.transforms import Resample
 from torchmetrics.functional.audio import scale_invariant_signal_noise_ratio as si_snr
 from wibench.pipeline_type import PipelineType
-from wibench.typing import TorchAudio
+from wibench.audio.typing import TorchAudio
 from wibench.common.metrics import PostEmbedMetric
 from wibench.audio.metrics.utils import align_pair
 

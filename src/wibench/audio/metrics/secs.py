@@ -6,7 +6,7 @@ from torchaudio.transforms import Resample
 from wibench.download import requires_download
 from wibench.pipeline_type import PipelineType
 from wibench.common.metrics import PostEmbedMetric
-from wibench.typing import TorchAudio
+from wibench.audio.typing import TorchAudio
 from wibench.audio.metrics.utils import align_pair
 
 URL = "https://nextcloud.ispras.ru/index.php/s/YQFGkgaBqJ4pz6q"

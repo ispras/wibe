@@ -6,7 +6,7 @@ import torch
 
 from wibench.common.algorithms import BaseAlgorithmWrapper
 from wibench.config import Params
-from wibench.typing import TorchAudio
+from wibench.audio.typing import TorchAudio
 from wibench.download import requires_download
 
 URL = "https://nextcloud.ispras.ru/index.php/s/JWaESfrH4HFj6a8"

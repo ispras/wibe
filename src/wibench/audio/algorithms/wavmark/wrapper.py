@@ -6,7 +6,7 @@ import torch
 from torchaudio.transforms import Resample
 from wibench.common.algorithms import BaseAlgorithmWrapper
 from wibench.config import Params
-from wibench.typing import TorchAudio
+from wibench.audio.typing import TorchAudio
 from wibench.watermark_data import TorchBitWatermarkData
 from wibench.download import requires_download
 

@@ -2,7 +2,7 @@ from typing import Callable, Optional
 from collections.abc import Iterator
 import warnings
 import torch
-from wibench.typing import TorchAudio
+from wibench.audio.typing import TorchAudio
 
 
 def as_mono(audio: torch.Tensor) -> torch.Tensor:

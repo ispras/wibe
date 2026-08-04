@@ -21,7 +21,7 @@ from torchvision.utils import save_image
 from torchvision.transforms.functional import to_tensor
 from PIL import Image
 from wibench.config import DumpType
-from wibench.typing import TorchAudio
+from wibench.audio.typing import TorchAudio  # TODO: It should no be there
 
 
 def asdict_nonrecursive(obj) -> Dict[str, Any]:

@@ -1,7 +1,7 @@
 import torch
 from torchaudio.transforms import Resample
 from wibench.common.attacks import BaseAttack
-from wibench.typing import TorchAudio
+from wibench.audio.typing import TorchAudio
 
 
 class Vocos(BaseAttack):
