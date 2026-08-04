@@ -132,16 +132,15 @@ def setup_logger(pipeline_config: PipeLineConfig, verbosity: int = 0, child_num:
         enqueue=True,
     )
     # file sink that logs errors
-    if pipeline_config.skip_errors:
-        logger.add(
-            logs_dir / "errors.log",
-            level="ERROR",
-            format=pipeline_config.log_format,
-            colorize=False,
-            backtrace=backtrace,
-            diagnose=diagnose,
-            enqueue=True,
-        )
+    logger.add(
+        logs_dir / "errors.log",
+        level="ERROR",
+        format=pipeline_config.log_format,
+        colorize=False,
+        backtrace=backtrace,
+        diagnose=diagnose,
+        enqueue=True,
+    )
 
     # file that mirrors tqdm bars: every bar update goes through tqdm.display,
     # so hooking it keeps one in-place-updated line per bar in the file
