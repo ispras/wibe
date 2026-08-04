@@ -65,11 +65,12 @@ def prerun():
     config = load_pipeline_config_yaml(config_path)
     pipeline_config: PipeLineConfig = config["pipeline"]
     
+    setup_cuda_visible_devices(pipeline_config)
+
     if "--dry-run" in sys.argv[1:]:
         pipeline_config.result_path /= "dry"
 
     setup_logger(pipeline_config, get_verbosity_from_argv(), os.environ.get(CHILD_NUM_ENV_NAME))
-    setup_cuda_visible_devices(pipeline_config)
 
 
 prerun()

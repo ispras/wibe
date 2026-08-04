@@ -11,6 +11,26 @@ import tqdm
 
 from wibench.config import LogLevel, PipeLineConfig
 import wibench.progress as progress
+from wibench.settings import (
+    CONSOLE_LOG_FILENAME,
+    ERRORS_LOG_FILENAME,
+    LOGS_DIRNAME,
+    PROGRESS_CHILD_LOG_FILENAME,
+    PROGRESS_LOG_FILENAME,
+)
+
+
+def _now_str() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+
+
+def append_run_banners(paths: list[Path]) -> None:
+    text = f" RUN START {_now_str()} "
+    w = len(text)
+    banner = f"\n╔{'═' * w}╗\n║{text}║\n╚{'═' * w}╝\n"
+    for path in paths:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(banner)
 
 
 def setup_console_logger(level: str = "INFO", stream=None, **kwargs) -> None:
@@ -59,8 +79,7 @@ class TqdmFileMirror:
         if not hasattr(bar, "_mirror_line"):
             bar._mirror_line = len(self.lines)
             self.lines.append("")
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        self.lines[bar._mirror_line] = f"{timestamp} | {text}"
+        self.lines[bar._mirror_line] = f"{_now_str()} | {text}"
         if self.timer is None:
             if sys.is_finalizing():
                 # interpreter shutdown (e.g. a bar closed by its __del__ after an uncaught exception): 
@@ -120,10 +139,13 @@ def setup_logger(pipeline_config: PipeLineConfig, verbosity: int = 0, child_num:
         diagnose=diagnose,
     )
     # file sinks under {result_path}/logs
-    logs_dir = pipeline_config.result_path / "logs"
+    logs_dir = pipeline_config.result_path / LOGS_DIRNAME
     logs_dir.mkdir(parents=True, exist_ok=True)
+    console_log = logs_dir / CONSOLE_LOG_FILENAME
+    errors_log = logs_dir / ERRORS_LOG_FILENAME
+    append_run_banners([console_log, errors_log])
     logger.add(
-        logs_dir / "console.log",
+        console_log,
         level=level,
         format=pipeline_config.log_format,
         colorize=False,
@@ -133,7 +155,7 @@ def setup_logger(pipeline_config: PipeLineConfig, verbosity: int = 0, child_num:
     )
     # file sink that logs errors
     logger.add(
-        logs_dir / "errors.log",
+        errors_log,
         level="ERROR",
         format=pipeline_config.log_format,
         colorize=False,
@@ -144,7 +166,11 @@ def setup_logger(pipeline_config: PipeLineConfig, verbosity: int = 0, child_num:
 
     # file that mirrors tqdm bars: every bar update goes through tqdm.display,
     # so hooking it keeps one in-place-updated line per bar in the file
-    mirror_name = "progress.log" if child_num is None else f"progress_{child_num}.log"
+    mirror_name = (
+        PROGRESS_LOG_FILENAME
+        if child_num is None
+        else PROGRESS_CHILD_LOG_FILENAME.format(child_num=child_num)
+    )
     bars_mirror = TqdmFileMirror(logs_dir / mirror_name)
     tqdm_display = tqdm.tqdm.display
 

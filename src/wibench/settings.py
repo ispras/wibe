@@ -17,6 +17,13 @@ GROUP_PREFIX = "venv"
 TXT_SUFFIX = ".txt"
 LOCK_SUFFIX = ".lock"
 
+# Result-dir logging layout: {result_path}/{LOGS_DIRNAME}/...
+LOGS_DIRNAME = "logs"
+CONSOLE_LOG_FILENAME = "console.log"
+ERRORS_LOG_FILENAME = "errors.log"
+PROGRESS_LOG_FILENAME = "progress.log"
+PROGRESS_CHILD_LOG_FILENAME = "progress_{child_num}.log"
+
 
 def profile_of(path: Path) -> str:
     """profiles/<profile>/venvs/venvN/... -> <profile>."""
