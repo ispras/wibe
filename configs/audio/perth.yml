@@ -4,54 +4,19 @@ algorithms:
       device: cpu
 
 post_embed_metrics:
-  - SI_SNR
-  - PESQ
-  - STOI
-  - NISQA
-  - DNSMOS
-  - SECS
+{% include 'common/post_embed_metrics.yml' %}
 
 post_extract_metrics:
-  - Result
-  - EmpiricalTPR@xFPR:
-      report_name: etpr@10e-1fpr
-      fpr_rate: 0.1
-      algorithm: perth
-      dataset: librispeech
-      dataset_params:
-        cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
-        subset: all
-        split: test.clean
-        sample_range: [0, 50]
-      random_extracts_path: "./random_extracts_0.1.csv"
+{% include 'common/post_extract_metrics.yml' %}
 
 datasets:
-  # - AudioFolderDataset:
-  #     path: /home/do-op/Projects/docmarking/dm-audio/dataset/classic-v1/
-  #     sample_rate: 16000
-#   - AudioSet:
-#       cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/AudioSet/
-#       subset: balanced
-#       split: test
-#       sample_range: [0, 1000]
-  - LibriSpeech:
-      report_name: ls_test_clean
-      cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
-      subset: all
-      split: test.clean
-      sample_range: [0, 50]
-  # - LibriSpeech:
-  #     report_name: ls_test_other
-  #     cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
-  #     subset: all
-  #     split: test.other
-  #     sample_range: [0, 50]
+{% include 'common/librispeech.yml' %}
 
 attacks:
-{% include 'audio/distortions.yml' %}
+{% include 'common/distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/perth
   aggregators:
     - CSV:
-        table_name: table_epm
+        table_name: table

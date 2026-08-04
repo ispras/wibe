@@ -3,46 +3,20 @@ algorithms:
     params:
       device: cpu
 
-# post_embed_metrics:
-#   - SI_SNR
-#   - PESQ
-#   - STOI
-#   - NISQA
-#   - DNSMOS
-#   - SECS
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %}
 
 post_extract_metrics:
-#   - ExtWm
-  - BER
-  - WER
+{% include 'common/post_extract_metrics.yml' %}
 
 datasets:
-  # - AudioFolderDataset:
-  #     path: /home/do-op/Projects/docmarking/dm-audio/dataset/classic-v1/
-  #     sample_rate: 16000
-#   - AudioSet:
-#       cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/AudioSet/
-#       subset: balanced
-#       split: test
-#       sample_range: [0, 1000]
-  - LibriSpeech:
-      report_name: ls_test_clean
-      cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
-      subset: all
-      split: test.clean
-      sample_range: [0, 500]
-  - LibriSpeech:
-      report_name: ls_test_other
-      cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/LibriSpeech/
-      subset: all
-      split: test.other
-      sample_range: [0, 500]
+{% include 'common/librispeech.yml' %}
 
 attacks:
-{% include 'common/band_filters.yml' %}
+{% include 'common/distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/audioseal
   aggregators:
     - CSV:
-        table_name: table_bands
+        table_name: table

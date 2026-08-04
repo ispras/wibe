@@ -4,31 +4,19 @@ algorithms:
       device: cuda:0
 
 post_embed_metrics:
-  - SI_SNR
-  - PESQ
-  - STOI
-  # - NISQA
-  # - DNSMOS
-  # - SECS
+{% include 'common/post_embed_metrics.yml' %}
 
 post_extract_metrics:
-  - ExtWm
-  - BER
-  - WER
+{% include 'common/post_extract_metrics.yml' %}
 
 datasets:
-  - LibriSpeech:
-      cache_dir: /fast-drive/redkin.d/hf_cache/librispeech
-      subset: other
-      split: test
-      sample_range: [0, 0]
-
+{% include 'common/librispeech.yml' %}
 
 attacks:
-{% include 'audio/distortions.yml' %}
+{% include 'common/distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/dnn_audio
   aggregators:
     - CSV:
-        table_name: table_250
+        table_name: table

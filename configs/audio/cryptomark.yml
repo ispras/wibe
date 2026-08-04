@@ -1,86 +1,23 @@
 algorithms:
   cryptomark:
     params:
-      profile: medium
+      profile: light
       target_rate: 16000
 
 post_embed_metrics:
-  - SI_SNR
-  - PESQ
-  - STOI
-  - NISQA
-  - DNSMOS
-  # - SECS
+{% include 'common/post_embed_metrics.yml' %}
 
 post_extract_metrics:
-  - ExtWm
-  - BER
-  - WER
-  - EmpiricalTPR@xFPR:
-      report_name: etpr@10e-1fpr
-      fpr_rate: 0.1
-      algorithm: cryptomark
-      algorithm_params:
-        params:
-          profile: medium
-          target_rate: 16000
-      dataset: audioset
-      dataset_params:
-        cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/HF-cache/
-        subset: balanced
-        split: test
-        sample_range: [0, 99]
-        min_duration: 2
-      random_extracts_path: "./random_cmm_audioset_extracts_0.1.csv"
-      method_type: multibit
-  - EmpiricalTPR@xFPR:
-      report_name: etpr@10e-2fpr
-      fpr_rate: 0.01
-      algorithm: cryptomark
-      algorithm_params:
-        params:
-          profile: medium
-          target_rate: 16000
-      dataset: audioset
-      dataset_params:
-        cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/HF-cache/
-        subset: balanced
-        split: test
-        sample_range: [0, 999]
-        min_duration: 2
-      random_extracts_path: "./random_cmm_audioset_extracts_0.01.csv"
-      method_type: multibit
-  - EmpiricalTPR@xFPR:
-      report_name: etpr@10e-3fpr
-      fpr_rate: 0.001
-      algorithm: cryptomark
-      algorithm_params:
-        params:
-          profile: medium
-          target_rate: 16000
-      dataset: audioset
-      dataset_params:
-        cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/HF-cache/
-        subset: balanced
-        split: test
-        sample_range: [0, 9999]
-        min_duration: 2
-      random_extracts_path: "./random_cmm_audioset_extracts_0.001.csv"
-      method_type: multibit
+{% include 'common/post_extract_metrics.yml' %}
 
 datasets:
-  - AudioSet:
-      cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/HF-cache/
-      subset: balanced
-      split: test
-      sample_range: [0, 2500]
-      min_duration: 2
+{% include 'common/librispeech.yml' %}
 
 attacks:
-{% include 'audio/distortions.yml' %}
+{% include 'common/distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/cryptomark
   aggregators:
     - CSV:
-        table_name: table_audioset_medium
+        table_name: table

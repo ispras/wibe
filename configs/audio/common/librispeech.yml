@@ -1,0 +1,10 @@
+  - LibriSpeech:
+      report_name: ls_test_clean
+      subset: all
+      split: test.clean
+      sample_range: [0, 2500]
+  - LibriSpeech:
+      report_name: ls_test_other
+      subset: all
+      split: test.other
+      sample_range: [0, 2500]
