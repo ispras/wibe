@@ -109,7 +109,7 @@ from wibench.config_loader import (
     ATTACKS_FIELD,
     PIPELINE_FIELD,
 )
-from wibench.config import PipeLineConfig, StageType
+from wibench.config import PipeLineConfig, StageType, should_create_post_pipeline_table
 import subprocess
 from wibench.aggregator import PandasAggregatorConfig
 from wibench.settings import PROFILES_DIR, VENVS_SUBDIR, get_profile, profile_of
@@ -158,7 +158,7 @@ def warn_about_dump_reads(stages: List[str], metrics: dict, pipeline_config: Pip
             )
 
 
-def clear_tables(config: PipeLineConfig, stages: List[str]):
+def clear_tables(config: PipeLineConfig, stages: List[str], metrics: dict):
     for aggregator_config in config.aggregators:
         if not isinstance(aggregator_config, PandasAggregatorConfig):
             continue
@@ -171,9 +171,8 @@ def clear_tables(config: PipeLineConfig, stages: List[str]):
         if StageType.embed in stages:
             if params_table_result_path.exists():
                 params_table_result_path.unlink()
-        if StageType.post_pipeline_aggregate in stages:
-            if post_pipeline_table_result_path.exists():
-                post_pipeline_table_result_path.unlink()
+        if should_create_post_pipeline_table(stages, metrics) and post_pipeline_table_result_path.exists():
+            post_pipeline_table_result_path.unlink()
 
 
 def subprocess_run(pipeline_config: PipeLineConfig, python_exec = sys.executable):
@@ -314,13 +313,14 @@ def run(
         pipeline_config.result_path /= "dry"
     if pipeline_config.seed is None:
         pipeline_config.seed = generate_random_seed()
-    clear_tables(pipeline_config, stages)
 
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
     alg_wrappers = loaded_config[ALGORITHMS_FIELD]
     metrics = {metric_field: loaded_config[metric_field] for metric_field in METRICS_FIELDS}
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
+
+    clear_tables(pipeline_config, stages, metrics)
 
     warn_about_dump_reads(stages, metrics, pipeline_config, dump_context, len(alg_wrappers))
 
