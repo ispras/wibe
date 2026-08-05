@@ -9,17 +9,17 @@ post_embed_metrics:
   - BLIP
 
 post_attack_metrics:
-{% include 'image/common/post_attack_metrics.yml' %}
+{% include 'common/post_attack_metrics.yml' %}
 
 post_extract_metrics:
  - Result:
     report_name: tpr@10e-3fpr
 
 datasets:
-{% include 'image/common/diffusiondb_prompts.yml' %}
+{% include 'common/diffusiondb_prompts.yml' %}
 
 attacks:
-{% include 'image/common/distortions.yml' %}
+{% include 'common/distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/maxsive

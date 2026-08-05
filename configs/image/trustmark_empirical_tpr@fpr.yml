@@ -57,7 +57,7 @@ post_extract_metrics:
       fpr_rate: 0.00000001
 
 datasets:
-{% include 'image/common/mscoco.yml' %}
+{% include 'common/mscoco.yml' %}
 
 attacks:
  - Identity

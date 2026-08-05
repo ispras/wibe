@@ -28,7 +28,7 @@ datasets:                   # Dataset of images to test on
       sample_range: [0, 9]   # Test with 10 images: 0, ..., 9
 
 attacks:                    # Attacks on watermarks
-{% include 'image/common/distortions.yml' %}
+{% include 'common/distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/trustmark   # Path to save results, including all images (with -d flag)

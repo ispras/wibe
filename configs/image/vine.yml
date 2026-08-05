@@ -4,17 +4,17 @@ algorithms:
       device: cuda
 
 post_embed_metrics:
-{% include 'image/common/post_embed_metrics.yml' %} 
+{% include 'common/post_embed_metrics.yml' %} 
 post_attack_metrics:
-{% include 'image/common/post_attack_metrics.yml' %} 
+{% include 'common/post_attack_metrics.yml' %} 
 post_extract_metrics:
-{% include 'image/common/post_extract_metrics.yml' %} 
+{% include 'common/post_extract_metrics.yml' %} 
 
 datasets:
-{% include 'image/common/diffusiondb.yml' %}
+{% include 'common/diffusiondb.yml' %}
 
 attacks:
-{% include 'image/common/distortions.yml' %}
+{% include 'common/distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/vine

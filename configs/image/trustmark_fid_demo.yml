@@ -44,7 +44,7 @@ post_pipeline_attack_metrics:
       device: cuda
 
 attacks:                    # Attacks on watermarks
-{% include 'image/common/distortions.yml' %}
+{% include 'common/distortions.yml' %}
 
 pipeline:
   result_path: ./test_results/trustmark_fid_demo_test  # Path to save results, including all images (with -d flag)
