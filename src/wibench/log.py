@@ -143,7 +143,8 @@ def setup_logger(pipeline_config: PipeLineConfig, verbosity: int = 0, child_num:
     logs_dir.mkdir(parents=True, exist_ok=True)
     console_log = logs_dir / CONSOLE_LOG_FILENAME
     errors_log = logs_dir / ERRORS_LOG_FILENAME
-    append_run_banners([console_log, errors_log])
+    if child_num is None:
+        append_run_banners([console_log, errors_log])
     logger.add(
         console_log,
         level=level,
