@@ -1,21 +1,17 @@
 from pathlib import Path
 from datetime import datetime
-import atexit
 import os
 import re
 import sys
-import threading
 from typing_extensions import (
     Optional,
     List,
-    get_args
 )
 from loguru import logger
-import tqdm
 
 from wibench.config_loader import load_pipeline_config_yaml
-from wibench.config import LogLevel, PipeLineConfig
-import wibench.progress as progress
+from wibench.config import PipeLineConfig
+from wibench.log import setup_logger
 from wibench.requirements import compatible_execs
 
 
@@ -61,146 +57,6 @@ def setup_cuda_visible_devices(pipeline_config: PipeLineConfig):
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
-class StreamToLogger:
-    def __init__(self, level="INFO"):
-        self.level = level
-
-    def write(self, message):
-        if message.startswith("\r"):
-            # progress-bar redraw (e.g. a third-party tqdm attached to the
-            # redirected stream), not a real message
-            return
-        message = message.strip()
-        if message:
-            # depth=1: report the print/write call site, not this wrapper
-            logger.opt(depth=1).log(self.level, message)
-
-    def flush(self):
-        pass
-
-    def isatty(self):
-        return False
-
-
-class TqdmFileMirror:
-    """In-memory tqdm bar states, flushed to disk by a timer at most once per min_interval (atomic replace + fsync), so the file survives a hard crash."""
-
-    def __init__(self, path: Path, min_interval: float = 1.0):
-        self.path = path
-        self.min_interval = min_interval
-        self.lines = []
-        self.lock = threading.Lock()  # serializes timer and atexit flushes
-        self.timer = None
-        atexit.register(self.flush)
-
-    def update(self, bar, text: str):
-        if not hasattr(bar, "_mirror_line"):
-            bar._mirror_line = len(self.lines)
-            self.lines.append("")
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        self.lines[bar._mirror_line] = f"{timestamp} | {text}"
-        if self.timer is None:
-            if sys.is_finalizing():
-                # interpreter shutdown (e.g. a bar closed by its __del__ after an uncaught exception): 
-                # threads cannot start anymore and Thread.start() would hang forever, so write synchronously
-                return self.flush()
-            self.timer = threading.Timer(self.min_interval, self.flush)
-            self.timer.daemon = True
-            self.timer.start()
-
-    def flush(self):
-        with self.lock:
-            self.timer = None
-            if not self.lines:
-                return
-            tmp = self.path.with_name(self.path.name + ".tmp")
-            with open(tmp, "w", encoding="utf-8") as f:
-                f.write("\n".join(self.lines) + "\n")
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(tmp, self.path)
-
-
-def setup_logger(pipeline_config: PipeLineConfig, verbosity: int = 0):
-    # -v flags only escalate logging relative to the config:
-    # -v: backtrace,
-    # -vv: +diagnose,
-    # -vvv and beyond: log level one step more verbose each
-    log_levels = list(get_args(LogLevel))
-    level_idx = log_levels.index(pipeline_config.log_level) - max(0, verbosity - 2)
-    level = log_levels[max(0, level_idx)]
-    backtrace = pipeline_config.log_backtrace or verbosity >= 1
-    diagnose = pipeline_config.log_diagnose or verbosity >= 2
-    # The progress bar and the logs share one real stream:
-    # routing log lines through tqdm.write makes tqdm clear the bar, print them and redraw the bar below, instead of tearing it
-    real_stderr = sys.stderr
-    progress.progress_file = real_stderr
-    # Third-party tqdm bars are created with file=None and would resolve it to the redirected sys.stderr;
-    # give them the real terminal instead, so they render as normal bars and get cleared/redrawn around each log line
-    tqdm_init = tqdm.tqdm.__init__
-
-    def tqdm_init_to_real_stderr(self, *args, **kwargs):
-        if kwargs.get("file") is None:
-            kwargs["file"] = real_stderr
-        tqdm_init(self, *args, **kwargs)
-
-    tqdm.tqdm.__init__ = tqdm_init_to_real_stderr
-
-    # sink for the real console
-    logger.remove()
-    logger.add(
-        lambda m: tqdm.tqdm.write(m, end="", file=real_stderr),
-        level=level,
-        format=pipeline_config.log_format,
-        colorize=real_stderr.isatty(),
-        backtrace=backtrace,
-        diagnose=diagnose,
-    )
-    # file sinks under {result_path}/logs
-    logs_dir = pipeline_config.result_path / "logs"
-    logs_dir.mkdir(parents=True, exist_ok=True)
-    logger.add(
-        logs_dir / "console.log",
-        level=level,
-        format=pipeline_config.log_format,
-        colorize=False,
-        backtrace=backtrace,
-        diagnose=diagnose,
-        enqueue=True,
-    )
-    # file sink that logs errors
-    if pipeline_config.skip_errors:
-        logger.add(
-            logs_dir / "errors.log",
-            level="ERROR",
-            format=pipeline_config.log_format,
-            colorize=False,
-            backtrace=backtrace,
-            diagnose=diagnose,
-            enqueue=True,
-        )
-
-    # file that mirrors tqdm bars: every bar update goes through tqdm.display,
-    # so hooking it keeps one in-place-updated line per bar in the file
-    child_num = os.environ.get(CHILD_NUM_ENV_NAME)
-    mirror_name = "progress.log" if child_num is None else f"progress_{child_num}.log"
-    bars_mirror = TqdmFileMirror(logs_dir / mirror_name)
-    tqdm_display = tqdm.tqdm.display
-
-    def display_to_file(self, msg=None, pos=None):
-        if msg == "":  # a closing bar erases itself with an empty msg; keep its last state instead
-            return tqdm_display(self, msg=msg, pos=pos)
-        if msg is None:
-            msg = str(self)  # render once; passing the text down saves tqdm re-rendering it
-        bars_mirror.update(self, msg)
-        return tqdm_display(self, msg=msg, pos=pos)
-
-    tqdm.tqdm.display = display_to_file
-
-    sys.stdout = StreamToLogger("INFO")
-    sys.stderr = StreamToLogger("WARNING")
-
-
 def prerun():
     config_path = get_config_path_from_argv()
     if config_path is None:
@@ -209,11 +65,12 @@ def prerun():
     config = load_pipeline_config_yaml(config_path)
     pipeline_config: PipeLineConfig = config["pipeline"]
     
+    setup_cuda_visible_devices(pipeline_config)
+
     if "--dry-run" in sys.argv[1:]:
         pipeline_config.result_path /= "dry"
 
-    setup_logger(pipeline_config, get_verbosity_from_argv())
-    setup_cuda_visible_devices(pipeline_config)
+    setup_logger(pipeline_config, get_verbosity_from_argv(), os.environ.get(CHILD_NUM_ENV_NAME))
 
 
 prerun()
@@ -252,7 +109,7 @@ from wibench.config_loader import (
     ATTACKS_FIELD,
     PIPELINE_FIELD,
 )
-from wibench.config import PipeLineConfig, StageType
+from wibench.config import PipeLineConfig, StageType, should_create_post_pipeline_table
 import subprocess
 from wibench.aggregator import PandasAggregatorConfig
 from wibench.settings import PROFILES_DIR, VENVS_SUBDIR, get_profile, profile_of
@@ -301,7 +158,7 @@ def warn_about_dump_reads(stages: List[str], metrics: dict, pipeline_config: Pip
             )
 
 
-def clear_tables(config: PipeLineConfig, stages: List[str]):
+def clear_tables(config: PipeLineConfig, stages: List[str], metrics: dict):
     for aggregator_config in config.aggregators:
         if not isinstance(aggregator_config, PandasAggregatorConfig):
             continue
@@ -314,9 +171,8 @@ def clear_tables(config: PipeLineConfig, stages: List[str]):
         if StageType.embed in stages:
             if params_table_result_path.exists():
                 params_table_result_path.unlink()
-        if StageType.post_pipeline_aggregate in stages:
-            if post_pipeline_table_result_path.exists():
-                post_pipeline_table_result_path.unlink()
+        if should_create_post_pipeline_table(stages, metrics) and post_pipeline_table_result_path.exists():
+            post_pipeline_table_result_path.unlink()
 
 
 def subprocess_run(pipeline_config: PipeLineConfig, python_exec = sys.executable):
@@ -457,13 +313,14 @@ def run(
         pipeline_config.result_path /= "dry"
     if pipeline_config.seed is None:
         pipeline_config.seed = generate_random_seed()
-    clear_tables(pipeline_config, stages)
 
     process_num = int(os.environ[CHILD_NUM_ENV_NAME]) if CHILD_NUM_ENV_NAME in os.environ else 0
     alg_wrappers = loaded_config[ALGORITHMS_FIELD]
     metrics = {metric_field: loaded_config[metric_field] for metric_field in METRICS_FIELDS}
     datasets = loaded_config[DATASETS_FIELD]
     attacks = loaded_config[ATTACKS_FIELD]
+
+    clear_tables(pipeline_config, stages, metrics)
 
     warn_about_dump_reads(stages, metrics, pipeline_config, dump_context, len(alg_wrappers))
 

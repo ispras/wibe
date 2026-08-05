@@ -1,17 +1,15 @@
 algorithms:
-  syncseal:
-    params:
-      method: dct_marker
+  dct_marker
 
 datasets:
   ImageFolderDataset:
     path: tests/data
 
 attacks:
-  Identity
+  UniInvAttackFlux
 
 pipeline:
-  result_path: ./test_results/tests/syncseal
+  result_path: ./test_results/tests/uniinvattackflux
   aggregators:
     - CSV:
         table_name: table

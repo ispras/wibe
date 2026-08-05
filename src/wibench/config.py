@@ -49,6 +49,13 @@ class StageType(str, Enum):
     post_pipeline_aggregate = "post_pipeline_aggregate"
 
 
+def should_create_post_pipeline_table(stages, metrics) -> bool:
+    return StageType.post_pipeline_aggregate in stages and any(
+        s in stages and metrics.get(s)
+        for s in (StageType.post_pipeline_embed_metrics, StageType.post_pipeline_attack_metrics)
+    )
+
+
 @dataclass
 class Params:
     """Base configuration parameters for modules.

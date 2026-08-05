@@ -18,6 +18,10 @@ Everything lives under ``profiles/``::
    ├── image/                   # a profile
    │   ├── .python-version      # (optional) Python version for all venvs of this profile
    │   ├── requirements/
+   │   │   ├── common/          # same idea one level down, shared inside this profile only
+   │   │   │   ├── base/
+   │   │   │   │   └── base.txt # mandatory: included in every group of this profile
+   │   │   │   └── common.txt   # optional: participates in this profile's composition
    │   │   ├── algorithms/      # one txt per entity, e.g. trustmark.txt
    │   │   ├── attacks/
    │   │   ├── datasets/
@@ -39,6 +43,11 @@ Requirement file roles:
   Every group of every profile starts with these files; a requirement that conflicts with the base cannot be installed at all.
 * ``profiles/common/*.txt`` — shared optional requirements.
   They join the composition of every profile like ordinary files: placed into groups where they fit, skipped where they conflict.
+* ``profiles/<profile>/requirements/common/base/*.txt`` — the profile's mandatory base.
+  Same as the shared base, but scoped to one profile: every group of this profile starts with these files, other profiles ignore them completely.
+  This is where the profile's runtime stack lives (e.g. ``torch`` for ``image``) instead of ``pyproject.toml``, so an ``audio`` venv is not forced to carry it.
+* ``profiles/<profile>/requirements/common/*.txt`` — optional requirements shared inside the profile.
+  They participate only in this profile's composition, like ordinary files.
 * ``profiles/<profile>/requirements/**/*.txt`` — profile-specific requirements.
   The ``<entity_type>/<entity>.txt`` naming (e.g. ``algorithms/trustmark.txt``) is what connects a config entry to its requirement file.
 
@@ -47,7 +56,7 @@ Commands
 
 .. code-block:: console
 
-   (.venv) wibench-venv [STAGES]... [-p PROFILE] [-j JOBS]
+   (.venv) wibench-venv [STAGES]... [-p PROFILE] [-j JOBS] [-v]
 
 .. list-table:: Stages
    :header-rows: 1
@@ -87,6 +96,8 @@ Options:
   The name ``common`` is rejected since it is not a profile.
 * ``-j, --jobs`` — maximum number of concurrent ``uv`` processes (default 8).
   Compatibility checks and locking run concurrently; results are cached, so repeated checks of the same file combination cost nothing.
+* ``-v, --verbose`` — escalate logging, same scheme as the main CLI: ``-v`` extended tracebacks (backtrace), ``-vv`` adds variable diagnostics (diagnose), ``-vvv`` and beyond lower the log level one step per extra ``v`` (``-vvv`` = DEBUG).
+  Failed resolutions during ``compose``/``extend`` are logged at DEBUG (conflicts there are expected and numerous), so use ``-vvv`` to see why two files don't fit into one venv; failures on the other stages are visible without it.
 
 Per‑profile Python version
 --------------------------

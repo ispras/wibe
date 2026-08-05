@@ -4,8 +4,8 @@ huggingface-hub>=0.33.4
 kornia
 pytorch-lightning
 open-clip-torch
-torch
 timm
-torchvision
 transformers>=4.48.0
 omegaconf
+einops
+accelerate

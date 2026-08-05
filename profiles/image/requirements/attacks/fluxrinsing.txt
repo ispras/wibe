@@ -1,5 +1,4 @@
-torch
-diffusers>=0.31.0
+diffusers>=0.35.2
 transformers>=4.48.0
 accelerate
 protobuf

@@ -1,7 +1,6 @@
 import asyncio
 import shutil
 import subprocess
-import sys
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -13,9 +12,10 @@ from loguru import logger
 from tqdm import tqdm
 import typer
 
+from wibench.log import escalate, setup_console_logger
 from wibench.settings import (
     BASE_SUBDIR,
-    COMMON_PROFILE,
+    COMMON_SUBDIR,
     DEFAULT_PROFILE,
     GROUP_PREFIX,
     LOCK_SUFFIX,
@@ -28,9 +28,7 @@ from wibench.settings import (
     venv_python,
 )
 
-logger.remove()
-# Route logs through tqdm so progress bars are not torn by log lines
-logger.add(lambda m: tqdm.write(m, end="", file=sys.stderr), colorize=True, level="INFO")
+setup_console_logger()
 
 
 @dataclass(frozen=True)
@@ -147,18 +145,26 @@ async def _run_retrying(args: list[str], timeout: float | None = None) -> tuple[
     return result
 
 
+def _failure_reason(result: tuple[int, str] | None) -> str:
+    return result[1].strip() if result is not None else f"uv did not finish within {COMPILE_TIMEOUT}s"
+
+
 # Maps (python version, sorted paths) to the task computing compatibility, so
 # concurrent misses on the same key share one uv run
 _compatible_cache: dict[tuple, asyncio.Task] = {}
 
 
-async def _check_compatible(paths: tuple[Path, ...]) -> bool:
+async def _check_compatible(paths: tuple[Path, ...], fail_level: str) -> bool:
     args = [*UV_COMPILE, "--no-annotate", *_python_args(), *map(str, paths)]
     result = await _run_retrying(args, timeout=COMPILE_TIMEOUT)
-    return result is not None and result[0] == 0
+    if result is not None and result[0] == 0:
+        return True
+    reason = _failure_reason(result)
+    logger.log(fail_level, f"Resolution failed for {', '.join(p.name for p in paths)}:\n{reason}")
+    return False
 
 
-async def _compatible(paths: list[Path]) -> bool:
+async def _compatible(paths: list[Path], fail_level: str = "DEBUG") -> bool:
     """Return True if uv pip compile succeeds for the given requirement files (cached)."""
     if not paths:
         return True
@@ -166,19 +172,19 @@ async def _compatible(paths: list[Path]) -> bool:
     # the Python version changes resolvability, so it is part of the key
     key = (_python, *sorted(paths))
     if (task := _compatible_cache.get(key)) is None:
-        task = asyncio.ensure_future(_check_compatible(key[1:]))
+        task = asyncio.ensure_future(_check_compatible(key[1:], fail_level))
         _compatible_cache[key] = task
     return await task
 
 
 async def validate(base_paths: list[Path], req_paths: list[Path]) -> list[Path]:
-    if not await _compatible(base_paths):
+    if not await _compatible(base_paths, fail_level="ERROR"):
         logger.error(f"Base requirements are not compatible: {', '.join(str(p) for p in base_paths)}")
         raise typer.Exit(1)
 
     with tqdm(total=len(req_paths), desc="validate", unit="file") as bar:
         async def check(p: Path) -> bool:
-            ok = await _compatible(base_paths + [p])
+            ok = await _compatible(base_paths + [p], fail_level="WARNING")
             if ok:
                 logger.info(f"{p} valid")
             else:
@@ -322,9 +328,7 @@ async def extend(cfg: Config, base_paths: list[Path], req_paths: list[Path]) -> 
 def _exit_unless_ok(result: tuple[int, str] | None, action: str) -> None:
     if result is not None and result[0] == 0:
         return
-    logger.error(f"Failed to {action}")
-    if result is not None:
-        sys.stderr.write(result[1])
+    logger.error(f"Failed to {action}:\n{_failure_reason(result)}")
     raise typer.Exit(1)
 
 
@@ -350,7 +354,8 @@ async def install(cfg: Config) -> None:
     lock_paths = sorted(cfg.glob_locks())
     for lock_path in tqdm(lock_paths, desc="install", unit="venv"):
         venv_path = lock_path.with_suffix("")
-        await _run_retrying(["uv", "venv", "--clear", *_python_args(), str(venv_path)])
+        result = await _run_retrying(["uv", "venv", "--clear", *_python_args(), str(venv_path)])
+        _exit_unless_ok(result, f"create venv {venv_path.name}")
         result = await _run_retrying(
             ["uv", "pip", "install", "-p", str(venv_python(venv_path)), "-r", str(lock_path)]
         )
@@ -420,7 +425,19 @@ def run(
         "-j",
         help="Max number of concurrent uv processes",
     ),
+    verbose: int = typer.Option(
+        0,
+        "--verbose",
+        "-v",
+        count=True,
+        help="Escalate logging: -v extended tracebacks (backtrace), -vv +variable diagnostics (diagnose), "
+        "-vvv and beyond lower the log level one step per extra v "
+        f"(-vvv = DEBUG, e.g. resolution conflicts during {compose.__name__}/{extend.__name__})",
+    ),
 ):
+    if verbose:
+        level, backtrace, diagnose = escalate("INFO", verbose)
+        setup_console_logger(level, backtrace=backtrace, diagnose=diagnose)
     run_stages = set(stages or [install.__name__])
     for name, bundle in BUNDLES.items():
         if name in run_stages:
@@ -439,21 +456,22 @@ def run(
         raise typer.Exit(1)
 
     profile = get_profile(profile)
-    if profile == COMMON_PROFILE:
-        typer.echo(f"'{COMMON_PROFILE}' is not a profile: it holds requirements shared by all profiles", err=True)
+    if profile == COMMON_SUBDIR:
+        typer.echo(f"'{COMMON_SUBDIR}' is not a profile: it holds requirements shared by all profiles", err=True)
         raise typer.Exit(1)
     cfg = Config(profile)
-    common_dir = Path(PROFILES_DIR) / COMMON_PROFILE
-    base_dir = common_dir / BASE_SUBDIR
+    common_dir = Path(PROFILES_DIR) / COMMON_SUBDIR
 
-    # Mandatory part of every group
-    base_paths = sorted(base_dir.glob(f"*{TXT_SUFFIX}"))
+    # Mandatory part of every group: the shared base plus the profile's own base
+    base_dirs = (common_dir / BASE_SUBDIR, cfg.requirements_dir / COMMON_SUBDIR / BASE_SUBDIR)
+    base_paths = [p for d in base_dirs for p in sorted(d.glob(f"*{TXT_SUFFIX}"))]
     if not base_paths:
-        logger.warning(f"No base requirements in {base_dir}, groups get no mandatory part")
+        logger.warning(f"No base requirements in {' or '.join(map(str, base_dirs))}, groups get no mandatory part")
 
-    # Shared txts join every profile's composition as ordinary (optional) files
+    # Shared txts (cross-profile and profile-level) join the composition as ordinary (optional) files;
+    # the profile's base files are mandatory, not optional, so they are excluded from the recursive glob
     req_paths = sorted(common_dir.glob(f"*{TXT_SUFFIX}"))
-    req_paths += sorted(cfg.requirements_dir.rglob(f"*{TXT_SUFFIX}"))
+    req_paths += sorted(set(cfg.requirements_dir.rglob(f"*{TXT_SUFFIX}")) - set(base_paths))
     logger.info(f"Profile: {cfg.profile}")
     logger.info(f"Python: {cfg.python or '(uv default)'}")
     logger.info(f"Base: {', '.join(str(p) for p in base_paths) or '(none)'}")
