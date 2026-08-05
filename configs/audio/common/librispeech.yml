@@ -1,10 +1,5 @@
-  - LibriSpeech:
-      report_name: ls_test_clean
+  - &dataset_name LibriSpeech: &dataset_params
+      report_name: ls_{{ ls_split | default("test.clean") }}
       subset: all
-      split: test.clean
-      sample_range: [0, 2500]
-  - LibriSpeech:
-      report_name: ls_test_other
-      subset: all
-      split: test.other
+      split: {{ ls_split | default("test.clean") }}
       sample_range: [0, 2500]

@@ -1,5 +1,7 @@
+{% set ls_split = "test.clean" %}
+
 algorithms:
-  SpreadSpectrum:
+  &alg_name SpreadSpectrum: &alg_params
     params:
       sample_rate: 16000
       watermark_length: 10

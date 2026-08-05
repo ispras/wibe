@@ -1,5 +1,7 @@
+{% set ls_split = "test.clean" %}
+
 algorithms:
-  FSVC:
+  &alg_name FSVC: &alg_params
     params:
       sample_rate: 16000
       watermark_length: 40
@@ -7,18 +9,18 @@ algorithms:
       gamma1: 0.16
       gamma2: 0.4
 
+datasets:
+{% include 'common/audioset.yml' %}
+
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %}
 
 post_extract_metrics:
 {% include 'common/post_extract_metrics.yml' %}
-
-datasets:
-{% include 'common/librispeech.yml' %}
+{% include 'common/empirical_tpr@fpr.yml' %}
 
 attacks:
 {% include 'common/distortions.yml' %}
-
 
 pipeline:
   result_path: ./test_results/fsvc

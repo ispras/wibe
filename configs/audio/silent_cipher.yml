@@ -1,17 +1,19 @@
+{% set ls_split = "test.clean" %}
+
 algorithms:
-  silent_cipher:
+  &alg_name silent_cipher: &alg_params
     params:
       model: 44.1k
       device: cpu
+
+datasets:
+{% include 'common/librispeech.yml' %}
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %}
 
 post_extract_metrics:
 {% include 'common/post_extract_metrics.yml' %}
-
-datasets:
-{% include 'common/librispeech.yml' %}
 
 attacks:
 {% include 'common/distortions.yml' %}

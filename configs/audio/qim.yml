@@ -1,5 +1,7 @@
+{% set ls_split = "test.clean" %}
+
 algorithms:
-  QIM:
+  &alg_name QIM: &alg_params
     params:
       sample_rate: 16000
       watermark_length: 40

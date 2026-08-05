@@ -1,5 +1,8 @@
 algorithms:
-  wavmark:
+{% set ls_split = "test.clean" %}
+
+
+  &alg_name wavmark: &alg_params
     params:
       device: cpu
 

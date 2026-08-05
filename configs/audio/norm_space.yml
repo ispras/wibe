@@ -1,19 +1,21 @@
+{% set ls_split = "test.clean" %}
+
 algorithms:
-  NormSpace:
+  &alg_name NormSpace: &alg_params
     params:
       sample_rate: 16000
       watermark_length: 40
       delta: 0.03
       wavelet: db1
 
+datasets:
+{% include 'common/librispeech.yml' %}
+
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %}
 
 post_extract_metrics:
 {% include 'common/post_extract_metrics.yml' %}
-
-datasets:
-{% include 'common/librispeech.yml' %}
 
 attacks:
 {% include 'common/distortions.yml' %}

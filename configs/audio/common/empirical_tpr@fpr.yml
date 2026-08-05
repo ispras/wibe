@@ -1,15 +1,48 @@
   - EmpiricalTPR@xFPR:
       report_name: etpr@10e-1fpr
       fpr_rate: 0.1
-      algorithm: aware
+      algorithm: *alg_name
       algorithm_params:
-        params:
-          device: cpu
-      dataset: audioset
+        <<: *alg_params
+      dataset: *dataset_name
       dataset_params:
-        cache_dir: /media/do-op/75003b47-88db-474a-8a2a-dcd2d5f6f059/data/HF-cache/
-        subset: balanced
-        split: test
+        <<: *dataset_params
         sample_range: [0, 99]
-      random_extracts_path: "./random_audioset_extracts_0.1.csv"
+      random_extracts_path: "./random_extracts_0.1.csv"
+{% if alg_name in ["perth"] %}
+      method_type: zerobit
+{% else %}
       method_type: multibit
+{% endif %}
+  - EmpiricalTPR@xFPR:
+      report_name: etpr@10e-2fpr
+      fpr_rate: 0.01
+      algorithm: *alg_name
+      algorithm_params:
+        <<: *alg_params
+      dataset: *dataset_name
+      dataset_params:
+        <<: *dataset_params
+        sample_range: [0, 999]
+      random_extracts_path: "./random_extracts_0.01.csv"
+{% if alg_name in ["perth"] %}
+      method_type: zerobit
+{% else %}
+      method_type: multibit
+{% endif %}
+  - EmpiricalTPR@xFPR:
+      report_name: etpr@10e-3fpr
+      fpr_rate: 0.001
+      algorithm: *alg_name
+      algorithm_params:
+        <<: *alg_params
+      dataset: *dataset_name
+      dataset_params:
+        <<: *dataset_params
+        sample_range: [0, 9999]
+      random_extracts_path: "./random_extracts_0.001.csv"
+{% if alg_name in ["perth"] %}
+      method_type: zerobit
+{% else %}
+      method_type: multibit
+{% endif %}

@@ -1,17 +1,19 @@
+{% set ls_split = "test.clean" %}
+
 algorithms:
-  cryptomark:
+  &alg_name cryptomark: &alg_params
     params:
       profile: light
       target_rate: 16000
+
+datasets:
+{% include 'common/librispeech.yml' %}
 
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %}
 
 post_extract_metrics:
 {% include 'common/post_extract_metrics.yml' %}
-
-datasets:
-{% include 'common/librispeech.yml' %}
 
 attacks:
 {% include 'common/distortions.yml' %}
