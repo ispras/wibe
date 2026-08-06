@@ -20,7 +20,8 @@ import wibench
 project = 'WIBE'
 copyright = '2026, ISP RAS'
 author = 'Ivannikov Institute for System Programming of the Russian Academy of Sciences'
-release = '0.4'
+release = "0.4.0"
+version = "0.4"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

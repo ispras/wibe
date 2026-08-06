@@ -18,9 +18,9 @@ B. Configure the environment
 
 In python>=3.10 environment run
 
-   .. code-block:: console
+.. code-block:: console
 
-      source prepare.sh
+    source prepare.sh
 
 See :ref:`setup <setup-link>` for more detailed setup
 
@@ -42,7 +42,7 @@ Specify the path to your ``configuration file`` as a required parameter:
 
    (.venv) wibench --config configs/trustmark_demo.yml
 
-You can find some predefined configurations in the ``config`` directory.
+You can find some predefined configurations in the ``configs`` directory.
 
 E. Results
 ----------
