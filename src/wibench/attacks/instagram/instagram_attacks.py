@@ -5,7 +5,7 @@ from torchvision.transforms.functional import to_tensor
 
 from wibench.attacks.base import BaseAttack
 from wibench.typing import TorchImg
-import pilgram
+
 
 
 class InstagramAttacks(BaseAttack):
@@ -13,6 +13,8 @@ class InstagramAttacks(BaseAttack):
     name = "instagram_attacks"
 
     def __init__(self, attack: str, module: Optional[str] = None) -> None:
+        import pilgram
+        
         if module not in [None, "css"]:
             raise AttributeError(f"Module {module} not supported in pilgram!")
         self.attack = getattr(pilgram if module is None else getattr(pilgram, module), attack)
