@@ -1,5 +1,5 @@
-# WIBE: Watermarks for generated Images – Benchmarking & Evaluation
-
+# [ASE 2025 Tool Demo] WIBE: Watermarks for generated Images – Benchmarking & Evaluation
+# (Coming soon) WARP: A Unified Benchmark for Invisible Image Watermarking — Robustness and Protection Against Attacks
 ![Documentation Status](https://readthedocs.org/projects/example-sphinx-basic/badge/?version=latest)
 
 **WIBE** is a modular and extensible framework for automated testing of invisible image watermarking methods under various attack scenarios.
@@ -227,4 +227,17 @@ Below is an average `TPR@0.1%FPR` chart for 7 algorithms under different types o
 
 * [Full documentation](https://ispras-wibe.readthedocs.io/en/latest/index.html)
 * [Tutorial video](https://youtu.be/31kiJ8G2NG8)
-* [Virtual environment manager (`wibench-venv`)](docs/venv_manager.md)
+
+## Citation
+
+If you find our work useful for your research, please cite our paper:
+
+```bibtex
+@inproceedings{yakushev2025wibe,
+  title={WIBE: Watermarks for generated Images--Benchmarking \& Evaluation},
+  author={Yakushev, Aleksey and Akimenkov, Aleksandr and Abud, Khaled and Obydenkov, Dmitry and Serzhenko, Irina and Aistov, Kirill and Kovalev, Egor and Fomin, Stanislav and Antsiferova, Anastasia and Lukianov, Kirill and Markin, Yury},
+  booktitle={2025 40th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
+  pages={4033--4036},
+  year={2025},
+  organization={IEEE}
+}
