@@ -1,0 +1,15 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  blurdeblurfpninception
+
+pipeline:
+  result_path: ./test_results/tests/blurdeblurfpninception
+  aggregators:
+    - CSV:
+        table_name: table

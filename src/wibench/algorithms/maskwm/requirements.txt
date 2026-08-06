@@ -1,8 +1,0 @@
-torch
-torchvision
-accelerate
-compressai
-numpy
-kornia
-diffusers
-pillow

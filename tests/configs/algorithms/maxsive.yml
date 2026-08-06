@@ -1,0 +1,15 @@
+algorithms:
+  maxsive
+
+datasets:
+  PromptFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/maxsive
+  aggregators:
+    - CSV:
+        table_name: table

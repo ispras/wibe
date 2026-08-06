@@ -1,13 +1,12 @@
 import torch
 from pathlib import Path
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.algorithms import BaseAlgorithmWrapper
 from wibench.watermark_data import TorchBitWatermarkData
-from wibench.module_importer import ModuleImporter
 from wibench.download import requires_download
 
 
-DEFAULT_VIDEOSEAL_SUBMODULE_PATH = "./submodules/videoseal"
 DEFAULT_VIDEOSEAL_MODEL_CARD_PATH = "resources/videoseal/videoseal_1.0.yaml"
 DEFAULT_PIXELSEAL_MODEL_CARD_PATH = "resources/videoseal/pixelseal.yaml"
 DEFAULT_CHUNKYSEAL_MODEL_CARD_PATH = "resources/videoseal/chunkyseal.yaml"
@@ -30,19 +29,17 @@ class VideosealWrapper(BaseAlgorithmWrapper):
     Provides an interface for embedding and extracting watermarks using the VideoSeal watermarking algorithm.
     Based on the code from `here <https://github.com/facebookresearch/videoseal>`__.
     """
-    
+    pipeline_type = PipelineType.IMAGE
     name = NAME_VIDEOSEAL
 
     def __init__(
         self,
         strength_factor: float = 1.,
         model_card: str = DEFAULT_VIDEOSEAL_MODEL_CARD_PATH,
-        module_path: str = DEFAULT_VIDEOSEAL_SUBMODULE_PATH,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
     ):
-        with ModuleImporter("VIDEOSEAL", module_path):
-            from VIDEOSEAL.videoseal.utils.cfg import setup_model_from_model_card
-            self.model = setup_model_from_model_card(Path(model_card))
+        from videoseal.utils.cfg import setup_model_from_model_card
+        self.model = setup_model_from_model_card(Path(model_card))
         self.model.eval()
         self.model.compile()
         self.model.blender.scaling_w *= strength_factor
@@ -89,10 +86,9 @@ class PixelSeal(VideosealWrapper):
         self,
         strength_factor: float = 1.,
         model_card:str = DEFAULT_PIXELSEAL_MODEL_CARD_PATH,
-        module_path: str = DEFAULT_VIDEOSEAL_SUBMODULE_PATH,
         device: str ="cuda" if torch.cuda.is_available() else "cpu",
     ):
-        super().__init__(strength_factor, model_card, module_path, device)
+        super().__init__(strength_factor, model_card, device)
         
 
 @requires_download(URL_CHUNKYSEAL, NAME_CHUNKYSEAL, REQUIRED_FILES_CHUNKYSEAL)
@@ -111,7 +107,6 @@ class ChunkySeal(VideosealWrapper):
         self,
         strength_factor: float = 1.,
         model_card:str = DEFAULT_CHUNKYSEAL_MODEL_CARD_PATH,
-        module_path: str = DEFAULT_VIDEOSEAL_SUBMODULE_PATH,
         device: str ="cuda" if torch.cuda.is_available() else "cpu",
     ):
-        super().__init__(strength_factor, model_card, module_path, device)
+        super().__init__(strength_factor, model_card, device)

@@ -1,8 +1,8 @@
-import ImageReward as RM
 import torch
 
 from typing_extensions import Any
 
+from wibench.pipeline_type import PipelineType
 from wibench.utils import (
     torch_img2numpy_bgr,
     save_tmp_images,
@@ -36,7 +36,10 @@ class BLIP(PostEmbedMetric):
     - The watermark_data field is required for the pipeline to work correctly
     """
 
+    pipeline_type = PipelineType.PROMPT
+
     def __init__(self, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
+        import ImageReward as RM
         self.model = RM.load_score("BLIP", device=device)
 
     def __call__(self,

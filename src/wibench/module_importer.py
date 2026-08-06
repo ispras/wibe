@@ -4,9 +4,11 @@ import pkgutil
 import sys
 import builtins
 import os
+import importlib
 
 from pathlib import Path
 from typing_extensions import Union, Dict, Any
+from loguru import logger
 
 
 def import_modules(package_name):
@@ -15,14 +17,14 @@ def import_modules(package_name):
     try:
         package = importlib.import_module(package_name)
     except Exception as e:
-        print(
+        logger.warning(
             f"Could not import '{package_name}': {e}"
         )  # Todo: logging
     for _, module_name, _ in pkgutil.iter_modules(package.__path__):
         try:
             importlib.import_module(f"{package_name}.{module_name}")
         except Exception as e:
-            print(
+            logger.warning(
                 f"Could not import '{module_name}' from '{package_name}': {e}"
             )  # Todo: logging
   
@@ -109,7 +111,8 @@ class ModuleImporter():
                     return result
             
             elif level > 0:
-                result = self._handle_relative_import(name, importer_name, level, fromlist)
+                file = globals["__file__"] if globals and "__file__" in globals else None
+                result = self._handle_relative_import(name, importer_name, level, fromlist, file)
                 if result is not None:
                     return result
 
@@ -158,7 +161,7 @@ class ModuleImporter():
         
         return None
 
-    def _handle_relative_import(self, name, importer_name, level, fromlist):
+    def _handle_relative_import(self, name, importer_name, level, fromlist, importer_file):
         if not importer_name.startswith(self.module_name):
             return None
         
@@ -169,7 +172,19 @@ class ModuleImporter():
                 package_parts = importer_name.split('.')
                 if level > len(package_parts):
                     return None
-                absolute_name = '.'.join(package_parts[:-level] + [name])
+                
+                pos = len(package_parts) - level + 1 if importer_file is not None and importer_file.endswith("__init__.py") else len(package_parts) - level
+                if len(name) > 0:    
+                    absolute_name = '.'.join(package_parts[: pos] + [name])
+                else:
+                    absolute_name = '.'.join(package_parts[: pos])
+                    
+                if pos == len(package_parts) and len(name) == 0 and len(fromlist) > 0:
+                    for module in fromlist:
+                        absolute_name = '.'.join(package_parts + [module])
+                        self._try_import_from_module_path(absolute_name, importer_name, [])
+                    return None
+                    
             else:
                 if level > 1:
                     return None
@@ -181,6 +196,8 @@ class ModuleImporter():
         return self._try_import_from_module_path(absolute_name, importer_name, fromlist)
 
     def _load_nested_module(self, fullname, path, add_alias=False):
+        if fullname in sys.modules:
+            return sys.modules[fullname]
         if fullname in self.nested_modules:
             return self.nested_modules[fullname]
         rel_name = fullname.split(".", maxsplit=1)[1]
@@ -197,9 +214,8 @@ class ModuleImporter():
             spec.loader.exec_module(module)
         except Exception as e:
             del sys.modules[fullname]
-            print(f"Failed to load nested module {fullname}: {e}")
+            logger.warning(f"Failed to load nested module {fullname}: {e}")
             return None
-            raise ImportError(f"Failed to load nested module {fullname}: {e}")
         
         self.nested_modules[fullname] = module
         if add_alias:
@@ -213,5 +229,11 @@ class ModuleImporter():
     def __exit__(self, exc_type, exc, exc_tb):
         builtins.__import__ = self.original_import
 
-        for name in list(self.nested_modules.keys()):
+        pop_set = set(self.nested_modules.keys())
+        
+        for module in sys.modules:
+            if module.startswith(self.module_name + "."):
+                pop_set.add(module)
+        
+        for name in pop_set:
             sys.modules.pop(name, None)

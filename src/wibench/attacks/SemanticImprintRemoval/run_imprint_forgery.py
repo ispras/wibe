@@ -8,6 +8,7 @@ import PIL
 import PIL.Image
 import torch
 from torchvision.transforms.functional import to_tensor
+from loguru import logger
 
 import pandas as pd
 
@@ -169,16 +170,17 @@ results["detection_successful"] = detection_successful
 rows.append(results)
 
 # log
-print(
-    f"Step {results['step']}, "
-    f"detection_success: {detection_successful}, "
-    f"bit accuracy: {results['bit_accuracy']:.5f}, "
-    f"p_value: {results['p_value']}, "
-    f"psnr: {results['psnr']:.5f}, "
-    f"ssim: {results['ssim']:.5f}, "
-    f"ms-ssim: {results['msssim']:.5f}, "
-    f"lpips: {results['lpips']:.5f}"
-)
+logger.info(f"""\n
+    Step {results['step']}\n
+    detection_success: {detection_successful}\n
+    bit accuracy: {results['bit_accuracy']:.5f}\n
+    p_value: {results['p_value']}\n
+    psnr: {results['psnr']:.5f}\n
+    ssim: {results['ssim']:.5f}\n
+    ms-ssim: {results['msssim']:.5f}\n
+    lpips: {results['lpips']:.5f}\n
+    """
+    )
 
 # training loop
 inverted_history = []
@@ -233,16 +235,17 @@ for step in tqdm.tqdm(range(args.steps)):
         rows.append(results)
 
         # log
-        print(
-            f"Step {results['step']}, "
-            f"detection_success: {detection_successful}, "
-            f"bit accuracy: {results['bit_accuracy']:.5f}, "
-            f"p_value: {results['p_value']}, "
-            f"psnr: {results['psnr']:.5f}, "
-            f"ssim: {results['ssim']:.5f}, "
-            f"ms-ssim: {results['msssim']:.5f}, "
-            f"lpips: {results['lpips']:.5f}"
-        )
+        logger.info(f"""\n
+            Step {results['step']}\n
+            detection_success: {detection_successful}\n
+            bit accuracy: {results['bit_accuracy']:.5f}\n
+            p_value: {results['p_value']}\n
+            psnr: {results['psnr']:.5f}\n
+            ssim: {results['ssim']:.5f}\n
+            ms-ssim: {results['msssim']:.5f}\n
+            lpips: {results['lpips']:.5f}\n
+            """
+            )
 
         # save metrics as csv every validation round
         df = pd.DataFrame(rows)

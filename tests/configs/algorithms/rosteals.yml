@@ -1,0 +1,15 @@
+algorithms:
+  rosteals
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/rosteals
+  aggregators:
+    - CSV:
+        table_name: table

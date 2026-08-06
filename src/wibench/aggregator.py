@@ -1,6 +1,7 @@
 import pandas as pd
 import traceback
 import json
+from loguru import logger
 
 from abc import (
     ABC,
@@ -90,6 +91,8 @@ class PandasAggregator(Aggregator):
         -----
         - Uses FileLock for multiprocess-safe operations
         - Handles header writing for new files
+        - Aligns batch columns with the existing CSV header (missing columns are filled with NaN);
+          if the batch brings new columns, the file is rewritten with the extended header so no data is lost
         - Silently skips on lock timeout
         """
         lock_path = path.parent / (path.name + ".lock")
@@ -97,16 +100,21 @@ class PandasAggregator(Aggregator):
 
         try:
             with lock:
-                df.to_csv(
-                    path,
-                    mode='a',
-                    header=not path.exists(),
-                    index=False
-                )
+                if not path.exists():
+                    df.to_csv(path, mode='a', header=True, index=False)
+                    return
+                header = pd.read_csv(path, nrows=0).columns.tolist()
+                if set(df.columns) - set(header):
+                    table = pd.concat([pd.read_csv(path), df], ignore_index=True)
+                    table.to_csv(path, mode='w', header=True, index=False)
+                else:
+                    df.reindex(columns=header).to_csv(
+                        path, mode='a', header=False, index=False
+                    )
         except Timeout:
-            print(f"Timeout: Could not acquire lock on {lock_path}")
+            logger.warning(f"Timeout: Could not acquire lock on {lock_path}")
         except Exception as e:
-            print(f"Error: {e}")
+            logger.warning(f"Error: {e}")
 
     def add(self, records: Dict[str, Any], dry: bool = False, post_pipeline_run: bool = False) -> None:
         """Process records and append to CSV files.
@@ -137,7 +145,8 @@ class PandasAggregator(Aggregator):
         batch = batch.drop(columns=["params"], axis=1)
         modify_records = batch.to_dict(orient="records")
         records = [planarize_dict(record) for record in modify_records]
-        columns = list(records[0].keys())
+        # union of keys over the batch
+        columns = list(dict.fromkeys(key for record in records for key in record))
         self.metrics_table = pd.DataFrame(records, columns=columns)
         self.safe_append_csv(self.metrics_table, metric_table_path)
 
@@ -215,7 +224,7 @@ class FanoutAggregator:
             try:
                 aggregator.add(records, dry, post_pipeline_run)
             except Exception:
-                print(f"An error occurred while aggregating information using the {aggregator.name} aggregator")  # TODO: logging
+                logger.warning(f"An error occurred while aggregating information using the {aggregator.name} aggregator")  # TODO: logging
                 traceback.print_exc()
 
 
@@ -244,11 +253,11 @@ def build_fanout_from_config(aggregators: List[AggregatorConfig], result_path: U
         if isinstance(aggr_config, PandasAggregatorConfig):
             aggregator = PandasAggregator(aggr_config, result_path)
             _aggregators.append(aggregator)
-            print("Loaded: CSV aggregator") # TODO: logging
+            logger.info("Loaded: CSV aggregator") # TODO: logging
         if isinstance(aggr_config, ClickHouseAggregatorConfig):
             aggregator = ClickHouseAggregator(aggr_config, result_path)
             _aggregators.append(aggregator)
-            print("Loaded: ClickHouse aggregator")
+            logger.info("Loaded: ClickHouse aggregator")
     if not len(_aggregators):
         raise ValueError("No aggregators loaded!")
     return FanoutAggregator(_aggregators)

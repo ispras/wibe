@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 
 from .models import register
+from loguru import logger
 
 
 def default_conv(in_channels, out_channels, kernel_size, bias=True):
@@ -169,7 +170,7 @@ class RCAN(nn.Module):
                     own_state[name].copy_(param)
                 except Exception:
                     if name.find('tail') >= 0:
-                        print('Replace pre-trained upsampler to new one...')
+                        logger.debug('Replace pre-trained upsampler to new one...')
                     else:
                         raise RuntimeError('While copying the parameter named {}, '
                                            'whose dimensions in the model are {} and '

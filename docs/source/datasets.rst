@@ -41,7 +41,10 @@ If it is possible to get number of samples in dataset, you may inherit from ``Ra
     from wibench.datasets import RangeBaseDataset
     from wibench.typing import ImageObject
 
-    class MyDataset(BaseDataset):
+    class MyDataset(RangeBaseDataset):
+
+        # Pipeline type depends on returned data type
+        pipeline_type = PipelineType.IMAGE
 
         def __init__(self, parametrs_of_dataset, sample_range: Optional[Tuple[int, int]] = None):
             ...
@@ -52,7 +55,8 @@ If it is possible to get number of samples in dataset, you may inherit from ``Ra
             ...
 
         def generator(self) -> Generator[ImageObject, None, None]:
-                # Yields images from directory.
+                # Yields images from directory. Alternatively, PromptObject 
+                # may be returned (pipeline_type should be changed accordingly)
                 ...
                 yield ImageObject(image_id, torch_image)
 

@@ -1,37 +1,39 @@
 from pathlib import Path
-from .datasets.base import BaseDataset
 from .algorithms.base import BaseAlgorithmWrapper
 from .attacks.base import BaseAttack
-from .metrics.base import BaseMetric, PostEmbedMetric, PostExtractMetric, PostPipelineMetric
-from .config import PipeLineConfig, AggregatorConfig, StageType, DumpType
+from .metrics.base import PostEmbedMetric, PostExtractMetric, PostPipelineMetric
+from .config import PipeLineConfig, AggregatorConfig, StageType, DumpType, should_create_post_pipeline_table
 from .utils import (
     seed_everything,
     object_id_to_seed
 )
 from .context import Context
+from .progress import Progress
 from typing import (
     List,
     Tuple,
     Union,
-    Iterable,
     Dict,
     Type,
-    Optional,
     Any,
+    Callable,
 )
 from wibench.typing import Object
 from dataclasses import is_dataclass
-from .config_loader import (
+from .base_objects import (
     get_algorithms,
     get_attacks,
     get_datasets,
     get_metrics,
+    get_report_name,
 )
 from .aggregator import build_fanout_from_config
 import tqdm
 from time import perf_counter
 import datetime
-from itertools import islice
+from itertools import islice, product
+from wibench.pipeline_type import PipelineType
+from loguru import logger
 
 
 class Stage:
@@ -40,11 +42,21 @@ class Stage:
     Each stage represents a distinct step in the watermarking pipeline workflow.
     Concrete implementations must override the process_object method.
 
+    Attributes
+    ----------
+    skip_errors : bool
+        If True, errors inside safe_call are logged and None is returned
+        instead of raising (set from PipeLineConfig.skip_errors)
+
     Methods
     -------
     process_object(object_context)
         Process an object through this stage (abstract)
+    safe_call(object_context, details, func, *args, **kwargs)
+        Call func, returning None on failure when skip_errors is enabled
     """
+    skip_errors: bool = True
+
     def process_object(self, object_context: Context) -> None:
         """Process an object through this pipeline stage.
 
@@ -54,9 +66,32 @@ class Stage:
             The context containing all object data and metadata
         """
         raise NotImplementedError()
-    
 
-class PostPipelineStage:
+    def safe_call(self, object_context: Context, details: Dict[str, Any], func: Callable, *args: Any, **kwargs: Any) -> Any:
+        """Call func with given arguments; on failure return None if skip_errors is set.
+
+        Parameters
+        ----------
+        object_context : Context
+            Context used to annotate the error log (method, object_id)
+        details : Dict[str, Any]
+            Extra fields for the error log (e.g. attack/metric name)
+        func : Callable
+            Function to call with the remaining arguments
+        """
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            if not self.skip_errors:
+                raise
+            details = {"method": object_context.method, **details,
+                       "object_id": object_context.object_id}
+            info = "\n".join(f"{k}: {v}" for k, v in details.items())
+            logger.exception(f"\n{type(self).__name__} failed, recording None:\n{info}")
+            return None
+
+
+class PostPipelineStage(Stage):
     """Abstract base class for all post pipeline processing stages.
 
     Each stage represents a distinct step in the watermarking post pipeline workflow.
@@ -70,17 +105,7 @@ class PostPipelineStage:
         Sets the context loading folder (classmethod)
     """
     context_dir: Path
-    
-    def process_object(self, object_context: Context) -> None:
-        """Process an object through this pipeline stage.
 
-        Parameters
-        ----------
-        object_context : Context
-            The context containing all object data and metadata
-        """
-        raise NotImplementedError()
-    
     @classmethod
     def set_context_dir(self, context_dir: Path) -> None:
         self.context_dir = context_dir 
@@ -113,11 +138,15 @@ class EmbedWatermarkStage(Stage):
         object_context.params = self.algorithm_wrapper.param_dict
         object_context.watermark_data = watermark_data
         s_time = perf_counter()
-        object_context.marked_object = self.algorithm_wrapper.embed(
-            **object_context.original_object, watermark_data=watermark_data
+        marked_object = self.safe_call(
+            object_context, {},
+            self.algorithm_wrapper.embed,
+            **object_context.original_object,
+            watermark_data=watermark_data,
         )
+        object_context.marked_object = marked_object
         object_context.marked_object_metrics["embed_time"] = (
-            perf_counter() - s_time
+            perf_counter() - s_time if marked_object is not None else None
         )
 
 
@@ -144,7 +173,12 @@ class PostEmbedMetricsStage(Stage):
         original_object_data = object_context.object_data
         marked_object = object_context.marked_object
         for metric in self.metrics:
-            res = metric(original_object_data, marked_object, watermark_data)
+            res = None
+            if marked_object is not None:
+                res = self.safe_call(
+                    object_context, {"metric": metric.report_name},
+                    metric, original_object_data, marked_object, watermark_data,
+                )
             object_context.marked_object_metrics[metric.report_name] = res
 
 
@@ -181,12 +215,13 @@ class PostAttackMetricsStage(Stage):
             attacked_object,
         ) in attacked_objects.items():
             for metric in self.metrics:
-                res = metric(
-                    marked_object, attacked_object, watermark_data
-                )
-                object_context.attacked_object_metrics[attack_name][
-                    metric.report_name
-                ] = res
+                res = None
+                if attacked_object is not None:
+                    res = self.safe_call(
+                        object_context, {"attack": attack_name, "metric": metric.report_name},
+                        metric, marked_object, attacked_object, watermark_data,
+                    )
+                object_context.attacked_object_metrics[attack_name][metric.report_name] = res
 
 
 class ApplyAttacksStage(Stage):
@@ -213,9 +248,16 @@ class ApplyAttacksStage(Stage):
         for attack in self.attacks:
             object_context.attacked_object_metrics[attack.report_name] = {}
             s_time = perf_counter()
-            attacked_object_context[attack.report_name] = attack(marked_object)
-            attack_time = perf_counter() - s_time
-            object_context.attacked_object_metrics[attack.report_name]["attack_time"] = attack_time
+            attacked_object = None
+            if marked_object is not None:
+                attacked_object = self.safe_call(
+                    object_context, {"attack": attack.report_name},
+                    attack, marked_object.clone(),
+                )
+            attacked_object_context[attack.report_name] = attacked_object
+            object_context.attacked_object_metrics[attack.report_name]["attack_time"] = (
+                perf_counter() - s_time if attacked_object is not None else None
+            )
 
 
 class ExtractWatermarkStage(Stage):
@@ -241,14 +283,16 @@ class ExtractWatermarkStage(Stage):
         watermark_data = object_context.watermark_data
         for attack_name, attacked_object in object_context.attacked_objects.items():
             s_time = perf_counter()
-            extraction_result = self.algorithm_wrapper.extract(
-                attacked_object, watermark_data
-            )
-            object_context.attacked_object_metrics[attack_name][
-                "extract_time"
-            ] = (perf_counter() - s_time)
-
+            extraction_result = None
+            if attacked_object is not None:
+                extraction_result = self.safe_call(
+                    object_context, {"attack": attack_name},
+                    self.algorithm_wrapper.extract, attacked_object, watermark_data,
+                )
             object_context.extraction_result[attack_name] = extraction_result
+            object_context.attacked_object_metrics[attack_name]["extract_time"] = (
+                perf_counter() - s_time if extraction_result is not None else None
+            )
 
 
 class PostExtractMetricsStage(Stage):
@@ -286,12 +330,13 @@ class PostExtractMetricsStage(Stage):
         ) in object_context.attacked_objects.items():
             extraction_result = object_context.extraction_result[attack_name]
             for metric in self.metrics:
-                res = metric(
-                    watermark_object, attacked_object, watermark_data, extraction_result
+                res = None
+                if extraction_result is not None:
+                    res = self.safe_call(
+                    object_context, {"attack": attack_name, "metric": metric.report_name},
+                    metric, watermark_object, attacked_object, watermark_data, extraction_result,
                 )
-                object_context.attacked_object_metrics[attack_name][
-                    metric.report_name
-                ] = res
+                object_context.attacked_object_metrics[attack_name][metric.report_name] = res
 
 
 class PostPipelineEmbedMetricsStage(PostPipelineStage):
@@ -299,7 +344,7 @@ class PostPipelineEmbedMetricsStage(PostPipelineStage):
     """
     def __init__(self,
                  metrics: List[PostPipelineMetric],
-                 algorithm_wrapper: BaseAlgorithmWrapper,
+                 algorithm_wrapper: Tuple[str, Any],
                  dump_type: DumpType) -> None:
         self.metrics = metrics
         self.dump_type = dump_type
@@ -307,20 +352,23 @@ class PostPipelineEmbedMetricsStage(PostPipelineStage):
         super().__init__()
 
     def process_object(self, object_context: Context):
-        ids = [img_id for img_id in islice(Context.glob(self.context_dir, self.dump_type), 0, None, 1)]
-        for metric in self.metrics:
-            for img_id in ids:
-                context = Context.load(self.context_dir, img_id, self.dump_type)
-                if context.dataset != object_context.dataset:
-                    continue
-                marked_object = context.marked_object
-                original_object = context.object_data
-                metric.update(original_object, marked_object)
-            object_context.marked_object_metrics[metric.report_name] = metric()
-            metric.reset()
-        object_context.method = self.algorithm_wrapper.report_name
-        object_context.param_hash = self.algorithm_wrapper.param_hash
+        object_context.method = get_report_name(*self.algorithm_wrapper)
         object_context.dtm = datetime.datetime.now()
+        ids = list(Context.glob(self.context_dir, self.dump_type))
+        for metric in self.metrics:
+            def compute(metric=metric):
+                # resetting first guarantees a clean state even if the previous compute failed midway
+                metric.reset()
+                for img_id in ids:
+                    context = Context.load(self.context_dir, img_id, self.dump_type)
+                    if context.dataset != object_context.dataset or context.marked_object is None:
+                        continue
+                    object_context.param_hash = context.param_hash
+                    metric.update(context.object_data, context.marked_object)
+                return metric()
+            object_context.marked_object_metrics[metric.report_name] = self.safe_call(
+                object_context, {"metric": metric.report_name}, compute
+            )
         return object_context
 
 
@@ -329,32 +377,42 @@ class PostPipelineAttackMetricsStage(PostPipelineStage):
     """
     def __init__(self,
                  metrics: List[PostPipelineMetric],
-                 attacks: List[BaseAttack],
-                 algorithm_wrapper: BaseAlgorithmWrapper,
+                 attacks: List[Tuple[str, Any]],
+                 algorithm_wrapper: Tuple[str, Any],
                  dump_type: DumpType) -> None:
         self.metrics = metrics
         self.algorithm_wrapper = algorithm_wrapper
-        self.attacks = [attack.report_name for attack in attacks]
+        self.attacks = [get_report_name(name, config) for name, config in attacks]
         self.dump_type = dump_type
         super().__init__()
 
     def process_object(self, object_context: Context) -> None:
+        object_context.method = get_report_name(*self.algorithm_wrapper)
+        object_context.dtm = datetime.datetime.now()
         object_context.attacked_object_metrics = {}
-        ids = [img_id for img_id in islice(Context.glob(self.context_dir, self.dump_type), 0, None, 1)]
+        ids = list(Context.glob(self.context_dir, self.dump_type))
         for metric in self.metrics:
             for attack in self.attacks:
-                for img_id in ids:
-                    context = Context.load(self.context_dir, img_id, self.dump_type)
-                    if context.dataset != object_context.dataset:
-                        continue
-                    marked_object = context.marked_object
-                    attacked_object = context.attacked_objects[attack]
-                    metric.update(marked_object, attacked_object)
-                object_context.attacked_object_metrics[attack] = {metric.report_name: metric()}
-                metric.reset()
-        object_context.method = self.algorithm_wrapper.report_name
-        object_context.param_hash = self.algorithm_wrapper.param_hash
-        object_context.dtm = datetime.datetime.now()
+                def compute(metric=metric, attack=attack):
+                    # resetting first guarantees a clean state even if the previous compute failed midway
+                    metric.reset()
+                    for img_id in ids:
+                        context = Context.load(self.context_dir, img_id, self.dump_type)
+                        if context.dataset != object_context.dataset:
+                            continue
+                        marked_object = context.marked_object
+                        attacked_object = context.attacked_objects[attack]
+                        if marked_object is None or attacked_object is None:
+                            continue
+                        object_context.param_hash = context.param_hash
+                        metric.update(marked_object, attacked_object)
+                    return metric()
+                object_context.attacked_object_metrics.setdefault(attack, {})[
+                    metric.report_name
+                ] = self.safe_call(
+                    object_context, {"attack": attack, "metric": metric.report_name},
+                    compute,
+                )
         return object_context
 
 
@@ -455,45 +513,72 @@ class StageRunner:
         attacks: List[Tuple[str, Dict[str, Any]]],
         metrics: Dict[str, List[Tuple[str, Dict[str, Any]]]],
         pipeline_config: PipeLineConfig,
-        dry_run: bool = False,
+        pipeline_type: PipelineType,
+        dry_run: bool = False
     ):
         self.stages: List[Stage] = []
         self.post_pipeline_stages: List[Union[Stage, PostPipelineStage]] = []
         self.seed = pipeline_config.seed
         
         cache = {}
+        all_entities = []
+        
+        def add_entity(func, *args, **kwargs):
+            result = func(*args, **kwargs)
+            all_entities.extend(result)
+            return result
+        
         def cached_call(func, *args, **kwargs):
             if hash(func) not in cache:
-                cache[hash(func)] = func(*args, **kwargs)
+                result = func(*args, **kwargs)
+                cache[hash(func)] = result
+                all_entities.extend(result)
             return cache[hash(func)]
             
         for stage in stages:
             stage_class = STAGE_CLASSES.get(stage, None)
-            if stage_class is None:
+            if (stage_class is None):
                 raise ValueError(f"Unknown stage: {stage}")
-            if stage in [StageType.embed, StageType.extract]:
-                self.stages.append(stage_class(cached_call(get_algorithms, [algorithm_wrapper])[0]))
-            elif stage == StageType.post_embed_metrics:
-                post_embed_metrics = get_metrics(metrics[stage])
+            if (stage in [StageType.embed, StageType.extract]):
+                wrapper = cached_call(get_algorithms, [algorithm_wrapper])[0]
+                self.stages.append(stage_class(wrapper))
+            elif (stage == StageType.post_embed_metrics):
+                post_embed_metrics = add_entity(get_metrics, metrics[stage])
                 self.stages.append(stage_class(post_embed_metrics))
-            elif stage == StageType.post_attack_metrics:
-                post_attack_metrics = get_metrics(metrics[stage])
-                self.stages.append(stage_class(post_attack_metrics))
-            elif stage == StageType.attack:
-                self.stages.append(stage_class(cached_call(get_attacks, attacks)))
-            elif stage == StageType.post_extract_metrics:
-                post_extract_metrics = get_metrics(metrics[stage])
-                self.stages.append(stage_class(post_extract_metrics))
-            elif stage == StageType.aggregate:
-                self.stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, pipeline_config.min_batch_size, dry_run))
-            elif (stage == StageType.post_pipeline_aggregate) and (pipeline_config.workers == 1):
-                self.post_pipeline_stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, 0, dry_run, True))
-            elif (stage == StageType.post_pipeline_embed_metrics) and (pipeline_config.workers == 1):
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), cached_call(get_algorithms, [algorithm_wrapper])[0], pipeline_config.dump_type))
-            elif (stage == StageType.post_pipeline_attack_metrics) and (pipeline_config.workers == 1):
-                self.post_pipeline_stages.append(stage_class(get_metrics(metrics[stage]), cached_call(get_attacks, attacks), cached_call(get_algorithms, [algorithm_wrapper])[0], pipeline_config.dump_type))
+            elif (stage == StageType.post_attack_metrics):
+                post_attack_metrics = add_entity(get_metrics, metrics[stage])
+                for metric in post_attack_metrics:
+                    if metric.pipeline_type == PipelineType.IMAGE and pipeline_type == PipelineType.PROMPT:
+                        metric.pipeline_type = PipelineType.ALL# Hack for psnr, ssim, lpips as attack assessment metrics
 
-        pass
+                self.stages.append(stage_class(post_attack_metrics))
+            elif (stage == StageType.attack):
+                self.stages.append(stage_class(cached_call(get_attacks, attacks)))
+            elif (stage == StageType.post_extract_metrics):
+                post_extract_metrics = add_entity(get_metrics, metrics[stage])
+                self.stages.append(stage_class(post_extract_metrics))
+            elif (stage == StageType.aggregate):
+                self.stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, pipeline_config.min_batch_size, dry_run))
+            elif stage == StageType.post_pipeline_aggregate and pipeline_config.workers == 1 and should_create_post_pipeline_table(stages, metrics):
+                self.post_pipeline_stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, 0, dry_run, True))
+            elif stage == StageType.post_pipeline_embed_metrics and pipeline_config.workers == 1 and metrics.get(stage):
+                self.post_pipeline_stages.append(stage_class(add_entity(get_metrics, metrics[stage]), algorithm_wrapper, pipeline_config.dump_type))
+            elif stage == StageType.post_pipeline_attack_metrics and pipeline_config.workers == 1 and metrics.get(stage):
+                self.post_pipeline_stages.append(stage_class(add_entity(get_metrics, metrics[stage]), attacks, algorithm_wrapper, pipeline_config.dump_type))
+
+        for stage in self.stages + self.post_pipeline_stages:
+            stage.skip_errors = pipeline_config.skip_errors
+
+        self.check_compatibility(all_entities, pipeline_type)
+
+    @staticmethod
+    def check_compatibility(entities: list[Any], pipeline_type: PipelineType):
+        compatibility_problems = [entity.report_name for entity in entities 
+                                  if (entity.pipeline_type & pipeline_type).value == 0]
+        if len(compatibility_problems) == 0:
+            logger.info(f"Running pipeline in {pipeline_type.name} mode")
+            return
+        raise ValueError(f"Incompatible pipeline configuration. These entities are not compatible with dataset type ({pipeline_type.name}): {compatibility_problems}")
 
     def run(self, context: Context):
         """Execute all stages on the given object context. Context is modified internally.
@@ -506,65 +591,6 @@ class StageRunner:
         for (stage_num, stage) in enumerate(self.stages):
             seed_everything(object_id_to_seed(context.object_id + str(self.seed) + str(stage_num)))
             stage.process_object(context)
-
-
-class Progress:
-    """Distributed progress tracking system for parallel pipeline execution.
-
-    Tracks completion across multiple processes using a file-based coordination system.
-    Provides both per-process counters and an aggregated progress bar for the root process.
-
-    Parameters
-    ----------
-    res_dir : Path
-        Directory for storing progress tracking files
-    total_iters : int
-        Total number of iterations expected across all processes
-    proc_num : int
-        Current process number (0 for root/main process)
-    num_processes : int
-        Total number of parallel processes
-    """
-    def __init__(
-        self,
-        res_dir: Path,
-        total_iters: int,
-        proc_num: int,
-        num_processes: int,
-    ):
-        self.res_dir = res_dir
-        self.proc_num = proc_num
-        self.progress = None
-        self.num_processes = num_processes
-        if proc_num == 0:
-            self.curr_res = 0
-            self.progress = tqdm.tqdm(total=total_iters)
-        self.passed = 0
-        self.progress_file = res_dir / f"tqdm{proc_num}"
-        self.total_iters = total_iters
-        with open(self.progress_file, "w") as f:
-            f.write("0")
-
-    def update(self):
-        self.passed += 1
-        with open(self.progress_file, "w") as f:
-            f.write(str(self.passed))
-        if self.proc_num == 0:
-            self.update_bar()
-
-    def update_bar(self):
-        res = 0
-        for proc_num in range(self.num_processes):
-            path = self.res_dir / f"tqdm{proc_num}"
-            if not path.exists():
-                continue
-            try:
-                with open(path, "r") as f:
-                    res += int(f.read())
-            except:
-                continue
-        self.progress.update(res - self.curr_res)
-        self.curr_res = res
 
 
 class Pipeline:
@@ -647,7 +673,7 @@ class Pipeline:
         stages: List[str],
         dump_context: bool = False,
         dry_run: bool = False,
-        process_num: int = 0,
+        process_num: int = 0
     ):
         """Execute the watermarking evaluation pipeline.
 
@@ -671,6 +697,10 @@ class Pipeline:
         - Flushes aggregators after processing
         - Supports partial stage execution
         """
+        pipeline_type = self.datasets[0].pipeline_type
+        for dataset in self.datasets:
+            if dataset.pipeline_type != pipeline_type:
+                raise ValueError(f"Incompatible datasets: expected {pipeline_type.name}, got {dataset.pipeline_type.name} for {dataset.report_name}")
         total_iters = None
         if "embed" in stages:
             dataset_iters = 0
@@ -709,12 +739,13 @@ class Pipeline:
                 self.attacks,
                 self.metrics,
                 self.config,
+                pipeline_type,
                 dry_run,
             )
             dataset_stop = self.config.workers if dry_run else None
             
             if (len(stage_runner.stages)):
-                if "embed" in stages:
+                if StageType.embed in stages:
                     context_gen = (
                         self.init_context(
                             run_id, dataset.report_name, watermark_object
@@ -752,12 +783,23 @@ class Pipeline:
             if (len(stage_runner.post_pipeline_stages) and (self.config.workers == 1)):
                 for (dataset_idx, dataset) in enumerate(self.datasets):
                     post_stage_context = self.init_context(run_id=run_id,
-                                                           original_object={"id": dataset_idx},
+                                                           original_object={"id": str(dataset_idx)},
                                                            dataset_name=dataset.report_name)
                     for post_stage in stage_runner.post_pipeline_stages:
                         if isinstance(post_stage, PostPipelineStage):
                             post_stage.set_context_dir(context_dir)
+                        elif (StageType.post_pipeline_embed_metrics not in stages) and \
+                             (StageType.post_pipeline_attack_metrics not in stages):
+                            post_stage_context = Context.load(context_dir.parent,
+                                                              None,
+                                                              self.config.dump_type,
+                                                              context_name="post_pipeline_context.json")
                         post_stage.process_object(post_stage_context)
+                        if dump_context:
+                            post_stage_context.dump(context_dir.parent,
+                                                    self.config.dump_type,
+                                                    context_name = "post_pipeline_context.json",
+                                                    global_context=True)
 
         if progress.progress is not None:
             progress.progress.close()

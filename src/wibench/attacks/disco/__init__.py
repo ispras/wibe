@@ -1,0 +1,1 @@
+from .defence import DISCOAttack

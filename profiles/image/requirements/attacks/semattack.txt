@@ -1,0 +1,16 @@
+Pillow
+pandas
+cryptography
+scipy
+matplotlib
+diffusers>=0.31.0
+transformers>=4.48.0
+accelerate
+protobuf
+sentencepiece
+beautifulsoup4
+ftfy
+scikit-image
+torchutils
+lpips
+torchmetrics

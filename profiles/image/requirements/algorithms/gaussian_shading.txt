@@ -1,0 +1,6 @@
+pycryptodome
+matplotlib
+accelerate
+transformers>=4.25.1,<=4.48.3
+diffusers>=0.10.0,<=0.23.1
+huggingface_hub<=0.25.2

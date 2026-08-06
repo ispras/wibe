@@ -110,6 +110,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+profiles/isolated_test
 
 # Translations
 *.mo
@@ -222,7 +223,11 @@ model_files.zip
 
 # datasets
 datasets
+!requirements/datasets
+!profiles/*/requirements/datasets
 
 # results
 test_results
-requirements_files
+
+# uv
+uv.lock

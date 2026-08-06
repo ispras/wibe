@@ -1,0 +1,15 @@
+algorithms:
+  sshidden
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/sshidden
+  aggregators:
+    - CSV:
+        table_name: table

@@ -4,10 +4,10 @@ from dataclasses import dataclass
 import torch
 import scipy
 from torchvision import transforms
-from diffusers import DPMSolverMultistepScheduler
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.module_importer import ModuleImporter
 
@@ -45,6 +45,7 @@ class TreeRingParams(Params):
     w_injection: str = "complex"
     w_pattern_const: int = 0
     threshold: int = 77
+    apply_watermark: bool = True
 
 
 @dataclass
@@ -78,13 +79,15 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         Tree-Ring algorithm configuration parameters (default EmptyDict)
 
     """
-    
+    pipeline_type = PipelineType.PROMPT
     name = "treering"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
         self.module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
         super().__init__(TreeRingParams(**params))
         self.params: TreeRingParams
+        from diffusers import DPMSolverMultistepScheduler
+        
         with ModuleImporter("TreeRing", self.module_path):
             from TreeRing.inverse_stable_diffusion import InversableStableDiffusionPipeline
             from TreeRing.optim_utils import (eval_watermark,
@@ -109,8 +112,6 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
             torch_dtype=torch.float16
         )
         self.pipe = pipe.to(self.device)
-
-        self.ground_truth_patch = get_watermarking_pattern(self.pipe, self.params, self.device)
 
         self.tester_prompt = '' # assume at the detection time, the original prompt is unknown
         self.text_embeddings = pipe.get_text_embedding(self.tester_prompt)
@@ -199,6 +200,7 @@ class TreeRingWrapper(BaseAlgorithmWrapper):
         watermarking_mask = get_watermarking_mask(init_latents_w, self.params, self.device)
 
         # inject watermark
-        init_latents_w = inject_watermark(init_latents_w, watermarking_mask, self.ground_truth_patch, self.params)
+        if self.params.apply_watermark:
+            init_latents_w = inject_watermark(init_latents_w, watermarking_mask, gt_patch, self.params)
         return TreeRingWatermarkData(init_latents_w,
                                      watermarking_mask, gt_patch.cpu().type(torch.complex64).numpy())

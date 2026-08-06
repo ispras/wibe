@@ -10,6 +10,7 @@ import numpy as np
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.module_importer import ModuleImporter
 
@@ -46,6 +47,7 @@ class RingIDParams(Params):
     num_inference_steps: int = 50
     test_num_inference_steps: Optional[int] = None
     threshold: float = 50
+    apply_watermark: bool = True
 
 
 @dataclass
@@ -76,7 +78,7 @@ class RingIDWrapper(BaseAlgorithmWrapper):
         RingID algorithm configuration parameters (default EmptyDict)
 
     """
-    
+    pipeline_type = PipelineType.PROMPT
     name = "ringid"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
@@ -126,15 +128,18 @@ class RingIDWrapper(BaseAlgorithmWrapper):
         watermark_pattern = watermark_data.watermark_pattern
         watermark_region_mask = watermark_data.watermark_mask
         no_watermark_latents = self.pipe.get_random_latents()
-        Fourier_watermark_latents = generate_Fourier_watermark_latents(
-            device=self.device,
-            radius=self.params.radius, 
-            radius_cutoff=self.params.radius_cutoff, 
-            original_latents = no_watermark_latents, 
-            watermark_pattern=watermark_pattern,
-            watermark_channel=self.watermark_channel,
-            watermark_region_mask=watermark_region_mask,
-        )
+        if self.params.apply_watermark:
+            Fourier_watermark_latents = generate_Fourier_watermark_latents(
+                device=self.device,
+                radius=self.params.radius, 
+                radius_cutoff=self.params.radius_cutoff, 
+                original_latents = no_watermark_latents, 
+                watermark_pattern=watermark_pattern,
+                watermark_channel=self.watermark_channel,
+                watermark_region_mask=watermark_region_mask,
+            )
+        else:
+            Fourier_watermark_latents = self.pipe.get_random_latents()
         batched_latents = torch.cat([no_watermark_latents.to(torch.float16),
                                      Fourier_watermark_latents.to(torch.float16)],
                                      dim=0)

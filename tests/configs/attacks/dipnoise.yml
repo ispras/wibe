@@ -1,0 +1,15 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  dipnoise
+
+pipeline:
+  result_path: ./test_results/tests/dipnoise
+  aggregators:
+    - CSV:
+        table_name: table

@@ -1,0 +1,6 @@
+bchlib
+focal_frequency_loss
+tensorboard
+lpips
+kornia
+torchvision>=0.18.0

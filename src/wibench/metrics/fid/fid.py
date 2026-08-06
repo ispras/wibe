@@ -1,6 +1,5 @@
 import torch
 
-from torchmetrics.image.fid import FrechetInceptionDistance
 from wibench.metrics.base import PostPipelineMetric
 from wibench.datasets.base import BaseDataset
 from wibench.typing import ImageObject, TorchImg
@@ -38,12 +37,14 @@ class FID(PostPipelineMetric):
                  normalize: bool = True) -> None:
         self.update_real = False
         self.device = device
+        from torchmetrics.image.fid import FrechetInceptionDistance
+
         self.metric = FrechetInceptionDistance(feature=feature, normalize=normalize, reset_real_features=False).to(self.device)
         if dataset_type is None:
             self.metric.reset_real_features = True
             self.update_real = True
             return
-        dataset_class = BaseDataset._registry.get(dataset_type, None)
+        dataset_class = BaseDataset._registry.get(dataset_type.lower(), None)
         if dataset_class is None:
             raise NotImplementedError("")
         self.dataset = dataset_class(**dataset_args)

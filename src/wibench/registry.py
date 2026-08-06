@@ -1,3 +1,7 @@
+from loguru import logger
+from wibench.pipeline_type import PipelineType
+
+
 class RegistryMeta(type):
     """Metaclass for implementing automatic plugin registration systems.
     
@@ -20,15 +24,17 @@ class RegistryMeta(type):
                 plugin_name = cls.name
             else:
                 plugin_name = cls.__name__
+                setattr(cls, "name", cls.__name__)
             plugin_name = plugin_name.lower()
-            if "report_name" not in cls.__dict__:
-                setattr(cls, "report_name", plugin_name)
+            setattr(cls, "report_name", plugin_name)
+            if "pipeline_type" not in cls.__dict__:
+                setattr(cls, "pipeline_type", PipelineType.ALL)
             for base in bases:
                 if hasattr(base, "_registry"):
                     if plugin_name in base._registry:
                         raise ValueError(f"{plugin_name} already registered")
                     base._registry[plugin_name] = cls
-                    print(
+                    logger.info(
                         f"Registered {base.type}: {cls.__name__} as {plugin_name}"
                     )
                     break

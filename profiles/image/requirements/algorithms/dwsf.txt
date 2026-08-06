@@ -1,0 +1,5 @@
+kornia
+crc8
+opencv-python
+Pillow
+torchsummary

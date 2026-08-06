@@ -12,14 +12,16 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../'))
+import wibench
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'WIBE'
-copyright = '2025, ISP RAS'
+copyright = '2026, ISP RAS'
 author = 'Ivannikov Institute for System Programming of the Russian Academy of Sciences'
-release = '0.3'
+release = "0.4.0"
+version = "0.4"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -42,6 +44,7 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
 }
+intersphinx_timeout = 5
 intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']

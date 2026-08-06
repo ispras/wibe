@@ -7,6 +7,7 @@ from torchvision import transforms
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
+from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.watermark_data import TorchBitWatermarkData
 
@@ -45,6 +46,7 @@ class METRParams(Params):
     decoder_state_dict_path: Optional[str] = None
     stable_sig_full_model_config: Optional[str] = None
     stable_sig_full_model_ckpt: Optional[str] = None
+    apply_watermark: bool = True
 
 
 @dataclass
@@ -67,7 +69,7 @@ class METRWatermarkData:
 
 
 class METRWrapper(BaseAlgorithmWrapper):
-    """`METR <https://arxiv.org/abs/2507.21195>`_: Image Watermarking with Large Number of Unique Messages.
+    """`METR <https://arxiv.org/abs/2408.08340>`_: Image Watermarking with Large Number of Unique Messages.
     
     Provides an interface for embedding and extracting watermarks in Text2Image task using the METR watermarking algorithm.
     Based on the code from `here <https://github.com/deepvk/metr>`__.
@@ -78,7 +80,7 @@ class METRWrapper(BaseAlgorithmWrapper):
         METR algorithm configuration parameters (default EmptyDict)
 
     """
-    
+    pipeline_type = PipelineType.PROMPT
     name = "metr"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
@@ -183,7 +185,8 @@ class METRWrapper(BaseAlgorithmWrapper):
         msg_str = "".join([str(int(ii)) for ii in watermark.tolist()[0]])
         self.params.msg = msg_str
         gt_patch = self.get_watermarking_pattern(self.pipe, self.params, self.device, message=msg_str)
-        init_latents_no_w = self.pipe.get_random_latents()
-        watermarking_mask = self.get_watermarking_mask(init_latents_no_w, self.params, self.device)
-        init_latents_w = self.inject_watermark(init_latents_no_w, watermarking_mask, gt_patch, self.params)
+        init_latents_w = self.pipe.get_random_latents()
+        watermarking_mask = self.get_watermarking_mask(init_latents_w, self.params, self.device)
+        if self.params.apply_watermark:
+            init_latents_w = self.inject_watermark(init_latents_w, watermarking_mask, gt_patch, self.params)
         return METRWatermarkData(watermark, watermarking_mask, init_latents_w)

@@ -1,7 +1,0 @@
-torch
-torchvision
-opencv-python
-kornia
-colormath
-pyyaml
-importlib-metadata

@@ -1,0 +1,15 @@
+algorithms:
+  stable_signature
+
+datasets:
+  PromptFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/stable_signature
+  aggregators:
+    - CSV:
+        table_name: table
