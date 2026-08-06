@@ -142,7 +142,7 @@ class PipeLineConfig(BaseModel):
         Can be escalated toward TRACE by -vvv and each additional -v CLI flag
         Default is "INFO"
     log_format : str
-        Loguru format string for pipeline log records, written to stderr and to {result_path}/logs/console.log (and errors.log when skip_errors is True)
+        Loguru format string for pipeline log records, written to stderr and to {result_path}/logs/console.log (and errors.log)
         Default is "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | PID: {process.id} | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
     log_backtrace : bool
         If True, error tracebacks in logs are extended beyond the catching point (loguru backtrace)

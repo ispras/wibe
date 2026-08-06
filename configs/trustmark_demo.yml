@@ -1,4 +1,4 @@
-# Demo testing config; it is recommended to run as: (venv) python -m wibench -config config/trustmark_demo.yml -d
+# Demo testing config; it is recommended to run as: (.venv) python -m wibench --config config/trustmark_demo.yml -d
 algorithms:
   trustmark:            # Watermarking algorithm and its parameters
     params:

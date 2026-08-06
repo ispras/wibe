@@ -56,7 +56,7 @@ The following sections describe the key components of the configuration in detai
 Algorithms
 ~~~~~~~~~~
 
-Provides parameters of the watermarking algorithm wrapper (an instance of a class inherited from `BaseAlgorithmWrapper <https://github.com/ispras/wibe/blob/main/configs/common/diffusiondb.yml>`_) to test. This may be a single wrapper or a list of wrappers (all wrappers in the list will be tested with the same configuration).
+Provides parameters of the watermarking algorithm wrapper (an instance of a class inherited from `BaseAlgorithmWrapper <https://github.com/ispras/wibe/blob/main/src/wibench/algorithms/base.py>`_) to test. This may be a single wrapper or a list of wrappers (all wrappers in the list will be tested with the same configuration).
 For example, you may test the same watermarking algorithm with different parameters.
 You can also redefine `report_name` so that different configurations are aggregated under different `method` fields.
 
@@ -239,7 +239,7 @@ Description of parameters:
 
       * `result_path/params_table_name.csv` — for algorithm parameters
 
-      * `result_path/post_pipeline_metrics_table_name` - for post pipeline metrics results (FID)
+      * `result_path/post_pipeline_metrics_table_name.csv` - for post pipeline metrics results (FID)
 
     * `ClickHouse` — aggregates results into a `ClickHouse <https://clickhouse.com/>`__ database
 
@@ -259,5 +259,5 @@ Description of parameters:
 
 * `cuda_visible_devices` — if running the pipeline on a cluster with multiple GPUs, you may list GPU IDs here as comma-separated numbers. It is recommended to use the same number of GPU devices as workers.
 
-* `skip_errors` — If True, an error in any stage is logged, the failed result is recorded as None, and processing continues. If False, the exception is raised and the pipeline stops. Also controls whether {result_path}/logs/errors.log (ERROR level and above) is written
+* `skip_errors` — If True, an error in any stage is logged, the failed result is recorded as None, and processing continues. If False, the exception is raised and the pipeline stops. Error logs are written to {result_path}/logs/errors.log (ERROR level and above)
 * `log_level` — Base log level for pipeline logs (loguru). Can be escalated toward TRACE by -vvv and each additional -v CLI flag.

@@ -220,7 +220,7 @@ MPRNet
    :special-members: __call__
 
 
-FLux Attack
+Flux Attacks
 ~~~~~~~~~~~
 
 .. autoclass:: wibench.attacks.UniEdit_FLUX.image_editing.UniEditAttackFlux
@@ -239,8 +239,29 @@ DISCO
    :special-members: __call__
 
 Instagram/CSS filters
-~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: wibench.attacks.instagramcss_filters.instagramcss_filters.InstagramCSSFilters
+   :members:
+   :special-members: __call__
+
+DiffPure
+~~~~~~~~
+
+.. autoclass:: wibench.attacks.diffpure.defence.DiffPureAttack
+   :members:
+   :special-members: __call__
+
+RealESRGAN
+~~~~~~~~~~
+
+.. autoclass:: wibench.attacks.realesrgan.realesrgan_attack.RealESRGANAttack
+   :members:
+   :special-members: __call__
+
+UnMarkerAttack
+~~~~~~~~~~~~~~
+
+.. autoclass:: wibench.attacks.UnMarker.unmark.UnMarkerAttack
    :members:
    :special-members: __call__

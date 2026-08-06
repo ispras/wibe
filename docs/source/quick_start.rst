@@ -31,7 +31,7 @@ Set the **HF_TOKEN** environment variable with your **HuggingFace** `token <http
 
 .. code-block:: console
 
-    (venv) python huggingface_login.py
+    (.venv) python huggingface_login.py
 
 D. All set!
 -----------
@@ -52,7 +52,7 @@ To explore interactive wind rose chart with average ``TPR@0.1%FPR`` for all algo
 
 .. code-block:: console
 
-    (venv) python make_plots.py --results_directory path_to_results_directory
+    (.venv) python make_plots.py --results_dir test_results/trustmark
 
 
 .. _hfas-link:
