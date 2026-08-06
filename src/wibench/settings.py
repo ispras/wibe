@@ -2,21 +2,27 @@ import os
 from pathlib import Path
 
 PROFILES_DIR = "./profiles"
-# Not a profile: profiles/common/base/*.txt are mandatory in every group,
-# profiles/common/*.txt join every profile's composition as ordinary files
-COMMON_PROFILE = "common"
 DEFAULT_PROFILE = "image"
 
 # Layout of profiles/<profile>/
 REQUIREMENTS_SUBDIR = "requirements"
 VENVS_SUBDIR = "venvs"
-BASE_SUBDIR = "base"  # under profiles/<COMMON_PROFILE>/
+
+COMMON_SUBDIR = "common"    # Not a profile or entity: common/*.txt join profile's composition as ordinary files
+BASE_SUBDIR = "base"        # Not a profile or entity: common/base/*.txt are mandatory in profile's groups
 PYTHON_VERSION_FILE = ".python-version"
 
 # Group artifacts inside the venvs dir: venv0.txt, venv0.lock, venv0/
 GROUP_PREFIX = "venv"
 TXT_SUFFIX = ".txt"
 LOCK_SUFFIX = ".lock"
+
+# Result-dir logging layout: {result_path}/{LOGS_DIRNAME}/...
+LOGS_DIRNAME = "logs"
+CONSOLE_LOG_FILENAME = "console.log"
+ERRORS_LOG_FILENAME = "errors.log"
+PROGRESS_LOG_FILENAME = "progress.log"
+PROGRESS_CHILD_LOG_FILENAME = "progress_{child_num}.log"
 
 
 def profile_of(path: Path) -> str:

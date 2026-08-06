@@ -1,7 +1,7 @@
 import datetime
 from time import perf_counter
 from pathlib import Path
-from itertools import islice
+from itertools import islice, product
 from dataclasses import is_dataclass
 from typing import (
     List,
@@ -19,7 +19,7 @@ from wibench.typing import Object
 from wibench.common.algorithms.base import BaseAlgorithmWrapper
 from wibench.common.attacks.base import BaseAttack
 from wibench.common.metrics.base import PostEmbedMetric, PostExtractMetric, PostPipelineMetric
-from wibench.config import PipeLineConfig, AggregatorConfig, StageType, DumpType
+from wibench.config import PipeLineConfig, AggregatorConfig, StageType, DumpType, should_create_post_pipeline_table
 from wibench.utils import (
     seed_everything,
     object_id_to_seed
@@ -558,11 +558,11 @@ class StageRunner:
                 self.stages.append(stage_class(post_extract_metrics))
             elif (stage == StageType.aggregate):
                 self.stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, pipeline_config.min_batch_size, dry_run))
-            elif (stage == StageType.post_pipeline_aggregate) and (pipeline_config.workers == 1):
+            elif stage == StageType.post_pipeline_aggregate and pipeline_config.workers == 1 and should_create_post_pipeline_table(stages, metrics):
                 self.post_pipeline_stages.append(stage_class(pipeline_config.aggregators, pipeline_config.result_path, 0, dry_run, True))
-            elif (stage == StageType.post_pipeline_embed_metrics) and (pipeline_config.workers == 1):
+            elif stage == StageType.post_pipeline_embed_metrics and pipeline_config.workers == 1 and metrics.get(stage):
                 self.post_pipeline_stages.append(stage_class(add_entity(get_metrics, metrics[stage]), algorithm_wrapper, pipeline_config.dump_type))
-            elif (stage == StageType.post_pipeline_attack_metrics) and (pipeline_config.workers == 1):
+            elif stage == StageType.post_pipeline_attack_metrics and pipeline_config.workers == 1 and metrics.get(stage):
                 self.post_pipeline_stages.append(stage_class(add_entity(get_metrics, metrics[stage]), attacks, algorithm_wrapper, pipeline_config.dump_type))
 
         for stage in self.stages + self.post_pipeline_stages:

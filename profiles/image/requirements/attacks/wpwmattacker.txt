@@ -1,7 +1,5 @@
 transformers #== 4.37.2 (todo: debug)
-diffusers 
-torch
-torchvision
+diffusers
 opencv-python
 scikit-image
 accelerate

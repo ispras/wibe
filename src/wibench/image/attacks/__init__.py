@@ -36,3 +36,5 @@ from .UnMarker import UnMarkerAttack
 from .vae import VAEAttack
 from .VAERegeneration import VAERegeneration
 from .wmforger import WMForger
+from .instagram import InstagramAttacks
+from .instagramcss_filters import InstagramCSSFilters

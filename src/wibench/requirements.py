@@ -9,7 +9,7 @@ from wibench.config_loader import (
     METRICS_FIELDS,
 )
 from wibench.settings import (
-    COMMON_PROFILE,
+    COMMON_SUBDIR,
     DEFAULT_PROFILE,
     GROUP_PREFIX,
     PROFILES_DIR,
@@ -82,7 +82,7 @@ def compatible_execs(
         (
             p
             for p in profiles_dir.glob(f"{profile or '*'}/{VENVS_SUBDIR}/{GROUP_PREFIX}*{TXT_SUFFIX}")
-            if profile_of(p) != COMMON_PROFILE
+            if profile_of(p) != COMMON_SUBDIR
         ),
         key=lambda p: (profile_of(p) != DEFAULT_PROFILE, p),
     )

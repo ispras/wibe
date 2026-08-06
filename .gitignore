@@ -110,6 +110,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+profiles/isolated_test
 
 # Translations
 *.mo

@@ -1,13 +1,10 @@
 Pillow
-torch
 pandas
-tqdm
 cryptography
 scipy
-torchvision
 matplotlib
 diffusers>=0.31.0
-transformers
+transformers>=4.48.0
 accelerate
 protobuf
 sentencepiece

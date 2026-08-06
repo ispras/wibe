@@ -1,5 +1,2 @@
-torch
-torchvision
 diffusers
 transformers
-numpy

@@ -1,4 +1,3 @@
 PyWavelets
 scikit-learn
 opencv-python
-numpy

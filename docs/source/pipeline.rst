@@ -222,6 +222,8 @@ Parameters for the pipeline, including multiprocessing and results aggregation:
       dump_type: serialized
       workers: 2
       cuda_visible_devices: 2,3
+      skip_errors: true
+      log_level: "INFO"
 
 Description of parameters:
 
@@ -256,3 +258,6 @@ Description of parameters:
 * `workers` — number of processes for parallel execution
 
 * `cuda_visible_devices` — if running the pipeline on a cluster with multiple GPUs, you may list GPU IDs here as comma-separated numbers. It is recommended to use the same number of GPU devices as workers.
+
+* `skip_errors` — If True, an error in any stage is logged, the failed result is recorded as None, and processing continues. If False, the exception is raised and the pipeline stops. Also controls whether {result_path}/logs/errors.log (ERROR level and above) is written
+* `log_level` — Base log level for pipeline logs (loguru). Can be escalated toward TRACE by -vvv and each additional -v CLI flag.
