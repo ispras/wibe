@@ -74,7 +74,7 @@ For example, for image-based metrics:
 
     from wibench.typing import TorchImg
 
-    class MyMetric(PostEmbedMetric):
+    class MyMetric(PostExtractMetric):
         def __call__(
             self,
             img1: TorchImg,

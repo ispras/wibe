@@ -302,3 +302,9 @@ SepMark
 
 .. automodule:: wibench.algorithms.sepmark.wrapper
     :members:
+
+RoSteALS
+~~~~~~~~
+
+.. automodule:: wibench.algorithms.rosteals.wrapper
+    :members:

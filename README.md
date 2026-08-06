@@ -197,7 +197,7 @@ then:
 
 ### 4. Run an experiment
 
-Specify the path to your `сonfiguration file` as a required parameter:
+Specify the path to your `configuration file` as a required parameter:
 
 ```console
 (.venv) wibench --config configs/trustmark_demo.yml
@@ -219,7 +219,7 @@ To explore interactive wind rose chart with average `TPR@0.1%FPR` for all algori
 (.venv) python make_plots.py --results_dir path_to_results_directory
 ```
 
-Below is an average `TPR@0.1%FPR` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the [DiffusionDB](https://poloclub.githubithub.io/diffusiondb/) dataset).
+Below is an average `TPR@0.1%FPR` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the [DiffusionDB](https://github.com/poloclub/diffusiondb) dataset).
 
 ![Average TPR@0.1%FPR for 7 algorithms](docs/imgs/tpr_0.1_fpr_avg.png)
 

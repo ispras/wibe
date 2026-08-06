@@ -18,7 +18,7 @@ import wibench
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'WIBE'
-copyright = '2025, ISP RAS'
+copyright = '2026, ISP RAS'
 author = 'Ivannikov Institute for System Programming of the Russian Academy of Sciences'
 release = '0.4'
 

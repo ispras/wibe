@@ -1,13 +1,16 @@
 #!/bin/bash
 
+# Recreates all WIBE virtual environments and removes existing ones.
 # Usage:
-#   ./prepare.sh                            # builds image venvs (default)
-#   WIBENCH_PROFILE=audio ./prepare.sh      # builds audio venvs
+#   source prepare.sh                       # builds image venvs (default)
+#   WIBENCH_PROFILE=audio source prepare.sh      # builds audio venvs
 
 profile=${WIBENCH_PROFILE:-image}
 config=${WIBENCH_CONFIG:-tests/configs/algorithms/dft_circle.yml}
 
-deactivate
+if command -v deactivate >/dev/null 2>&1; then
+    deactivate
+fi
 rm -rf .venv
 rm -rf "profiles/${profile}/venvs"
 rm -rf uv.lock
