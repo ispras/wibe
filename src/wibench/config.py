@@ -134,8 +134,7 @@ class PipeLineConfig(BaseModel):
         Default is empty list (all devices are visible for all subprocesses)
     skip_errors : bool
         If True, an error in any stage is logged, the failed result is recorded as None, and processing continues
-        If False, the exception is raised and the pipeline stops
-        Also controls whether {result_path}/logs/errors.log (ERROR level and above) is written
+        If False, the exception is raised and the pipeline stops. Error logs are written to {result_path}/logs/errors.log (ERROR level and above)
         Default is True
     log_level : LogLevel
         Base log level for pipeline logs (loguru)

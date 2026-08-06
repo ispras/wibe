@@ -190,7 +190,7 @@ class WER(PostExtractMetric):
         extraction_result: Any,
     ) -> float:
         wm = watermark_data.watermark
-        return int(np.all(np.array(wm).flatten() == np.array(extraction_result).flatten()))
+        return 1 - int(np.all(np.array(wm).flatten() == np.array(extraction_result).flatten()))
 
 
 class EmpiricalTPRxFPR(PostExtractMetric):

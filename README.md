@@ -39,7 +39,7 @@ The system architecture consists of a sequence of processing configurable stages
 | MBRS | post-hoc | mbrs | 30/256 bits | [Enhancing Robustness of DNN-based Watermarking by Mini-Batch of Real and Simulated JPEG Compression](https://github.com/jzyustc/MBRS) |
 | SS HiDDeN | post-hoc | sshidden | 48 bits | HiDDeN watermarking algorithm adapted from the [Stable Signature](https://github.com/facebookresearch/stable_signature/tree/main) |
 | RivaGAN | post-hoc | riva_gan | 30 bits | [Image watermarking via RivaGAN: a deep-learning-based encoder/decoder with attention mechanism](https://github.com/ShieldMnt/invisible-watermark) |
-| SSL | post-hoc | ssl_watermarking | zero-bit / 32 bits | [Watermarking Images in Self-Supervised Latent-Spaces (SSL)](https://github.com/facebookresearch/ssl_watermarking>) |
+| SSL | post-hoc | ssl_watermarking | zero-bit / 32 bits | [Watermarking Images in Self-Supervised Latent-Spaces (SSL)](https://github.com/facebookresearch/ssl_watermarking) |
 | Stable Signature | built-in | stable_signature | 48 bits (fixed for single model) | [The Stable Signature: Rooting Watermarks in Latent Diffusion Models](https://github.com/facebookresearch/stable_signature/tree/main) |
 | StegaStamp | post-hoc | stega_stamp | 100 bits | [StegaStamp: Invisible Hyperlinks in Physical Photographs](https://github.com/tancik/StegaStamp) |
 | TreeRing | built-in | treering | zero-bit | [Tree-Ring: Fingerprints for Diffusion Images that are Invisible and Robust](https://github.com/YuxinWenRick/tree-ring-watermark) |
@@ -137,7 +137,7 @@ The system architecture consists of a sequence of processing configurable stages
 | Empirical TPR at x% FPR | extraction success | post_extract_metrics | empiricaltpr@xfpr | Empirical True Positive Rate at fixed False Positive Rate threshold (multi-bit only) |
 | P-value | extraction success | post_extract_metrics | p-value | P-value denotes probability to observe the same result as in case of extraction from not watermarked object. |
 | Result | auxiliary | post_extract_metrics | result | Records extraction result (zero-bit case) |
-| Embeded watermark | auxiliary | post_embed_metrics | embwm | Records embeded watermark (multi-bit case) |
+| Embedded watermark | auxiliary | post_embed_metrics | embwm | Records embedded watermark (multi-bit case) |
 | Extracted watermark | auxiliary | post_extract_metrics | extwm | Records extracted watermark (multi-bit case) |
 
 </details>
@@ -177,7 +177,7 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 > Conflicting dependency pins mean one shared venv is not enough:
 > `wibench-venv` builds several compatible ones, and `wibench` picks among them automatically.
 > If you plan to add your own algorithm, attack, dataset or metric,
-> read **[docs/venv_manager.md](docs/venv_manager.md)** first.
+> read **[venv manager docs](https://ispras-wibe.readthedocs.io/en/main/venvs.html)** first.
 
 **Optional (not recommended)** — download all pre-trained weights
 ```console
@@ -241,3 +241,4 @@ If you find our work useful for your research, please cite our paper:
   year={2025},
   organization={IEEE}
 }
+```
