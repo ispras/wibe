@@ -1,6 +1,8 @@
 # [ASE 2025 Tool Demo] WIBE: Watermarks for generated Images – Benchmarking & Evaluation
 # (Coming soon) WARP: A Unified Benchmark for Invisible Image Watermarking — Robustness and Protection Against Attacks
-![Documentation Status](https://readthedocs.org/projects/example-sphinx-basic/badge/?version=latest)
+[![Documentation Status](https://readthedocs.org/projects/ispras-wibe/badge/?version=latest)](
+    https://ispras-wibe.readthedocs.io/en/latest/
+)
 
 **WIBE** is a modular and extensible framework for automated testing of invisible image watermarking methods under various attack scenarios.
 The system is designed to support research and development of robust watermarking techniques by enabling systematic evaluation

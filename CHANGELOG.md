@@ -4,15 +4,20 @@
 
 WARP paper release
 
-Added:
+This release significantly extends the WIBE benchmark with new watermarking methods, removal and forgery attacks, metrics, datasets, and a new dependency-management system for running components with conflicting requirements.
+
+### Added
 
 - Attacks: Instagram filters, NRP, MPRNet, UniEditFlux, DISCO, TrustMarkRM, DiffPure, RealESRGAN, support for any attack combination and embedding watermark as an attack
 - Methods: VINE, SepMark, Rosteals
 - Metrics: WER, Empirical TPR@xFPR
 - MSCOCO with captions
 
-Features:
+### Features
 
+- New wibench-venv command-line utility.
+- Profile-based virtual environments under profiles/.
+- Automatic grouping of compatible component requirements.
 - Smart dependencies management with uv
 - Logging
 - Cuda visible devices for post pipeline metrics fix
