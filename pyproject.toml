@@ -22,8 +22,6 @@ dependencies = [
     "pydantic",
     "opencv-python",
     "torchvision",
-    "torchaudio<2.11",
-    "torchmetrics",
     "loguru",
     "huggingface_hub",
     "json2clickhouse @ git+https://gitlab.ispras.ru/opentools/jsons2clickhouse@7ca5f7bf3dac3307e6f63d46b4a592b4ce40b933",
@@ -31,8 +29,7 @@ dependencies = [
     "pytest",
     "pytest-cov",
     "pytest-forked",
-    "librosa==0.11.0",
-    "numba>=0.55",
+    "soundfile",
 ]
 
 [dependency-groups]

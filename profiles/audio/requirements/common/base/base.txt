@@ -1,0 +1,6 @@
+torchaudio<2.11
+torchmetrics
+torchcodec
+librosa==0.11.0
+soundfile
+numba>=0.55
