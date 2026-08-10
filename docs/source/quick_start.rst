@@ -18,9 +18,9 @@ B. Configure the environment
 
 In python>=3.10 environment run
 
-   .. code-block:: console
+.. code-block:: console
 
-      source prepare.sh
+    source prepare.sh
 
 See :ref:`setup <setup-link>` for more detailed setup
 
@@ -31,7 +31,7 @@ Set the **HF_TOKEN** environment variable with your **HuggingFace** `token <http
 
 .. code-block:: console
 
-    (venv) python huggingface_login.py
+    (.venv) python huggingface_login.py
 
 D. All set!
 -----------
@@ -42,7 +42,7 @@ Specify the path to your ``configuration file`` as a required parameter:
 
    (.venv) wibench --config configs/trustmark_demo.yml
 
-You can find some predefined configurations in the ``config`` directory.
+You can find some predefined configurations in the ``configs`` directory.
 
 E. Results
 ----------
@@ -52,7 +52,7 @@ To explore interactive wind rose chart with average ``TPR@0.1%FPR`` for all algo
 
 .. code-block:: console
 
-    (venv) python make_plots.py --results_directory path_to_results_directory
+    (.venv) python make_plots.py --results_dir test_results/trustmark
 
 
 .. _hfas-link:

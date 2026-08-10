@@ -1,0 +1,6 @@
+transformers #== 4.37.2 (todo: debug)
+diffusers
+opencv-python
+scikit-image
+accelerate
+onnxruntime

@@ -1,0 +1,15 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  latentfrequencymasking
+
+pipeline:
+  result_path: ./test_results/tests/latentfrequencymasking
+  aggregators:
+    - CSV:
+        table_name: table

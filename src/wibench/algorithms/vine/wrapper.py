@@ -1,10 +1,8 @@
 from pathlib import Path
 from dataclasses import dataclass
-import sys
 from typing import Any, Dict, Optional, Union
 import torch
 
-from wibench.module_importer import ModuleImporter
 from wibench.algorithms.base import BaseAlgorithmWrapper
 from wibench.config import Params
 from wibench.pipeline_type import PipelineType
@@ -19,7 +17,6 @@ NAME = "vine"
 REQUIRED_FILES = ["VINE-B-Dec/model.safetensors", "VINE-B-Dec/config.json",
                   "VINE-B-Enc/model.safetensors", "VINE-B-Enc/config.json"]
 
-DEFAULT_MODULE_PATH = "./submodules/VINE"
 DEFAULT_ENCODER_PATH = "./model_files/vine/VINE-B-Enc"
 DEFAULT_DECODER_PATH = "./model_files/vine/VINE-B-Dec"
 
@@ -52,11 +49,10 @@ class VINEWrapper(BaseAlgorithmWrapper):
         super().__init__(VINEParams(**params))
         self.params: VINEParams
         self.device = self.params.device
-        module_path = ModuleImporter.pop_resolve_module_path(params, DEFAULT_MODULE_PATH)
-        with ModuleImporter("VINE", module_path):
-            from VINE.vine.src.stega_encoder_decoder import CustomConvNeXt
-            from VINE.vine.src.vine_turbo import VINE_Turbo
-        
+        from vine.src.stega_encoder_decoder import CustomConvNeXt
+        from vine.src.vine_turbo import VINE_Turbo
+
+
         encoder_weights_path = Path(self.params.encoder_weights_path).resolve()
         decoder_weights_path = Path(self.params.decoder_weights_path).resolve()
 

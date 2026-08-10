@@ -83,8 +83,8 @@ class DFTMarker:
         if len(or_shape) == 3:
             or_shape = or_shape[:2]
         img512 = cv2.resize(img, (512, 512))
-        embeded = self.embed(img512, mark, alpha, r)
-        rback = cv2.resize(embeded, or_shape[::-1])
+        embedded = self.embed(img512, mark, alpha, r)
+        rback = cv2.resize(embedded, or_shape[::-1])
         return rback
 
     def _rolling_corr(self, a: np.ndarray, b: np.ndarray):

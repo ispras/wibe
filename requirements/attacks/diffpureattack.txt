@@ -1,4 +1,0 @@
-torch
-geotorch
-torchdiffeq
-tensorboardX

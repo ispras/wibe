@@ -1,6 +1,6 @@
 [project]
 name = "wibench"
-version = "0.3.0"
+version = "0.4.0"
 description = "An Extensible Open Source Framework for Evaluating Imperceptibility and Robustness of Digital Watermarks for Generated Images"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -24,15 +24,15 @@ dependencies = [
     "torchvision",
     "loguru",
     "huggingface_hub",
-    "json2clickhouse @ git+https://gitlab.ispras.ru/opentools/jsons2clickhouse",
+    "json2clickhouse @ git+https://gitlab.ispras.ru/opentools/jsons2clickhouse@7ca5f7bf3dac3307e6f63d46b4a592b4ce40b933",
     "plotly",
+    "pytest",
+    "pytest-cov",
+    "pytest-forked",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest",
-    "pytest-cov",
-    "pytest-forked",
     "flake8",
     "flake8-commas",
     "flake8-continuation",
@@ -49,12 +49,12 @@ build-backend = "setuptools.build_meta"
 
 [project.scripts]
 wibench = "wibench.cli:app"
+wibench-venv = "wibench.venv_manager:app"
 
+# uv configuration settings (extra-build-dependencies, dependency-metadata, ...) live in uv.toml:
+# it takes precedence over [tool.uv] and would shadow them here
 [tool.uv]
 package = true
-
-[tool.uv.extra-build-dependencies]
-image-reward = ["setuptools<82"]
 
 [tool.black]
 line-length = 79
@@ -89,6 +89,8 @@ addopts = "--cov=src/wibench --cov-report=term --cov-report=html --cov-append"
 source = ["src/wibench"]
 parallel = true
 branch = true
+patch = ["subprocess"]
+relative_files = true
 
 [tool.coverage.report]
 exclude_lines = [

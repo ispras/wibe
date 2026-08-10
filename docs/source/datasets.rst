@@ -41,7 +41,7 @@ If it is possible to get number of samples in dataset, you may inherit from ``Ra
     from wibench.datasets import RangeBaseDataset
     from wibench.typing import ImageObject
 
-    class MyDataset(BaseDataset):
+    class MyDataset(RangeBaseDataset):
 
         # Pipeline type depends on returned data type
         pipeline_type = PipelineType.IMAGE

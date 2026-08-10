@@ -1,0 +1,21 @@
+algorithms:
+  ssl_watermarking:
+    params:
+      method: zero-bit
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  - JPEG:
+      quality: 80
+  
+post_extract_metrics:
+  p-value
+
+pipeline:
+  result_path: ./test_results/tests/p-value
+  aggregators:
+    - CSV:
+        table_name: table

@@ -1,19 +1,19 @@
 # Changelog
 
-## Version 0.4.0 - TBA
+## Version 0.4.0 - 06.08.26
 
 WARP paper release
 
 Added:
 
-- Attacks: NRP, MPRNet, UniEditFlux, DISCO, TrustMarkRM, DiffPure, RealESRGAN, support for any attack combination and embedding watermark as an attack
+- Attacks: Instagram filters, NRP, MPRNet, UniEditFlux, DISCO, TrustMarkRM, DiffPure, RealESRGAN, support for any attack combination and embedding watermark as an attack
 - Methods: VINE, SepMark, Rosteals
 - Metrics: WER, Empirical TPR@xFPR
 - MSCOCO with captions
 
 Features:
 
-- Smart dependencies managements with uv
+- Smart dependencies management with uv
 - Logging
 - Cuda visible devices for post pipeline metrics fix
 - Some more bugfixes
@@ -38,7 +38,7 @@ Features:
 
 Minor changes and fixes
 
-## Version 0.2.0 - 12.08.26
+## Version 0.2.0 - 12.08.25
 
 Release presented at ASE 2025. Added key features of Wibe:
 

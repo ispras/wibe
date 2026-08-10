@@ -1,0 +1,7 @@
+vine @ git+https://github.com/Shilin-LU/VINE@d72f11a93f8de9bc45ef61202b9c8dda2a70cc77
+peft
+transformers>=4.36.0,<=4.51.3
+accelerate>=0.32.0
+diffusers
+huggingface_hub
+requests

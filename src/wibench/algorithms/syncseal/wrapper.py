@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 
 from wibench.algorithms.base import BaseAlgorithmWrapper
-from wibench.module_importer import ModuleImporter
 from wibench.pipeline_type import PipelineType
 from wibench.typing import TorchImg
 from wibench.config import Params
@@ -19,7 +18,6 @@ URL = "https://nextcloud.ispras.ru/index.php/s/A6MWxxoXPmHDYK3"
 NAME = "syncseal"
 REQUIRED_FILES = ["checkpoint.pth", "syncmodel.jit.pt"]
 
-DEFAULT_SUBMODULE_PATH = "./submodules/WMAR/syncseal/syncseal"
 DEFAULT_CHECKPOINT_PATH = "./model_files/syncseal/syncmodel.jit.pt"
 
 
@@ -93,7 +91,6 @@ class SyncSeal(BaseAlgorithmWrapper):
     name = "syncseal"
 
     def __init__(self, params: Dict[str, Any] = {}) -> None:
-        self.module_path = str(Path(params.pop("module_path", DEFAULT_SUBMODULE_PATH)).resolve())
         super().__init__(SyncSealParams(**params))
         self.params: SyncSealParams
         self.device = self.params.device
@@ -102,34 +99,33 @@ class SyncSeal(BaseAlgorithmWrapper):
         self.method_wrapper = self._registry.get(self.params.method)(**self.params.method_params)
     
     def _bulid_from_config(self, checkpoint_path: str) -> nn.Module:
-        with ModuleImporter("syncseal", self.module_path):
-            from syncseal.models import build_embedder, build_extractor
-            from syncseal.models.scripted import SyncModelJIT
-            from syncseal.modules.jnd import JND
-            state_dict = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+        from syncseal.models import build_embedder, build_extractor
+        from syncseal.models.scripted import SyncModelJIT
+        from syncseal.modules.jnd import JND
+        state_dict = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
 
-            # Load sub-model configurations
-            embedder_cfg = self.params.embedder_config
-            extractor_cfg = self.params.extractor_config
+        # Load sub-model configurations
+        embedder_cfg = self.params.embedder_config
+        extractor_cfg = self.params.extractor_config
 
-            # Build the embedder model
-            embedder = build_embedder(self.params.embedder_config.model, asdict(embedder_cfg))
-            logger.debug(f'embedder: {sum(p.numel() for p in embedder.parameters() if p.requires_grad) / 1e6:.1f}M parameters')
+        # Build the embedder model
+        embedder = build_embedder(self.params.embedder_config.model, asdict(embedder_cfg))
+        logger.debug(f'embedder: {sum(p.numel() for p in embedder.parameters() if p.requires_grad) / 1e6:.1f}M parameters')
 
-            # Build the extractor model
-            extractor = build_extractor(self.params.extractor_config.model, extractor_cfg, self.params.img_size_proc)
-            logger.debug(f'extractor: {sum(p.numel() for p in extractor.parameters() if p.requires_grad) / 1e6:.1f}M parameters')
+        # Build the extractor model
+        extractor = build_extractor(self.params.extractor_config.model, extractor_cfg, self.params.img_size_proc)
+        logger.debug(f'extractor: {sum(p.numel() for p in extractor.parameters() if p.requires_grad) / 1e6:.1f}M parameters')
 
-            attenuation_cfg = asdict(self.params.jnd_config)
-            attenuation = JND(**attenuation_cfg)
+        attenuation_cfg = asdict(self.params.jnd_config)
+        attenuation = JND(**attenuation_cfg)
 
-            sync_model = SyncModelJIT(embedder,
-                                      extractor,
-                                      attenuation,
-                                      self.params.scaling_w,
-                                      self.params.scaling_i,
-                                      self.params.img_size_proc)
-            sync_model.load_state_dict(state_dict["model"])
+        sync_model = SyncModelJIT(embedder,
+                                  extractor,
+                                  attenuation,
+                                  self.params.scaling_w,
+                                  self.params.scaling_i,
+                                  self.params.img_size_proc)
+        sync_model.load_state_dict(state_dict["model"])
         return sync_model
 
     def embed(self, image: TorchImg, watermark_data: WatermarkData) -> TorchImg:

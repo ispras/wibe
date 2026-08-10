@@ -1,0 +1,17 @@
+algorithms:
+  syncseal:
+    params:
+      method: dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/syncseal
+  aggregators:
+    - CSV:
+        table_name: table

@@ -1,0 +1,15 @@
+algorithms:
+  hidden
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/hidden
+  aggregators:
+    - CSV:
+        table_name: table

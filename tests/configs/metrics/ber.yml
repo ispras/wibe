@@ -1,0 +1,19 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  - JPEG:
+      quality: 80
+  
+post_extract_metrics:
+  ber
+
+pipeline:
+  result_path: ./test_results/tests/ber
+  aggregators:
+    - CSV:
+        table_name: table

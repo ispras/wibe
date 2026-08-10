@@ -1,0 +1,32 @@
+# Demo testing config; it is recommended to run as: (venv) python -m wibench -config config/trustmark_demo.yml -d
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+post_pipeline_embed_metrics:
+  - FID:
+      report_name: fid_mscoco
+      device: cuda
+      dataset_type: mscoco
+      dataset_args:
+        sample_range: [0, 4]
+        cache_dir: ./datasets/mscoco
+        split: val
+  - FID:
+      device: cuda
+
+post_pipeline_attack_metrics:
+  - FID:
+      device: cuda
+
+attacks:                    # Attacks on watermarks
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/fid # Path to save results, including all images (with -d flag)
+  aggregators:
+    - CSV:                  # Aggregate results in .csv file in result_path folder
+        table_name: table

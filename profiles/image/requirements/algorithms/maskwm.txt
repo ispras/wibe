@@ -1,0 +1,5 @@
+accelerate
+compressai>=1.2.8
+kornia
+diffusers
+pillow

@@ -1,0 +1,15 @@
+algorithms:
+  dwt_dct
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  Identity
+
+pipeline:
+  result_path: ./test_results/tests/dwt_dct
+  aggregators:
+    - CSV:
+        table_name: table

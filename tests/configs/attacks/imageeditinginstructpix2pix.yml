@@ -1,0 +1,15 @@
+algorithms:
+  dct_marker
+
+datasets:
+  ImageFolderDataset:
+    path: tests/data
+
+attacks:
+  imageeditinginstructpix2pix
+
+pipeline:
+  result_path: ./test_results/tests/imageeditinginstructpix2pix
+  aggregators:
+    - CSV:
+        table_name: table

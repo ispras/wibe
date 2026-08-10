@@ -110,6 +110,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+profiles/isolated_test
 
 # Translations
 *.mo
@@ -223,7 +224,7 @@ model_files.zip
 # datasets
 datasets
 !requirements/datasets
-!src/wibench/datasets
+!profiles/*/requirements/datasets
 
 # results
 test_results
