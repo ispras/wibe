@@ -195,27 +195,14 @@ class WER(PostExtractMetric):
         return 1 - int(np.all(np.array(wm).flatten() == np.array(extraction_result).flatten()))
 
 
-import os
-import logging
-from pathlib import Path
-from fractions import Fraction
-from typing import Any, Dict, Optional, Union
-
-import numpy as np
-import torch
-from tqdm import tqdm
-
-logger = logging.getLogger(__name__)
-
-
 class EmpiricalTPRxFPR(PostExtractMetric):
     """Empirical True Positive Rate at fixed False Positive Rate threshold.
 
     Supports two modes:
-        - zerobit: empirical threshold over scalar detection scores
-        - multibit: empirical threshold over random extracted bit sequences
+        - zero-bit: empirical threshold over scalar detection scores
+        - multi-bit: empirical threshold over random extracted bit sequences
 
-    For zerobit:
+    For zero-bit:
         larger_is_better=True:
             score >= threshold means detected.
             Example: correlation, similarity, confidence.
@@ -236,15 +223,15 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         fpr_rate: float = 0.1,
         larger_is_better: bool = True,
         random_extracts_path: str = "./threshold.pt",
-        method_type: str = "zerobit",
+        method_type: str = "zero-bit",
     ) -> None:
         from wibench.base_objects import get_datasets, get_algorithms
 
         if not (0.0 < fpr_rate < 1.0):
             raise ValueError(f"fpr_rate must be in (0, 1), got {fpr_rate}")
 
-        if method_type not in {"zerobit", "multibit"}:
-            raise ValueError(f"method_type must be 'zerobit' or 'multibit', got {method_type}")
+        if method_type not in {"zero-bit", "multi-bit"}:
+            raise ValueError(f"method_type must be 'zero-bit' or 'multi-bit', got {method_type}")
 
         self.fpr_rate = float(fpr_rate)
         self.method_type = method_type
@@ -297,7 +284,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         return self.fpr_rate
 
     def _zerobit_threshold(self, scores: Union[list[float], np.ndarray]) -> float:
-        """Compute zerobit threshold from null scores."""
+        """Compute zero-bit threshold from null scores."""
         scores = np.asarray(scores, dtype=np.float64)
         q = self._zerobit_quantile()
         return float(np.nanquantile(scores, q))
@@ -310,14 +297,14 @@ class EmpiricalTPRxFPR(PostExtractMetric):
             if self.method_type in cache_data and key in cache_data[self.method_type]:
                 result = cache_data[self.method_type][key]
 
-                if self.method_type == "zerobit":
+                if self.method_type == "zero-bit":
                     scores = result.get("scores", [])
 
                     if self._has_enough_samples(scores):
                         threshold = self._zerobit_threshold(scores)
 
                         logger.info(
-                            f"Loaded zerobit scores for {key}: "
+                            f"Loaded zero-bit scores for {key}: "
                             f"n={len(scores)}, "
                             f"fpr_rate={self.fpr_rate}, "
                             f"threshold={threshold:.6f}"
@@ -326,7 +313,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
                         return threshold
 
                     logger.info(
-                        f"Cached zerobit scores for {key} are insufficient: "
+                        f"Cached zero-bit scores for {key} are insufficient: "
                         f"n={len(scores)}, required={self._min_required_samples()}"
                     )
 
@@ -335,14 +322,14 @@ class EmpiricalTPRxFPR(PostExtractMetric):
 
                     if self._has_enough_samples(extracts):
                         logger.info(
-                            f"Loaded multibit random extracts for {key}: "
+                            f"Loaded multi-bit random extracts for {key}: "
                             f"n={len(extracts)}, fpr_rate={self.fpr_rate}"
                         )
 
                         return np.asarray(extracts)
 
                     logger.info(
-                        f"Cached multibit extracts for {key} are insufficient: "
+                        f"Cached multi-bit extracts for {key} are insufficient: "
                         f"n={len(extracts)}, required={self._min_required_samples()}"
                     )
 
@@ -352,7 +339,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         total = len(self.dataset)
         logger.info(f"Generating random extracts for dataset length: {total}")
 
-        is_zerobit = self.method_type == "zerobit"
+        is_zerobit = self.method_type == "zero-bit"
         data = []
 
         for obj in tqdm(self.dataset.generator(), total=total):
@@ -378,7 +365,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
             quantile_value = self._zerobit_quantile()
 
             logger.info(
-                f"Zerobit: generated scores n={len(scores)}, "
+                f"Zero-bit: generated scores n={len(scores)}, "
                 f"threshold={threshold:.6f}, "
                 f"quantile={quantile_value:.6f}, "
                 f"fpr_rate={self.fpr_rate:.6f}, "
@@ -397,7 +384,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         extracts = np.stack(data)
 
         logger.info(
-            f"Multibit: saved {len(extracts)} extracts, shape={extracts.shape}, "
+            f"Multi-bit: saved {len(extracts)} extracts, shape={extracts.shape}, "
             f"fpr_rate={self.fpr_rate:.6f}"
         )
 
@@ -417,7 +404,7 @@ class EmpiricalTPRxFPR(PostExtractMetric):
         watermark_data: Any,
         extraction_result: Any,
     ) -> int:
-        if self.method_type == "zerobit":
+        if self.method_type == "zero-bit":
             score = float(extraction_result)
             threshold = float(self.statistic)
 

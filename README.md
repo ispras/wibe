@@ -134,8 +134,8 @@ The system architecture consists of a sequence of processing configurable stages
 | BER | extraction success | post_extract_metrics | ber | Bit Error Rate (multi-bit) |
 | WER | extraction success | post_extract_metrics | wer | Word Error Rate (multi-bit) |
 | TPR at x% FPR | extraction success | post_extract_metrics | tpr@xfpr | True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit) |
-| Empirical TPR at x% FPR | extraction success | post_extract_metrics | empiricaltpr@xfpr | Empirical True Positive Rate at fixed False Positive Rate threshold (multi-bit only) |
-| P-value | extraction success | post_extract_metrics | p-value | P-value denotes probability to observe the same result as in case of extraction from not watermarked object. |
+| Empirical TPR at x% FPR | extraction success | post_extract_metrics | empiricaltpr@xfpr | Empirical True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit) |
+| P-value | extraction success | post_extract_metrics | p-value | P-value denotes probability to observe the same result as in case of extraction from not watermarked object |
 | Result | auxiliary | post_extract_metrics | result | Records extraction result (zero-bit case) |
 | Embedded watermark | auxiliary | post_embed_metrics | embwm | Records embedded watermark (multi-bit case) |
 | Extracted watermark | auxiliary | post_extract_metrics | extwm | Records extracted watermark (multi-bit case) |
