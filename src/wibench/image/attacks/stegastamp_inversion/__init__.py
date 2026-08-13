@@ -1,1 +1,1 @@
-from . import stegastamp_inversion
+from .stegastamp_inversion import StegastampInversion

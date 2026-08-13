@@ -38,3 +38,4 @@ from .VAERegeneration import VAERegeneration
 from .wmforger import WMForger
 from .instagram import InstagramAttacks
 from .instagramcss_filters import InstagramCSSFilters
+from .stegastamp_inversion import StegastampInversion

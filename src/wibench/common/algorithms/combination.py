@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 import torch
 from wibench.typing import TorchImg
 from wibench.common.algorithms.base import BaseAlgorithmWrapper
-import wibench.base_objects
 
 
 def merge_wms(wms: list[Any]):
@@ -50,6 +49,7 @@ class Combination(BaseAlgorithmWrapper):
         List of algorithms with their parameters to apply one-by-one.
     """
     def __init__(self, algorithms: list[dict[str, Any]]):
+        import wibench.base_objects # Hack to solve circular import issue
         algorithm_tuples = []
         for algorithm in algorithms:
             if isinstance(algorithm, str):

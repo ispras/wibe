@@ -27,3 +27,4 @@ from .trustmark import TrustMarkWrapper
 from .vine import VINEWrapper
 from .videoseal import VideosealWrapper
 from .watermark_anything import WatermarkAnythingWrapper
+from .sepmark import SepMarkWrapper
