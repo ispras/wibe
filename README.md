@@ -1,5 +1,5 @@
-# WIBE: Watermarks for generated Images – Benchmarking & Evaluation
-
+# [ASE 2025 Tool Demo] WIBE: Watermarks for generated Images – Benchmarking & Evaluation
+# (Coming soon) WARP: A Unified Benchmark for Invisible Image Watermarking — Robustness and Protection Against Attacks
 ![Documentation Status](https://readthedocs.org/projects/example-sphinx-basic/badge/?version=latest)
 
 **WIBE** is a modular and extensible framework for automated testing of invisible image and audio watermarking methods under various attack scenarios.
@@ -41,7 +41,7 @@ The system architecture consists of a sequence of processing configurable stages
 | MBRS | post-hoc | mbrs | 30/256 bits | [Enhancing Robustness of DNN-based Watermarking by Mini-Batch of Real and Simulated JPEG Compression](https://github.com/jzyustc/MBRS) |
 | SS HiDDeN | post-hoc | sshidden | 48 bits | HiDDeN watermarking algorithm adapted from the [Stable Signature](https://github.com/facebookresearch/stable_signature/tree/main) |
 | RivaGAN | post-hoc | riva_gan | 30 bits | [Image watermarking via RivaGAN: a deep-learning-based encoder/decoder with attention mechanism](https://github.com/ShieldMnt/invisible-watermark) |
-| SSL | post-hoc | ssl_watermarking | zero-bit / 32 bits | [Watermarking Images in Self-Supervised Latent-Spaces (SSL)](https://github.com/facebookresearch/ssl_watermarking>) |
+| SSL | post-hoc | ssl_watermarking | zero-bit / 32 bits | [Watermarking Images in Self-Supervised Latent-Spaces (SSL)](https://github.com/facebookresearch/ssl_watermarking) |
 | Stable Signature | built-in | stable_signature | 48 bits (fixed for single model) | [The Stable Signature: Rooting Watermarks in Latent Diffusion Models](https://github.com/facebookresearch/stable_signature/tree/main) |
 | StegaStamp | post-hoc | stega_stamp | 100 bits | [StegaStamp: Invisible Hyperlinks in Physical Photographs](https://github.com/tancik/StegaStamp) |
 | TreeRing | built-in | treering | zero-bit | [Tree-Ring: Fingerprints for Diffusion Images that are Invisible and Robust](https://github.com/YuxinWenRick/tree-ring-watermark) |
@@ -159,6 +159,7 @@ The system architecture consists of a sequence of processing configurable stages
 <details>
 <summary><b>Metrics</b></summary>
 
+
 ### Image domain
 
 | Metric       | Type                                          | Stage                                                     | Config name | Description                                                                                                                                    |
@@ -189,14 +190,14 @@ The system architecture consists of a sequence of processing configurable stages
 
 | Metric                  | Type               | Stage                | Config name       | Description                                                                                                  |
 |-------------------------|--------------------|----------------------|-------------------|--------------------------------------------------------------------------------------------------------------|
-| BER                     | extraction success | post_extract_metrics | ber               | Bit Error Rate (multi-bit)                                                                                   |
-| WER                     | extraction success | post_extract_metrics | wer               | Word Error Rate (multi-bit)                                                                                  |
-| TPR at x% FPR           | extraction success | post_extract_metrics | tpr@xfpr          | True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit)                      |
-| Empirical TPR at x% FPR | extraction success | post_extract_metrics | empiricaltpr@xfpr | Empirical True Positive Rate at fixed False Positive Rate threshold (multi-bit only)                         |
-| P-value                 | extraction success | post_extract_metrics | p-value           | P-value denotes probability to observe the same result as in case of extraction from not watermarked object. |
-| Result                  | auxiliary          | post_extract_metrics | result            | Records extraction result (zero-bit case)                                                                    |
-| Embeded watermark       | auxiliary          | post_embed_metrics   | embwm             | Records embeded watermark (multi-bit case)                                                                   |
-| Extracted watermark     | auxiliary          | post_extract_metrics | extwm             | Records extracted watermark (multi-bit case)                                                                 |
+| BER | extraction success | post_extract_metrics | ber | Bit Error Rate (multi-bit) |
+| WER | extraction success | post_extract_metrics | wer | Word Error Rate (multi-bit) |
+| TPR at x% FPR | extraction success | post_extract_metrics | tpr@xfpr | True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit) |
+| Empirical TPR at x% FPR | extraction success | post_extract_metrics | empiricaltpr@xfpr | Empirical True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit) |
+| P-value | extraction success | post_extract_metrics | p-value | P-value denotes probability to observe the same result as in case of extraction from not watermarked object |
+| Result | auxiliary | post_extract_metrics | result | Records extraction result (zero-bit case) |
+| Embedded watermark | auxiliary | post_embed_metrics | embwm | Records embedded watermark (multi-bit case) |
+| Extracted watermark | auxiliary | post_extract_metrics | extwm | Records extracted watermark (multi-bit case) |
 
 </details>
 
@@ -235,7 +236,7 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 > Conflicting dependency pins mean one shared venv is not enough:
 > `wibench-venv` builds several compatible ones, and `wibench` picks among them automatically.
 > If you plan to add your own algorithm, attack, dataset or metric,
-> read **[docs/venv_manager.md](docs/venv_manager.md)** first.
+> read **[venv manager docs](https://ispras-wibe.readthedocs.io/en/main/venvs.html)** first.
 
 **Optional (not recommended)** — download all pre-trained weights
 ```console
@@ -255,7 +256,7 @@ then:
 
 ### 4. Run an experiment
 
-Specify the path to your `сonfiguration file` as a required parameter:
+Specify the path to your `configuration file` as a required parameter:
 
 ```console
 (.venv) wibench --config configs/trustmark_demo.yml
@@ -277,7 +278,7 @@ To explore interactive wind rose chart with average `TPR@0.1%FPR` for all algori
 (.venv) python make_plots.py --results_dir path_to_results_directory
 ```
 
-Below is an average `TPR@0.1%FPR` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the [DiffusionDB](https://poloclub.githubithub.io/diffusiondb/) dataset).
+Below is an average `TPR@0.1%FPR` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the [DiffusionDB](https://github.com/poloclub/diffusiondb) dataset).
 
 ![Average TPR@0.1%FPR for 7 algorithms](docs/imgs/tpr_0.1_fpr_avg.png)
 
@@ -285,4 +286,18 @@ Below is an average `TPR@0.1%FPR` chart for 7 algorithms under different types o
 
 * [Full documentation](https://ispras-wibe.readthedocs.io/en/latest/index.html)
 * [Tutorial video](https://youtu.be/31kiJ8G2NG8)
-* [Virtual environment manager (`wibench-venv`)](docs/venv_manager.md)
+
+## Citation
+
+If you find our work useful for your research, please cite our paper:
+
+```bibtex
+@inproceedings{yakushev2025wibe,
+  title={WIBE: Watermarks for generated Images--Benchmarking \& Evaluation},
+  author={Yakushev, Aleksey and Akimenkov, Aleksandr and Abud, Khaled and Obydenkov, Dmitry and Serzhenko, Irina and Aistov, Kirill and Kovalev, Egor and Fomin, Stanislav and Antsiferova, Anastasia and Lukianov, Kirill and Markin, Yury},
+  booktitle={2025 40th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
+  pages={4033--4036},
+  year={2025},
+  organization={IEEE}
+}
+```

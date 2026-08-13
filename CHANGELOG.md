@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 0.4.0 - TBA
+## Version 0.4.0 - 06.08.26
 
 WARP paper release
 
@@ -38,7 +38,7 @@ Features:
 
 Minor changes and fixes
 
-## Version 0.2.0 - 12.08.26
+## Version 0.2.0 - 12.08.25
 
 Release presented at ASE 2025. Added key features of Wibe:
 
