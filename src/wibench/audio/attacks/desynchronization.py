@@ -1,3 +1,13 @@
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2025 DeepMark
+# Copyright (c) 2026 ISP RAS
+#
+# This file contains code derived from the DeepMarkPy Benchmark project:
+# https://github.com/deepmark/deepmarkpy-benchmark
+#
+# Modifications have been made.
+
 import librosa.effects
 import torch
 import numpy as np
@@ -85,7 +95,7 @@ class InvertedTimeStretch(BaseAttack):
 class PitchShift(BaseAttack):
     """Shift audio pitch without changing its duration."""
 
-    def __init__(self, cents: float):
+    def __init__(self, cents: float = 5):
         """Initialize the attack.
 
         Parameters
@@ -304,15 +314,15 @@ class ReplacementAttack(BaseAttack):
 
     def __init__(
         self,
-        block_size: int,
-        overlap_factor: float,
-        lower_bound: float,
-        upper_bound: float,
-        k: int,
-        use_masking: bool,
-        search_window_sec: float,
-        search_dims: int,
-        tile_size: int,
+        block_size: int = 1024,
+        overlap_factor: float = 0.75,
+        lower_bound: float = 0,
+        upper_bound: float = 0,
+        k: int = 100,
+        use_masking: bool = False,
+        search_window_sec: float = 0.0,
+        search_dims: int = 0,
+        tile_size: int = 256,
     ):
         """Initialize the attack.
 
@@ -368,12 +378,13 @@ class ReplacementAttack(BaseAttack):
         TorchAudio
             Audio signal after block replacement.
         """
+        from .replacement_attack import replacement2_attack
+
         data = audio.data
         device = data.device
         dtype = data.dtype
 
         data_np = data.detach().cpu().numpy()
-
         processed = np.stack(
             [
                 replacement2_attack(

@@ -1,7 +1,23 @@
-# TODO: Replace with proper license
-
-__author__ = "S.I. Mimilakis"
-__copyright__ = "MacSeNet"
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Copyright (c) 2025 DeepMark
+#
+# This file is derived from the DeepMarkPy Benchmark project:
+# https://github.com/deepmark/deepmarkpy-benchmark
+#
+# Original DeepMarkPy Benchmark source:
+# https://github.com/deepmark/deepmarkpy-benchmark/blob/main/src/deepmarkpy/plugins/attacks/replacement/psychoacoustic_model.py
+#
+# The implementation is believed to be derived in part from:
+# https://github.com/ashishpatel26/Audio-Masking-Methods/blob/master/MaskingMethods.py
+#
+# Original upstream code is distributed under the GNU General Public License
+# version 3.0. This file is therefore distributed under the terms of the GNU
+# General Public License, version 3.0 or any later version.
+#
+# Modifications Copyright (c) 2026 ISP RAS
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 import math
 

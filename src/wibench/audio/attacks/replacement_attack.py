@@ -54,7 +54,6 @@ Key differences from the original O(N^2) pure-Python implementation:
 """
 
 import numpy as np
-from tqdm import tqdm
 
 from .psychoacoustic_model import PsychoacousticModel
 
@@ -185,9 +184,7 @@ def replacement2_attack(
     processed = np.empty_like(coeffs)
     cnt_replaced = 0
 
-    for q0 in tqdm(
-        range(0, N, tile_size), desc="Replacement2 attack", unit="tile"
-    ):
+    for q0 in range(0, N, tile_size):
         qend = min(q0 + tile_size, N)
         queries = work[q0:qend]
         sq_queries = sq_norms[q0:qend]
