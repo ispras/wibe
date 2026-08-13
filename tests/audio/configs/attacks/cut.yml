@@ -1,0 +1,30 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - Cut:
+      duration_ms: 100
+      mode: start
+  - Cut:
+      duration_ms: 100
+      mode: end
+  - Cut:
+      duration_ms: 100
+      mode: random
+
+pipeline:
+  result_path: ./test_results/tests/pitch_shift
+  aggregators:
+    - CSV:
+        table_name: table

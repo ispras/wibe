@@ -8,12 +8,105 @@
 #
 # Modifications have been made.
 
+from typing import Literal
 import librosa.effects
 import torch
 import numpy as np
 from torchaudio.transforms import Resample
 from wibench.audio.typing import TorchAudio
 from wibench.common.attacks import BaseAttack
+
+
+class Cut(BaseAttack):
+    """Remove a segment of the specified duration from an audio signal."""
+
+    def __init__(
+        self,
+        duration_ms: float,
+        mode: Literal["start", "end", "random"] = "random",
+    ):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        duration_ms : float
+            Duration of the segment to remove in milliseconds.
+        mode : {"start", "end", "random"}
+            Position of the removed segment:
+
+            - ``"start"``: remove samples from the beginning;
+            - ``"end"``: remove samples from the end;
+            - ``"random"``: remove a contiguous segment starting at a
+              randomly selected position.
+        """
+        if duration_ms < 0:
+            raise ValueError("'duration_ms' must be non-negative.")
+
+        if mode not in ("start", "end", "random"):
+            raise ValueError(
+                "'mode' must be one of: 'start', 'end', or 'random'."
+            )
+
+        self.duration_ms = duration_ms
+        self.mode = mode
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Remove a segment from an audio signal.
+
+        The same temporal segment is removed from all channels.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio signal with the selected segment removed.
+        """
+        data = audio.data
+        num_samples = data.shape[-1]
+
+        cut_samples = round(
+            self.duration_ms * audio.rate / 1000
+        )
+        cut_samples = min(cut_samples, num_samples)
+
+        if cut_samples == 0:
+            return audio.clone()
+
+        if cut_samples == num_samples:
+            return TorchAudio(
+                data=data[:, :0].clone(),
+                rate=audio.rate,
+            )
+
+        if self.mode == "start":
+            result = data[:, cut_samples:]
+
+        elif self.mode == "end":
+            result = data[:, :-cut_samples]
+
+        else:
+            start = torch.randint(
+                num_samples - cut_samples + 1,
+                size=(),
+                device=data.device,
+            ).item()
+
+            result = torch.cat(
+                (
+                    data[:, :start],
+                    data[:, start + cut_samples:],
+                ),
+                dim=-1,
+            )
+
+        return TorchAudio(
+            data=result.clone(),
+            rate=audio.rate,
+        )
 
 
 class TimeStretch(BaseAttack):
@@ -125,7 +218,8 @@ class PitchShift(BaseAttack):
 
         data = audio.data.detach().cpu().numpy()
         semitones = self.cents / 100.0
-        shifted = librosa.effects.pitch_shift(data, sr=audio.rate, n_steps=semitones)
+        shifted = librosa.effects.pitch_shift(
+            data, sr=audio.rate, n_steps=semitones)
         return TorchAudio(
             data=torch.from_numpy(
                 np.ascontiguousarray(shifted)
