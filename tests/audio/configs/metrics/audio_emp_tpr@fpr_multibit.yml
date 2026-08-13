@@ -24,7 +24,7 @@ post_extract_metrics:
         path: tests/audio/data/
         sample_rate: 16000
       random_extracts_path: "./random_extracts_0.1.csv"
-      method_type: multibit
+      method_type: multi-bit
 
 datasets:
   - AudioFolderDataset:

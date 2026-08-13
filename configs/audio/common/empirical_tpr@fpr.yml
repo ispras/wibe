@@ -10,9 +10,9 @@
         sample_range: [0, 99]
       random_extracts_path: "./random_extracts_0.1.csv"
 {% if alg_name in ["perth"] %}
-      method_type: zerobit
+      method_type: zero-bit
 {% else %}
-      method_type: multibit
+      method_type: multi-bit
 {% endif %}
   - EmpiricalTPR@xFPR:
       report_name: etpr@10e-2fpr
@@ -26,9 +26,9 @@
         sample_range: [0, 999]
       random_extracts_path: "./random_extracts_0.01.csv"
 {% if alg_name in ["perth"] %}
-      method_type: zerobit
+      method_type: zero-bit
 {% else %}
-      method_type: multibit
+      method_type: multi-bit
 {% endif %}
   - EmpiricalTPR@xFPR:
       report_name: etpr@10e-3fpr
@@ -42,7 +42,7 @@
         sample_range: [0, 9999]
       random_extracts_path: "./random_extracts_0.001.csv"
 {% if alg_name in ["perth"] %}
-      method_type: zerobit
+      method_type: zero-bit
 {% else %}
-      method_type: multibit
+      method_type: multi-bit
 {% endif %}
