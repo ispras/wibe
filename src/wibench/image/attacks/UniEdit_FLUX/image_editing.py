@@ -15,7 +15,7 @@ import numpy as np
 #from wibench.common.attacks import BaseAttack
 from wibench.common.attacks import BaseAttack
 from wibench.module_importer import ModuleImporter
-DEFAULT_UNI_PATH = "./src/wibench/attacks/UniEdit_FLUX/UniEdit-Flow_FLUX/src"
+DEFAULT_UNI_PATH = "./src/wibench/image/attacks/UniEdit_FLUX/UniEdit-Flow_FLUX/src"
 
 
 @torch.inference_mode()

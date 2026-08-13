@@ -17,7 +17,7 @@ loss_files = ['gray_adaptive_trial0.pth','gray_pnet_lin_vgg_trial0.pth','gray_wa
 'gray_pnet_lin_squeeze_trial0.pth','gray_watson_dct_trial0.pth','gray_watson_vgg_trial0.pth','rgb_pnet_lin_squeeze_trial0.pth','rgb_watson_dct_trial0.pth','rgb_watson_vgg_trial0.pth']
 REQUIRED_FILES_UNMARKER=["alexnet-owt-7be5be79.pth"] + [f'loss_provider/weights/{x}' for x in loss_files] 
 DEFAULT_MODELS_PATH = f'./model_files/{NAME_UNMARKER}/'
-DEFAULT_CONFIG_PATH = "./src/wibench/attacks/UnMarker/attack_configs/Yu2.yaml"
+DEFAULT_CONFIG_PATH = "./src/wibench/image/attacks/UnMarker/attack_configs/Yu2.yaml"
 
 @requires_download(URL_UNMARKER, NAME_UNMARKER, REQUIRED_FILES_UNMARKER)
 class UnMarkerAttack(BaseAttack):

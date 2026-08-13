@@ -33,7 +33,7 @@ from wibench.download import requires_download
 URL_REALESRGAN="https://nextcloud.ispras.ru/index.php/s/dKiNcrb4PtNmJ4N"
 NAME_REALESRGAN="realesrgan"
 REQUIRED_FILES_REALESRGAN=["realesr-general-x4v3.pth", "realesr-general-wdn-x4v3.pth"]
-DEFAULT_REALESRGAN_PATH="./src/wibench/attacks/disco/dfsrc_disco"
+DEFAULT_REALESRGAN_PATH="./src/wibench/image/attacks/disco/dfsrc_disco"
 DEFAULT_REALESRGAN_WEIGHTS_PATH = f"./model_files/{NAME_REALESRGAN}/{REQUIRED_FILES_REALESRGAN[0]}"
 DEFAULT_REALESRGAN_WEIGHTS_PATH_2 = f"./model_files/{NAME_REALESRGAN}/{REQUIRED_FILES_REALESRGAN[1]}"
 

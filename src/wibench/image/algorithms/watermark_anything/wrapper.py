@@ -47,7 +47,7 @@ class WatermarkAnythingWrapper(BaseAlgorithmWrapper):
         self,
         module_path: str = "./submodules/watermark_anything",
         ckpt_path: str = "./model_files/watermark_anything/wam_mit.pth",
-        params_path: str = "src/wibench/algorithms/watermark_anything/configs/params.json",
+        params_path: str = "src/wibench/image/algorithms/watermark_anything/configs/params.json",
         wm_length: int = 32,
         scaling_w: float = 1.5,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",

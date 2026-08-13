@@ -6,7 +6,7 @@ import torch
 URL_DISCO="https://nextcloud.ispras.ru/index.php/s/4zX2pNcxdTnFMEr"
 NAME_DISCO="disco"
 REQUIRED_FILES_DISCO=["disco_pgd.pth"]
-DEFAULT_DISCO_PATH="./src/wibench/attacks/disco/dfsrc_disco"
+DEFAULT_DISCO_PATH="./src/wibench/image/attacks/disco/dfsrc_disco"
 DEFAULT_DISCO_WEIGHTS_PATH = f"./model_files/{NAME_DISCO}/{REQUIRED_FILES_DISCO[0]}"
 
 @requires_download(URL_DISCO, NAME_DISCO, REQUIRED_FILES_DISCO)
