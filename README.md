@@ -128,10 +128,12 @@ The system architecture consists of a sequence of processing configurable stages
 
 ### Audio domain
 
-| Attack      | Config name                                                                       | Description                                                                                                                                             |
-|-------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Distortions | resampling, requantization, scaling, noise, filter, echo, mpeg, aac, speed, boost | Common distortions like resampling, requantization, scaling, noise (Gaussian noise), band filtering, echo, MPEG/AAC transcoding, speed, volume boosting |
-| Vocos       | vocos                                                                             | [Vocos: Closing the gap between time-domain and Fourier-based neural vocoders for high-quality audio synthesis](https://github.com/gemelo-ai/vocos)     |
+| Attack            | Config name                                                                                    | Description                                                                                                                                         |
+|-------------------|------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| Editing           | resampling, requantization, scaling, noise, filter, echo, mpeg, aac, boost                     | Common distortions that may be used while basic sound editing                                                                                       |
+| Effects           | echo, pitchshift                                                                               | Signal distortions causing emphasizing specific sound characteristics                                                                               |
+| Desynchronization | cut, speed, timestretch, invertedtimestretch, flipsamples, zerocrossinserts, replacementattack | Various type of desynchronization distortions aimed to impact temporal structure of signal                                                          |
+| Vocos             | vocos                                                                                          | [Vocos: Closing the gap between time-domain and Fourier-based neural vocoders for high-quality audio synthesis](https://github.com/gemelo-ai/vocos) |
 
 ### Common
 
