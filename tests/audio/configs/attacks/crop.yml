@@ -24,7 +24,7 @@ attacks:
       mode: random
 
 pipeline:
-  result_path: ./test_results/tests/pitch_shift
+  result_path: ./test_results/tests/cut
   aggregators:
     - CSV:
         table_name: table

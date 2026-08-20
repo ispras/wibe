@@ -17,7 +17,7 @@ from wibench.audio.typing import TorchAudio
 from wibench.common.attacks import BaseAttack
 
 
-class Cut(BaseAttack):
+class Crop(BaseAttack):
     """Remove a segment of the specified duration from an audio signal."""
 
     def __init__(
