@@ -1,5 +1,18 @@
 # Changelog
 
+## Version 2.0.0 - 25.08.26 (?)
+
+Audio WIBE release
+
+Pipeline and project structure optimized for multiple domain processing
+
+Added:
+
+- Methods: AudioSeal, WavMark, SilentCipher, Perth, AWARE, DNN-Watermarking, DCT-B1, FSVC, NormSpace, Patchwork, QIM, EchoHiding, SpreadSpectrum, LSB, CryptoMark
+- Metrics: SI-SNR, PESQ, STOI, NISQA, DNSMOS, SECS
+- Attacks: Resampling, Requantization, Scaling, Noise, Filter, MPEG, Echo, AAC, Speed, Boost, TimeStretch, InvertedTimeStretch, FlipSamples, ZeroCrossInserts, Replacement, Vocos
+- Datasets: AudioFolder, LibriSpeech, AudioSet
+
 ## Version 0.4.0 - 06.08.26
 
 WARP paper release
