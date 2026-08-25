@@ -351,8 +351,10 @@ def run(
         subprocess_run(pipeline_config, python_exec=chosen_exec)
         return
     import_modules("wibench.common", debug)
-    import_modules("wibench.image", debug)
-    import_modules("wibench.audio", debug)
+    if get_profile() == "image":
+        import_modules("wibench.image", debug)
+    if get_profile() == "audio":
+        import_modules("wibench.audio", debug)
     import_modules("user_plugins", debug)
     
     if CHILD_NUM_ENV_NAME not in os.environ and (pipeline_config.workers > 1 or len(pipeline_config.cuda_visible_devices)):
