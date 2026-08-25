@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
-import pywt
 from scipy.fftpack import dct, idct
 
 from wibench.config import Params
@@ -44,6 +43,9 @@ class NormSpaceWrapper(ClassicWatermarkWrapper):
         signal: np.ndarray,
         payload: np.ndarray,
     ) -> np.ndarray:
+
+        import pywt
+
         segments = np.array_split(signal, len(payload))
         wm_segments = []
 
