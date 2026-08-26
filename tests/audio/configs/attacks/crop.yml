@@ -13,13 +13,13 @@ datasets:
       sample_rate: 16000
 
 attacks:
-  - Cut:
+  - Crop:
       duration_ms: 100
       mode: start
-  - Cut:
+  - Crop:
       duration_ms: 100
       mode: end
-  - Cut:
+  - Crop:
       duration_ms: 100
       mode: random
 

@@ -90,6 +90,8 @@ class NormSpaceWrapper(ClassicWatermarkWrapper):
         signal: np.ndarray,
         payload_len: int,
     ) -> np.ndarray:
+        import pywt
+
         segments = np.array_split(signal, payload_len)
         bits = []
 
