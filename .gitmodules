@@ -67,3 +67,7 @@
 [submodule "submodules/cryptomark"]
 	path = submodules/cryptomark
 	url = git@gitlab.ispras.ru:watermarking/dm-audio.git
+[submodule "submodules/hifimark"]
+	path = submodules/hifimark
+	url = git@gitlab.ispras.ru:watermarking/dnn-audio-reworked.git
+	branch = issue1

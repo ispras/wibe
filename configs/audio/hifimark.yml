@@ -1,0 +1,20 @@
+algorithms:
+  &alg_name hifi-mark: &alg_params
+
+datasets:
+{% include 'common/libritts.yml' %}
+
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %}
+
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %}
+
+attacks:
+{% include 'common/distortions.yml' %}
+
+pipeline:
+  result_path: ./test_results/hifi-mark
+  aggregators:
+    - CSV:
+        table_name: table
