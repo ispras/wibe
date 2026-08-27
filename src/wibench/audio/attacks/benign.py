@@ -7,6 +7,7 @@ import librosa
 from typing import Literal
 import scipy.signal
 import torch
+import torchaudio.functional
 import numpy as np
 from torchaudio.transforms import Resample
 from wibench.audio.typing import TorchAudio
@@ -186,6 +187,72 @@ class Noise(BaseAttack):
         noise = torch.randn_like(signal) * noise_power.sqrt()
         return TorchAudio(
             data=signal + noise,
+            rate=audio.rate,
+        )
+
+
+class PinkNoise(BaseAttack):
+    """Add pink noise with a specified signal-to-noise ratio."""
+
+    def __init__(self, snr_db: float):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        snr_db : float
+            Target signal-to-noise ratio in decibels.
+        """
+        self.snr_db = snr_db
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Apply pink noise with the specified signal-to-noise ratio.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio corrupted by pink noise.
+        """
+        signal = audio.data
+
+        # Generate white noise.
+        white = torch.randn_like(signal)
+
+        # Pink noise filter coefficients.
+        b = torch.tensor(
+            [0.049922035, -0.095993537, 0.050612699, -0.004408786],
+            dtype=signal.dtype,
+            device=signal.device,
+        )
+        a = torch.tensor(
+            [1.0, -2.494956002, 2.017265875, -0.522189400],
+            dtype=signal.dtype,
+            device=signal.device,
+        )
+
+        # Apply the pink noise filter.
+        pink = torchaudio.functional.lfilter(
+            white,
+            a_coeffs=a,
+            b_coeffs=b,
+            clamp=False,
+        )
+
+        # Calculate the target noise power.
+        signal_power = signal.square().mean(dim=-1, keepdim=True)
+        snr_linear = 10 ** (self.snr_db / 10.0)
+        noise_power = signal_power / snr_linear
+
+        # Normalize pink noise to the target power.
+        pink_power = pink.square().mean(dim=-1, keepdim=True)
+        pink = pink * (noise_power / pink_power).sqrt()
+
+        return TorchAudio(
+            data=signal + pink,
             rate=audio.rate,
         )
 

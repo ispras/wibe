@@ -306,6 +306,13 @@ Noise
    :members:
    :special-members: __call__
 
+Pink Noise
+^^^^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.benign.PinkNoise
+   :members:
+   :special-members: __call__
+
 Filter
 ^^^^^^
 
