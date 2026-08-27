@@ -53,14 +53,7 @@ class HifiMarkWrapper(BaseAlgorithmWrapper):
     HifiMark audio watermarking algorithm wrapper.
 
     The model configuration is loaded from a YAML config file.  The checkpoint
-    is loaded from ``model_path/checkpoint_filename``.  The default layout is:
-
-        ./model_files/dnnaudio/checkpoint.pt
-        ./model_files/dnnaudio/config.yaml
-
-    For multi-channel signals, watermarking and extraction are performed
-    independently for each channel.  Extraction uses majority voting over
-    channel-level payloads, matching the interface style of the WavMark wrapper.
+    is loaded from ``model_path/checkpoint_filename``.
     """
 
     name = NAME
