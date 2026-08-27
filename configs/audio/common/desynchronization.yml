@@ -1,25 +1,25 @@
   - Identity
-  - Cut:
+  - Crop:
       report_name: cut_start_10ms
       duration_ms: 10
       mode: start
-  - Cut:
+  - Crop:
       report_name: cut_start_100ms
       duration_ms: 100
       mode: start
-  - Cut:
+  - Crop:
       report_name: cut_start_500ms
       duration_ms: 500
       mode: start
-  - Cut:
+  - Crop:
       report_name: cut_start_1s
       duration_ms: 1000
       mode: start
-  - Cut:
+  - Crop:
       report_name: cut_end_100ms
       duration_ms: 100
       mode: end
-  - Cut:
+  - Crop:
       report_name: cut_random_100ms
       duration_ms: 100
       mode: random
