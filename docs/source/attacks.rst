@@ -362,6 +362,13 @@ Boost
    :members:
    :special-members: __call__
 
+Wiener Filter
+^^^^^^^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.benign.WienerFilter
+   :members:
+   :special-members: __call__
+
 Malicious attacks
 ~~~~~~~~~~~~~~~~~
 
