@@ -278,6 +278,13 @@ Benign attacks
 
 This block contains benign (non-malicious) audio attacks.
 
+Sign Inversion
+^^^^^^^^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.benign.SignInversion
+   :members:
+   :special-members: __call__
+
 Resampling
 ^^^^^^^^^^
 

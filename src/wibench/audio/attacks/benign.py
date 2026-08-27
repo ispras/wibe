@@ -15,6 +15,28 @@ from wibench.utils import HiddenWarnings
 from wibench.common.attacks import BaseAttack
 
 
+class SignInversion(BaseAttack):
+    """Invert the sign of the audio signal."""
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Invert the sign of the audio signal.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio signal with inverted polarity.
+        """
+        return TorchAudio(
+            data=-audio.data,
+            rate=audio.rate,
+        )
+
+
 class Resampling(BaseAttack):
     """Resample audio to a target sampling rate and back."""
 
