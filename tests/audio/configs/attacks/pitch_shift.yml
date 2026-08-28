@@ -13,7 +13,7 @@ datasets:
       sample_rate: 16000
 
 attacks:
-  - PitchShift:
+  - Pitch:
       cents: 5
 
 pipeline:

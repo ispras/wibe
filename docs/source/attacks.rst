@@ -273,123 +273,141 @@ Special
 Implemented audio attacks
 -------------------------
 
-Benign attacks
-~~~~~~~~~~~~~~
+Signal distortions
+~~~~~~~~~~~~~~~~~~
 
-This block contains benign (non-malicious) audio attacks.
+This block contains signal-level transformations that modify the amplitude, frequency content, sampling representation, or noise characteristics of the audio signal.
 
 Sign Inversion
 ^^^^^^^^^^^^^^
 
-.. autoclass:: wibench.audio.attacks.benign.SignInversion
+.. autoclass:: wibench.audio.attacks.signal.SignInversion
    :members:
    :special-members: __call__
 
 Resampling
 ^^^^^^^^^^
 
-.. autoclass:: wibench.audio.attacks.benign.Resampling
+.. autoclass:: wibench.audio.attacks.signal.Resampling
    :members:
    :special-members: __call__
 
 Requantization
 ^^^^^^^^^^^^^^
 
-.. autoclass:: wibench.audio.attacks.benign.Requantization
+.. autoclass:: wibench.audio.attacks.signal.Requantization
    :members:
    :special-members: __call__
 
 Scaling
 ^^^^^^^
 
-.. autoclass:: wibench.audio.attacks.benign.Scaling
+.. autoclass:: wibench.audio.attacks.signal.Scaling
    :members:
    :special-members: __call__
 
-Noise
-^^^^^
+White Noise
+^^^^^^^^^^^
 
-.. autoclass:: wibench.audio.attacks.benign.Noise
+.. autoclass:: wibench.audio.attacks.signal.WhiteNoise
    :members:
    :special-members: __call__
 
 Pink Noise
 ^^^^^^^^^^
 
-.. autoclass:: wibench.audio.attacks.benign.PinkNoise
+.. autoclass:: wibench.audio.attacks.signal.PinkNoise
    :members:
    :special-members: __call__
 
 Filter
 ^^^^^^
 
-.. autoclass:: wibench.audio.attacks.benign.Filter
-   :members:
-   :special-members: __call__
-
-MPEG
-^^^^
-
-.. autoclass:: wibench.audio.attacks.benign.Mpeg
-   :members:
-   :special-members: __call__
-
-Echo
-^^^^
-
-.. autoclass:: wibench.audio.attacks.benign.Echo
-   :members:
-   :special-members: __call__
-
-AAC
-^^^
-
-.. autoclass:: wibench.audio.attacks.benign.AAC
-   :members:
-   :special-members: __call__
-
-Speed
-^^^^^
-
-.. autoclass:: wibench.audio.attacks.benign.Speed
+.. autoclass:: wibench.audio.attacks.signal.Filter
    :members:
    :special-members: __call__
 
 Boost
 ^^^^^
 
-.. autoclass:: wibench.audio.attacks.benign.Boost
+.. autoclass:: wibench.audio.attacks.signal.Boost
    :members:
    :special-members: __call__
+
+
+Compression
+~~~~~~~~~~~
+
+This block contains audio compression attacks based on lossy audio codecs.
+
+MPEG
+^^^^
+
+.. autoclass:: wibench.audio.attacks.compression.Mpeg
+   :members:
+   :special-members: __call__
+
+AAC
+^^^
+
+.. autoclass:: wibench.audio.attacks.compression.AAC
+   :members:
+   :special-members: __call__
+
+
+Acoustic effects
+~~~~~~~~~~~~~~~~
+
+This block contains transformations that simulate acoustic effects affecting the audio signal.
+
+Echo
+^^^^
+
+.. autoclass:: wibench.audio.attacks.acoustic.Echo
+   :members:
+   :special-members: __call__
+
+Audio effects
+~~~~~~~~~~~~~~~~
+
+This block contains transformations that simulate audio effects.
+
+Pitch
+^^^^^
+
+.. autoclass:: wibench.audio.attacks.effect.Pitch
+   :members:
+   :special-members: __call__
+
+Enhancement
+~~~~~~~~~~~
+
+This block contains audio enhancement and denoising methods that modify the signal to suppress noise or other unwanted components.
 
 Wiener Filter
 ^^^^^^^^^^^^^
 
-.. autoclass:: wibench.audio.attacks.benign.WienerFilter
+.. autoclass:: wibench.audio.attacks.enhancement.WienerFilter
    :members:
    :special-members: __call__
 
-Malicious attacks
-~~~~~~~~~~~~~~~~~
-
-This block contains malicious attacks designed to remove or degrade watermarks.
-
-Vocos
-^^^^^
-
-.. autoclass:: wibench.audio.attacks.malicious.Vocos
-   :members:
-   :special-members: __call__
 
 Desynchronization attacks
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This block contains desynchronization attacks that disrupt the temporal alignment of watermarks.
+This block contains attacks that modify the temporal structure or local alignment of the audio signal and can therefore disrupt watermark synchronization.
 
 Time Stretch
 ^^^^^^^^^^^^
 
 .. autoclass:: wibench.audio.attacks.desynchronization.TimeStretch
+   :members:
+   :special-members: __call__
+
+Speed
+^^^^^
+
+.. autoclass:: wibench.audio.attacks.desynchronization.Speed
    :members:
    :special-members: __call__
 
@@ -407,13 +425,6 @@ Flip Samples
    :members:
    :special-members: __call__
 
-Pitch Shift
-^^^^^^^^^^^
-
-.. autoclass:: wibench.audio.attacks.desynchronization.PitchShift
-   :members:
-   :special-members: __call__
-
 Zero Cross Inserts
 ^^^^^^^^^^^^^^^^^^
 
@@ -425,5 +436,17 @@ Replacement Attack
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: wibench.audio.attacks.desynchronization.ReplacementAttack
+   :members:
+   :special-members: __call__
+
+Malicious attacks
+~~~~~~~~~~~~~~~~~
+
+This block contains attacks specifically designed to remove or substantially degrade audio watermarks.
+
+Vocos
+^^^^^
+
+.. autoclass:: wibench.audio.attacks.malicious.Vocos
    :members:
    :special-members: __call__

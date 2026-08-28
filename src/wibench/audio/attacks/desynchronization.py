@@ -8,13 +8,14 @@
 #
 # Modifications have been made.
 
+from pathlib import Path
 from typing import Literal
 import librosa.effects
 import torch
 import numpy as np
-from torchaudio.transforms import Resample
 from wibench.audio.typing import TorchAudio
 from wibench.common.attacks import BaseAttack
+from wibench.audio.attacks.ffmpeg import FFmpegAttack
 
 
 class Crop(BaseAttack):
@@ -150,6 +151,57 @@ class TimeStretch(BaseAttack):
         )
 
 
+class Speed(FFmpegAttack):
+    """Change the playback speed of an audio signal."""
+
+    def __init__(
+        self,
+        factor: float,
+        tmp_folder: Path = Path("/tmp"),
+        cleanup: bool = True,
+    ):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        factor : float
+            Playback speed factor. Values greater than 1 speed up the audio,
+            while values between 0 and 1 slow it down.
+        tmp_folder : Path, default=Path("/tmp")
+            Directory used for temporary files.
+        cleanup : bool, default=True
+            Whether to remove temporary files after processing.
+        """
+        super().__init__(tmp_folder, cleanup)
+
+        if factor <= 0:
+            raise ValueError("factor must be positive")
+
+        self.factor = factor
+
+    @property
+    def output_extension(self):
+        return "wav"
+
+    def ffmpeg_args(
+            self,
+            input_path: Path,
+            output_path: Path,
+            audio: TorchAudio) -> list[str]:
+        return [
+            "ffmpeg",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            str(input_path),
+            "-af",
+            f"asetrate={audio.rate * self.factor},aresample={audio.rate}",
+            str(output_path),
+            "-y",
+        ]
+
+
 class InvertedTimeStretch(BaseAttack):
     """Apply time stretching followed by inverse time stretching."""
 
@@ -183,52 +235,6 @@ class InvertedTimeStretch(BaseAttack):
             rates.
         """
         return self.inverse_time_stretch(self.time_stretch(audio))
-
-
-class PitchShift(BaseAttack):
-    """Shift audio pitch without changing its duration."""
-
-    def __init__(self, cents: float = 5):
-        """Initialize the attack.
-
-        Parameters
-        ----------
-        cents : float
-            Pitch shift in cents, where 100 cents correspond to one semitone.
-            Positive values increase the pitch and negative values decrease it.
-        """
-        self.cents = cents
-
-    def __call__(self, audio: TorchAudio) -> TorchAudio:
-        """Apply pitch shifting to an audio signal.
-
-        Parameters
-        ----------
-        audio : TorchAudio
-            Input audio signal.
-
-        Returns
-        -------
-        TorchAudio
-            Pitch-shifted audio signal with the original sampling rate and
-            duration.
-        """
-        device = audio.data.device
-        dtype = audio.data.dtype
-
-        data = audio.data.detach().cpu().numpy()
-        semitones = self.cents / 100.0
-        shifted = librosa.effects.pitch_shift(
-            data, sr=audio.rate, n_steps=semitones)
-        return TorchAudio(
-            data=torch.from_numpy(
-                np.ascontiguousarray(shifted)
-            ).to(
-                device=device,
-                dtype=dtype,
-            ),
-            rate=audio.rate,
-        )
 
 
 class ZeroCrossInserts(BaseAttack):
