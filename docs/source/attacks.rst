@@ -354,6 +354,13 @@ AAC
    :members:
    :special-members: __call__
 
+Opus
+^^^^
+
+.. autoclass:: wibench.audio.attacks.compression.Opus
+   :members:
+   :special-members: __call__
+
 
 Acoustic effects
 ~~~~~~~~~~~~~~~~
