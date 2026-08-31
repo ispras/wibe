@@ -1,4 +1,4 @@
-from .signal import SignInversion, Resampling, Requantization, Scaling, Filter, WhiteNoise, PinkNoise, Boost
+from .signal import SignInversion, Resampling, Requantization, Gain, Filter, WhiteNoise, PinkNoise
 from .compression import Mpeg, AAC
 from .acoustic import Echo
 from .effect import Pitch

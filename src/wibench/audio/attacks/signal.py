@@ -138,19 +138,27 @@ class Requantization(BaseAttack):
         )
 
 
-class Scaling(BaseAttack):
-    """Scale the amplitude of an audio signal."""
+class Gain(BaseAttack):
+    """Scale the amplitude of an audio signal by a specified gain."""
 
-    def __init__(self, factor: float):
+    def __init__(
+        self,
+        gain_db: float,
+        clip: bool = False,
+    ):
         """Initialize the attack.
 
         Parameters
         ----------
-        factor : float
-            Amplitude scaling factor. Values greater than 1 amplify the
-            signal, while values between 0 and 1 attenuate it.
+        gain_db : float
+            Gain applied to the audio signal in decibels. Positive values
+            amplify the signal, while negative values attenuate it.
+        clip : bool, default=False
+            Whether to clip the output signal to the ``[-1, 1]`` range
+            after applying the gain.
         """
-        self.factor = factor
+        self.gain_db = gain_db
+        self.clip = clip
 
     def __call__(self, audio: TorchAudio) -> TorchAudio:
         """Apply amplitude scaling.
@@ -165,8 +173,12 @@ class Scaling(BaseAttack):
         TorchAudio
             Audio with scaled amplitude.
         """
+        factor = 10 ** (self.gain_db / 20)
+        signal = audio.data * factor
+        if self.clip:
+            signal = signal.clamp(-1.0, 1.0)
         return TorchAudio(
-            data=audio.data * self.factor,
+            data=signal,
             rate=audio.rate,
         )
 
@@ -349,50 +361,3 @@ class Filter(BaseAttack):
             ),
             rate=audio.rate,
         )
-
-
-class Boost(FFmpegAttack):
-    """Apply gain to an audio signal."""
-
-    def __init__(
-        self,
-        gain_db: float,
-        tmp_folder: Path = Path("/tmp"),
-        cleanup: bool = True,
-    ):
-        """Initialize the attack.
-
-        Parameters
-        ----------
-        gain_db : float
-            Gain in decibels.
-        tmp_folder : Path, default=Path("/tmp")
-            Directory used for temporary files.
-        cleanup : bool, default=True
-            Whether to remove temporary files after processing.
-        """
-        super().__init__(tmp_folder, cleanup)
-        self.gain_db = gain_db
-
-    @property
-    def output_extension(self) -> str:
-        return "wav"
-
-    def ffmpeg_args(
-        self,
-        input_path: Path,
-        output_path: Path,
-        _: TorchAudio,
-    ) -> list[str]:
-        return [
-            "ffmpeg",
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-i",
-            str(input_path),
-            "-af",
-            f"volume={self.gain_db}dB",
-            str(output_path),
-            "-y",
-        ]

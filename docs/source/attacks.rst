@@ -299,10 +299,10 @@ Requantization
    :members:
    :special-members: __call__
 
-Scaling
-^^^^^^^
+Gain
+^^^^
 
-.. autoclass:: wibench.audio.attacks.signal.Scaling
+.. autoclass:: wibench.audio.attacks.signal.Gain
    :members:
    :special-members: __call__
 
@@ -324,13 +324,6 @@ Filter
 ^^^^^^
 
 .. autoclass:: wibench.audio.attacks.signal.Filter
-   :members:
-   :special-members: __call__
-
-Boost
-^^^^^
-
-.. autoclass:: wibench.audio.attacks.signal.Boost
    :members:
    :special-members: __call__
 
