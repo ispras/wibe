@@ -327,6 +327,13 @@ Filter
    :members:
    :special-members: __call__
 
+Clipping
+^^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.signal.Clipping
+   :members:
+   :special-members: __call__
+
 
 Compression
 ~~~~~~~~~~~

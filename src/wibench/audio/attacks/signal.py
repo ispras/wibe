@@ -361,3 +361,45 @@ class Filter(BaseAttack):
             ),
             rate=audio.rate,
         )
+
+
+class Clipping(BaseAttack):
+    """Clip the amplitude of an audio signal."""
+
+    def __init__(self, threshold: float):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        threshold : float
+            Maximum absolute amplitude of the output signal. Samples greater
+            than ``threshold`` are set to ``threshold``, while samples less
+            than ``-threshold`` are set to ``-threshold``. Must be positive.
+        """
+        if threshold <= 0:
+            raise ValueError(
+                f"threshold must be positive, got {threshold}"
+            )
+
+        self.threshold = threshold
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Apply amplitude clipping.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio with amplitudes clipped to the specified threshold.
+        """
+        return TorchAudio(
+            data=audio.data.clamp(
+                min=-self.threshold,
+                max=self.threshold,
+            ),
+            rate=audio.rate,
+        )
