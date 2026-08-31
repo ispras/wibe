@@ -200,7 +200,9 @@ class WhiteNoise(BaseAttack):
         signal = audio.data
         signal_power = signal.square().mean(dim=-1, keepdim=True)
         noise_power = signal_power / (10 ** (self.snr_db / 10))
-        noise = torch.randn_like(signal) * noise_power.sqrt()
+        noise = torch.randn_like(signal)
+        noise = noise / noise.square().mean(dim=-1, keepdim=True).sqrt()
+        noise = noise * noise_power.sqrt()
         return TorchAudio(
             data=signal + noise,
             rate=audio.rate,
