@@ -1,6 +1,6 @@
-from .signal import SignInversion, Resampling, Requantization, Gain, Filter, WhiteNoise, PinkNoise
-from .compression import Mpeg, AAC
-from .acoustic import Echo
+from .signal import SignInversion, Resampling, Requantization, Gain, Clipping, Filter, WhiteNoise, PinkNoise
+from .compression import Mpeg, AAC, Opus
+from .acoustic import Echo, Reverb
 from .effect import Pitch
 from .enhancement import WienerFilter
 from .malicious import Vocos

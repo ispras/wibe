@@ -374,6 +374,13 @@ Echo
    :members:
    :special-members: __call__
 
+Reverb
+^^^^^^
+
+.. autoclass:: wibench.audio.attacks.acoustic.Reverb
+   :members:
+   :special-members: __call__
+
 Audio effects
 ~~~~~~~~~~~~~~~~
 

@@ -1,0 +1,33 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - Reverb:
+      report_name: reverb_strong
+      decay: 0.85
+      mix: 0.75
+  - Reverb:
+      report_name: reverb_medium
+      decay: 0.6
+      mix: 0.5
+  - Reverb:
+      report_name: reverb_weak
+      decay: 0.3
+      mix: 0.25
+
+pipeline:
+  result_path: ./test_results/tests/reverb
+  aggregators:
+    - CSV:
+        table_name: table
