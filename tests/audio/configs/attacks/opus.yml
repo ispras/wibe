@@ -13,11 +13,18 @@ datasets:
       sample_rate: 16000
 
 attacks:
-  - Scaling:
-      factor: 0.85
+  - Opus:
+        report_name: opus_32
+        bitrate: 24
+  - Opus:
+        report_name: opus_64
+        bitrate: 64
+  - Opus:
+        report_name: opus_128
+        bitrate: 128
 
 pipeline:
-  result_path: ./test_results/tests/scaling
+  result_path: ./test_results/tests/opus
   aggregators:
     - CSV:
         table_name: table

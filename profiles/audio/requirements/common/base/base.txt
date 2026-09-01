@@ -7,3 +7,4 @@ librosa==0.11.0
 soundfile
 numba>=0.55
 datasets==5.0.1
+numpy

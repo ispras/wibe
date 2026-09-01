@@ -55,9 +55,9 @@ class ContextEncoder:
             return ContextEncoder.encode(asdict_nonrecursive(obj), save_dir, parent_key)
         elif isinstance(obj, (torch.Tensor, np.ndarray)):
             return ContextEncoder._save_tensor(obj, save_dir, parent_key)
-        # TODO: Use common interface
-        elif hasattr(obj, "dump"):
-            return obj.dump(save_dir, parent_key)
+        # TODO: Use common interface -- ugly dirty hack (меня Леша заставил =)
+        elif hasattr(obj, "dump_audio"):
+            return obj.dump_audio(save_dir, parent_key)
         elif isinstance(obj, dict):
             return {k: ContextEncoder.encode(v, save_dir, f"{parent_key}.{k}" if parent_key else k) for k, v in obj.items()}
         elif isinstance(obj, (list, tuple)):

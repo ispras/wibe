@@ -13,18 +13,15 @@ datasets:
       sample_rate: 16000
 
 attacks:
-  - Crop:
-      duration_ms: 100
-      mode: start
-  - Crop:
-      duration_ms: 100
-      mode: end
-  - Crop:
-      duration_ms: 100
-      mode: random
+  - Clipping:
+      report_name: clip_0.9
+      threshold: 0.9
+  - Clipping:
+      report_name: cip_0.7
+      threshold: 0.7
 
 pipeline:
-  result_path: ./test_results/tests/crop
+  result_path: ./test_results/tests/clipping
   aggregators:
     - CSV:
         table_name: table

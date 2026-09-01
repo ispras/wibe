@@ -22,7 +22,7 @@ class TorchAudio(NamedTuple):
     def clone(self) -> Self:
         return TorchAudio(data=self.data.clone(), rate=int(self.rate))
 
-    def dump(self, save_dir: Path, key: str) -> Dict:
+    def dump_audio(self, save_dir: Path, key: str) -> Dict:
         """Save audio tensor tuple to file and return metadata.
 
         Parameters

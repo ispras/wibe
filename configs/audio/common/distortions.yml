@@ -14,14 +14,14 @@
   - Scaling:
       report_name: scaling_11
       factor: 1.1
-  - Noise:
-      report_name: noise_20
+  - WhiteNoise:
+      report_name: white_noise_20
       snr_db: 20
-  - Noise:
-      report_name: noise_30
+  - WhiteNoise:
+      report_name: white_noise_30
       snr_db: 30
-  - Noise:
-      report_name: noise_40
+  - WhiteNoise:
+      report_name: white_noise_40
       snr_db: 40
   - Filter:
       report_name: lowpass_2k

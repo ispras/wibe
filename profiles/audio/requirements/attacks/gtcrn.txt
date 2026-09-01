@@ -1,1 +1,0 @@
-# GTCRN uses the audio profile's base PyTorch and NumPy dependencies.

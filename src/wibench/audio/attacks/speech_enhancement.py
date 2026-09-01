@@ -8,7 +8,7 @@ from torchaudio.transforms import Resample
 
 from wibench.audio.attacks._gtcrn import GTCRNModel
 from wibench.audio.typing import TorchAudio
-from wibench.common.attacks.base import BaseAttack
+from wibench.common.attacks import BaseAttack
 from wibench.pipeline_type import PipelineType
 
 _METRICGAN_PLUS_REVISION = "a196ce26b3bdace6fa1d819017584bdbcce462a8"
