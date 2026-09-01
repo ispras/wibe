@@ -235,7 +235,7 @@ git submodule update --init --recursive
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 (.venv) pip install uv
-(.venv) uv sy
+(.venv) uv sync
 (.venv) wibench-venv rebuild   # builds additional venvs
 ```
 
