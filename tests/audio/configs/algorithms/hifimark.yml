@@ -1,0 +1,16 @@
+algorithms:
+  hifi-mark
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/22050/
+      sample_rate: 22050
+
+attacks:
+  - Identity
+
+pipeline:
+  result_path: ./test_results/tests/hifi-mark
+  aggregators:
+    - CSV:
+        table_name: table
