@@ -360,6 +360,20 @@ Vocos
    :members:
    :special-members: __call__
 
+MetricGAN+
+^^^^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.speech_enhancement.MetricGANPlus
+   :members:
+   :special-members: __call__
+
+GTCRN
+^^^^^
+
+.. autoclass:: wibench.audio.attacks.speech_enhancement.GTCRN
+   :members:
+   :special-members: __call__
+
 Desynchronization attacks
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

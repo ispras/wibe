@@ -134,6 +134,8 @@ The system architecture consists of a sequence of processing configurable stages
 | Effects           | echo, pitchshift                                                                               | Signal distortions causing emphasizing specific sound characteristics                                                                               |
 | Desynchronization | cut, speed, timestretch, invertedtimestretch, flipsamples, zerocrossinserts, replacementattack | Various type of desynchronization distortions aimed to impact temporal structure of signal                                                          |
 | Vocos             | vocos                                                                                          | [Vocos: Closing the gap between time-domain and Fourier-based neural vocoders for high-quality audio synthesis](https://github.com/gemelo-ai/vocos) |
+| MetricGAN+        | metricganplus                                                                                  | Zero-knowledge speech-enhancement attack using the [SpeechBrain MetricGAN+ checkpoint](https://huggingface.co/speechbrain/metricgan-plus-voicebank)   |
+| GTCRN             | gtcrn                                                                                          | Zero-knowledge complex-mask attack using the [GTCRN DNS3 checkpoint](https://github.com/Xiaobin-Rong/gtcrn)                                          |
 
 ### Common
 

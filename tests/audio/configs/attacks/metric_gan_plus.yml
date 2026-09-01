@@ -1,0 +1,25 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - MetricGANPlus:
+      device: cpu
+      source: speechbrain/metricgan-plus-voicebank
+      revision: a196ce26b3bdace6fa1d819017584bdbcce462a8
+
+pipeline:
+  result_path: ./test_results/tests/metric_gan_plus
+  aggregators:
+    - CSV:
+        table_name: table
