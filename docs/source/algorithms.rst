@@ -346,6 +346,12 @@ DNN Audio Watermarking
 .. automodule:: wibench.audio.algorithms.dnn_audio.wrapper
     :members:
 
+HIFI-MARK
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: wibench.audio.algorithms.hifi_mark.wrapper
+    :members:
+
 DCT-B1
 ~~~~~~
 
