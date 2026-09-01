@@ -386,10 +386,17 @@ Audio effects
 
 This block contains transformations that simulate audio effects.
 
-Pitch
-^^^^^
+PitchShift
+^^^^^^^^^^
 
-.. autoclass:: wibench.audio.attacks.effect.Pitch
+.. autoclass:: wibench.audio.attacks.effect.PitchShift
+   :members:
+   :special-members: __call__
+
+DynamicRangeCompressor
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.effect.DynamicRangeCompressor
    :members:
    :special-members: __call__
 
