@@ -47,3 +47,8 @@ requires-dist = []
 name = "metr"
 version = "1.0.0"
 requires-dist = []
+
+# curated in profiles/audio/requirements/algorithms/silent_cipher.txt
+[[dependency-metadata]]
+name = "silentcipher"
+requires-dist = []

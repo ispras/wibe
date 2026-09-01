@@ -1,3 +1,7 @@
-from .benign import Resampling, Requantization, Scaling, Noise, Filter, Mpeg, Echo, AAC, Speed, Boost
+from .signal import SignInversion, Resampling, Requantization, Gain, Clipping, Filter, WhiteNoise, PinkNoise
+from .compression import Mpeg, AAC, Opus
+from .acoustic import Echo, Reverb
+from .effect import PitchShift, DynamicRangeCompressor
+from .enhancement import WienerFilter
 from .malicious import Vocos
-from .desynchronization import TimeStretch, InvertedTimeStretch, FlipSamples, PitchShift, ZeroCrossInserts, ReplacementAttack
+from .desynchronization import TimeStretch, Speed, InvertedTimeStretch, FlipSamples, ZeroCrossInserts, ReplacementAttack

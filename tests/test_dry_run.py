@@ -13,6 +13,7 @@ from wibench.config_loader import (
     render_jinja2_config,
 )
 from wibench.pipeline import STAGE_CLASSES
+from wibench.settings import get_profile
 sys.path.append(str(Path(__file__).parent.parent))
 
 
@@ -70,13 +71,11 @@ def run_wibench(config_file: Path, stages: list[str], tmp_path: Path):
     assert result.returncode == 0, f"Failed to run wibench: {result.stderr}"
 
 def valid_profile(config_path:  Path, profile_arg: Optional[str]) -> bool:
-    config_profile = config_path.parent.parent.parent.name
     if profile_arg is not None:
-        return profile_arg == config_profile
-    elif "WIBENCH_PROFILE" in os.environ:
-        return os.getenv("WIBENCH_PROFILE") == config_profile
+        return profile_arg == get_profile()
     else:
-        return True
+        config_profile = config_path.parent.parent.parent.name
+        return config_profile == get_profile()
 
 @pytest.mark.forked
 @pytest.mark.parametrize(

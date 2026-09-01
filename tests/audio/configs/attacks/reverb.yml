@@ -13,11 +13,21 @@ datasets:
       sample_rate: 16000
 
 attacks:
-  - Boost:
-        gain_db: 10
+  - Reverb:
+      report_name: reverb_strong
+      decay: 0.85
+      mix: 0.75
+  - Reverb:
+      report_name: reverb_medium
+      decay: 0.6
+      mix: 0.5
+  - Reverb:
+      report_name: reverb_weak
+      decay: 0.3
+      mix: 0.25
 
 pipeline:
-  result_path: ./test_results/tests/boost
+  result_path: ./test_results/tests/reverb
   aggregators:
     - CSV:
         table_name: table

@@ -13,18 +13,11 @@ datasets:
       sample_rate: 16000
 
 attacks:
-  - Crop:
-      duration_ms: 100
-      mode: start
-  - Crop:
-      duration_ms: 100
-      mode: end
-  - Crop:
-      duration_ms: 100
-      mode: random
+  - WhiteNoise:
+      snr_db: 30
 
 pipeline:
-  result_path: ./test_results/tests/crop
+  result_path: ./test_results/tests/noise
   aggregators:
     - CSV:
         table_name: table

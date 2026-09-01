@@ -14,14 +14,12 @@ import json
 import datetime
 from pathlib import Path
 import torch
-import soundfile
 import numpy as np
 import re
 from torchvision.utils import save_image
 from torchvision.transforms.functional import to_tensor
 from PIL import Image
 from wibench.config import DumpType
-from wibench.audio.typing import TorchAudio  # TODO: It should no be there
 
 
 def asdict_nonrecursive(obj) -> Dict[str, Any]:
@@ -57,8 +55,9 @@ class ContextEncoder:
             return ContextEncoder.encode(asdict_nonrecursive(obj), save_dir, parent_key)
         elif isinstance(obj, (torch.Tensor, np.ndarray)):
             return ContextEncoder._save_tensor(obj, save_dir, parent_key)
-        elif isinstance(obj, TorchAudio):
-            return ContextEncoder._save_torchaudio(obj, save_dir, parent_key)
+        # TODO: Use common interface -- ugly dirty hack (меня Леша заставил =)
+        elif hasattr(obj, "dump_audio"):
+            return obj.dump_audio(save_dir, parent_key)
         elif isinstance(obj, dict):
             return {k: ContextEncoder.encode(v, save_dir, f"{parent_key}.{k}" if parent_key else k) for k, v in obj.items()}
         elif isinstance(obj, (list, tuple)):
@@ -71,33 +70,6 @@ class ContextEncoder:
             return obj
         else:
             return ContextEncoder._save_unknown(obj, save_dir, parent_key)
-
-    @staticmethod
-    def _save_torchaudio(audio: TorchAudio, save_dir: Path, key: str) -> Dict:
-        """Save audio tensor tuple to file and return metadata.
-        
-        Parameters
-        ----------
-        audio : TorchAudio
-            Audio data to save
-        save_dir : Path
-            Directory to save the file
-        key : str
-            Base name for the file
-            
-        Returns
-        -------
-        Dict
-            Metadata dict with:
-            - __type__: Data type ('torch_audio')
-            - path: Relative path to saved file
-        """
-        safe_key = re.sub(r'[^\w\-_]', '_', key)
-        audio_path = f"{safe_key}.wav"
-        soundfile.write(save_dir / audio_path,
-                        data=audio.data.T.detach().cpu(),
-                        samplerate=audio.rate)
-        return {"__type__": "torch_audio", "path": audio_path}
 
     @staticmethod
     def _save_tensor(tensor: Union[torch.Tensor, np.ndarray], save_dir: Path, key: str) -> Dict:

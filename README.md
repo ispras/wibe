@@ -128,13 +128,15 @@ The system architecture consists of a sequence of processing configurable stages
 
 ### Audio domain
 
-| Attack            | Config name                                                                                    | Description                                                                                                                                         |
-|-------------------|------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Editing           | resampling, requantization, scaling, noise, filter, echo, mpeg, aac, boost                     | Common distortions that may be used while basic sound editing                                                                                       |
-| Effects           | echo, pitchshift                                                                               | Signal distortions causing emphasizing specific sound characteristics                                                                               |
-| Desynchronization | cut, speed, timestretch, invertedtimestretch, flipsamples, zerocrossinserts, replacementattack | Various type of desynchronization distortions aimed to impact temporal structure of signal                                                          |
-| Vocos             | vocos                                                                                          | [Vocos: Closing the gap between time-domain and Fourier-based neural vocoders for high-quality audio synthesis](https://github.com/gemelo-ai/vocos) |
-
+| Attack             | Config name                                                                                    | Description                                                                                                                                         |
+|--------------------|------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| Signal distortions | signinversion, resampling, requantization, gain, filter, whitenoise, pinknoise, clipping       | Common signal-level transformations affecting amplitude, sampling, quantization, frequency content, or noise.                                       |
+| Compression        | mpeg, aac, opus                                                                                | Lossy audio compression and encoding distortions.                                                                                                   |
+| Acoustic           | echo, reverb                                                                                   | Acoustic effects simulating propagation and reflections of sound.                                                                                   |
+| Effect             | pitchshift, dynamicrangecompressor                                                             | Different audio effects.                                                                                                                            |
+| Enhancement        | wienerfilter                                                                                   | Signal enhancement and denoising methods that modify the audio to suppress noise or unwanted components.                                            |
+| Desynchronization  | cut, speed, timestretch, invertedtimestretch, flipsamples, zerocrossinserts, replacementattack | Distortions that modify the temporal structure or local alignment of the signal.                                                                    |
+| Vocos              | vocos                                                                                          | [Vocos: Closing the gap between time-domain and Fourier-based neural vocoders for high-quality audio synthesis](https://github.com/gemelo-ai/vocos) |
 ### Common
 
 | Attack | Config name | Description |

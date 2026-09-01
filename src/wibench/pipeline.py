@@ -548,7 +548,7 @@ class StageRunner:
                 post_attack_metrics = add_entity(get_metrics, metrics[stage])
                 for metric in post_attack_metrics:
                     if metric.pipeline_type == PipelineType.IMAGE and pipeline_type == PipelineType.PROMPT:
-                        metric.pipeline_type = PipelineType.ALL# Hack for psnr, ssim, lpips as attack assessment metrics
+                        metric.pipeline_type = PipelineType.ALL_IMAGE # Hack for psnr, ssim, lpips as attack assessment metrics
 
                 self.stages.append(stage_class(post_attack_metrics))
             elif (stage == StageType.attack):

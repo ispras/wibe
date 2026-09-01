@@ -13,11 +13,11 @@ datasets:
       sample_rate: 16000
 
 attacks:
-  - Noise:
-      snr_db: 30
+  - PinkNoise:
+      snr_db: 25
 
 pipeline:
-  result_path: ./test_results/tests/noise
+  result_path: ./test_results/tests/pink_noise
   aggregators:
     - CSV:
         table_name: table
