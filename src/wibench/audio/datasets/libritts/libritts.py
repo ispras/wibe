@@ -38,8 +38,6 @@ class LibriTTS(RangeBaseDataset):
 
     pipeline_type = PipelineType.AUDIO
 
-    # совпадает с твоим train config:
-    # data.dataset_name: mythicinfinity/libritts
     dataset_path = "mythicinfinity/libritts"
 
     def __init__(

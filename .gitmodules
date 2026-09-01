@@ -70,4 +70,3 @@
 [submodule "submodules/hifimark"]
 	path = submodules/hifimark
 	url = git@gitlab.ispras.ru:watermarking/dnn-audio-reworked.git
-	branch = issue1
