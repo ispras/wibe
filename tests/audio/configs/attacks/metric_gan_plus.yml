@@ -15,8 +15,6 @@ datasets:
 attacks:
   - MetricGANPlus:
       device: cpu
-      source: speechbrain/metricgan-plus-voicebank
-      revision: a196ce26b3bdace6fa1d819017584bdbcce462a8
 
 pipeline:
   result_path: ./test_results/tests/metric_gan_plus

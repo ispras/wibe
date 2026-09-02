@@ -15,7 +15,6 @@ datasets:
 attacks:
   - GTCRN:
       device: cpu
-      download_progress: false
 
 pipeline:
   result_path: ./test_results/tests/gtcrn

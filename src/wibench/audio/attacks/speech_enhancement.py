@@ -1,17 +1,31 @@
 """Black-box attacks based on pretrained speech-enhancement models."""
 
-from pathlib import Path
-from typing import Any
-
 import torch
 from torchaudio.transforms import Resample
 
 from wibench.audio.attacks._gtcrn import GTCRNModel
 from wibench.audio.typing import TorchAudio
 from wibench.common.attacks import BaseAttack
+from wibench.download import requires_download
 from wibench.pipeline_type import PipelineType
 
-_METRICGAN_PLUS_REVISION = "a196ce26b3bdace6fa1d819017584bdbcce462a8"
+_METRICGAN_PLUS_URL = (
+    "https://nextcloud.ispras.ru/index.php/s/HoBgJQGd5F8zgXj"
+)
+_METRICGAN_PLUS_NAME = "metricganplus"
+_METRICGAN_PLUS_REQUIRED_FILES = [
+    "hyperparams.yaml",
+    "enhance_model.ckpt",
+]
+_METRICGAN_PLUS_MODEL_PATH = f"./model_files/{_METRICGAN_PLUS_NAME}"
+
+_GTCRN_URL = "https://nextcloud.ispras.ru/index.php/s/AKTY2GaFyG8xMe4"
+_GTCRN_NAME = "gtcrn"
+_GTCRN_CHECKPOINT_FILENAME = "model_trained_on_dns3.tar"
+_GTCRN_REQUIRED_FILES = [_GTCRN_CHECKPOINT_FILENAME]
+_GTCRN_CHECKPOINT_PATH = (
+    f"./model_files/{_GTCRN_NAME}/{_GTCRN_CHECKPOINT_FILENAME}"
+)
 
 
 class _SpeechEnhancementAttack(BaseAttack):
@@ -153,8 +167,20 @@ class _SpeechEnhancementAttack(BaseAttack):
         )
 
 
+@requires_download(
+    _METRICGAN_PLUS_URL,
+    _METRICGAN_PLUS_NAME,
+    _METRICGAN_PLUS_REQUIRED_FILES,
+)
 class MetricGANPlus(_SpeechEnhancementAttack):
     """Enhance audio with the pretrained SpeechBrain MetricGAN+ model.
+
+    The model is described in the `MetricGAN+ paper
+    <https://www.isca-archive.org/interspeech_2021/fu21_interspeech.html>`__.
+    This attack uses the official `SpeechBrain implementation
+    <https://github.com/speechbrain/speechbrain>`__
+    and its `pretrained VoiceBank checkpoint
+    <https://huggingface.co/speechbrain/metricgan-plus-voicebank>`__.
 
     This is a zero-knowledge attack: the model is pretrained for ordinary
     speech denoising and receives no information about the watermarking
@@ -166,9 +192,6 @@ class MetricGANPlus(_SpeechEnhancementAttack):
     def __init__(
         self,
         device: str = "cpu",
-        source: str = "speechbrain/metricgan-plus-voicebank",
-        revision: str | None = _METRICGAN_PLUS_REVISION,
-        savedir: str | None = None,
         clip_output: bool = True,
     ):
         """Initialize the MetricGAN+ attack.
@@ -177,15 +200,6 @@ class MetricGANPlus(_SpeechEnhancementAttack):
         ----------
         device : str, default="cpu"
             Device used for model inference.
-        source : str, default="speechbrain/metricgan-plus-voicebank"
-            SpeechBrain model identifier or a local model directory.
-        revision : str or None
-            Hugging Face revision of the model source. The default pins the
-            official checkpoint used by this attack. Set to ``None`` for a
-            non-Hugging-Face source that does not support revisions.
-        savedir : str or None, default=None
-            Optional directory for model files. When omitted, SpeechBrain's
-            standard cache is used without creating files in the repository.
         clip_output : bool, default=True
             Clip reconstructed samples to the valid ``[-1, 1]`` range.
         """
@@ -194,19 +208,15 @@ class MetricGANPlus(_SpeechEnhancementAttack):
         from speechbrain.inference.enhancement import (
             SpectralMaskEnhancement,
         )
-        from speechbrain.utils.fetching import FetchConfig
+        from speechbrain.utils.fetching import FetchConfig, LocalStrategy
 
-        load_options: dict[str, Any] = {
-            "source": source,
-            "run_opts": {"device": str(self.device)},
-        }
-        if revision is not None:
-            load_options["fetch_config"] = FetchConfig(
-                revision=revision,
-            )
-        if savedir is not None:
-            load_options["savedir"] = str(Path(savedir).expanduser())
-        self.enhancer = SpectralMaskEnhancement.from_hparams(**load_options)
+        self.enhancer = SpectralMaskEnhancement.from_hparams(
+            source=_METRICGAN_PLUS_MODEL_PATH,
+            savedir=_METRICGAN_PLUS_MODEL_PATH,
+            run_opts={"device": str(self.device)},
+            local_strategy=LocalStrategy.NO_LINK,
+            fetch_config=FetchConfig(allow_network=False),
+        )
         self.enhancer.eval()
 
     def _enhance(self, signal: torch.Tensor) -> torch.Tensor:
@@ -221,8 +231,17 @@ class MetricGANPlus(_SpeechEnhancementAttack):
         )
 
 
+@requires_download(
+    _GTCRN_URL,
+    _GTCRN_NAME,
+    _GTCRN_REQUIRED_FILES,
+)
 class GTCRN(_SpeechEnhancementAttack):
     """Enhance audio with the official GTCRN DNS3 checkpoint.
+
+    The model is described in the `GTCRN paper
+    <https://ieeexplore.ieee.org/document/10448310>`__ and implemented in the
+    official GitHub `repository <https://github.com/Xiaobin-Rong/gtcrn>`__.
 
     GTCRN estimates a complex ratio mask, so the attack can modify both the
     magnitude and phase of the possible watermark while remaining independent
@@ -230,22 +249,10 @@ class GTCRN(_SpeechEnhancementAttack):
     """
 
     pipeline_type = PipelineType.AUDIO
-    _checkpoint_url = (
-        "https://raw.githubusercontent.com/Xiaobin-Rong/gtcrn/"
-        "502ebfab64da7c4a9af78dcb9c6ceef1ebb01c73/"
-        "checkpoints/model_trained_on_dns3.tar"
-    )
-    _checkpoint_filename = (
-        "gtcrn-dns3-"
-        "a630d992cf792daf4ce2bb5bcf9c4d389f740a8f09c6e0971184697fe6371b79"
-        ".tar"
-    )
 
     def __init__(
         self,
         device: str = "cpu",
-        checkpoint_path: str | None = None,
-        download_progress: bool = True,
         clip_output: bool = True,
     ):
         """Initialize the GTCRN attack.
@@ -254,37 +261,16 @@ class GTCRN(_SpeechEnhancementAttack):
         ----------
         device : str, default="cpu"
             Device used for model inference.
-        checkpoint_path : str or None, default=None
-            Optional path to a local GTCRN checkpoint. When omitted, the
-            pinned official DNS3 checkpoint is downloaded to the PyTorch
-            cache and verified by its SHA-256 filename.
-        download_progress : bool, default=True
-            Display checkpoint download progress when it is not cached.
         clip_output : bool, default=True
             Clip reconstructed samples to the valid ``[-1, 1]`` range.
         """
         super().__init__(device=device, clip_output=clip_output)
 
-        if checkpoint_path is None:
-            checkpoint = torch.hub.load_state_dict_from_url(
-                self._checkpoint_url,
-                map_location="cpu",
-                progress=download_progress,
-                check_hash=True,
-                file_name=self._checkpoint_filename,
-                weights_only=True,
-            )
-        else:
-            path = Path(checkpoint_path).expanduser()
-            if not path.is_file():
-                raise FileNotFoundError(
-                    f"GTCRN checkpoint does not exist: {path}",
-                )
-            checkpoint = torch.load(
-                path,
-                map_location="cpu",
-                weights_only=True,
-            )
+        checkpoint = torch.load(
+            _GTCRN_CHECKPOINT_PATH,
+            map_location="cpu",
+            weights_only=True,
+        )
 
         state_dict = checkpoint.get("model", checkpoint)
         self.model = GTCRNModel().to(self.device)
