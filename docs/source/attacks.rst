@@ -393,10 +393,17 @@ PitchShift
    :members:
    :special-members: __call__
 
-DynamicRangeCompressor
+Dynamic Range Compressor
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: wibench.audio.attacks.effect.DynamicRangeCompressor
+   :members:
+   :special-members: __call__
+
+Limiter
+^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.effect.Limiter
    :members:
    :special-members: __call__
 
@@ -474,7 +481,7 @@ Replacement Attack
    :members:
    :special-members: __call__
 
-Replacement Attack
+Frame Dropout
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: wibench.audio.attacks.desynchronization.FrameDropout
