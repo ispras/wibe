@@ -474,6 +474,13 @@ Replacement Attack
    :members:
    :special-members: __call__
 
+Replacement Attack
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.desynchronization.FrameDropout
+   :members:
+   :special-members: __call__
+
 Malicious attacks
 ~~~~~~~~~~~~~~~~~
 
