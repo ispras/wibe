@@ -14,7 +14,14 @@ datasets:
 
 attacks:
   - Requantization:
-      target_dtype: float16
+      report_name: requantize_16bit
+      bit_depth: 16
+  - Requantization:
+      report_name: requantize_12bit
+      bit_depth: 12
+  - Requantization:
+      report_name: requantize_8bit
+      bit_depth: 8
 
 pipeline:
   result_path: ./test_results/tests/requantization
