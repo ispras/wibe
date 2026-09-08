@@ -161,6 +161,7 @@ The system architecture consists of a sequence of processing configurable stages
 | LibriSpeech   | librispeech         | [ASR corpus](https://huggingface.co/datasets/openslr/librispeech_asr) based on public domain audio books, audio and transcription           |
 | LibriTTS      | libritts            | [Dataset](https://huggingface.co/datasets/mythicinfinity/libritts) based on LibriSpeech, sr 22050 kHz, audio and transcription              |
 | AudioSet      | audioset            | [Dataset](https://huggingface.co/datasets/agkphysics/AudioSet) of 10-second clips from YouTube, annotated into one or more sound categories |
+| FreeMusicArchive | freemusicarchive | [FMA](https://github.com/mdeff/fma) an open, large-scale collection of music designed for evaluating tasks in Music Information Retrieval (MIR) and machine learning |
 
 </details>
 

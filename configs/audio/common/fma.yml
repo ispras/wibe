@@ -1,0 +1,5 @@
+  - &dataset_name FreeMusicArchive: &dataset_params
+      report_name: fma_small
+      size: small
+      split: train
+      sample_range: [0, 2500]
