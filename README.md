@@ -162,6 +162,7 @@ The system architecture consists of a sequence of processing configurable stages
 | LibriTTS      | libritts            | [Dataset](https://huggingface.co/datasets/mythicinfinity/libritts) based on LibriSpeech, sr 22050 kHz, audio and transcription              |
 | AudioSet      | audioset            | [Dataset](https://huggingface.co/datasets/agkphysics/AudioSet) of 10-second clips from YouTube, annotated into one or more sound categories |
 | FreeMusicArchive | freemusicarchive | [FMA](https://github.com/mdeff/fma) an open, large-scale collection of music designed for evaluating tasks in Music Information Retrieval (MIR) and machine learning |
+| VCTK          | vctk                | The [CSTR VCTK Corpus](https://huggingface.co/datasets/saeedzou/vctk-48khz) (Voice Cloning Toolkit) is a speech dataset containing approximately 44 hours of read English speech by 109 to 110 speakers with diverse regional accents. |
 
 </details>
 
