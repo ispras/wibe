@@ -13,4 +13,6 @@
         - ja
         - zh-CN
       split: test
+      sampling: balanced
+      seed: 42
       sample_range: [0, 2500]
