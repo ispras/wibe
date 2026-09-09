@@ -150,6 +150,8 @@ The system architecture consists of a sequence of processing configurable stages
 
 <details>
 <summary><b>Datasets</b></summary>
+
+
 | Dataset          | Config name         | Description                                                                                                                                                                  |
 |------------------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Image folder     | imagefolderdataset  | Loading images from a directory                                                                                                                                              |
