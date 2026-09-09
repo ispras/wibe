@@ -5,4 +5,5 @@ from .libritts import LibriTTS
 from .fma import FreeMusicArchive
 from .vctk import VCTK
 from .common_voice import CommonVoice
+from .aishell1 import AISHELL
 from .golos import Golos

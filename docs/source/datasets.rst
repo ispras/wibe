@@ -92,4 +92,6 @@ Audio Datasets
 
 .. autoclass:: wibench.audio.datasets.common_voice.CommonVoice
 
+.. autoclass:: wibench.audio.datasets.aishell1.AISHELL
+
 .. autoclass:: wibench.audio.datasets.golos.Golos
