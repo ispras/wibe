@@ -89,3 +89,5 @@ Audio Datasets
 .. autoclass:: wibench.audio.datasets.fma.FreeMusicArchive
 
 .. autoclass:: wibench.audio.datasets.vctk.VCTK
+
+.. autoclass:: wibench.audio.datasets.common_voice.CommonVoice

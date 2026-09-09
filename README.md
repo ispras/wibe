@@ -150,19 +150,19 @@ The system architecture consists of a sequence of processing configurable stages
 
 <details>
 <summary><b>Datasets</b></summary>
-
-| Dataset       | Config name         | Description                                                                                                                                 |
-|---------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| Image folder  | imagefolderdataset  | Loading images from a directory                                                                                                             |
-| Prompt folder | promptfolderdataset | Loading text prompts from a directory with .txt files                                                                                       |
-| Audio Folder  | audiofolderdataset  | Loading audio from a directory                                                                                                              |
-| DiffusionDB   | diffusiondb         | https://github.com/poloclub/diffusiondb, both images and prompts                                                                            |
-| MSCOCO        | mscoco              | https://cocodataset.org/, both images and prompts                                                                                           |
-| LibriSpeech   | librispeech         | [ASR corpus](https://huggingface.co/datasets/openslr/librispeech_asr) based on public domain audio books, audio and transcription           |
-| LibriTTS      | libritts            | [Dataset](https://huggingface.co/datasets/mythicinfinity/libritts) based on LibriSpeech, sr 22050 kHz, audio and transcription              |
-| AudioSet      | audioset            | [Dataset](https://huggingface.co/datasets/agkphysics/AudioSet) of 10-second clips from YouTube, annotated into one or more sound categories |
-| FreeMusicArchive | freemusicarchive | [FMA](https://github.com/mdeff/fma) an open, large-scale collection of music designed for evaluating tasks in Music Information Retrieval (MIR) and machine learning |
-| VCTK          | vctk                | The [CSTR VCTK Corpus](https://huggingface.co/datasets/saeedzou/vctk-48khz) (Voice Cloning Toolkit) is a speech dataset containing approximately 44 hours of read English speech by 109 to 110 speakers with diverse regional accents. |
+| Dataset          | Config name         | Description                                                                                                                                                                  |
+|------------------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Image folder     | imagefolderdataset  | Loading images from a directory                                                                                                                                              |
+| Prompt folder    | promptfolderdataset | Loading text prompts from a directory with .txt files                                                                                                                        |
+| Audio Folder     | audiofolderdataset  | Loading audio from a directory                                                                                                                                               |
+| DiffusionDB      | diffusiondb         | https://github.com/poloclub/diffusiondb, both images and prompts                                                                                                             |
+| MSCOCO           | mscoco              | https://cocodataset.org/, both images and prompts                                                                                                                            |
+| LibriSpeech      | librispeech         | [ASR corpus](https://www.openslr.org/12) based on public domain audio books, audio and transcription                                                                         |
+| LibriTTS         | libritts            | [Dataset](https://www.openslr.org/60/) based on LibriSpeech, sr 22050 kHz, audio and transcription                                                                           |
+| AudioSet         | audioset            | [Dataset](https://research.google.com/audioset/) of 10-second clips from YouTube                                                                                             |
+| FreeMusicArchive | freemusicarchive    | [FMA](https://arxiv.org/abs/1612.01840) is a large-scale collection of music                                                                                                 |
+| VCTK             | vctk                | The [CSTR VCTK Corpus](https://huggingface.co/datasets/saeedzou/vctk-48khz) (Voice Cloning Toolkit) is a speech dataset of read English speech with diverse regional accents |
+| CommonVoice      | commonvoice         | Public-domain multilingual voice [database](https://commonvoice.mozilla.org)                                                                                                 |
 
 </details>
 
