@@ -91,3 +91,5 @@ Audio Datasets
 .. autoclass:: wibench.audio.datasets.vctk.VCTK
 
 .. autoclass:: wibench.audio.datasets.common_voice.CommonVoice
+
+.. autoclass:: wibench.audio.datasets.golos.Golos

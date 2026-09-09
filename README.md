@@ -163,6 +163,7 @@ The system architecture consists of a sequence of processing configurable stages
 | FreeMusicArchive | freemusicarchive    | [FMA](https://arxiv.org/abs/1612.01840) is a large-scale collection of music                                                                                                 |
 | VCTK             | vctk                | The [CSTR VCTK Corpus](https://huggingface.co/datasets/saeedzou/vctk-48khz) (Voice Cloning Toolkit) is a speech dataset of read English speech with diverse regional accents |
 | CommonVoice      | commonvoice         | Public-domain multilingual voice [database](https://commonvoice.mozilla.org)                                                                                                 |
+| Golos            | golos               | Russian ASR [dataset](https://www.openslr.org/114/) with trained acoustic and language models                                                                                               |
 
 </details>
 
