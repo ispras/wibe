@@ -1,1 +1,1 @@
-from .fma import FMA
+from .fma import FreeMusicArchive
