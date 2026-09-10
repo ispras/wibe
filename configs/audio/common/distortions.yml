@@ -8,12 +8,12 @@
   - Requantization:
       report_name: requantize_float16
       target_dtype: float16
-  - Scaling:
-      report_name: scaling_09
-      factor: 0.9
-  - Scaling:
-      report_name: scaling_11
-      factor: 1.1
+  - Gain:
+      report_name: gain_3db
+      gain_db: 3
+  - Gain:
+      report_name: gain_6db
+      gain_db: 6
   - WhiteNoise:
       report_name: white_noise_20
       snr_db: 20
@@ -109,13 +109,4 @@
   - Speed:
         report_name: speed_05x
         factor: 1.05
-  - Boost:
-        report_name: boost_05
-        gain_db: 5
-  - Boost:
-        report_name: boost_10
-        gain_db: 10
-  - Boost:
-        report_name: boost_20
-        gain_db: 20
   

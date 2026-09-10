@@ -38,10 +38,10 @@
   - InvertedTimeStretch:
       report_name: inv_time_stretch_80%
       rate: 0.8
-  - Pitch:
+  - PitchShift:
       report_name: pitch_shift_1
       cents: 1
-  - Pitch:
+  - PitchShift:
       report_name: pitch_shift_5
       cents: 5
   - FlipSamples:
@@ -50,13 +50,13 @@
   - ZeroCrossInserts:
       pause_length: 20
       min_distance: 1.0
-  - ReplacementAttack:
-      block_size: 1024
-      overlap_factor: 0.75
-      lower_bound: 0
-      upper_bound: 10
-      k: 100
-      use_masking: False
-      search_window_sec: 0.0
-      search_dims: 0
-      tile_size: 256
+#   - ReplacementAttack:
+#       block_size: 1024
+#       overlap_factor: 0.75
+#       lower_bound: 0
+#       upper_bound: 10
+#       k: 100
+#       use_masking: False
+#       search_window_sec: 0.0
+#       search_dims: 0
+#       tile_size: 256

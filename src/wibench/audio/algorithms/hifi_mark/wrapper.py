@@ -1,27 +1,28 @@
 from dataclasses import dataclass
+import math
 from os.path import join
 from typing import Any
 
 import numpy as np
 import torch
-import torch.nn.functional as F
+import torchaudio.functional as AF
 
+from wibench.audio.typing import TorchAudio
 from wibench.common.algorithms import BaseAlgorithmWrapper
 from wibench.config import Params
-from wibench.audio.typing import TorchAudio
-from wibench.watermark_data import TorchBitWatermarkData
 from wibench.download import requires_download
 from wibench.module_importer import ModuleImporter
+from wibench.watermark_data import TorchBitWatermarkData
+
 
 DEFAULT_MODULE_PATH = "./submodules/hifimark/src/HifiMark"
+DEFAULT_SCRIPTS_PATH = "./submodules/hifimark/scripts"
 
 URL = "https://nextcloud.ispras.ru/index.php/s/bSzq3qrFNwMHj9b"
-
 NAME = "hifi-mark"
 
 VERSION = "256bv7_temporal/"
-
-CHECKPOINT_FILENAME = "checkpoint_final.pt"
+CHECKPOINT_FILENAME = "checkpoint_step_140750.pt"
 CONFIG_FILENAME = "config.yaml"
 
 REQUIRED_FILES = [
@@ -35,327 +36,226 @@ DEFAULT_CONFIG_PATH = DEFAULT_MODEL_PATH
 
 @dataclass
 class HifiMarkParams(Params):
-    """HifiMark watermarking configuration parameters."""
-
     model_path: str = DEFAULT_MODEL_PATH
     checkpoint_filename: str = VERSION + CHECKPOINT_FILENAME
 
     config_path: str = DEFAULT_CONFIG_PATH
     config_filename: str = VERSION + CONFIG_FILENAME
 
-    clip_output: bool = True
-    extraction_mode: str = "prob_mean"
+    # HifiMark decoder mode.
+    extraction_scheme: str = "sliding"
+
+    payload_seed: int = 12345
+
+    # Same inference parameters as current eval_models.py.
+    sliding_step_seconds: float = 0.01
+    embed_min_tail_ratio: float = 0.8
+    sliding_min_audio_ratio: float = 0.75
+    sliding_boundary_pad_ratio: float = 0.25
+    sliding_max_sync_bit_errors: int = 2
+    sliding_max_candidates: int = 8
+    sliding_candidate_extra: int = 0
+    sliding_min_separation_ratio: float = 0.5
+    sliding_aggregation: str = "prob_mean"
+
+    # eval_models.py currently uses BATCH_CHUNKS = 128.
+    sliding_batch_size: int = 128
 
 
 @requires_download(URL, NAME, REQUIRED_FILES)
 class HifiMarkWrapper(BaseAlgorithmWrapper):
-    """
-    HifiMark audio watermarking algorithm wrapper.
-
-    The model configuration is loaded from a YAML config file.  The checkpoint
-    is loaded from ``model_path/checkpoint_filename``.
-    """
-
     name = NAME
+
     SAMPLE_RATE = 22050
     MESSAGE_LENGTH = 256
 
-    def __init__(
-        self,
-        params: dict[str, Any] = {},
-    ):
-        super().__init__(HifiMarkParams(**params))
+    def __init__(self, params: dict[str, Any] | None = None):
+        raw_params = {} if params is None else dict(params)
+
+        module_path = ModuleImporter.pop_resolve_module_path(
+            raw_params,
+            DEFAULT_MODULE_PATH,
+        )
+
+        super().__init__(HifiMarkParams(**raw_params))
         self.params: HifiMarkParams
 
         self.device = torch.device(self.params.device)
 
-        module_path = ModuleImporter.pop_resolve_module_path(
-            params, DEFAULT_MODULE_PATH)
-        with ModuleImporter("HifiMark", module_path):
-            from HifiMark.config import (
-                cfg_get,
-                load_config,
-                make_message_config,
-                make_stft_config,
+        scheme = str(self.params.extraction_scheme).lower().strip()
+
+        if scheme == "classic":
+            scheme = "static"
+
+        if scheme not in {"static", "sliding"}:
+            raise ValueError(
+                "extraction_scheme must be 'static', 'classic' or 'sliding'"
             )
-            from HifiMark.messages import expand_message
-            from HifiMark.models import WatermarkModel
-            from HifiMark.stft import stft_ri_to_waveform, waveform_to_stft_ri
 
-            self.cfg_get = cfg_get
-            self.load_config = load_config
-            self.make_message_config = make_message_config
-            self.make_stft_config = make_stft_config
-            self.expand_message = expand_message
-            self.WatermarkModel = WatermarkModel
-            self.stft_ri_to_waveform = stft_ri_to_waveform
-            self.waveform_to_stft_ri = waveform_to_stft_ri
+        self.extraction_scheme = scheme
 
-        from torchaudio.transforms import Resample
-        self.resample = Resample
-
-        self.checkpoint_path = join(
+        checkpoint_path = join(
             self.params.model_path,
             self.params.checkpoint_filename,
         )
-        self.config_file = join(
+
+        config_path = join(
             self.params.config_path,
             self.params.config_filename,
         )
 
-        self.model, self.cfg, self.stft_config, self.message_config = self._load_model(
-            checkpoint_path=self.checkpoint_path,
-            config_path=self.config_file,
-            device=self.device,
-        )
-
-        self.sample_rate = int(self.cfg_get(self.cfg, "data.sample_rate", self.SAMPLE_RATE))
-        self.SAMPLE_RATE = self.sample_rate
-
-        self.message_length = int(self.message_config.num_bits)
-        self.MESSAGE_LENGTH = self.message_length
-
-    def _load_model(
-        self,
-        checkpoint_path: str,
-        config_path: str,
-        device: torch.device,
-    ):
-        checkpoint = torch.load(checkpoint_path, map_location=device)
-        cfg = self.load_config(config_path)
-
-        stft_config = self.make_stft_config(cfg)
-        message_config = self.make_message_config(cfg)
-
-        model = self.WatermarkModel(
-            attacks=None,
-            stft_config=stft_config,
-            message_config=message_config,
-            embedder_use_message_encoder=bool(
-                self.cfg_get(cfg, "model.message_encoder", False)
-            ),
-            embedder_message_channels=int(
-                self.cfg_get(cfg, "model.message_channels", 64)
-            ),
-            embedder_message_hidden_dim=int(
-                self.cfg_get(cfg, "model.message_hidden_dim", 512)
-            ),
-            detector_head=str(
-                self.cfg_get(cfg, "model.detector_head", "flatten")
-            ),
-            detector_hidden_dim=int(
-                self.cfg_get(cfg, "model.detector_hidden_dim", 512)
-            ),
-        ).to(device)
-
-        state_dict = checkpoint["model"] if "model" in checkpoint else checkpoint
-        load_result = model.load_state_dict(state_dict, strict=False)
-
-        optional_missing_prefixes = (
-            "attacks.",
-            "detector.head_id",
-            "detector.freq_to_time.",
-            "detector.temporal.",
-            "detector.bit_head.",
-            "detector.frame_projector.",
-            "detector.time_projector.",
-            "detector.temporal_head.",
-            "detector.pool_head.",
-            "detector.logit_head.",
-        )
-
-        bad_missing = [
-            key
-            for key in load_result.missing_keys
-            if not key.startswith(optional_missing_prefixes)
-        ]
-        bad_unexpected = [
-            key
-            for key in load_result.unexpected_keys
-            if not key.startswith("attacks.")
-        ]
-
-        if bad_missing or bad_unexpected:
-            raise RuntimeError(
-                "Unexpected checkpoint mismatch:\n"
-                f"missing_keys={bad_missing}\n"
-                f"unexpected_keys={bad_unexpected}"
+        with (
+            ModuleImporter("HifiMark", module_path),
+            ModuleImporter("scripts", DEFAULT_SCRIPTS_PATH),
+        ):
+            from scripts.watermark_inference import (
+                InferenceConfig,
+                WatermarkInference,
+            )
+            from scripts.watermark_payload import (
+                TOTAL_BITS,
+                make_payload_bits,
             )
 
-        model.eval()
-        return model, cfg, stft_config, message_config
+            self.InferenceConfig = InferenceConfig
+            self.WatermarkInference = WatermarkInference
+            self.make_payload_bits = make_payload_bits
+            self.TOTAL_BITS = int(TOTAL_BITS)
 
-    def _prepare_audio(
-        self,
-        audio: TorchAudio,
-    ) -> torch.Tensor:
+        search_config = self.InferenceConfig(
+            step_seconds=self.params.sliding_step_seconds,
+            min_embed_tail_ratio=self.params.embed_min_tail_ratio,
+            min_audio_ratio=self.params.sliding_min_audio_ratio,
+            boundary_pad_ratio=self.params.sliding_boundary_pad_ratio,
+            max_sync_bit_errors=self.params.sliding_max_sync_bit_errors,
+            max_candidates=self.params.sliding_max_candidates,
+            candidate_extra=self.params.sliding_candidate_extra,
+            min_separation_ratio=self.params.sliding_min_separation_ratio,
+            aggregation=self.params.sliding_aggregation,
+            batch_size=self.params.sliding_batch_size,
+        )
+
+        self.engine = self.WatermarkInference.load(
+            config_path=config_path,
+            checkpoint_path=checkpoint_path,
+            device=self.device,
+            sample_rate=None,
+            search_config=search_config,
+        )
+
+        self.sample_rate = int(self.engine.sample_rate)
+        self.SAMPLE_RATE = self.sample_rate
+
+        self.message_length = int(self.engine.num_bits)
+        self.MESSAGE_LENGTH = self.message_length
+
+        if self.message_length != self.TOTAL_BITS:
+            raise ValueError(
+                f"HifiMark production payload requires "
+                f"{self.TOTAL_BITS} bits, "
+                f"model has {self.message_length}"
+            )
+
+        self._payload_index = 0
+
+        # Only diagnostic state for WiBench.
+        self.last_watermark_verified: bool | None = None
+        self.last_decoded_payload = None
+        self.last_decode_available: bool | None = None
+        self.last_detection_result = None
+
+    def _prepare_audio(self, audio: TorchAudio) -> torch.Tensor:
         """
-        Resample audio to the model sample rate if necessary.
+        Convert WiBench TorchAudio to the mono waveform expected by HifiMark.
 
-        Parameters
-        ----------
-        audio : TorchAudio
-            Input audio.
-
-        Returns
-        -------
-        torch.Tensor
-            Audio tensor with shape (C, T).
+        This is only an API adapter, not watermarking/inference logic.
         """
-        signal = audio.data.detach().float()
+        signal = audio.data.detach().float().cpu()
 
         if signal.ndim == 1:
             signal = signal.unsqueeze(0)
+
         if signal.ndim != 2:
-            raise ValueError(f"Expected audio tensor with shape (C, T), got {tuple(signal.shape)}")
+            raise ValueError(
+                "Expected audio tensor with shape (C, T), "
+                f"got {tuple(signal.shape)}"
+            )
 
-        if audio.rate != self.sample_rate:
-            signal = self.resample(
-                orig_freq=audio.rate,
-                new_freq=self.sample_rate,
-            )(signal)
+        signal = signal.mean(dim=0, keepdim=True)
 
-        return signal
+        if int(audio.rate) != self.sample_rate:
+            signal = AF.resample(
+                signal,
+                int(audio.rate),
+                self.sample_rate,
+            )
 
-    def _chunk_len(self) -> int:
-        if hasattr(self.stft_config, "chunk_len"):
-            return int(self.stft_config.chunk_len)
-        return int(
-            (self.stft_config.n_frames - 1) * self.stft_config.hop_length
-            + self.stft_config.win_length
-        )
-
-    @staticmethod
-    def _split_chunks(
-        waveform: torch.Tensor,
-        chunk_len: int,
-    ) -> tuple[torch.Tensor, int]:
-        original_len = int(waveform.numel())
-        remainder = original_len % chunk_len
-        if remainder != 0:
-            waveform = F.pad(waveform, (0, chunk_len - remainder))
-        return waveform.reshape(-1, chunk_len), original_len
-
-    @staticmethod
-    def _merge_chunks(
-        chunks: torch.Tensor,
-        original_len: int,
-    ) -> torch.Tensor:
-        return chunks.reshape(-1)[:original_len]
+        return signal.contiguous().to(self.device)
 
     def _prepare_payload(
         self,
         watermark_data: TorchBitWatermarkData,
     ) -> torch.Tensor:
-        payload = watermark_data.watermark.detach().to(self.device).float().reshape(1, -1)
+        """Convert WiBench watermark object to HifiMark B x bits tensor."""
+        payload = (
+            watermark_data.watermark
+            .detach()
+            .to(self.device)
+            .float()
+            .reshape(1, -1)
+        )
+
         if payload.shape[1] != self.message_length:
             raise ValueError(
-                f"Expected watermark length {self.message_length}, got {payload.shape[1]}"
+                f"Expected {self.message_length} watermark bits, "
+                f"got {payload.shape[1]}"
             )
+
         return payload
 
-    @torch.inference_mode()
-    def _encode_channel(
+    def _split_embedding_tail(
         self,
         channel: torch.Tensor,
-        payload: torch.Tensor,
-    ) -> torch.Tensor:
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """
-        Embed a watermark into a single channel.
+        Separate the final tail only when HifiMark itself would discard it.
 
-        Parameters
-        ----------
-        channel : torch.Tensor
-            Mono audio channel with shape (T,).
-        payload : torch.Tensor
-            Binary payload with shape (1, K), already on the wrapper device.
-
-        Returns
-        -------
-        torch.Tensor
-            Watermarked channel with shape (T,).
+        Returns:
+            markable_audio
+            untouched_tail or None
         """
-        chunk_len = self._chunk_len()
-        chunks, original_len = self._split_chunks(channel.reshape(-1), chunk_len)
-        chunks = chunks.to(self.device)
+        channel = channel.reshape(-1)
 
-        stft = self.waveform_to_stft_ri(
-            chunks,
-            cfg=self.stft_config,
+        total_len = int(channel.numel())
+        chunk_len = int(self.engine.chunk_len)
+
+        full_chunks, tail_len = divmod(total_len, chunk_len)
+
+        # No tail at all.
+        if tail_len == 0:
+            return channel, None
+
+        min_tail_samples = math.ceil(
+            float(self.engine.search_config.min_embed_tail_ratio)
+            * chunk_len
         )
 
-        bits_for_chunks = payload.expand(stft.shape[0], -1).contiguous()
-        message = self.expand_message(
-            bits_for_chunks,
-            cfg=self.message_config,
-        )
+        # HifiMark keeps this tail itself and zero-pads it internally.
+        if tail_len >= min_tail_samples:
+            return channel, None
 
-        embedded_stft = self.model.embedder(stft, message)
-        embedded_chunks = self.stft_ri_to_waveform(
-            embedded_stft,
-            length=chunks.shape[-1],
-            cfg=self.stft_config,
-        )
+        # Audio shorter than one complete chunk and also below the minimum
+        # embedding length. Let engine.embed() handle this case and raise
+        # the same error as the original HifiMark implementation.
+        if full_chunks == 0:
+            return channel, None
 
-        embedded = self._merge_chunks(
-            chunks=embedded_chunks.detach().cpu(),
-            original_len=original_len,
-        ).to(channel.device, dtype=channel.dtype)
+        split_at = full_chunks * chunk_len
 
-        if self.params.clip_output:
-            embedded = embedded.clamp(-1.0, 1.0)
+        markable_audio = channel[:split_at]
+        untouched_tail = channel[split_at:]
 
-        return embedded
-
-    @torch.inference_mode()
-    def _decode_channel(
-        self,
-        channel: torch.Tensor,
-    ) -> np.ndarray:
-        """
-        Extract a watermark from a single channel.
-
-        Parameters
-        ----------
-        channel : torch.Tensor
-            Mono audio channel with shape (T,).
-
-        Returns
-        -------
-        np.ndarray
-            Extracted binary payload with shape (K,).
-        """
-        chunk_len = self._chunk_len()
-        chunks, _ = self._split_chunks(channel.reshape(-1), chunk_len)
-        chunks = chunks.to(self.device)
-
-        stft = self.waveform_to_stft_ri(
-            chunks,
-            cfg=self.stft_config,
-        )
-
-        logits = self.model.detector(stft)
-
-        mode = str(self.params.extraction_mode).lower().strip()
-        if mode == "logit_sum":
-            payload = (logits.sum(dim=0, keepdim=True) >= 0.0).float()
-        elif mode == "segment":
-            # Majority vote over per-segment hard decisions.
-            segment_bits = (torch.sigmoid(logits) >= 0.5).float()
-            payload = (
-                segment_bits.sum(dim=0, keepdim=True)
-                >= ((segment_bits.shape[0] + 1) // 2)
-            ).float()
-        elif mode == "prob_mean":
-            probs = torch.sigmoid(logits)
-            payload = (probs.mean(dim=0, keepdim=True) >= 0.5).float()
-        else:
-            raise ValueError(
-                "Unknown extraction_mode. Expected one of: "
-                "'prob_mean', 'logit_sum', 'segment'."
-            )
-
-        return payload.squeeze(0).detach().cpu().numpy().astype(int)
+        return markable_audio, untouched_tail
 
     @torch.inference_mode()
     def embed(
@@ -363,34 +263,43 @@ class HifiMarkWrapper(BaseAlgorithmWrapper):
         audio: TorchAudio,
         watermark_data: TorchBitWatermarkData,
     ) -> TorchAudio:
-        """
-        Embed a watermark into an audio signal.
-
-        Parameters
-        ----------
-        audio : TorchAudio
-            Input audio signal.
-        watermark_data : TorchBitWatermarkData
-            Watermark payload.
-
-        Returns
-        -------
-        TorchAudio
-            Watermarked audio.
-        """
         signal = self._prepare_audio(audio)
         payload = self._prepare_payload(watermark_data)
 
-        wm_signal = torch.stack(
-            [
-                self._encode_channel(channel, payload)
-                for channel in signal
-            ],
-            dim=0,
+        channel = signal[0]
+        original_len = int(channel.numel())
+
+        markable_audio, untouched_tail = self._split_embedding_tail(
+            channel
         )
 
+        embedded = self.engine.embed(
+            markable_audio,
+            payload,
+        )
+
+        # Restore only the tail that HifiMark would otherwise discard.
+        if untouched_tail is not None:
+            embedded = torch.cat(
+                [
+                    embedded,
+                    untouched_tail.to(
+                        device=embedded.device,
+                        dtype=embedded.dtype,
+                    ),
+                ],
+                dim=0,
+            )
+
+        if int(embedded.numel()) != original_len:
+            raise RuntimeError(
+                "Unexpected HifiMark output length after tail restoration: "
+                f"input={original_len}, "
+                f"output={embedded.numel()}"
+            )
+
         return TorchAudio(
-            data=wm_signal,
+            data=embedded.reshape(1, -1).detach().cpu(),
             rate=self.sample_rate,
         )
 
@@ -399,47 +308,48 @@ class HifiMarkWrapper(BaseAlgorithmWrapper):
         self,
         audio: TorchAudio,
         watermark_data: TorchBitWatermarkData,
-    ) -> np.ndarray:
-        """
-        Extract a watermark from an audio signal.
+    ) -> np.ndarray | None:
+        del watermark_data
 
-        Parameters
-        ----------
-        audio : TorchAudio
-            Input audio signal.
-        watermark_data : TorchBitWatermarkData
-            Present for interface compatibility. The current extractor does not
-            require the original payload.
-
-        Returns
-        -------
-        np.ndarray
-            Extracted watermark payload.
-        """
         signal = self._prepare_audio(audio)
+        channel = signal[0]
 
-        payloads = np.stack(
-            [
-                self._decode_channel(channel)
-                for channel in signal
-            ],
-            axis=0,
+        detection = self.engine.decode(
+            channel,
+            mode=self.extraction_scheme,
         )
 
-        payload = (
-            payloads.sum(axis=0)
-            >= (payloads.shape[0] + 1) // 2
-        ).astype(int)
+        self.last_detection_result = detection
+        self.last_watermark_verified = bool(detection.verified)
+        self.last_decoded_payload = detection.decoded_payload
+        self.last_decode_available = detection.bits is not None
 
-        return payload
+        if detection.bits is None:
+            # TODO: Implement error processing
+            return TorchBitWatermarkData\
+                .get_random(self.MESSAGE_LENGTH)\
+                .watermark\
+                .detach()\
+                .numpy()
+
+        return (
+            detection.bits
+            .reshape(-1)
+            .detach()
+            .cpu()
+            .numpy()
+            .astype(int)
+        )
 
     def watermark_data_gen(self) -> TorchBitWatermarkData:
-        """
-        Generate a random watermark payload.
+        payload = self.make_payload_bits(
+            audio_idx=self._payload_index,
+            seed=self.params.payload_seed,
+            device="cpu",
+        )
 
-        Returns
-        -------
-        TorchBitWatermarkData
-            Random watermark payload.
-        """
-        return TorchBitWatermarkData.get_random(self.message_length)
+        self._payload_index += 1
+
+        return TorchBitWatermarkData(
+            watermark=payload.reshape(-1).to(torch.int64)
+        )
