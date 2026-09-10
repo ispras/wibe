@@ -319,6 +319,6 @@ class CommonVoice(RangeBaseDataset):
                 if self.mono and data.ndim == 2 and data.shape[0] > 1:
                     data = data.mean(dim=0, keepdim=True)
                 yield AudioObject(
-                    f"{language}/{filename}",
+                    f"{language}_{filename}",
                     TorchAudio(data, rate),
                 )

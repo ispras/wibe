@@ -1,0 +1,44 @@
+  - &dataset_name CombinedDataset: &dataset_params
+      report_name: speech
+      sampling: round_robin
+      datasets:
+        - LibriSpeech:
+            report_name: ls_test.clean
+            subset: all
+            split: test.clean
+            sample_range: [0, 1499]
+        - LibriSpeech:
+            report_name: ls_test.other
+            subset: all
+            split: test.other
+            sample_range: [0, 1499]
+        - VCTK:
+            split: train
+            sample_range: [0, 1999]
+        - CommonVoice:
+            languages:
+              - en
+              - de
+              - fr
+              - es
+              - it
+              - ru
+              - uk
+              - pl
+              - ar
+              - hi
+              - ja
+              - zh-CN
+            split: test
+            sampling: balanced
+            seed: 42
+            sample_range: [0, 2999]
+        - Golos:
+            split: test
+            mono: True
+            sample_range: [0, 999]
+        - AISHELL:
+            split: test
+            mono: True
+            sample_range: [0, 999]
+
