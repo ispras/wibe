@@ -158,3 +158,108 @@ class DynamicRangeCompressor(BaseAttack):
             data=output,
             rate=audio.rate,
         )
+
+
+class Limiter(BaseAttack):
+    """Apply lookahead peak limiting to an audio signal."""
+
+    def __init__(
+        self,
+        threshold_db: float = -1.0,
+        attack_ms: float = 1.0,
+        release_ms: float = 100.0,
+        lookahead_ms: float = 5.0,
+    ):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        threshold_db : float, default=-1.0
+            Maximum output peak level in decibels relative to full scale.
+            The limiter attenuates the signal to keep its peak below this
+            threshold.
+        attack_ms : float, default=1.0
+            Time in milliseconds used to reduce gain when the signal exceeds
+            the threshold.
+        release_ms : float, default=100.0
+            Time in milliseconds used to restore gain after the signal falls
+            below the threshold.
+        lookahead_ms : float, default=5.0
+            Lookahead time in milliseconds. The audio signal is delayed by
+            this amount, allowing the limiter to detect peaks before they
+            reach the output.
+        """
+        if attack_ms <= 0:
+            raise ValueError(
+                f"attack_ms must be positive, got {attack_ms}"
+            )
+
+        if release_ms <= 0:
+            raise ValueError(
+                f"release_ms must be positive, got {release_ms}"
+            )
+
+        if lookahead_ms < 0:
+            raise ValueError(
+                f"lookahead_ms must be non-negative, got {lookahead_ms}"
+            )
+
+        self.threshold_db = threshold_db
+        self.attack_ms = attack_ms
+        self.release_ms = release_ms
+        self.lookahead_ms = lookahead_ms
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Apply lookahead peak limiting.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio after lookahead peak limiting.
+        """
+        signal = audio.data
+        rate = audio.rate
+        if signal.shape[-1] == 0:
+            return audio.clone()
+
+        threshold = 10.0 ** (self.threshold_db / 20.0)
+        peak = signal.abs().amax(dim=0)
+        target_gain = torch.minimum(
+            torch.ones_like(peak),
+            threshold / peak.clamp_min(
+                torch.finfo(signal.dtype).eps
+            )
+        )
+
+        attack_samples = self.attack_ms * rate / 1000.0
+        release_samples = self.release_ms * rate / 1000.0
+        attack_coeff = math.exp(-1.0 / attack_samples)
+        release_coeff = math.exp(-1.0 / release_samples)
+        gain = torch.empty_like(target_gain)
+        gain[0] = target_gain[0]
+        for index in range(1, signal.shape[-1]):
+            previous_gain = gain[index - 1]
+            current_target = target_gain[index]
+            coefficient = attack_coeff if current_target < previous_gain \
+                else release_coeff
+            gain[index] = coefficient * previous_gain + \
+                (1.0 - coefficient) * current_target
+
+        lookahead_samples = round(self.lookahead_ms * rate / 1000.0)
+        if lookahead_samples > 0:
+            delayed_signal = torch.nn.functional.pad(
+                signal,
+                (lookahead_samples, 0),
+            )[..., : signal.shape[-1]]
+        else:
+            delayed_signal = signal
+        output = delayed_signal * gain.unsqueeze(0)
+        return TorchAudio(
+            data=output,
+            rate=rate,
+        )

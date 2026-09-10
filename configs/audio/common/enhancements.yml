@@ -1,0 +1,44 @@
+  # Wiener filtering
+  - WienerFilter:
+      report_name: wiener_weak
+      n_fft: 512
+      hop_length: 128
+      win_length: 512
+      noise_quantile: 0.05
+      strength: 0.75
+      floor: 0.1
+      smoothing: 5
+      mono: false
+
+  - WienerFilter:
+      report_name: wiener_medium
+      n_fft: 512
+      hop_length: 128
+      win_length: 512
+      noise_quantile: 0.10
+      strength: 1.0
+      floor: 0.05
+      smoothing: 5
+      mono: false
+
+  - WienerFilter:
+      report_name: wiener_strong
+      n_fft: 512
+      hop_length: 128
+      win_length: 512
+      noise_quantile: 0.20
+      strength: 1.5
+      floor: 0.0
+      smoothing: 5
+      mono: false
+
+  # Neural speech enhancement
+  - GTCRN:
+      report_name: gtcrn
+      device: cuda
+      clip_output: true
+
+  - MetricGANPlus:
+      report_name: metricgan_plus
+      device: cuda
+      clip_output: true

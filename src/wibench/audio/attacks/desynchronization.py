@@ -514,3 +514,107 @@ class ReplacementAttack(BaseAttack):
             ),
             rate=audio.rate,
         )
+
+
+class FrameDropout(BaseAttack):
+    """Randomly remove or silence fixed-duration audio frames."""
+
+    def __init__(
+        self,
+        frame_ms: float,
+        probability: float,
+        mode: Literal["remove", "silence"] = "remove",
+        seed: int | None = None,
+    ):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        frame_ms : float
+            Duration of an audio frame in milliseconds.
+        probability : float
+            Probability of dropping each frame. Must be in the ``[0, 1]``
+            range.
+        mode : {"remove", "zero"}, default="remove"
+            How dropped frames are processed:
+
+            - ``"remove"`` physically removes selected frames, reducing the
+              output duration and causing temporal desynchronization.
+            - ``"zero"`` replaces selected frames with zeros while preserving
+              the original duration.
+        seed : int or None, default=None
+            Optional random seed used to make frame selection reproducible.
+        """
+        if frame_ms <= 0:
+            raise ValueError(
+                f"frame_ms must be positive, got {frame_ms}"
+            )
+        if not 0 <= probability <= 1:
+            raise ValueError(
+                "probability must be in [0, 1], "
+                f"got {probability}"
+            )
+        if mode not in ("remove", "silence"):
+            raise ValueError(
+                f"Unsupported mode: {mode}"
+            )
+
+        self.frame_ms = frame_ms
+        self.probability = probability
+        self.mode = mode
+        self.seed = seed
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Apply random frame dropout.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio after frame dropout. The output duration is reduced when
+            ``mode="remove"`` and preserved when ``mode="zero"``.
+        """
+        signal = audio.data
+        frame_size = max(1, round(self.frame_ms * audio.rate / 1000.0))
+        length = signal.shape[-1]
+        num_frames = (length + frame_size - 1) // frame_size
+        generator = None
+        if self.seed is not None:
+            generator = torch.Generator(device=signal.device)
+            generator.manual_seed(self.seed + len(audio))
+
+        drop_mask = torch.rand(
+            num_frames,
+            device=signal.device,
+            generator=generator,
+        ) < self.probability
+
+        output: torch.tensor
+        if self.mode == "silence":
+            output = signal.clone()
+            for index in range(num_frames):
+                if not drop_mask[index]:
+                    continue
+                start = index * frame_size
+                end = min(start + frame_size, length)
+                output[..., start:end] = 0
+        else:
+            frames = []
+            for index in range(num_frames):
+                if drop_mask[index]:
+                    continue
+                start = index * frame_size
+                end = min(start + frame_size, length)
+                frames.append(signal[..., start:end])
+            if frames:
+                output = torch.cat(frames, dim=-1)
+            else:
+                output = signal[..., :0]
+        return TorchAudio(
+            data=output,
+            rate=audio.rate,
+        )

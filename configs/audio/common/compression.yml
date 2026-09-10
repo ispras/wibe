@@ -1,0 +1,41 @@
+  # MP3 compression
+  - Mpeg:
+      report_name: mp3_192k
+      bitrate: 192
+
+  - Mpeg:
+      report_name: mp3_128k
+      bitrate: 128
+
+  - Mpeg:
+      report_name: mp3_64k
+      bitrate: 64
+
+  # AAC compression
+  - AAC:
+      report_name: aac_192k
+      bitrate: 192
+
+  - AAC:
+      report_name: aac_128k
+      bitrate: 128
+
+  - AAC:
+      report_name: aac_64k
+      bitrate: 64
+
+  # Opus compression
+  - Opus:
+      report_name: opus_64k
+      bitrate: 64
+      application: audio
+
+  - Opus:
+      report_name: opus_32k
+      bitrate: 32
+      application: audio
+
+  - Opus:
+      report_name: opus_16k
+      bitrate: 16
+      application: audio

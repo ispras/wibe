@@ -134,9 +134,11 @@ The system architecture consists of a sequence of processing configurable stages
 | Signal distortions | signinversion, resampling, requantization, gain, filter, whitenoise, pinknoise, clipping       | Common signal-level transformations affecting amplitude, sampling, quantization, frequency content, or noise.                                       |
 | Compression        | mpeg, aac, opus                                                                                | Lossy audio compression and encoding distortions.                                                                                                   |
 | Acoustic           | echo, reverb                                                                                   | Acoustic effects simulating propagation and reflections of sound.                                                                                   |
-| Effect             | pitchshift, dynamicrangecompressor                                                             | Different audio effects.                                                                                                                            |
+| Effect             | pitchshift, dynamicrangecompressor, limiter                                                    | Different audio effects.                                                                                                                            |
 | Enhancement        | wienerfilter                                                                                   | Signal enhancement and denoising methods that modify the audio to suppress noise or unwanted components.                                            |
-| Desynchronization  | cut, speed, timestretch, invertedtimestretch, flipsamples, zerocrossinserts, replacementattack | Distortions that modify the temporal structure or local alignment of the signal.                                                                    |
+| MetricGAN+         | metricganplus                                                                                  | Black-box speech-enhancement attack using [MetricGAN+](https://huggingface.co/speechbrain/metricgan-plus-voicebank) ([paper](https://www.isca-archive.org/interspeech_2021/fu21_interspeech.html), [implementation](https://github.com/speechbrain/speechbrain)). |
+| GTCRN              | gtcrn                                                                                          | Black-box speech-enhancement attack using the official [GTCRN](https://github.com/Xiaobin-Rong/gtcrn) DNS3 checkpoint ([paper](https://ieeexplore.ieee.org/document/10448310)). |
+| Desynchronization  | cut, speed, timestretch, invertedtimestretch, flipsamples, zerocrossinserts, replacementattack, framedropout | Distortions that modify the temporal structure or local alignment of the signal.                                                                    |
 | Vocos              | vocos                                                                                          | [Vocos: Closing the gap between time-domain and Fourier-based neural vocoders for high-quality audio synthesis](https://github.com/gemelo-ai/vocos) |
 ### Common
 
@@ -149,16 +151,22 @@ The system architecture consists of a sequence of processing configurable stages
 <details>
 <summary><b>Datasets</b></summary>
 
-| Dataset       | Config name         | Description                                                                                                                                 |
-|---------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| Image folder  | imagefolderdataset  | Loading images from a directory                                                                                                             |
-| Prompt folder | promptfolderdataset | Loading text prompts from a directory with .txt files                                                                                       |
-| Audio Folder  | audiofolderdataset  | Loading audio from a directory                                                                                                              |
-| DiffusionDB   | diffusiondb         | https://github.com/poloclub/diffusiondb, both images and prompts                                                                            |
-| MSCOCO        | mscoco              | https://cocodataset.org/, both images and prompts                                                                                           |
-| LibriSpeech   | librispeech         | [ASR corpus](https://huggingface.co/datasets/openslr/librispeech_asr) based on public domain audio books, audio and transcription           |
-| LibriTTS      | libritts            | [Dataset](https://huggingface.co/datasets/mythicinfinity/libritts) based on LibriSpeech, sr 22050 kHz, audio and transcription              |
-| AudioSet      | audioset            | [Dataset](https://huggingface.co/datasets/agkphysics/AudioSet) of 10-second clips from YouTube, annotated into one or more sound categories |
+
+| Dataset          | Config name         | Description                                                                                                                                                                  |
+|------------------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Image folder     | imagefolderdataset  | Loading images from a directory                                                                                                                                              |
+| Prompt folder    | promptfolderdataset | Loading text prompts from a directory with .txt files                                                                                                                        |
+| Audio Folder     | audiofolderdataset  | Loading audio from a directory                                                                                                                                               |
+| DiffusionDB      | diffusiondb         | https://github.com/poloclub/diffusiondb, both images and prompts                                                                                                             |
+| MSCOCO           | mscoco              | https://cocodataset.org/, both images and prompts                                                                                                                            |
+| LibriSpeech      | librispeech         | [ASR corpus](https://www.openslr.org/12) based on public domain audio books, audio and transcription                                                                         |
+| LibriTTS         | libritts            | [Dataset](https://www.openslr.org/60/) based on LibriSpeech, sr 22050 kHz, audio and transcription                                                                           |
+| AudioSet         | audioset            | [Dataset](https://research.google.com/audioset/) of 10-second clips from YouTube                                                                                             |
+| FreeMusicArchive | freemusicarchive    | [FMA](https://arxiv.org/abs/1612.01840) is a large-scale collection of music                                                                                                 |
+| VCTK             | vctk                | The [CSTR VCTK Corpus](https://huggingface.co/datasets/saeedzou/vctk-48khz) (Voice Cloning Toolkit) is a speech dataset of read English speech with diverse regional accents |
+| CommonVoice      | commonvoice         | Public-domain multilingual voice [database](https://commonvoice.mozilla.org)                                                                                                 |
+| AISHELL-1        | aishell             | [Aishell](https://www.openslr.org/33/) is an open-source Chinese Mandarin speech corpus                                                                                               |
+| Golos            | golos               | Russian ASR [dataset](https://www.openslr.org/114/) with trained acoustic and language models                                                                                               |
 
 </details>
 

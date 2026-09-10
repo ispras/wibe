@@ -1,0 +1,1 @@
+from .golos import Golos

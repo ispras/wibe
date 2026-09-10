@@ -85,3 +85,13 @@ Audio Datasets
 .. autoclass:: wibench.audio.datasets.audioset.AudioSet
 
 .. autoclass:: wibench.audio.datasets.libritts.LibriTTS
+
+.. autoclass:: wibench.audio.datasets.fma.FreeMusicArchive
+
+.. autoclass:: wibench.audio.datasets.vctk.VCTK
+
+.. autoclass:: wibench.audio.datasets.common_voice.CommonVoice
+
+.. autoclass:: wibench.audio.datasets.aishell1.AISHELL
+
+.. autoclass:: wibench.audio.datasets.golos.Golos

@@ -76,64 +76,35 @@ class Resampling(BaseAttack):
 
 
 class Requantization(BaseAttack):
-    """Requantize audio by converting it to another data type and back."""
+    """Requantize audio to a specified PCM bit depth."""
 
-    _DTYPES = {
-        "float16": torch.float16,
-        "bfloat16": torch.bfloat16,
-        "float32": torch.float32,
-        "float64": torch.float64,
-        "int8": torch.int8,
-        "int16": torch.int16,
-        "int32": torch.int32,
-        "int64": torch.int64,
-        "uint8": torch.uint8,
-    }
-
-    def __init__(self, target_dtype: str):
+    def __init__(self, bit_depth: int):
         """Initialize the attack.
 
         Parameters
         ----------
-        target_dtype : str
-            Intermediate data type used for requantization. Supported values
-            are: ``"float16"``, ``"bfloat16"``, ``"float32"``, ``"float64"``,
-            ``"int8"``, ``"int16"``, ``"int32"``, ``"int64"``, and
-            ``"uint8"``.
+        bit_depth : int
+            Target PCM bit depth. Lower values produce stronger
+            quantization distortion.
         """
-        if target_dtype not in self._DTYPES:
+        if bit_depth < 2:
             raise ValueError(
-                f"Unsupported dtype '{target_dtype}'. "
-                f"Supported dtypes are: {', '.join(self._DTYPES)}."
+                f"bit_depth must be at least 2, got {bit_depth}"
             )
 
-        self.target_dtype_name = target_dtype
-        self.target_dtype = self._DTYPES[target_dtype]
+        self.bit_depth = bit_depth
 
-    def __call__(self, audio: TorchAudio) -> TorchAudio:
-        """Apply the requantization attack.
-
-        Parameters
-        ----------
-        audio : TorchAudio
-            Input audio signal.
-
-        Returns
-        -------
-        TorchAudio
-            Audio converted to the target data type and then restored to its
-            original data type.
-        """
-        original_dtype = audio.data.dtype
-
-        signal = (
-            audio.data
-            .to(self.target_dtype)
-            .to(original_dtype)
-        )
-
+    def __call__(
+        self,
+        audio: TorchAudio,
+    ) -> TorchAudio:
+        """Apply PCM requantization."""
+        signal = audio.data
+        max_value = float(2 ** (self.bit_depth - 1) - 1)
+        quantized = torch.round(signal.clamp(-1, 1) * max_value)
+        output = quantized / max_value
         return TorchAudio(
-            data=signal,
+            data=output,
             rate=audio.rate,
         )
 

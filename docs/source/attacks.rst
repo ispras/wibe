@@ -393,10 +393,17 @@ PitchShift
    :members:
    :special-members: __call__
 
-DynamicRangeCompressor
+Dynamic Range Compressor
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: wibench.audio.attacks.effect.DynamicRangeCompressor
+   :members:
+   :special-members: __call__
+
+Limiter
+^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.effect.Limiter
    :members:
    :special-members: __call__
 
@@ -409,6 +416,20 @@ Wiener Filter
 ^^^^^^^^^^^^^
 
 .. autoclass:: wibench.audio.attacks.enhancement.WienerFilter
+   :members:
+   :special-members: __call__
+
+MetricGAN+
+^^^^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.speech_enhancement.MetricGANPlus
+   :members:
+   :special-members: __call__
+
+GTCRN
+^^^^^
+
+.. autoclass:: wibench.audio.attacks.speech_enhancement.GTCRN
    :members:
    :special-members: __call__
 
@@ -457,6 +478,13 @@ Replacement Attack
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: wibench.audio.attacks.desynchronization.ReplacementAttack
+   :members:
+   :special-members: __call__
+
+Frame Dropout
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.desynchronization.FrameDropout
    :members:
    :special-members: __call__
 
