@@ -39,3 +39,35 @@
       report_name: opus_16k
       bitrate: 16
       application: audio
+
+  # EnCodec compression
+  - EnCodec:
+      report_name: encodec_1_5k
+      bandwidth: 1.5
+      device: cuda
+
+  - EnCodec:
+      report_name: encodec_6k
+      bandwidth: 6
+      device: cuda
+
+  - EnCodec:
+      report_name: encodec_24k
+      bandwidth: 24
+      device: cuda
+
+  # DAC compression
+  - DAC:
+      report_name: dac_2q
+      n_quantizers: 2
+      device: cuda
+
+  - DAC:
+      report_name: dac_5q
+      n_quantizers: 5
+      device: cuda
+
+  - DAC:
+      report_name: dac_9q
+      n_quantizers: 9
+      device: cuda

@@ -361,6 +361,20 @@ Opus
    :members:
    :special-members: __call__
 
+EnCodec
+^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.compression.EnCodec
+   :members:
+   :special-members: __call__
+
+DAC
+^^^
+
+.. autoclass:: wibench.audio.attacks.compression.DAC
+   :members:
+   :special-members: __call__
+
 
 Acoustic effects
 ~~~~~~~~~~~~~~~~
