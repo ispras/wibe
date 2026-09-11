@@ -1,62 +1,78 @@
   - Identity
+
+  # Crop
   - Crop:
-      report_name: cut_start_10ms
-      duration_ms: 10
-      mode: start
-  - Crop:
-      report_name: cut_start_100ms
+      report_name: crop_start_100ms
       duration_ms: 100
       mode: start
+
   - Crop:
-      report_name: cut_start_500ms
+      report_name: crop_start_500ms
       duration_ms: 500
       mode: start
+
   - Crop:
-      report_name: cut_start_1s
-      duration_ms: 1000
-      mode: start
-  - Crop:
-      report_name: cut_end_100ms
-      duration_ms: 100
+      report_name: crop_end_500ms
+      duration_ms: 500
       mode: end
+
   - Crop:
-      report_name: cut_random_100ms
-      duration_ms: 100
+      report_name: crop_random_500ms
+      duration_ms: 500
       mode: random
+
+  # Time stretch
   - TimeStretch:
-      report_name: time_stretch_101%
+      report_name: time_stretch_101pct
       rate: 1.01
+
   - TimeStretch:
-      report_name: time_stretch_105%
-      rate: 1.05
+      report_name: time_stretch_110pct
+      rate: 1.10
+
   - TimeStretch:
-      report_name: time_stretch_110%
-      rate: 1.1
-  - TimeStretch:
-      report_name: time_stretch_140%
-      rate: 1.4
+      report_name: time_stretch_140pct
+      rate: 1.40
+
+  # Speed
+  - Speed:
+      report_name: speed_101pct
+      factor: 1.01
+
+  - Speed:
+      report_name: speed_110pct
+      factor: 1.10
+
+  - Speed:
+      report_name: speed_140pct
+      factor: 1.40
+
+  # Inverted time stretch
   - InvertedTimeStretch:
-      report_name: inv_time_stretch_80%
-      rate: 0.8
-  - Pitch:
-      report_name: pitch_shift_1
-      cents: 1
-  - Pitch:
-      report_name: pitch_shift_5
-      cents: 5
+      report_name: inv_time_stretch_101pct
+      rate: 1.01
+
+  - InvertedTimeStretch:
+      report_name: inv_time_stretch_110pct
+      rate: 1.10
+
+  # Local corruption
   - FlipSamples:
+      report_name: flip_100
       num_flips: 100
       duration: 0.5
+
+  - FlipSamples:
+      report_name: flip_1000
+      num_flips: 1000
+      duration: 0.5
+
   - ZeroCrossInserts:
+      report_name: zero_cross_20
       pause_length: 20
       min_distance: 1.0
-  - ReplacementAttack:
-      block_size: 1024
-      overlap_factor: 0.75
-      lower_bound: 0
-      upper_bound: 10
-      k: 100
-      use_masking: False
-      search_window_sec: 0.0
-      search_dims: 0
-      tile_size: 256
+
+  - ZeroCrossInserts:
+      report_name: zero_cross_100
+      pause_length: 100
+      min_distance: 1.0
