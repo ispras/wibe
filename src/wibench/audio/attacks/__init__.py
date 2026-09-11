@@ -1,5 +1,5 @@
 from .signal import SignInversion, Resampling, Requantization, Gain, Clipping, Filter, WhiteNoise, PinkNoise
-from .compression import Mpeg, AAC, Opus
+from .compression import Mpeg, AAC, Opus, EnCodec, DAC
 from .acoustic import Echo, Reverb
 from .effect import PitchShift, DynamicRangeCompressor, Limiter
 from .enhancement import WienerFilter
