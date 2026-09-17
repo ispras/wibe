@@ -1,21 +1,31 @@
-{% set ls_split = "test.clean" %}
-
 algorithms:
   &alg_name perth: &alg_params
     params:
-      device: cpu
+      device: cuda
 
 datasets:
-{% include 'common/librispeech.yml' %}
+{% include 'common/audioset.yml' %}
 
 post_embed_metrics:
-{% include 'common/post_embed_metrics.yml' %}
+  - SI_SNR
+  - PESQ
+  - STOI
+  - NISQA
+  - DNSMOS
+  - SECS
 
 post_extract_metrics:
-{% include 'common/post_extract_metrics.yml' %}
+  - Result
+{% include 'common/empirical_zerobit_tpr@fpr.yml' %}
 
 attacks:
-{% include 'common/distortions.yml' %}
+  - Identity
+{% include 'common/signal.yml' %}
+{% include 'common/effects.yml' %}
+{% include 'common/enhancements.yml' %}
+{% include 'common/desynchronization.yml' %}
+{% include 'common/compression.yml' %}
+{% include 'common/malicious.yml' %}
 
 pipeline:
   result_path: ./test_results/perth

@@ -1,5 +1,3 @@
-  - Identity
-
   # Crop
   - Crop:
       report_name: crop_start_100ms
