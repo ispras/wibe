@@ -488,13 +488,6 @@ Zero Cross Inserts
    :members:
    :special-members: __call__
 
-Replacement Attack
-^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: wibench.audio.attacks.desynchronization.ReplacementAttack
-   :members:
-   :special-members: __call__
-
 Frame Dropout
 ^^^^^^^^^^^^^^^^^^
 

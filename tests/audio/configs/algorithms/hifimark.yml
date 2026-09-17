@@ -3,7 +3,7 @@ algorithms:
 
 datasets:
   - AudioFolderDataset:
-      path: tests/audio/data/22050/
+      path: tests/audio/data
       sample_rate: 22050
 
 attacks:
