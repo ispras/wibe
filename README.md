@@ -233,7 +233,7 @@ All subsequent commands are run from this directory.
 **Option A — one command**
 
 ```console
-source prepare.sh
+WIBENCH_PROFILE=image source prepare.sh   # or audio profile
 ```
 
 **Option B — step by step**
@@ -244,7 +244,7 @@ python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 (.venv) pip install uv
 (.venv) uv sync
-(.venv) wibench-venv rebuild   # builds additional venvs
+(.venv) wibench-venv rebuild --profile image   # builds additional venvs
 ```
 
 > Conflicting dependency pins mean one shared venv is not enough:
