@@ -65,7 +65,7 @@ Implemented datasets
 --------------------
 
 Image Datasets
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 .. autoclass:: wibench.image.datasets.base.ImageFolderDataset
     

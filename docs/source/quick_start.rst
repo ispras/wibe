@@ -20,7 +20,7 @@ In python>=3.10 environment run
 
 .. code-block:: console
 
-    source prepare.sh
+    WIBENCH_PROFILE=image source prepare.sh
 
 See :ref:`setup <setup-link>` for more detailed setup
 

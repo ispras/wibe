@@ -218,7 +218,7 @@ MPRNet
 
 
 Flux Attacks
-~~~~~~~~~~~
+~~~~~~~~~~~~
 
 .. autoclass:: wibench.image.attacks.UniEdit_FLUX.image_editing.UniEditAttackFlux
    :members:
@@ -408,7 +408,7 @@ PitchShift
    :special-members: __call__
 
 Dynamic Range Compressor
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: wibench.audio.attacks.effect.DynamicRangeCompressor
    :members:
