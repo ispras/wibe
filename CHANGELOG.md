@@ -8,7 +8,7 @@ Pipeline and project structure optimized for multiple domain processing
 
 Added:
 
-- Methods: AudioSeal, WavMark, SilentCipher, Perth, AWARE, DNN-Watermarking, DCT-B1, FSVC, NormSpace, Patchwork, QIM, EchoHiding (Forward, Positive, Negative), SpreadSpectrum, LSB, CryptoMark, HIFI-Mark
+- Methods: AudioSeal, WavMark, SilentCipher, Perth, AWARE, DNN-Watermarking, DCT-B1, FSVC, NormSpace, Patchwork, QIM, EchoHiding (Forward, Positive, Negative), SpreadSpectrum, LSB
 - Metrics: SI-SNR, PESQ, STOI, NISQA, DNSMOS, SECS
 - Attacks: 6 groups (Signal, Compression, Enhancements, Effects, Malicious, Desynchronization) total 30
 - Datasets: AudioFolder, LibriSpeech, AudioSet, VCTK, CommonVoice, Golos, AISHELL
