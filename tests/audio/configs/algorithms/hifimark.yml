@@ -3,11 +3,7 @@ algorithms:
 
 datasets:
   - AudioFolderDataset:
-<<<<<<< HEAD
-      path: tests/audio/data/
-=======
       path: tests/audio/data
->>>>>>> origin/audio_wibe
       sample_rate: 22050
 
 attacks:
