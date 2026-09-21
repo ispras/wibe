@@ -218,7 +218,7 @@ MPRNet
 
 
 Flux Attacks
-~~~~~~~~~~~
+~~~~~~~~~~~~
 
 .. autoclass:: wibench.image.attacks.UniEdit_FLUX.image_editing.UniEditAttackFlux
    :members:
@@ -361,6 +361,20 @@ Opus
    :members:
    :special-members: __call__
 
+EnCodec
+^^^^^^^
+
+.. autoclass:: wibench.audio.attacks.compression.EnCodec
+   :members:
+   :special-members: __call__
+
+DAC
+^^^
+
+.. autoclass:: wibench.audio.attacks.compression.DAC
+   :members:
+   :special-members: __call__
+
 
 Acoustic effects
 ~~~~~~~~~~~~~~~~
@@ -394,7 +408,7 @@ PitchShift
    :special-members: __call__
 
 Dynamic Range Compressor
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: wibench.audio.attacks.effect.DynamicRangeCompressor
    :members:
@@ -471,13 +485,6 @@ Zero Cross Inserts
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: wibench.audio.attacks.desynchronization.ZeroCrossInserts
-   :members:
-   :special-members: __call__
-
-Replacement Attack
-^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: wibench.audio.attacks.desynchronization.ReplacementAttack
    :members:
    :special-members: __call__
 

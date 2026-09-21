@@ -132,13 +132,13 @@ The system architecture consists of a sequence of processing configurable stages
 | Attack             | Config name                                                                                    | Description                                                                                                                                         |
 |--------------------|------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
 | Signal distortions | signinversion, resampling, requantization, gain, filter, whitenoise, pinknoise, clipping       | Common signal-level transformations affecting amplitude, sampling, quantization, frequency content, or noise.                                       |
-| Compression        | mpeg, aac, opus                                                                                | Lossy audio compression and encoding distortions.                                                                                                   |
+| Compression        | mpeg, aac, opus, encodec, dac                                                                  | Lossy conventional and neural audio compression codecs.                                                                                             |
 | Acoustic           | echo, reverb                                                                                   | Acoustic effects simulating propagation and reflections of sound.                                                                                   |
 | Effect             | pitchshift, dynamicrangecompressor, limiter                                                    | Different audio effects.                                                                                                                            |
 | Enhancement        | wienerfilter                                                                                   | Signal enhancement and denoising methods that modify the audio to suppress noise or unwanted components.                                            |
 | MetricGAN+         | metricganplus                                                                                  | Black-box speech-enhancement attack using [MetricGAN+](https://huggingface.co/speechbrain/metricgan-plus-voicebank) ([paper](https://www.isca-archive.org/interspeech_2021/fu21_interspeech.html), [implementation](https://github.com/speechbrain/speechbrain)). |
 | GTCRN              | gtcrn                                                                                          | Black-box speech-enhancement attack using the official [GTCRN](https://github.com/Xiaobin-Rong/gtcrn) DNS3 checkpoint ([paper](https://ieeexplore.ieee.org/document/10448310)). |
-| Desynchronization  | cut, speed, timestretch, invertedtimestretch, flipsamples, zerocrossinserts, replacementattack, framedropout | Distortions that modify the temporal structure or local alignment of the signal.                                                                    |
+| Desynchronization  | cut, speed, timestretch, invertedtimestretch, flipsamples, zerocrossinserts, framedropout | Distortions that modify the temporal structure or local alignment of the signal.                                                                    |
 | Vocos              | vocos                                                                                          | [Vocos: Closing the gap between time-domain and Fourier-based neural vocoders for high-quality audio synthesis](https://github.com/gemelo-ai/vocos) |
 ### Common
 
@@ -233,7 +233,7 @@ All subsequent commands are run from this directory.
 **Option A — one command**
 
 ```console
-source prepare.sh
+WIBENCH_PROFILE=image source prepare.sh   # or audio profile
 ```
 
 **Option B — step by step**
@@ -244,7 +244,7 @@ python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 (.venv) pip install uv
 (.venv) uv sync
-(.venv) wibench-venv rebuild   # builds additional venvs
+(.venv) wibench-venv rebuild --profile=image   # builds additional venvs
 ```
 
 > Conflicting dependency pins mean one shared venv is not enough:

@@ -1,7 +1,5 @@
-{% set ls_split = "test.clean" %}
-
 algorithms:
-  &alg_name QIM: &alg_params
+  QIM:
     params:
       sample_rate: 16000
       watermark_length: 40
@@ -9,17 +7,24 @@ algorithms:
       repetitions: 64
       seed: 12345
 
+datasets:
+{% include 'common/speech_10k.yml' %}
+
 post_embed_metrics:
 {% include 'common/post_embed_metrics.yml' %}
 
 post_extract_metrics:
 {% include 'common/post_extract_metrics.yml' %}
-
-datasets:
-{% include 'common/librispeech.yml' %}
+{% include 'common/tpr@10e-6fpr.yml' %}
 
 attacks:
-{% include 'common/distortions.yml' %}
+  - Identity
+{% include 'common/signal.yml' %}
+{% include 'common/effects.yml' %}
+{% include 'common/enhancements.yml' %}
+{% include 'common/desynchronization.yml' %}
+{% include 'common/compression.yml' %}
+{% include 'common/malicious.yml' %}
 
 pipeline:
   result_path: ./test_results/qim

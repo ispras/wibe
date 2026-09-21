@@ -1,0 +1,33 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - DAC:
+      report_name: dac_2q
+      n_quantizers: 2
+      device: cpu
+  - DAC:
+      report_name: dac_5q
+      n_quantizers: 5
+      device: cpu
+  - DAC:
+      report_name: dac_9q
+      n_quantizers: 9
+      device: cpu
+
+pipeline:
+  result_path: ./test_results/tests/dac
+  aggregators:
+    - CSV:
+        table_name: table

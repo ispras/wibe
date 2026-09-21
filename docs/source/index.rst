@@ -9,7 +9,7 @@ WIBE
 .. |number_of_image_algorithms| replace:: 34
 .. |number_of_audio_algorithms| replace:: 18
 .. |number_of_image_attacks| replace:: 30+
-.. |number_of_audio_attacks| replace:: 20+
+.. |number_of_audio_attacks| replace:: 28
 .. |number_of_metrics| replace:: 24
 
 .. _DiffusionDB: https://poloclub.github.io/diffusiondb/

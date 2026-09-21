@@ -13,19 +13,21 @@ datasets:
       sample_rate: 16000
 
 attacks:
-  - ReplacementAttack:
-      block_size: 1024
-      overlap_factor: 0.75
-      lower_bound: 0
-      upper_bound: 10
-      k: 100
-      use_masking: False
-      search_window_sec: 0.0
-      search_dims: 0
-      tile_size: 256
+  - EnCodec:
+      report_name: encodec_1_5k
+      bandwidth: 1.5
+      device: cpu
+  - EnCodec:
+      report_name: encodec_6k
+      bandwidth: 6
+      device: cpu
+  - EnCodec:
+      report_name: encodec_24k
+      bandwidth: 24
+      device: cpu
 
 pipeline:
-  result_path: ./test_results/tests/replacement_attack
+  result_path: ./test_results/tests/encodec
   aggregators:
     - CSV:
         table_name: table

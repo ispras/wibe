@@ -114,7 +114,7 @@ It returns the extraction result, such as the extracted bit message.
 
 
 Implemented image algorithms
-----------------------
+----------------------------
 ARWGAN
 ~~~~~~
 

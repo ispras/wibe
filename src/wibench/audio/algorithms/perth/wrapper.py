@@ -122,7 +122,7 @@ class PerthWrapper(BaseAlgorithmWrapper):
             watermarks.append(
                 np.asarray(watermark)
             )
-        return np.mean(watermarks)
+        return float(np.mean(watermarks))
 
     def watermark_data_gen(
         self,

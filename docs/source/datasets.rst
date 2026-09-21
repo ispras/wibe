@@ -65,7 +65,7 @@ Implemented datasets
 --------------------
 
 Image Datasets
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 .. autoclass:: wibench.image.datasets.base.ImageFolderDataset
     
@@ -95,3 +95,8 @@ Audio Datasets
 .. autoclass:: wibench.audio.datasets.aishell1.AISHELL
 
 .. autoclass:: wibench.audio.datasets.golos.Golos
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+.. autoclass:: wibench.common.datasets.combined.CombinedDataset
