@@ -1,17 +1,17 @@
 # Changelog
 
-## Version 2.0.0 - 25.08.26 (?)
+## Version 3.0.0 - 21.09.26
 
-Audio WIBE release
+WIBE-X release (a.k.a. WIBE 3.0)
 
 Pipeline and project structure optimized for multiple domain processing
 
 Added:
 
-- Methods: AudioSeal, WavMark, SilentCipher, Perth, AWARE, DNN-Watermarking, DCT-B1, FSVC, NormSpace, Patchwork, QIM, EchoHiding, SpreadSpectrum, LSB, CryptoMark
+- Methods: AudioSeal, WavMark, SilentCipher, Perth, AWARE, DNN-Watermarking, DCT-B1, FSVC, NormSpace, Patchwork, QIM, EchoHiding (Forward, Positive, Negative), SpreadSpectrum, LSB, CryptoMark, HIFI-Mark
 - Metrics: SI-SNR, PESQ, STOI, NISQA, DNSMOS, SECS
-- Attacks: Resampling, Requantization, Scaling, Noise, Filter, MPEG, Echo, AAC, Speed, Boost, TimeStretch, InvertedTimeStretch, FlipSamples, ZeroCrossInserts, Replacement, Vocos
-- Datasets: AudioFolder, LibriSpeech, AudioSet
+- Attacks: 6 groups (Signal, Compression, Enhancements, Effects, Malicious, Desynchronization) total 30
+- Datasets: AudioFolder, LibriSpeech, AudioSet, VCTK, CommonVoice, Golos, AISHELL
 
 ## Version 0.4.0 - 06.08.26
 
