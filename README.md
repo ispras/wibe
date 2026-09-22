@@ -1,23 +1,23 @@
-# [ASE 2025 Tool Demo] WIBE: Watermarks for generated Images – Benchmarking & Evaluation
-# (Coming soon) WARP: A Unified Benchmark for Invisible Image Watermarking — Robustness and Protection Against Attacks
+# WIBE-X: A Multi-Domain Benchmark for Digital Watermarking
 ![Documentation Status](https://readthedocs.org/projects/example-sphinx-basic/badge/?version=latest)
 
-**WIBE** is a modular and extensible framework for automated testing of invisible image and audio watermarking methods under various attack scenarios.
-The system is designed to support research and development of robust watermarking techniques by enabling systematic evaluation
-through a customizable processing pipeline.
+**WIBE-X** is a modular and extensible framework for automated testing of invisible digital watermarking methods across image and audio domains under various attack scenarios.
+Extending the original WIBE framework, it provides a unified processing pipeline for systematic evaluation of both classical and neural watermarking techniques
 
 The system architecture consists of a sequence of processing configurable stages.
 
-![WIBE schema](docs/imgs/wibe_schema.png)
+![WIBE schema](docs/imgs/wibe-x-overview-matched.png)
 
 ## Key features
 
-* Modularity and extensibility through a plugin-based architecture
-* Reproducibility ensured by YAML-configured experiments
-* Usability with a simple command-line interface
-* Flexible persistence through multiple storage backends, including files and ClickHouse database
-* Transparency via real-time visual feedback
-* Scalability to run experiments on clusters
+* **Multi-domain support** for invisible digital watermarking in images and audio
+* **Modularity and extensibility** through a unified plugin-based architecture for watermarking methods, datasets, attacks, and metrics
+* **Comprehensive robustness testing** with configurable individual and composed transformations, including conventional and neural codecs and generative resynthesis
+* **Reproducibility** through declarative YAML-configured experiments and isolated execution environments
+* **Comprehensive evaluation** with modality-specific quality metrics and unified watermark robustness metrics
+* **Flexible persistence** through multiple storage backends, including files and ClickHouse database
+* **Interactive visual diagnostics** based on sample-level evaluation results
+* **Scalability** from local workstations to multi-GPU and distributed cluster environments
 
 ## Implemented algorithms, attacks, datasets and metrics
 
@@ -217,6 +217,12 @@ The system architecture consists of a sequence of processing configurable stages
 
 To assess implemented watermarking algorithms and attacks on watermarks, follow the step-by-step procedure below.
 
+### 0. Domain
+
+To build the benchmarking environment, user must specify the proper domain profile. The list of supported profiles:
+- `image` - image-based watermarking algorithms (default);
+- `audio` - audio-based watermarking algorithms.
+
 ### 1. Clone
 
 ```console
@@ -231,7 +237,7 @@ All subsequent commands are run from this directory.
 **Option A — one command**
 
 ```console
-WIBENCH_PROFILE=image source prepare.sh   # or audio profile
+WIBENCH_PROFILE=audio source prepare.sh   # or audio profile
 ```
 
 **Option B — step by step**
@@ -242,7 +248,7 @@ python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 (.venv) pip install uv
 (.venv) uv sync
-(.venv) wibench-venv rebuild --profile=image   # builds additional venvs
+(.venv) wibench-venv rebuild --profile=audio   # builds additional venvs
 ```
 
 > Conflicting dependency pins mean one shared venv is not enough:
@@ -271,45 +277,45 @@ then:
 Specify the path to your `configuration file` as a required parameter:
 
 ```console
-(.venv) wibench --config configs/trustmark_demo.yml
+(.venv) wibench --config configs/audio/audioseal.yml --profile audio
 ```
+Upon completion of computations, you can explore the evaluation results for different combinations of watermarking algorithms, attacks, and computed performance metrics.
 
-Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking algorithms, attacks, and computed performance metrics.
+By default, WIBE-X stores sample-level evaluation results, including watermark robustness, media quality metrics, and execution times. To save the media samples produced at different stages of the processing pipeline, use the `--dump-context` option.
 
-Below, from left to right, are the original, watermarked with [StegaStamp](https://www.matthewtancik.com/stegastamp), and attacked by [FLUX Regeneration](https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb) images.
+This saves the original, watermarked, and transformed media samples, including intermediate results produced after each applied attack, for both audio and image experiments.
 
-![Original, watermarked, and attacked images](docs/imgs/original_watermarked_attacked.png)
+### 5. Explore the results
 
-And here are the same as above, the original and watermarked images, as well as their difference.
+The following figure summarizes the robustness and imperceptibility of the evaluated audio watermarking algorithms. The horizontal axis represents the average watermark robustness measured as `TPR@0.1%FPR`, while the vertical axes show audio quality measured using `SI-SNR` and `PESQ`. Each point corresponds to a watermarking algorithm.
 
-![Original and watermarked images, and their difference](docs/imgs/original_watermarked_difference.png)
-
-To explore interactive wind rose chart with average `TPR@0.1%FPR` for all algorithms and attacks evaluated so far, run the following command:
-
-```console
-(.venv) python make_plots.py --results_dir path_to_results_directory
-```
-
-Below is an average `TPR@0.1%FPR` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the [DiffusionDB](https://github.com/poloclub/diffusiondb) dataset).
-
-![Average TPR@0.1%FPR for 7 algorithms](docs/imgs/tpr_0.1_fpr_avg.png)
+![Robustness and imperceptibility of audio watermarking algorithms](docs/imgs/sisnr_pesq_robustness.png)
 
 ## Resources
 
 * [Full documentation](https://ispras-wibe.readthedocs.io/en/latest/index.html)
-* [Tutorial video](https://youtu.be/31kiJ8G2NG8)
+* [Tutorial video](https://youtu.be/hUcYxb18RCk)
 
-## Citation
+## Publications
 
-If you find our work useful for your research, please cite our paper:
+This project builds upon our previous work on benchmarking invisible image watermarking:
 
-```bibtex
-@inproceedings{yakushev2025wibe,
-  title={WIBE: Watermarks for generated Images--Benchmarking \& Evaluation},
-  author={Yakushev, Aleksey and Akimenkov, Aleksandr and Abud, Khaled and Obydenkov, Dmitry and Serzhenko, Irina and Aistov, Kirill and Kovalev, Egor and Fomin, Stanislav and Antsiferova, Anastasia and Lukianov, Kirill and Markin, Yury},
-  booktitle={2025 40th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
-  pages={4033--4036},
-  year={2025},
-  organization={IEEE}
-}
-```
+- **WIBE:** *Watermarks for generated Images – Benchmarking & Evaluation*, ASE 2025.
+
+  <details>
+  <summary><b>BibTeX</b></summary>
+
+  ```bibtex
+  @inproceedings{yakushev2025wibe,
+    title={WIBE: Watermarks for generated Images--Benchmarking \& Evaluation},
+    author={Yakushev, Aleksey and Akimenkov, Aleksandr and Abud, Khaled and Obydenkov, Dmitry and Serzhenko, Irina and Aistov, Kirill and Kovalev, Egor and Fomin, Stanislav and Antsiferova, Anastasia and Lukianov, Kirill and Markin, Yury},
+    booktitle={2025 40th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
+    pages={4033--4036},
+    year={2025},
+    organization={IEEE}
+  }
+  ```
+
+  </details>
+
+- **WARP:** *A Unified Benchmark for Invisible Image Watermarking — Robustness and Protection Against Attacks*, ACM MM 2026.
