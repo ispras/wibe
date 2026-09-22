@@ -232,7 +232,18 @@ cd wibe
 
 All subsequent commands are run from this directory.
 
-### 2. Set up the environment
+### 2. System dependencies
+
+**Ubuntu:**
+
+```bash
+sudo apt-get install -y ffmpeg libgl1
+```
+
+- `ffmpeg` — multimedia processing
+- `libgl1` — OpenGL, required by some CV/DL dependencies
+
+### 3. Set up the environment
 
 **Option A — one command**
 
@@ -261,7 +272,7 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 (.venv) python download_models.py   # no need to use: weights download automatically on demand
 ```
 
-### 3. Authenticate with HuggingFace
+### 4. Authenticate with HuggingFace
 
 Some models need HuggingFace access. Set `HF_TOKEN` to your
 [token](https://huggingface.co/settings/tokens)
@@ -272,7 +283,7 @@ then:
 (.venv) python huggingface_login.py
 ```
 
-### 4. Run an experiment
+### 5. Run an experiment
 
 Specify the path to your `configuration file` as a required parameter:
 
@@ -285,7 +296,7 @@ By default, WIBE-X stores sample-level evaluation results, including watermark r
 
 This saves the original, watermarked, and transformed media samples, including intermediate results produced after each applied attack, for both audio and image experiments.
 
-### 5. Explore the results
+### 6. Explore the results
 
 The following figure summarizes the robustness and imperceptibility of the evaluated audio watermarking algorithms. The horizontal axis represents the average watermark robustness measured as `TPR@0.1%FPR`, while the vertical axes show audio quality measured using `SI-SNR` and `PESQ`. Each point corresponds to a watermarking algorithm.
 
