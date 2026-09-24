@@ -1,0 +1,1 @@
+from .stegastamp_inversion import StegastampInversion

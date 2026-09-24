@@ -1,0 +1,116 @@
+  - SignInversion:
+      report_name: sign_inversion
+
+  # Resampling
+  - Resampling:
+      report_name: resample_12k
+      target_rate: 12000
+  - Resampling:
+      report_name: resample_8k
+      target_rate: 8000
+  - Resampling:
+      report_name: resample_4k
+      target_rate: 4000
+
+    # Requantization
+  - Requantization:
+      report_name: requantize_16bit
+      bit_depth: 16
+  - Requantization:
+      report_name: requantize_12bit
+      bit_depth: 12
+  - Requantization:
+      report_name: requantize_8bit
+      bit_depth: 8
+
+  # Gain
+  - Gain:
+      report_name: gain_minus_6db
+      gain_db: -6
+  - Gain:
+      report_name: gain_minus_3db
+      gain_db: -3
+  - Gain:
+      report_name: gain_plus_3db
+      gain_db: 3
+  - Gain:
+      report_name: gain_plus_6db
+      gain_db: 6
+
+  # White noise
+  - WhiteNoise:
+      report_name: white_noise_40db
+      snr_db: 30
+  - WhiteNoise:
+      report_name: white_noise_30db
+      snr_db: 20
+  - WhiteNoise:
+      report_name: white_noise_20db
+      snr_db: 10
+
+  # Pink noise
+  - PinkNoise:
+      report_name: pink_noise_40db
+      snr_db: 30
+  - PinkNoise:
+      report_name: pink_noise_30db
+      snr_db: 20
+  - PinkNoise:
+      report_name: pink_noise_20db
+      snr_db: 10
+
+  # Low-pass filtering
+  - Filter:
+      report_name: lowpass_7k
+      filter_type: lowpass
+      freq_1: 7000
+  - Filter:
+      report_name: lowpass_4k
+      filter_type: lowpass
+      freq_1: 4000
+  - Filter:
+      report_name: lowpass_2k
+      filter_type: lowpass
+      freq_1: 2000
+
+  # High-pass filtering
+  - Filter:
+      report_name: highpass_100
+      filter_type: highpass
+      freq_1: 100
+  - Filter:
+      report_name: highpass_500
+      filter_type: highpass
+      freq_1: 500
+  - Filter:
+      report_name: highpass_1500
+      filter_type: highpass
+      freq_1: 1500
+
+  # Band-pass filtering
+  - Filter:
+      report_name: bandpass_100_7k
+      filter_type: bandpass
+      freq_1: 100
+      freq_2: 7000
+  - Filter:
+      report_name: bandpass_300_4k
+      filter_type: bandpass
+      freq_1: 300
+      freq_2: 4000
+  - Filter:
+      report_name: bandpass_500_3k
+      filter_type: bandpass
+      freq_1: 500
+      freq_2: 3000
+
+  # Hard clipping
+  - Clipping:
+      report_name: clipping_09
+      threshold: 0.9
+  - Clipping:
+      report_name: clipping_06
+      threshold: 0.6
+  - Clipping:
+      report_name: clipping_03
+      threshold: 0.3

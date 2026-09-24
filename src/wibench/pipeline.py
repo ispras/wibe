@@ -1,14 +1,8 @@
+import datetime
+from time import perf_counter
 from pathlib import Path
-from .algorithms.base import BaseAlgorithmWrapper
-from .attacks.base import BaseAttack
-from .metrics.base import PostEmbedMetric, PostExtractMetric, PostPipelineMetric
-from .config import PipeLineConfig, AggregatorConfig, StageType, DumpType, should_create_post_pipeline_table
-from .utils import (
-    seed_everything,
-    object_id_to_seed
-)
-from .context import Context
-from .progress import Progress
+from itertools import islice, product
+from dataclasses import is_dataclass
 from typing import (
     List,
     Tuple,
@@ -18,22 +12,27 @@ from typing import (
     Any,
     Callable,
 )
+from loguru import logger
+from wibench.aggregator import build_fanout_from_config
+from wibench.pipeline_type import PipelineType
 from wibench.typing import Object
-from dataclasses import is_dataclass
-from .base_objects import (
+from wibench.common.algorithms.base import BaseAlgorithmWrapper
+from wibench.common.attacks.base import BaseAttack
+from wibench.common.metrics.base import PostEmbedMetric, PostExtractMetric, PostPipelineMetric
+from wibench.config import PipeLineConfig, AggregatorConfig, StageType, DumpType, should_create_post_pipeline_table
+from wibench.utils import (
+    seed_everything,
+    object_id_to_seed
+)
+from wibench.context import Context
+from wibench.progress import Progress
+from wibench.base_objects import (
     get_algorithms,
     get_attacks,
     get_datasets,
     get_metrics,
     get_report_name,
 )
-from .aggregator import build_fanout_from_config
-import tqdm
-from time import perf_counter
-import datetime
-from itertools import islice, product
-from wibench.pipeline_type import PipelineType
-from loguru import logger
 
 
 class Stage:
@@ -549,7 +548,7 @@ class StageRunner:
                 post_attack_metrics = add_entity(get_metrics, metrics[stage])
                 for metric in post_attack_metrics:
                     if metric.pipeline_type == PipelineType.IMAGE and pipeline_type == PipelineType.PROMPT:
-                        metric.pipeline_type = PipelineType.ALL# Hack for psnr, ssim, lpips as attack assessment metrics
+                        metric.pipeline_type = PipelineType.ALL_IMAGE # Hack for psnr, ssim, lpips as attack assessment metrics
 
                 self.stages.append(stage_class(post_attack_metrics))
             elif (stage == StageType.attack):

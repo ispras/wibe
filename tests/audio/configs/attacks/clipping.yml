@@ -1,0 +1,27 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - Clipping:
+      report_name: clip_0.9
+      threshold: 0.9
+  - Clipping:
+      report_name: cip_0.7
+      threshold: 0.7
+
+pipeline:
+  result_path: ./test_results/tests/clipping
+  aggregators:
+    - CSV:
+        table_name: table
