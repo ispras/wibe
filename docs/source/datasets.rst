@@ -8,7 +8,7 @@ How to add a new dataset
 ------------------------------
 
 
-This guide explains how to add a new dataset to **WIBE** framework. For more examples, refer to the ``wibench.datasets`` module.
+This guide explains how to add a new dataset to **WIBE** framework. For more examples, refer to the ``wibench.common.datasets`` module.
 
 Create ``your_dataset.py`` file in ``user_plugins`` directory.
 
@@ -16,7 +16,7 @@ Here we have an example for image based dataset.
 
 .. code-block:: python
 
-    from wibench.datasets import BaseDataset
+    from wibench.common.datasets import BaseDataset
     from wibench.typing import ImageObject
 
     class MyDataset(BaseDataset):
@@ -38,7 +38,7 @@ If it is possible to get number of samples in dataset, you may inherit from ``Ra
 
 .. code-block:: python
 
-    from wibench.datasets import RangeBaseDataset
+    from wibench.common.datasets import RangeBaseDataset
     from wibench.typing import ImageObject
 
     class MyDataset(RangeBaseDataset):
@@ -64,11 +64,39 @@ If it is possible to get number of samples in dataset, you may inherit from ``Ra
 Implemented datasets
 --------------------
 
-.. autoclass:: wibench.datasets.base.ImageFolderDataset
+Image Datasets
+~~~~~~~~~~~~~~
+
+.. autoclass:: wibench.image.datasets.base.ImageFolderDataset
     
-.. autoclass:: wibench.datasets.base.PromptFolderDataset
+.. autoclass:: wibench.image.datasets.base.PromptFolderDataset
 
-.. autoclass:: wibench.datasets.diffusiondb.diffusiondb.DiffusionDB
+.. autoclass:: wibench.image.datasets.diffusiondb.diffusiondb.DiffusionDB
 
-.. autoclass:: wibench.datasets.mscoco.mscoco.MSCOCO
+.. autoclass:: wibench.image.datasets.mscoco.mscoco.MSCOCO
 
+Audio Datasets
+~~~~~~~~~~~~~~
+
+.. autoclass:: wibench.audio.datasets.base.AudioFolderDataset
+
+.. autoclass:: wibench.audio.datasets.librispeech.LibriSpeech
+
+.. autoclass:: wibench.audio.datasets.audioset.AudioSet
+
+.. autoclass:: wibench.audio.datasets.libritts.LibriTTS
+
+.. autoclass:: wibench.audio.datasets.fma.FreeMusicArchive
+
+.. autoclass:: wibench.audio.datasets.vctk.VCTK
+
+.. autoclass:: wibench.audio.datasets.common_voice.CommonVoice
+
+.. autoclass:: wibench.audio.datasets.aishell1.AISHELL
+
+.. autoclass:: wibench.audio.datasets.golos.Golos
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+.. autoclass:: wibench.common.datasets.combined.CombinedDataset

@@ -58,3 +58,9 @@
 [submodule "submodules/RoSteALS"]
 	path = submodules/RoSteALS
 	url = https://github.com/yakulex/RoSteALS.git
+[submodule "submodules/aware"]
+	path = submodules/aware
+	url = https://github.com/deepmark/aware.git
+[submodule "submodules/dnn-audio-watermarking"]
+	path = submodules/dnn-audio-watermarking
+	url = https://github.com/kosta-pmf/dnn-audio-watermarking.git

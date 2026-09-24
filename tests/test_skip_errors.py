@@ -5,13 +5,13 @@ import pytest
 import torch
 
 from wibench.aggregator import PandasAggregator
-from wibench.algorithms.base import BaseAlgorithmWrapper
-from wibench.attacks.base import BaseAttack
 from wibench.config import DumpType, PipeLineConfig
 from wibench.context import Context
-from wibench.metrics.base import PostEmbedMetric, PostExtractMetric, PostPipelineMetric
 from wibench.pipeline import AggregateMetricsStage, PostPipelineStage, StageRunner
 from wibench.pipeline_type import PipelineType
+from wibench.common.algorithms.base import BaseAlgorithmWrapper
+from wibench.common.attacks import BaseAttack
+from wibench.common.metrics import PostEmbedMetric, PostExtractMetric, PostPipelineMetric
 
 
 class SkipTestAlgo(BaseAlgorithmWrapper):

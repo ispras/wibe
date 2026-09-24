@@ -1,0 +1,1 @@
+from .aishell1 import AISHELL

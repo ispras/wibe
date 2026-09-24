@@ -1,0 +1,73 @@
+  # MP3 compression
+  - Mpeg:
+      report_name: mp3_192k
+      bitrate: 192
+
+  - Mpeg:
+      report_name: mp3_128k
+      bitrate: 128
+
+  - Mpeg:
+      report_name: mp3_64k
+      bitrate: 64
+
+  # AAC compression
+  - AAC:
+      report_name: aac_192k
+      bitrate: 192
+
+  - AAC:
+      report_name: aac_128k
+      bitrate: 128
+
+  - AAC:
+      report_name: aac_64k
+      bitrate: 64
+
+  # Opus compression
+  - Opus:
+      report_name: opus_64k
+      bitrate: 64
+      application: audio
+
+  - Opus:
+      report_name: opus_32k
+      bitrate: 32
+      application: audio
+
+  - Opus:
+      report_name: opus_16k
+      bitrate: 16
+      application: audio
+
+  # EnCodec compression
+  - EnCodec:
+      report_name: encodec_1_5k
+      bandwidth: 1.5
+      device: cuda
+
+  - EnCodec:
+      report_name: encodec_6k
+      bandwidth: 6
+      device: cuda
+
+  - EnCodec:
+      report_name: encodec_24k
+      bandwidth: 24
+      device: cuda
+
+  # DAC compression
+  - DAC:
+      report_name: dac_2q
+      n_quantizers: 2
+      device: cuda
+
+  - DAC:
+      report_name: dac_5q
+      n_quantizers: 5
+      device: cuda
+
+  - DAC:
+      report_name: dac_9q
+      n_quantizers: 9
+      device: cuda

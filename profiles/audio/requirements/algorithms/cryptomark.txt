@@ -1,0 +1,15 @@
+setuptools>=65.6.3
+typing_extensions
+numpy<2
+resampy>=0.4.3
+librosa
+scipy
+ecdsa
+pydantic
+pydantic_settings
+bitarray
+reedsolo
+pesq
+pystoi
+tqdm
+pydub

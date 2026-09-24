@@ -1,0 +1,21 @@
+algorithms:
+  NormSpace:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      delta: 0.03
+      wavelet: db1
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - Identity
+
+pipeline:
+  result_path: ./test_results/tests/norm_space
+  aggregators:
+    - CSV:
+        table_name: table

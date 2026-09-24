@@ -1,30 +1,32 @@
-# [ASE 2025 Tool Demo] WIBE: Watermarks for generated Images – Benchmarking & Evaluation
-# (Coming soon) WARP: A Unified Benchmark for Invisible Image Watermarking — Robustness and Protection Against Attacks
-[![Documentation Status](https://readthedocs.org/projects/ispras-wibe/badge/?version=latest)](
+# WIBE-X: A Multi-Domain Benchmark for Digital Watermarking
+[![Documentation Status](https://app.readthedocs.org/projects/example-sphinx-basic/badge/?version=latest)](
     https://ispras-wibe.readthedocs.io/en/latest/
 )
 
-**WIBE** is a modular and extensible framework for automated testing of invisible image watermarking methods under various attack scenarios.
-The system is designed to support research and development of robust watermarking techniques by enabling systematic evaluation
-through a customizable processing pipeline.
+**WIBE-X** is a modular and extensible framework for automated testing of invisible digital watermarking methods across image and audio domains under various attack scenarios.
+Extending the original WIBE framework, it provides a unified processing pipeline for systematic evaluation of both classical and neural watermarking techniques
 
 The system architecture consists of a sequence of processing configurable stages.
 
-![WIBE schema](docs/imgs/wibe_schema.png)
+![WIBE schema](docs/imgs/wibe-x-overview-matched.png)
 
 ## Key features
 
-* Modularity and extensibility through a plugin-based architecture
-* Reproducibility ensured by YAML-configured experiments
-* Usability with a simple command-line interface
-* Flexible persistence through multiple storage backends, including files and ClickHouse database
-* Transparency via real-time visual feedback
-* Scalability to run experiments on clusters
+* **Multi-domain support** for invisible digital watermarking in images and audio
+* **Modularity and extensibility** through a unified plugin-based architecture for watermarking methods, datasets, attacks, and metrics
+* **Comprehensive robustness testing** with configurable individual and composed transformations, including conventional and neural codecs and generative resynthesis
+* **Reproducibility** through declarative YAML-configured experiments and isolated execution environments
+* **Comprehensive evaluation** with modality-specific quality metrics and unified watermark robustness metrics
+* **Flexible persistence** through multiple storage backends, including files and ClickHouse database
+* **Interactive visual diagnostics** based on sample-level evaluation results
+* **Scalability** from local workstations to multi-GPU and distributed cluster environments
 
 ## Implemented algorithms, attacks, datasets and metrics
 
 <details>
 <summary><b>Algorithms</b></summary>
+
+### Image domain
 
 | Algorithm | Type | Config name | Default capacity | Reference |
 |-----------|------|-------------|------------------|-----------|
@@ -63,14 +65,35 @@ The system architecture consists of a sequence of processing configurable stages
 | SepMark | post-hoc | sepmark | 30/128 bits | [SepMark: Deep Separable Watermarking for Unified Source Tracing and Deepfake Detection](https://github.com/sh1newu/SepMark) |
 | RoSteALS | post-hoc | rosteals | 100 bits | [RoSteALS: Robust Steganography using Autoencoder Latent Space](https://github.com/TuBui/RoSteALS) |
 
+### Audio domain
+
+| Algorithm                     | Type     | Config name                                  | Default capacity         | Reference                                                                                                                                                                                            |
+|-------------------------------|----------|----------------------------------------------|--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| AudioSeal                     | post-hoc | audioseal                                    | 16 bits                  | [AudioSeal: Efficient Localized Audio Watermarking](https://github.com/facebookresearch/audioseal)                                                                                                   |
+| SilentCipher                  | post-hoc | silent_cipher                                | 40 bits                  | [SilentCipher: Deep Audio Watermarking](https://github.com/sony/silentcipher)                                                                                                                        |
+| WavMark                       | post-hoc | wavmark                                      | 16 bits                  | [WavMark: Watermarking for Audio Generation](https://github.com/sony/silentcipher)                                                                                                                   |
+| AWARE                         | post-hoc | aware                                        | 20 bits                  | [AWARE: Audio Watermarking via Adversarial Resistance to Edits](https://github.com/deepmark/aware)                                                                                                   |
+| RobustDNN                     | post-hoc | dnn_audio                                    | 512 bits (6 keys)        | [Robust speech watermarking by a jointly trained embedder and detector using a DNN](https://github.com/kosta-pmf/dnn-audio-watermarking)                                                             |
+| Perth                         | post-hoc | perth                                        | zero-bit                 | [Perth: Open Source AI Watermarking Model](https://github.com/resemble-ai/perth)                                                                                                                     |
+| FSVC                          | post-hoc | fsvc                                         | 40 bits (default params) | [Desynchronization Attacks Resilient Watermarking Method Based on Frequency Singular Value Coefficient Modification](https://github.com/kosta-pmf/audio-watermarking/blob/main/fsvc_watermarking.py) |
+| Patchwork                     | post-hoc | patchwork                                    | 40 bits (default params) | [Patchwork-Based Multilayer Audio Watermarking](https://github.com/kosta-pmf/audio-watermarking/blob/main/patchwork_multylayer_watermarking.py)                                                      |
+| DCT-b1                        | post-hoc | dct_b1                                       | 24 bits (default params) | [Robust, transparent and high-capacity audio watermarking in DCT domain](https://github.com/kosta-pmf/audio-watermarking/blob/main/dct_watermarking.py)                                              |
+| Norm space                    | post-hoc | norm_space                                   | 40 bits (default params) | [Novel secured scheme for blind audio/speech norm-space watermarking by Arnold algorithm](https://github.com/kosta-pmf/audio-watermarking/blob/main/norm_space_watermarking.py)                      |
+| Spread Spectrum               | post-hoc | spread_spectrum                              | 10 bits (default params) | [Spread-Spectrum Watermarking of Audio Signals](https://gist.github.com/tam17aki/326cf8666338e39d4f5f9cb777e8c6c0)                                                                                   |
+| Quantization Index Modulation | post-hoc | qim                                          | 40 bits (default params) | [Quantization Index Modulation: A Class of Provably Good Methods for Digital Watermarking and Information Embedding](https://github.com/pl561/QuantizationIndexModulation)                           |
+| Echo Hiding Watermarking      | post-hoc | echo-positive,  echo-negative,  echo-forward | 16 bits (default params) | [Echo hiding](https://github.com/ktekeli/audio-steganography-algorithms/tree/master/02-Echo-Hiding)                                                                                                  |
+| Least Significant Bit         | post-hoc | lsb                                          | 40 bits (default params) | [Audio Steganography Method Using Least Significant Bit (LSB) Encoding Technique](https://github.com/shalom06/Audio-Stego)          
+
 </details>
 
 <details>
 <summary><b>Attacks</b></summary>
 
+### Image domain
+
 | Attack | Config name | Description |
 |--------|-------------|-------------|
-| Distortions | identity, jpeg, rotate90, rotate, gaussianblur, gaussiannoise, centercrop, resize, randomcropout, brightness, contrast, pixelshift, colorinversion | Common distortions like JPEG, blur, noise, rotation, etc |
+| Distortions | jpeg, rotate90, rotate, gaussianblur, gaussiannoise, centercrop, resize, randomcropout, brightness, contrast, pixelshift, colorinversion | Common distortions like JPEG, blur, noise, rotation, etc |
 | WPWMAttacker | wpwmattacker | [Saliency-Aware Diffusion Reconstruction for Effective Invisible Watermark Removal](https://github.com/inzamamulDU/SADRE) |
 | DIP | dip | DIP-based watermark evasion attack adopted from the github [repository](https://github.com/sun-umn/DIP_Watermark_Evasion_TMLR) |
 | Adversarial | adversarialembedding | Adversarial embedding attack from [WAVES](https://github.com/umd-huang-lab/WAVES) |
@@ -104,40 +127,88 @@ The system architecture consists of a sequence of processing configurable stages
 | UnMarkerAttack | unmarkerattack | [UnMarker: A Universal Attack on Defensive Image Watermarking](https://arxiv.org/abs/2405.08363) |
 | Instagram/CSS filters | instagramcss_filters | [Instagram/CSS filters for image editing](https://github.com/akiomik/pilgram) |
 
+### Audio domain
+
+| Attack             | Config name                                                                                    | Description                                                                                                                                         |
+|--------------------|------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| Signal distortions | signinversion, resampling, requantization, gain, filter, whitenoise, pinknoise, clipping       | Common signal-level transformations affecting amplitude, sampling, quantization, frequency content, or noise.                                       |
+| Compression        | mpeg, aac, opus, encodec, dac                                                                  | Lossy conventional and neural audio compression codecs.                                                                                             |
+| Acoustic           | echo, reverb                                                                                   | Acoustic effects simulating propagation and reflections of sound.                                                                                   |
+| Effect             | pitchshift, dynamicrangecompressor, limiter                                                    | Different audio effects.                                                                                                                            |
+| Enhancement        | wienerfilter                                                                                   | Signal enhancement and denoising methods that modify the audio to suppress noise or unwanted components.                                            |
+| MetricGAN+         | metricganplus                                                                                  | Black-box speech-enhancement attack using [MetricGAN+](https://huggingface.co/speechbrain/metricgan-plus-voicebank) ([paper](https://www.isca-archive.org/interspeech_2021/fu21_interspeech.html), [implementation](https://github.com/speechbrain/speechbrain)). |
+| GTCRN              | gtcrn                                                                                          | Black-box speech-enhancement attack using the official [GTCRN](https://github.com/Xiaobin-Rong/gtcrn) DNS3 checkpoint ([paper](https://ieeexplore.ieee.org/document/10448310)). |
+| Desynchronization  | cut, speed, timestretch, invertedtimestretch, flipsamples, zerocrossinserts, framedropout | Distortions that modify the temporal structure or local alignment of the signal.                                                                    |
+| Vocos              | vocos                                                                                          | [Vocos: Closing the gap between time-domain and Fourier-based neural vocoders for high-quality audio synthesis](https://github.com/gemelo-ai/vocos) |
+### Common
+
+| Attack | Config name | Description |
+|--------|-------------|-------------|
+| Distortions | identity | No attack applied |
+
 </details>
 
 <details>
 <summary><b>Datasets</b></summary>
 
-| Dataset | Config name | Description |
-|---------|-------------|-------------|
-| Image folder | imagefolderdataset | Loading images from a directory |
-| Prompt folder | promptfolderdataset | Loading text prompts from a directory with .txt files |
-| DiffusionDB | diffusiondb | https://github.com/poloclub/diffusiondb, both images and prompts |
-| MSCOCO | mscoco | https://cocodataset.org/, both images and prompts |
+
+| Dataset          | Config name         | Description                                                                                                                                                                  |
+|------------------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Image folder     | imagefolderdataset  | Loading images from a directory                                                                                                                                              |
+| Prompt folder    | promptfolderdataset | Loading text prompts from a directory with .txt files                                                                                                                        |
+| Audio Folder     | audiofolderdataset  | Loading audio from a directory                                                                                                                                               |
+| DiffusionDB      | diffusiondb         | https://github.com/poloclub/diffusiondb, both images and prompts                                                                                                             |
+| MSCOCO           | mscoco              | https://cocodataset.org/, both images and prompts                                                                                                                            |
+| LibriSpeech      | librispeech         | [ASR corpus](https://www.openslr.org/12) based on public domain audio books, audio and transcription                                                                         |
+| LibriTTS         | libritts            | [Dataset](https://www.openslr.org/60/) based on LibriSpeech, sr 22050 kHz, audio and transcription                                                                           |
+| AudioSet         | audioset            | [Dataset](https://research.google.com/audioset/) of 10-second clips from YouTube                                                                                             |
+| FreeMusicArchive | freemusicarchive    | [FMA](https://arxiv.org/abs/1612.01840) is a large-scale collection of music                                                                                                 |
+| VCTK             | vctk                | The [CSTR VCTK Corpus](https://huggingface.co/datasets/saeedzou/vctk-48khz) (Voice Cloning Toolkit) is a speech dataset of read English speech with diverse regional accents |
+| CommonVoice      | commonvoice         | Public-domain multilingual voice [database](https://commonvoice.mozilla.org)                                                                                                 |
+| AISHELL-1        | aishell             | [Aishell](https://www.openslr.org/33/) is an open-source Chinese Mandarin speech corpus                                                                                               |
+| Golos            | golos               | Russian ASR [dataset](https://www.openslr.org/114/) with trained acoustic and language models                                                                                               |
 
 </details>
 
 <details>
 <summary><b>Metrics</b></summary>
 
-| Metric | Type | Stage | Config name | Description |
-|--------|------|-------|-------------|-------------|
-| PSNR | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | psnr | peak signal-to-noise ratio |
-| SSIM | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | ssim | structural similarity index |
-| LPIPS | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | lpips | [The Unreasonable Effectiveness of Deep Features as a Perceptual Metric](https://github.com/richzhang/PerceptualSimilarity) |
-| DreamSim | image quality, compare with not marked image | post_embed_metrics, post_attack_metrics | dreamsim | [DreamSim: Learning New Dimensions of Human Visual Similarity using Synthetic Data.](https://arxiv.org/abs/2306.09344) |
-| Aesthetic | single image quality | post_embed_metrics, post_attack_metrics | aesthetic | [Aesthetic score predictor](https://github.com/christophschuhmann/improved-aesthetic-predictor) |
-| CLIP IQA | single image quality | post_embed_metrics, post_attack_metrics | clip_iqa | [Exploring CLIP for Assessing the Look and Feel of Images](https://lightning.ai/docs/torchmetrics/stable/multimodal/clip_iqa.html) |
-| BLIP | image quality, compare image with text prompt | post_embed_metrics | blip | [BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation](https://github.com/salesforce/BLIP) |
-| CLIP Score | image quality, compare image with text prompt | post_embed_metrics | clipscore | [CLIPScore: A Reference-free Evaluation Metric for Image Captioning](https://github.com/openai/CLIP) |
-| Image Reward | image quality, compare image with text prompt | post_embed_metrics | imagereward | [Learning and Evaluating Human Preferences for Text-to-Image Generation](https://github.com/zai-org/ImageReward/tree/main) |
-| FID | image quality, compare two sets of images | post_pipeline_embed_metrics, post_pipeline_attack_metrics | fid | FID metric from [GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium](https://arxiv.org/abs/1706.08500) |
+
+### Image domain
+
+| Metric       | Type                                          | Stage                                                     | Config name | Description                                                                                                                                    |
+|--------------|-----------------------------------------------|-----------------------------------------------------------|-------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| PSNR         | image quality, compare with not marked image  | post_embed_metrics, post_attack_metrics                   | psnr        | peak signal-to-noise ratio                                                                                                                     |
+| SSIM         | image quality, compare with not marked image  | post_embed_metrics, post_attack_metrics                   | ssim        | structural similarity index                                                                                                                    |
+| LPIPS        | image quality, compare with not marked image  | post_embed_metrics, post_attack_metrics                   | lpips       | [The Unreasonable Effectiveness of Deep Features as a Perceptual Metric](https://github.com/richzhang/PerceptualSimilarity)                    |
+| DreamSim     | image quality, compare with not marked image  | post_embed_metrics, post_attack_metrics                   | dreamsim    | [DreamSim: Learning New Dimensions of Human Visual Similarity using Synthetic Data.](https://arxiv.org/abs/2306.09344)                         |
+| Aesthetic    | single image quality                          | post_embed_metrics, post_attack_metrics                   | aesthetic   | [Aesthetic score predictor](https://github.com/christophschuhmann/improved-aesthetic-predictor)                                                |
+| CLIP IQA     | single image quality                          | post_embed_metrics, post_attack_metrics                   | clip_iqa    | [Exploring CLIP for Assessing the Look and Feel of Images](https://lightning.ai/docs/torchmetrics/stable/multimodal/clip_iqa.html)             |
+| BLIP         | image quality, compare image with text prompt | post_embed_metrics                                        | blip        | [BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation](https://github.com/salesforce/BLIP) |
+| CLIP Score   | image quality, compare image with text prompt | post_embed_metrics                                        | clipscore   | [CLIPScore: A Reference-free Evaluation Metric for Image Captioning](https://github.com/openai/CLIP)                                           |
+| Image Reward | image quality, compare image with text prompt | post_embed_metrics                                        | imagereward | [Learning and Evaluating Human Preferences for Text-to-Image Generation](https://github.com/zai-org/ImageReward/tree/main)                     |
+| FID          | image quality, compare two sets of images     | post_pipeline_embed_metrics, post_pipeline_attack_metrics | fid         | FID metric from [GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium](https://arxiv.org/abs/1706.08500)          |
+
+### Audio domain
+
+| Metric | Type                                                         | Stage              | Config name | Description                                                                                                                                                               |
+|--------|--------------------------------------------------------------|--------------------|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SI-SNR | audio quality, compare with not marked image                 | post_embed_metrics | si_snr      | Scale-Invariant Signal-to-Noise Ratio                                                                                                                                     |
+| PESQ   | audio quality, compare with not marked image                 | post_embed_metrics | pesq        | [Perceptual evaluation of speech quality (PESQ)-a new method for speech quality assessment of telephone networks and codecs](https://ieeexplore.ieee.org/document/941023) |
+| STOI   | audio quality, compare with not marked image                 | post_embed_metrics | stoi        | [A short-time objective intelligibility measure for time-frequency weighted noisy speech](https://ieeexplore.ieee.org/document/5495701)                                   |
+| NISQA  | audio quality assesment delta, compare with not marked image | post_embed_metrics | nisqa       | [NISQA: A Deep CNN-Self-Attention Model for Multidimensional Speech Quality Prediction with Crowdsourced Datasets](https://arxiv.org/abs/2104.09494)                      |
+| DNSMOS | audio quality assesment delta, compare with not marked image | post_embed_metrics | dnsmos      | [DNSMOS: A Non-Intrusive Perceptual Objective Speech Quality metric to evaluate Noise Suppressors](https://arxiv.org/abs/2010.15258)                                      |
+| SECS   | audio quality, compare with not marked image                 | post_embed_metrics | secs        | Speaker Encoder Cosine Similarity                                                                                                                                         |
+
+### Common
+
+| Metric                  | Type               | Stage                | Config name       | Description                                                                                                  |
+|-------------------------|--------------------|----------------------|-------------------|--------------------------------------------------------------------------------------------------------------|
 | BER | extraction success | post_extract_metrics | ber | Bit Error Rate (multi-bit) |
 | WER | extraction success | post_extract_metrics | wer | Word Error Rate (multi-bit) |
 | TPR at x% FPR | extraction success | post_extract_metrics | tpr@xfpr | True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit) |
-| Empirical TPR at x% FPR | extraction success | post_extract_metrics | empiricaltpr@xfpr | Empirical True Positive Rate at fixed False Positive Rate threshold (multi-bit only) |
-| P-value | extraction success | post_extract_metrics | p-value | P-value denotes probability to observe the same result as in case of extraction from not watermarked object. |
+| Empirical TPR at x% FPR | extraction success | post_extract_metrics | empiricaltpr@xfpr | Empirical True Positive Rate at fixed False Positive Rate threshold (both zero-bit and multi-bit) |
+| P-value | extraction success | post_extract_metrics | p-value | P-value denotes probability to observe the same result as in case of extraction from not watermarked object |
 | Result | auxiliary | post_extract_metrics | result | Records extraction result (zero-bit case) |
 | Embedded watermark | auxiliary | post_embed_metrics | embwm | Records embedded watermark (multi-bit case) |
 | Extracted watermark | auxiliary | post_extract_metrics | extwm | Records extracted watermark (multi-bit case) |
@@ -148,6 +219,12 @@ The system architecture consists of a sequence of processing configurable stages
 
 To assess implemented watermarking algorithms and attacks on watermarks, follow the step-by-step procedure below.
 
+### 0. Domain
+
+To build the benchmarking environment, user must specify the proper domain profile. The list of supported profiles:
+- `image` - image-based watermarking algorithms (default);
+- `audio` - audio-based watermarking algorithms.
+
 ### 1. Clone
 
 ```console
@@ -157,12 +234,23 @@ cd wibe
 
 All subsequent commands are run from this directory.
 
-### 2. Set up the environment
+### 2. System dependencies
+
+**Ubuntu:**
+
+```bash
+sudo apt-get install -y ffmpeg libgl1
+```
+
+- `ffmpeg` — multimedia processing
+- `libgl1` — OpenGL, required by some CV/DL dependencies
+
+### 3. Set up the environment
 
 **Option A — one command**
 
 ```console
-source prepare.sh
+WIBENCH_PROFILE=audio source prepare.sh   # or audio profile
 ```
 
 **Option B — step by step**
@@ -173,7 +261,7 @@ python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 (.venv) pip install uv
 (.venv) uv sync
-(.venv) wibench-venv rebuild   # builds additional venvs
+(.venv) wibench-venv rebuild --profile=audio   # builds additional venvs
 ```
 
 > Conflicting dependency pins mean one shared venv is not enough:
@@ -186,7 +274,7 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 (.venv) python download_models.py   # no need to use: weights download automatically on demand
 ```
 
-### 3. Authenticate with HuggingFace
+### 4. Authenticate with HuggingFace
 
 Some models need HuggingFace access. Set `HF_TOKEN` to your
 [token](https://huggingface.co/settings/tokens)
@@ -197,50 +285,50 @@ then:
 (.venv) python huggingface_login.py
 ```
 
-### 4. Run an experiment
+### 5. Run an experiment
 
 Specify the path to your `configuration file` as a required parameter:
 
 ```console
-(.venv) wibench --config configs/trustmark_demo.yml
+(.venv) wibench --config configs/audio/audioseal.yml --profile audio
 ```
+Upon completion of computations, you can explore the evaluation results for different combinations of watermarking algorithms, attacks, and computed performance metrics.
 
-Upon completion of computations, you can view watermarked images and explore interactive charts for different combinations of watermarking algorithms, attacks, and computed performance metrics.
+By default, WIBE-X stores sample-level evaluation results, including watermark robustness, media quality metrics, and execution times. To save the media samples produced at different stages of the processing pipeline, use the `--dump-context` option.
 
-Below, from left to right, are the original, watermarked with [StegaStamp](https://www.matthewtancik.com/stegastamp), and attacked by [FLUX Regeneration](https://github.com/leiluk1/erasing-the-invisible-beige-box/blob/main/notebooks/treering_attack.ipynb) images.
+This saves the original, watermarked, and transformed media samples, including intermediate results produced after each applied attack, for both audio and image experiments.
 
-![Original, watermarked, and attacked images](docs/imgs/original_watermarked_attacked.png)
+### 6. Explore the results
 
-And here are the same as above, the original and watermarked images, as well as their difference.
+The following figure summarizes the robustness and imperceptibility of the evaluated audio watermarking algorithms. The horizontal axis represents the average watermark robustness measured as `TPR@0.1%FPR`, while the vertical axes show audio quality measured using `SI-SNR` and `PESQ`. Each point corresponds to a watermarking algorithm.
 
-![Original and watermarked images, and their difference](docs/imgs/original_watermarked_difference.png)
-
-To explore interactive wind rose chart with average `TPR@0.1%FPR` for all algorithms and attacks evaluated so far, run the following command:
-
-```console
-(.venv) python make_plots.py --results_dir path_to_results_directory
-```
-
-Below is an average `TPR@0.1%FPR` chart for 7 algorithms under different types of attacks (evaluated on 300 images from the [DiffusionDB](https://github.com/poloclub/diffusiondb) dataset).
-
-![Average TPR@0.1%FPR for 7 algorithms](docs/imgs/tpr_0.1_fpr_avg.png)
+![Robustness and imperceptibility of audio watermarking algorithms](docs/imgs/sisnr_pesq_robustness.png)
 
 ## Resources
 
 * [Full documentation](https://ispras-wibe.readthedocs.io/en/latest/index.html)
-* [Tutorial video](https://youtu.be/31kiJ8G2NG8)
+* [Tutorial video](https://youtu.be/hUcYxb18RCk)
 
-## Citation
+## Publications
 
-If you find our work useful for your research, please cite our paper:
+This project builds upon our previous work on benchmarking invisible image watermarking:
 
-```bibtex
-@inproceedings{yakushev2025wibe,
-  title={WIBE: Watermarks for generated Images--Benchmarking \& Evaluation},
-  author={Yakushev, Aleksey and Akimenkov, Aleksandr and Abud, Khaled and Obydenkov, Dmitry and Serzhenko, Irina and Aistov, Kirill and Kovalev, Egor and Fomin, Stanislav and Antsiferova, Anastasia and Lukianov, Kirill and Markin, Yury},
-  booktitle={2025 40th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
-  pages={4033--4036},
-  year={2025},
-  organization={IEEE}
-}
-```
+- **WIBE:** *Watermarks for generated Images – Benchmarking & Evaluation*, ASE 2025.
+
+  <details>
+  <summary><b>BibTeX</b></summary>
+
+  ```bibtex
+  @inproceedings{yakushev2025wibe,
+    title={WIBE: Watermarks for generated Images--Benchmarking \& Evaluation},
+    author={Yakushev, Aleksey and Akimenkov, Aleksandr and Abud, Khaled and Obydenkov, Dmitry and Serzhenko, Irina and Aistov, Kirill and Kovalev, Egor and Fomin, Stanislav and Antsiferova, Anastasia and Lukianov, Kirill and Markin, Yury},
+    booktitle={2025 40th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
+    pages={4033--4036},
+    year={2025},
+    organization={IEEE}
+  }
+  ```
+
+  </details>
+
+- **WARP:** *A Unified Benchmark for Invisible Image Watermarking — Robustness and Protection Against Attacks*, ACM MM 2026.

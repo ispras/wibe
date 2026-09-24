@@ -1,4 +1,6 @@
+import os
 import subprocess
+from typing import Optional
 import pytest
 import sys
 import yaml
@@ -11,23 +13,29 @@ from wibench.config_loader import (
     render_jinja2_config,
 )
 from wibench.pipeline import STAGE_CLASSES
+from wibench.settings import get_profile
 sys.path.append(str(Path(__file__).parent.parent))
 
 
-CONFIG_DIR = Path(__file__).parent / "configs"
+PROFILES_DIR = Path(__file__).parent
+
+config_dirs = []
+for profile_path in PROFILES_DIR.iterdir():
+    if profile_path.is_dir() and (profile_path / "configs").exists():
+        config_dirs.append(profile_path / "configs")
 
 stems_with_stage_split = {} # {"metr", "ringid", "treering", "maxsive", "gaussian_shading"}
 stems_without_dry_run = {"fid"}
 
-config_files = list(CONFIG_DIR.glob("**/*.yml"))
 configs_without_split: list[Path] = []
 configs_with_split: list[Path] = []
-
-for config_file in config_files:
-    if config_file.stem in stems_with_stage_split:
-        configs_with_split.append(config_file)
-    else:
-        configs_without_split.append(config_file)
+for config_dir in config_dirs:
+    config_files = list(config_dir.glob("**/*.yml"))
+    for config_file in config_files:
+        if config_file.stem in stems_with_stage_split:
+            configs_with_split.append(config_file)
+        else:
+            configs_without_split.append(config_file)
 
 
 def run_wibench(config_file: Path, stages: list[str], tmp_path: Path):
@@ -62,12 +70,22 @@ def run_wibench(config_file: Path, stages: list[str], tmp_path: Path):
     )
     assert result.returncode == 0, f"Failed to run wibench: {result.stderr}"
 
+def valid_profile(config_path:  Path, profile_arg: Optional[str]) -> bool:
+    if profile_arg is not None:
+        return profile_arg == get_profile()
+    else:
+        config_profile = config_path.parent.parent.parent.name
+        return config_profile == get_profile()
+
 @pytest.mark.forked
 @pytest.mark.parametrize(
     "config_file", configs_without_split, ids=[f.name for f in configs_without_split]
 )
-def test_configs_without_stage_split(config_file: Path, tmp_path: Path):
+def test_configs_without_stage_split(config_file: Path, tmp_path: Path, profile: Optional[str]):
     assert config_file.exists(), f"Config file {config_file} does not exist!"
+    if not valid_profile(config_file, profile):
+        pytest.skip("Config profile mismatch")
+
     run_wibench(config_file, list(STAGE_CLASSES.keys()), tmp_path)
 
 
@@ -75,8 +93,11 @@ def test_configs_without_stage_split(config_file: Path, tmp_path: Path):
 @pytest.mark.parametrize(
     "config_file", configs_with_split, ids=[f.name for f in configs_with_split]
 )
-def test_configs_with_stage_split(config_file: Path, tmp_path: Path):
+def test_configs_with_stage_split(config_file: Path, tmp_path: Path, profile: Optional[str]):
     assert config_file.exists(), f"Config file {config_file} does not exist!"
+    if not valid_profile(config_file, profile):
+        pytest.skip("Config profile mismatch")
+
     run_wibench(config_file, ["embed", "attack", "extract"], tmp_path)
     run_wibench(
         config_file,
