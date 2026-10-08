@@ -252,7 +252,7 @@ sudo apt-get install -y ffmpeg libgl1
 **Option A — one command**
 
 ```console
-WIBENCH_PROFILE=audio source prepare.sh   # or audio profile
+WIBENCH_PROFILE=audio source prepare.sh   # or image profile
 ```
 
 **Option B — step by step**
