@@ -2,6 +2,8 @@
 [![Documentation Status](https://app.readthedocs.org/projects/example-sphinx-basic/badge/?version=latest)](
     https://ispras-wibe.readthedocs.io/en/latest/
 )
+[![arXiv](https://img.shields.io/badge/arXiv-2609.40031-b31b1b.svg)](https://arxiv.org/abs/2609.40031)
+
 
 **WIBE-X** is a modular and extensible framework for automated testing of invisible digital watermarking methods across image and audio domains under various attack scenarios.
 Extending the original WIBE framework, it provides a unified processing pipeline for systematic evaluation of both classical and neural watermarking techniques
