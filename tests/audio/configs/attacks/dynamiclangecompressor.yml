@@ -1,0 +1,39 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - DynamicRangeCompressor:
+      report_name: drc_weak
+      threshold_db: -10
+      ratio: 2.0
+      attack_ms: 20
+      release_ms: 200
+  - DynamicRangeCompressor:
+      report_name: drc_medium
+      threshold_db: -20
+      ratio: 4.0
+      attack_ms: 10
+      release_ms: 100
+  - DynamicRangeCompressor:
+      report_name: drc_strong
+      threshold_db: -30
+      ratio: 8.0
+      attack_ms: 5
+      release_ms: 50
+
+pipeline:
+  result_path: ./test_results/tests/dynamicrangecompressor
+  aggregators:
+    - CSV:
+        table_name: table

@@ -1,0 +1,33 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+{% include 'common/speech_10k.yml' %}
+
+post_embed_metrics:
+{% include 'common/post_embed_metrics.yml' %}
+
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %}
+{% include 'common/tpr@10e-6fpr.yml' %}
+
+attacks:
+  - Identity
+{% include 'common/signal.yml' %}
+{% include 'common/effects.yml' %}
+{% include 'common/enhancements.yml' %}
+{% include 'common/desynchronization.yml' %}
+{% include 'common/compression.yml' %}
+{% include 'common/malicious.yml' %}
+
+pipeline:
+  result_path: ./test_results/fsvc
+  aggregators:
+    - CSV:
+        table_name: table

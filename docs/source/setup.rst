@@ -34,7 +34,7 @@ Manual setup
 
       .. code-block:: console
 
-         (.venv) wibench-venv rebuild 
+         (.venv) wibench-venv rebuild --profile=image
 
     See :ref:`venvs <venvs-link>` for more details
 

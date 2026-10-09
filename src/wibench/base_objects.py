@@ -1,10 +1,10 @@
 from functools import partial
 from typing import List, Tuple, Any, Dict
 
-from wibench.algorithms.base import BaseAlgorithmWrapper
-from wibench.attacks.base import BaseAttack
-from wibench.datasets.base import BaseDataset
-from wibench.metrics.base import BaseMetric
+from wibench.common.algorithms import BaseAlgorithmWrapper
+from wibench.common.attacks import BaseAttack
+from wibench.common.datasets import BaseDataset
+from wibench.common.metrics import BaseMetric
 
 
 def get_report_name(name: str, config: Any):

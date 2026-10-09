@@ -1,0 +1,89 @@
+  # Echo
+  - Echo:
+      report_name: echo_10ms
+      delay: 0.010
+
+  - Echo:
+      report_name: echo_50ms
+      delay: 0.050
+
+  - Echo:
+      report_name: echo_100ms
+      delay: 0.100
+
+  # Reverb
+  - Reverb:
+      report_name: reverb_weak
+      decay: 0.3
+      mix: 0.25
+
+  - Reverb:
+      report_name: reverb_medium
+      decay: 0.6
+      mix: 0.5
+
+  - Reverb:
+      report_name: reverb_strong
+      decay: 0.85
+      mix: 0.75
+
+  # Pitch shift
+  - PitchShift:
+      report_name: pitchshift_minus_100c
+      cents: -100
+
+  - PitchShift:
+      report_name: pitchshift_minus_50c
+      cents: -50
+
+  - PitchShift:
+      report_name: pitchshift_plus_50c
+      cents: 50
+
+  - PitchShift:
+      report_name: pitchshift_plus_100c
+      cents: 100
+
+  # Dynamic range compression
+  - DynamicRangeCompressor:
+      report_name: compressor_weak
+      threshold_db: -10
+      ratio: 2.0
+      attack_ms: 20.0
+      release_ms: 200.0
+
+  - DynamicRangeCompressor:
+      report_name: compressor_medium
+      threshold_db: -20
+      ratio: 4.0
+      attack_ms: 10.0
+      release_ms: 100.0
+
+  - DynamicRangeCompressor:
+      report_name: compressor_strong
+      threshold_db: -30
+      ratio: 8.0
+      attack_ms: 5.0
+      release_ms: 50.0
+
+  # Limiter
+  - Limiter:
+      report_name: limiter_weak
+      threshold_db: -1.0
+      attack_ms: 3.0
+      release_ms: 200.0
+      lookahead_ms: 5.0
+
+  - Limiter:
+      report_name: limiter_medium
+      threshold_db: -3.0
+      attack_ms: 1.0
+      release_ms: 100.0
+      lookahead_ms: 5.0
+
+  - Limiter:
+      report_name: limiter_strong
+      threshold_db: -6.0
+      attack_ms: 0.5
+      release_ms: 50.0
+      lookahead_ms: 3.0

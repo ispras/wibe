@@ -2,13 +2,14 @@ import torch
 from dataclasses import dataclass, field, fields
 from collections import namedtuple
 from typing import Any, Dict, Optional
-from typing_extensions import NewType
+from typing_extensions import NewType, NamedTuple, Self
 
 
 Range = namedtuple("Range", ["start", "stop"])
 
 
 # ToDo: may be jaxtyping?
+# TODO: Move into image namespace
 TorchImg = NewType("TorchImg", torch.Tensor)
 '''
  Image is represented as float32 torch tensor of shape (C x H x W) in the range [0.0, 1.0], channels RGB 
@@ -22,7 +23,7 @@ TorchImgNormalize = NewType("TorchImgNormalize", torch.Tensor)
 @dataclass
 class Object:
     """Base class for pipeline objects, got from dataset. Fields with "alias" are used to be passed to metrics os original dataset data
-    
+
     Attributes
     ----------
     id : str
@@ -36,12 +37,12 @@ class Object:
 
     def get_object_alias(self) -> Any:
         """Retrieve the alias name for this object.
-        
+
         Returns
         -------
         Any
             The alias name if configured
-            
+
         Raises
         ------
         ValueError
@@ -61,7 +62,7 @@ class Object:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]):
         """Construct object from dictionary with alias support.
-        
+
         Parameters
         ----------
         data : Dict[str, Any]
@@ -69,12 +70,12 @@ class Object:
             - 'id': Unique identifier
             - 'alias': Optional alias name
             - Additional object attributes
-            
+
         Returns
         -------
         Object
             Initialized instance
-            
+
         Notes
         -----
         - Preserves all non-special fields from input dict
@@ -90,7 +91,7 @@ class Object:
 
     def dynamic_asdict(self) -> Dict[str, Any]:
         """Convert object to dictionary, excluding internal fields.
-        
+
         Returns
         -------
         Dict[str, Any]  
@@ -106,10 +107,11 @@ class Object:
         return result
 
 
+# TODO: Move into image namespace
 @dataclass
 class ImageObject(Object):
     """Object containing an image tensor. Image is passed to metrics as original image via "alias" metadata.
-    
+
     Attributes
     ----------
     id : str
@@ -120,10 +122,11 @@ class ImageObject(Object):
     image: TorchImg = field(metadata={"alias": "image"})
 
 
+# TODO: Move into image namespace
 @dataclass
 class PromptObject(Object):
     """Object containing a text prompt with alias support. Prompt is passed to metrics as original object via "alias" metadata.
-    
+
     Attributes
     ----------
     id : str

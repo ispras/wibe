@@ -1,0 +1,23 @@
+algorithms:
+  Patchwork:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      fs: 3000
+      fe: 7000
+      k1: 0.195
+      k2: 0.08
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - Identity
+
+pipeline:
+  result_path: ./test_results/tests/patchwork
+  aggregators:
+    - CSV:
+        table_name: table

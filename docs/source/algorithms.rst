@@ -8,7 +8,7 @@ How to implement a new watermarking algorithm
 
 This guide explains how to implement a new watermarking algorithm wrapper for integration with the WIBE framework.
 The wrapper system provides a standardized interface for various watermarking techniques.
-For more examples, refer to the ``wibench.algorithms`` module.
+For more examples, refer to the ``wibench.image.algorithms`` or ``wibench.audio.algorithms`` module.
 
 Create `your_wrapper.py` file in `user_plugins` directory.
 
@@ -17,7 +17,7 @@ Implement the wrapper class ctor
 
 .. code-block:: python
 
-    from wibench.algorithms import BaseAlgorithmWrapper
+    from wibench.common.algorithms import BaseAlgorithmWrapper
     from wibench.module_importer import ModuleImporter
     from wibench.pipeline_type import PipelineType
 
@@ -113,198 +113,295 @@ It returns the extraction result, such as the extracted bit message.
             ...
 
 
-Implemented algorithms
-----------------------
-
-
+Implemented image algorithms
+----------------------------
 ARWGAN
 ~~~~~~
 
-.. automodule:: wibench.algorithms.arwgan.wrapper
+.. automodule:: wibench.image.algorithms.arwgan.wrapper
     :members:
 
 CIN
 ~~~
 
-.. automodule:: wibench.algorithms.cin.wrapper
+.. automodule:: wibench.image.algorithms.cin.wrapper
     :members:
 
 DCT
 ~~~~~~~~~~
 
-.. automodule:: wibench.algorithms.dct_marker.wrapper
+.. automodule:: wibench.image.algorithms.dct_marker.wrapper
     :members:
 
 DFT Circle
 ~~~~~~~~~~
 
-.. automodule:: wibench.algorithms.dft_circle.wrapper
+.. automodule:: wibench.image.algorithms.dft_circle.wrapper
     :members:
 
 DWSF
 ~~~~
 
-.. automodule:: wibench.algorithms.dwsf.wrapper
+.. automodule:: wibench.image.algorithms.dwsf.wrapper
     :members:
 
 DWT SVM
 ~~~~~~~
 
-.. automodule:: wibench.algorithms.dwt_svm.wrapper
+.. automodule:: wibench.image.algorithms.dwt_svm.wrapper
     :members:
 
 DWT DCT
 ~~~~~~~
 
-.. autoclass:: wibench.algorithms.invisible_watermark.wrapper.DwtDctWrapper
+.. autoclass:: wibench.image.algorithms.invisible_watermark.wrapper.DwtDctWrapper
     :members:
 
 DWT DCT SVD
 ~~~~~~~~~~~
 
-.. autoclass:: wibench.algorithms.invisible_watermark.wrapper.DwtDctSvdWrapper
+.. autoclass:: wibench.image.algorithms.invisible_watermark.wrapper.DwtDctSvdWrapper
     :members:
 
 HiDDeN
 ~~~~~~
 
-.. automodule:: wibench.algorithms.hidden.wrapper
+.. automodule:: wibench.image.algorithms.hidden.wrapper
     :members:
 
 InvisMark
 ~~~~~~~~~
 
-.. autoclass:: wibench.algorithms.invismark.wrapper.InvisMarkWrapper
+.. autoclass:: wibench.image.algorithms.invismark.wrapper.InvisMarkWrapper
     :members:
 
 MBRS
 ~~~~
 
-.. autoclass:: wibench.algorithms.mbrs.wrapper.MBRSWrapper
+.. autoclass:: wibench.image.algorithms.mbrs.wrapper.MBRSWrapper
     :members:
 
 SSHiDDeN
 ~~~~~~~~
 
-.. automodule:: wibench.algorithms.sshidden.wrapper
+.. automodule:: wibench.image.algorithms.sshidden.wrapper
     :members:
 
 RivaGAN
 ~~~~~~~
 
-.. autoclass:: wibench.algorithms.invisible_watermark.wrapper.RivaGanWrapper
+.. autoclass:: wibench.image.algorithms.invisible_watermark.wrapper.RivaGanWrapper
     :members:
 
 SSL watermarking
 ~~~~~~~~~~~~~~~~
 
-.. autoclass:: wibench.algorithms.ssl_watermarking.wrapper.SSLMarkerWrapper
+.. autoclass:: wibench.image.algorithms.ssl_watermarking.wrapper.SSLMarkerWrapper
     :members:
 
 Stable Signature
 ~~~~~~~~~~~~~~~~
 
-.. automodule:: wibench.algorithms.stable_signature.wrapper
+.. automodule:: wibench.image.algorithms.stable_signature.wrapper
     :members:
 
 StegaStamp
 ~~~~~~~~~~
 
-.. automodule:: wibench.algorithms.stega_stamp.wrapper
+.. automodule:: wibench.image.algorithms.stega_stamp.wrapper
     :members:
 
 TreeRing
 ~~~~~~~~
 
-.. automodule:: wibench.algorithms.treering.wrapper
+.. automodule:: wibench.image.algorithms.treering.wrapper
     :members:
 
 TrustMark
 ~~~~~~~~~
 
-.. automodule:: wibench.algorithms.trustmark.wrapper
+.. automodule:: wibench.image.algorithms.trustmark.wrapper
     :members:
 
 VideoSeal, PixelSeal, ChunkySeal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: wibench.algorithms.videoseal.wrapper
+.. automodule:: wibench.image.algorithms.videoseal.wrapper
     :members:
 
 Watermark Anything
 ~~~~~~~~~~~~~~~~~~
 
-.. automodule:: wibench.algorithms.watermark_anything.wrapper
+.. automodule:: wibench.image.algorithms.watermark_anything.wrapper
     :members:
 
 MaskWM
 ~~~~~~
 
-.. automodule:: wibench.algorithms.maskwm.wrapper
+.. automodule:: wibench.image.algorithms.maskwm.wrapper
     :members:
 
 SyncSeal
 ~~~~~~~~
 
-.. automodule:: wibench.algorithms.syncseal.wrapper
+.. automodule:: wibench.image.algorithms.syncseal.wrapper
     :members:
 
 Gaussian Shading
 ~~~~~~~~~~~~~~~~
 
-.. automodule:: wibench.algorithms.gaussian_shading.wrapper
+.. automodule:: wibench.image.algorithms.gaussian_shading.wrapper
     :members:
 
 Ring-ID
 ~~~~~~~
 
-.. automodule:: wibench.algorithms.ringid.wrapper
+.. automodule:: wibench.image.algorithms.ringid.wrapper
     :members:
 
 MaXsive
 ~~~~~~~
 
-.. automodule:: wibench.algorithms.maxsive.wrapper
+.. automodule:: wibench.image.algorithms.maxsive.wrapper
     :members:
 
 METR
 ~~~~
 
-.. automodule:: wibench.algorithms.metr.wrapper
+.. automodule:: wibench.image.algorithms.metr.wrapper
     :members:
 
 PIMoG
 ~~~~~
 
-.. automodule:: wibench.algorithms.pimog.wrapper
+.. automodule:: wibench.image.algorithms.pimog.wrapper
     :members:
 
 Robust-Wide
 ~~~~~~~~~~~
 
-.. automodule:: wibench.algorithms.robust_wide.wrapper
+.. automodule:: wibench.image.algorithms.robust_wide.wrapper
     :members:
 
 FIN
 ~~~
 
-.. automodule:: wibench.algorithms.fin.wrapper
+.. automodule:: wibench.image.algorithms.fin.wrapper
     :members:
 
 VINE
 ~~~~
 
-.. automodule:: wibench.algorithms.vine.wrapper
+.. automodule:: wibench.image.algorithms.vine.wrapper
     :members:
 
 SepMark
 ~~~~~~~
 
-.. automodule:: wibench.algorithms.sepmark.wrapper
+.. automodule:: wibench.image.algorithms.sepmark.wrapper
     :members:
 
 RoSteALS
 ~~~~~~~~
 
-.. automodule:: wibench.algorithms.rosteals.wrapper
+.. automodule:: wibench.image.algorithms.rosteals.wrapper
+    :members:
+
+Implemented audio algorithms
+----------------------------
+
+AudioSeal
+~~~~~~~~~
+
+.. automodule:: wibench.audio.algorithms.audioseal.wrapper
+    :members:
+
+SilentCipher
+~~~~~~~~~~~~
+
+.. automodule:: wibench.audio.algorithms.silentcipher.wrapper
+    :members:
+
+WavMark
+~~~~~~~
+
+.. automodule:: wibench.audio.algorithms.wavmark.wrapper
+    :members:
+
+AWARE
+~~~~~
+
+.. automodule:: wibench.audio.algorithms.aware.wrapper
+    :members:
+
+Perth
+~~~~~
+
+.. automodule:: wibench.audio.algorithms.perth.wrapper
+    :members:
+
+DNN Audio Watermarking
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: wibench.audio.algorithms.dnn_audio.wrapper
+    :members:
+
+DCT-B1
+~~~~~~
+
+.. automodule:: wibench.audio.algorithms.dctb1.wrapper
+    :members:
+
+FSVC
+~~~~
+
+.. automodule:: wibench.audio.algorithms.fsvc.wrapper
+    :members:
+
+Norm Space
+~~~~~~~~~~
+
+.. automodule:: wibench.audio.algorithms.norm_space.wrapper
+    :members:
+
+Patchwork (Multilayer)
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: wibench.audio.algorithms.patchwork_multylayer.wrapper
+    :members:
+
+QIM
+~~~
+
+.. automodule:: wibench.audio.algorithms.qim.wrapper
+    :members:
+
+Echo Hiding (Positive)
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: wibench.audio.algorithms.echo_hiding.positive.wrapper
+    :members:
+
+Echo Hiding (Negative)
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: wibench.audio.algorithms.echo_hiding.negative.wrapper
+    :members:
+
+Echo Hiding (Forward)
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: wibench.audio.algorithms.echo_hiding.forward.wrapper
+    :members:
+
+Spread Spectrum
+~~~~~~~~~~~~~~~
+
+.. automodule:: wibench.audio.algorithms.spread_spectrum.wrapper
+    :members:
+
+LSB
+~~~
+
+.. automodule:: wibench.audio.algorithms.lsb.wrapper
     :members:

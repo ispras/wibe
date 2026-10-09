@@ -1,0 +1,42 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+post_extract_metrics:
+  - EmpiricalTPR@xFPR:
+      report_name: etpr@10e-1fpr
+      fpr_rate: 0.1
+      algorithm: fsvc
+      algorithm_params:
+        params:
+          sample_rate: 16000
+          watermark_length: 40
+          alpha: 0.04
+          gamma1: 0.16
+          gamma2: 0.4
+      dataset: audiofolderdataset
+      dataset_params:
+        path: tests/audio/data/
+        sample_rate: 16000
+      random_extracts_path: "./random_extracts_0.1.csv"
+      method_type: multi-bit
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - WhiteNoise:
+      snr_db: 20
+
+pipeline:
+  result_path: ./test_results/tests/emp_tpr@fpr_multibit
+  aggregators:
+    - CSV:
+        table_name: table

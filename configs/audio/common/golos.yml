@@ -1,0 +1,4 @@
+  - &dataset_name Golos: &dataset_params
+      split: test
+      mono: True
+      sample_range: [0, 2500]

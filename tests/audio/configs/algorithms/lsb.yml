@@ -1,0 +1,20 @@
+algorithms:
+  LSB:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      repetitions: 1
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - Identity
+
+pipeline:
+  result_path: ./test_results/tests/lsb
+  aggregators:
+    - CSV:
+        table_name: table

@@ -22,6 +22,7 @@ dependencies = [
     "pydantic",
     "opencv-python",
     "torchvision",
+    "soundfile",
     "loguru",
     "huggingface_hub",
     "json2clickhouse @ git+https://gitlab.ispras.ru/opentools/jsons2clickhouse@7ca5f7bf3dac3307e6f63d46b4a592b4ce40b933",

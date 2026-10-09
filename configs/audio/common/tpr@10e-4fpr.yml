@@ -1,0 +1,12 @@
+  - TPR@xFPR:
+      report_name: tpr@10e-1fpr
+      fpr_rate: 0.1
+  - TPR@xFPR:
+      report_name: tpr@10e-2fpr
+      fpr_rate: 0.01
+  - TPR@xFPR:
+      report_name: tpr@10e-3fpr
+      fpr_rate: 0.001
+  - TPR@xFPR:
+      report_name: tpr@10e-4fpr
+      fpr_rate: 0.0001

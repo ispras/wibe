@@ -1,0 +1,5 @@
+  - LibriTTS:
+      report_name: mythicinfinity/libritts
+      subset: clean
+      split: test.clean
+      sample_range: [0, 4835]

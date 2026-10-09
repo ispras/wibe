@@ -1,0 +1,27 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - Speed:
+        report_name: speed_99x
+        factor: 0.99
+  - Speed:
+        report_name: speed_01x
+        factor: 1.01
+
+pipeline:
+  result_path: ./test_results/tests/speed
+  aggregators:
+    - CSV:
+        table_name: table

@@ -1,0 +1,376 @@
+from pathlib import Path
+from typing import Literal
+import scipy.signal
+import torch
+import torchaudio.functional
+from torchaudio.transforms import Resample
+from wibench.audio.typing import TorchAudio
+from wibench.common.attacks import BaseAttack
+from wibench.audio.attacks.ffmpeg import FFmpegAttack
+
+
+class SignInversion(BaseAttack):
+    """Invert the sign of the audio signal."""
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Invert the sign of the audio signal.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio signal with inverted polarity.
+        """
+        return TorchAudio(
+            data=-audio.data,
+            rate=audio.rate,
+        )
+
+
+class Resampling(BaseAttack):
+    """Resample audio to a target sampling rate and back."""
+
+    def __init__(self, target_rate: int):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        target_rate : int
+            Intermediate sampling rate used for resampling. The output audio
+            is then resampled back to the original sampling rate.
+        """
+        self.target_rate = target_rate
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Apply the resampling attack.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio resampled to ``target_rate`` and then restored to the
+            original sampling rate.
+        """
+        if audio.rate == self.target_rate:
+            return audio.clone()
+        signal = Resample(
+            orig_freq=audio.rate,
+            new_freq=self.target_rate,
+        )(audio.data)
+        signal = Resample(
+            orig_freq=self.target_rate,
+            new_freq=audio.rate,
+        )(signal)
+        return TorchAudio(
+            data=signal,
+            rate=audio.rate,
+        )
+
+
+class Requantization(BaseAttack):
+    """Requantize audio to a specified PCM bit depth."""
+
+    def __init__(self, bit_depth: int):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        bit_depth : int
+            Target PCM bit depth. Lower values produce stronger
+            quantization distortion.
+        """
+        if bit_depth < 2:
+            raise ValueError(
+                f"bit_depth must be at least 2, got {bit_depth}"
+            )
+
+        self.bit_depth = bit_depth
+
+    def __call__(
+        self,
+        audio: TorchAudio,
+    ) -> TorchAudio:
+        """Apply PCM requantization."""
+        signal = audio.data
+        max_value = float(2 ** (self.bit_depth - 1) - 1)
+        quantized = torch.round(signal.clamp(-1, 1) * max_value)
+        output = quantized / max_value
+        return TorchAudio(
+            data=output,
+            rate=audio.rate,
+        )
+
+
+class Gain(BaseAttack):
+    """Scale the amplitude of an audio signal by a specified gain."""
+
+    def __init__(
+        self,
+        gain_db: float,
+        clip: bool = False,
+    ):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        gain_db : float
+            Gain applied to the audio signal in decibels. Positive values
+            amplify the signal, while negative values attenuate it.
+        clip : bool, default=False
+            Whether to clip the output signal to the ``[-1, 1]`` range
+            after applying the gain.
+        """
+        self.gain_db = gain_db
+        self.clip = clip
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Apply amplitude scaling.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio with scaled amplitude.
+        """
+        factor = 10 ** (self.gain_db / 20)
+        signal = audio.data * factor
+        if self.clip:
+            signal = signal.clamp(-1.0, 1.0)
+        return TorchAudio(
+            data=signal,
+            rate=audio.rate,
+        )
+
+
+class WhiteNoise(BaseAttack):
+    """Add white Gaussian noise with a specified signal-to-noise ratio."""
+
+    def __init__(self, snr_db: float):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        snr_db : float
+            Target signal-to-noise ratio in decibels.
+        """
+        self.snr_db = snr_db
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Apply additive white Gaussian noise.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio corrupted by additive white Gaussian noise.
+        """
+        signal = audio.data
+        signal_power = signal.square().mean(dim=-1, keepdim=True)
+        noise_power = signal_power / (10 ** (self.snr_db / 10))
+        noise = torch.randn_like(signal)
+        noise = noise / noise.square().mean(dim=-1, keepdim=True).sqrt()
+        noise = noise * noise_power.sqrt()
+        return TorchAudio(
+            data=signal + noise,
+            rate=audio.rate,
+        )
+
+
+class PinkNoise(BaseAttack):
+    """Add pink noise with a specified signal-to-noise ratio."""
+
+    def __init__(self, snr_db: float):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        snr_db : float
+            Target signal-to-noise ratio in decibels.
+        """
+        self.snr_db = snr_db
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Apply pink noise with the specified signal-to-noise ratio.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio corrupted by pink noise.
+        """
+        signal = audio.data
+
+        # Generate white noise.
+        white = torch.randn_like(signal)
+
+        # Pink noise filter coefficients.
+        b = torch.tensor(
+            [0.049922035, -0.095993537, 0.050612699, -0.004408786],
+            dtype=signal.dtype,
+            device=signal.device,
+        )
+        a = torch.tensor(
+            [1.0, -2.494956002, 2.017265875, -0.522189400],
+            dtype=signal.dtype,
+            device=signal.device,
+        )
+
+        # Apply the pink noise filter.
+        pink = torchaudio.functional.lfilter(
+            white,
+            a_coeffs=a,
+            b_coeffs=b,
+            clamp=False,
+        )
+
+        # Calculate the target noise power.
+        signal_power = signal.square().mean(dim=-1, keepdim=True)
+        snr_linear = 10 ** (self.snr_db / 10.0)
+        noise_power = signal_power / snr_linear
+
+        # Normalize pink noise to the target power.
+        pink_power = pink.square().mean(dim=-1, keepdim=True)
+        pink = pink * (noise_power / pink_power).sqrt()
+
+        return TorchAudio(
+            data=signal + pink,
+            rate=audio.rate,
+        )
+
+
+class Filter(BaseAttack):
+    """Apply a Butterworth filter to the audio signal."""
+
+    def __init__(
+        self,
+        filter_type: Literal["lowpass", "highpass", "bandpass"],
+        freq_1: float,
+        freq_2: float | None = None,
+        order: int = 5,
+    ):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        filter_type : {"lowpass", "highpass", "bandpass"}
+            Type of Butterworth filter.
+        freq_1 : float
+            Cutoff frequency in Hz. For a band-pass filter, this is the lower
+            cutoff frequency.
+        freq_2 : float | None, optional
+            Upper cutoff frequency in Hz for a band-pass filter.
+        order : int, default=5
+            Filter order.
+        """
+        if filter_type not in {"lowpass", "highpass", "bandpass"}:
+            raise ValueError(f"Unsupported filter type: {filter_type}")
+
+        if filter_type == "bandpass" and freq_2 is None:
+            raise ValueError("freq_2 must be specified for bandpass filter")
+
+        self.filter_type = filter_type
+        self.freq_1 = freq_1
+        self.freq_2 = freq_2
+        self.order = order
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Apply the filter.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Filtered audio signal.
+        """
+        cutoff = (
+            (self.freq_1, self.freq_2)
+            if self.filter_type == "bandpass"
+            else self.freq_1
+        )
+        sos = scipy.signal.butter(
+            self.order,
+            cutoff,
+            btype=self.filter_type,
+            fs=audio.rate,
+            output="sos",
+        )
+        signal = audio.data.detach().cpu().numpy()
+        filtered = scipy.signal.sosfiltfilt(
+            sos,
+            signal,
+            axis=-1,
+        ).copy()
+        return TorchAudio(
+            data=torch.as_tensor(
+                filtered,
+                dtype=audio.data.dtype,
+                device=audio.data.device,
+            ),
+            rate=audio.rate,
+        )
+
+
+class Clipping(BaseAttack):
+    """Clip the amplitude of an audio signal."""
+
+    def __init__(self, threshold: float):
+        """Initialize the attack.
+
+        Parameters
+        ----------
+        threshold : float
+            Maximum absolute amplitude of the output signal. Samples greater
+            than ``threshold`` are set to ``threshold``, while samples less
+            than ``-threshold`` are set to ``-threshold``. Must be positive.
+        """
+        if threshold <= 0:
+            raise ValueError(
+                f"threshold must be positive, got {threshold}"
+            )
+
+        self.threshold = threshold
+
+    def __call__(self, audio: TorchAudio) -> TorchAudio:
+        """Apply amplitude clipping.
+
+        Parameters
+        ----------
+        audio : TorchAudio
+            Input audio signal.
+
+        Returns
+        -------
+        TorchAudio
+            Audio with amplitudes clipped to the specified threshold.
+        """
+        return TorchAudio(
+            data=audio.data.clamp(
+                min=-self.threshold,
+                max=self.threshold,
+            ),
+            rate=audio.rate,
+        )

@@ -1,0 +1,39 @@
+  - LibriSpeech:
+      report_name: ls_test.clean
+      subset: all
+      split: test.clean
+      sample_range: [0, 149]
+  - LibriSpeech:
+      report_name: ls_test.other
+      subset: all
+      split: test.other
+      sample_range: [0, 149]
+  - VCTK:
+      split: train
+      sample_range: [0, 199]
+  - CommonVoice:
+      languages:
+        - en
+        - de
+        - fr
+        - es
+        - it
+        - ru
+        - uk
+        - pl
+        - ar
+        - hi
+        - ja
+        - zh-CN
+      split: test
+      sampling: balanced
+      seed: 42
+      sample_range: [0, 299]
+  - Golos:
+      split: test
+      mono: True
+      sample_range: [0, 99]
+  - AISHELL:
+      split: test
+      mono: True
+      sample_range: [0, 99]

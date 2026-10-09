@@ -11,7 +11,7 @@ from typing_extensions import Union, Dict, Any
 from loguru import logger
 
 
-def import_modules(package_name):
+def import_modules(package_name: str, debug: bool = False):
     if Path(package_name).exists():
         sys.path.append(".")
     try:
@@ -20,6 +20,8 @@ def import_modules(package_name):
         logger.warning(
             f"Could not import '{package_name}': {e}"
         )  # Todo: logging
+        if debug:
+            raise e
     for _, module_name, _ in pkgutil.iter_modules(package.__path__):
         try:
             importlib.import_module(f"{package_name}.{module_name}")
@@ -27,6 +29,8 @@ def import_modules(package_name):
             logger.warning(
                 f"Could not import '{module_name}' from '{package_name}': {e}"
             )  # Todo: logging
+            if debug:
+                raise e
   
 
 class ModuleImporter():

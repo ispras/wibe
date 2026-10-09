@@ -1,0 +1,10 @@
+datasets>=2.15.4
+huggingface-hub>=0.36.2
+fsspec>=2026.6.0
+pyarrow>=20.0.0
+soundfile
+
+torch
+torchaudio
+torchvision
+torchcodec

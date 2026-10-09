@@ -1,0 +1,39 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - Limiter:
+      report_name: limiter_weak
+      threshold_db: -1.0
+      attack_ms: 3.0
+      release_ms: 200.0
+      lookahead_ms: 5.0
+  - Limiter:
+      report_name: limiter_medium
+      threshold_db: -3.0
+      attack_ms: 1.0
+      release_ms: 100.0
+      lookahead_ms: 5.0
+  - Limiter:
+      report_name: limiter_strong
+      threshold_db: -6.0
+      attack_ms: 0.5
+      release_ms: 50.0
+      lookahead_ms: 3.0
+
+pipeline:
+  result_path: ./test_results/tests/limiter
+  aggregators:
+    - CSV:
+        table_name: table

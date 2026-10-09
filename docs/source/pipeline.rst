@@ -56,7 +56,7 @@ The following sections describe the key components of the configuration in detai
 Algorithms
 ~~~~~~~~~~
 
-Provides parameters of the watermarking algorithm wrapper (an instance of a class inherited from `BaseAlgorithmWrapper <https://github.com/ispras/wibe/blob/main/src/wibench/algorithms/base.py>`_) to test. This may be a single wrapper or a list of wrappers (all wrappers in the list will be tested with the same configuration).
+Provides parameters of the watermarking algorithm wrapper (an instance of a class inherited from `BaseAlgorithmWrapper <https://github.com/ispras/wibe/blob/main/src/wibench/common/algorithms/base.py>`_) to test. This may be a single wrapper or a list of wrappers (all wrappers in the list will be tested with the same configuration).
 For example, you may test the same watermarking algorithm with different parameters.
 You can also redefine `report_name` so that different configurations are aggregated under different `method` fields.
 
@@ -91,7 +91,7 @@ The YAML configuration supports lists, dictionaries, strings, integers, floating
 Datasets
 ~~~~~~~~
 
-Provides parameters of the dataset (an instance of a class inherited from `BaseDataset <https://github.com/ispras/wibe/blob/main/src/wibench/datasets/base.py#L10>`_) to test on.
+Provides parameters of the dataset (an instance of a class inherited from `BaseDataset <https://github.com/ispras/wibe/blob/main/src/wibench/common/datasets/base.py#L11>`_) to test on.
 This may be a single dataset or a list of datasets.
 
 As with **Algorithms**, you can redefine `report_name`. All other fields are passed to the dataset constructor.
@@ -109,7 +109,7 @@ As with **Algorithms**, you can redefine `report_name`. All other fields are pas
 Attacks
 ~~~~~~~
 
-Provides parameters of attacks (an instance of a class inherited from `BaseAttack <https://github.com/ispras/wibe/blob/main/src/wibench/attacks/base.py#L5>`_) applied to objects with embedded watermarks (for example, marked images).
+Provides parameters of attacks (an instance of a class inherited from `BaseAttack <https://github.com/ispras/wibe/blob/main/src/wibench/common/attacks/base.py#L5>`_) applied to objects with embedded watermarks (for example, marked images).
 This may be a list of attacks; `report_name` may be redefined. 
 Below is an example of a JPEG compression attack applied to images with different quality factors:
 

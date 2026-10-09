@@ -9,9 +9,15 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
+import sys
+import site
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../'))
+import site
+
+site.main()
+sys.path.insert(0, os.path.abspath('../../src'))
+
 import wibench
 
 # -- Project information -----------------------------------------------------
@@ -20,8 +26,8 @@ import wibench
 project = 'WIBE'
 copyright = '2026, ISP RAS'
 author = 'Ivannikov Institute for System Programming of the Russian Academy of Sciences'
-release = "0.4.0"
-version = "0.4"
+release = "3.0.0"
+version = "3.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

@@ -1,0 +1,30 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - Requantization:
+      report_name: requantize_16bit
+      bit_depth: 16
+  - Requantization:
+      report_name: requantize_12bit
+      bit_depth: 12
+  - Requantization:
+      report_name: requantize_8bit
+      bit_depth: 8
+
+pipeline:
+  result_path: ./test_results/tests/requantization
+  aggregators:
+    - CSV:
+        table_name: table

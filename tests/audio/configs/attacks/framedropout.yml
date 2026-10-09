@@ -1,0 +1,57 @@
+algorithms:
+  FSVC:
+    params:
+      sample_rate: 16000
+      watermark_length: 40
+      alpha: 0.04
+      gamma1: 0.16
+      gamma2: 0.4
+
+datasets:
+  - AudioFolderDataset:
+      path: tests/audio/data/
+      sample_rate: 16000
+
+attacks:
+  - FrameDropout:
+      report_name: dropout_weak
+      frame_ms: 10
+      probability: 0.01
+      mode: remove
+      seed: 42
+  - FrameDropout:
+      report_name: dropout_medium
+      frame_ms: 20
+      probability: 0.05
+      mode: remove
+      seed: 42
+  - FrameDropout:
+      report_name: dropout_strong
+      frame_ms: 40
+      probability: 0.1
+      mode: remove
+      seed: 42
+  - FrameDropout:
+      report_name: silence_weak
+      frame_ms: 10
+      probability: 0.01
+      mode: silence
+      seed: 42
+  - FrameDropout:
+      report_name: silence_medium
+      frame_ms: 20
+      probability: 0.05
+      mode: silence
+      seed: 42
+  - FrameDropout:
+      report_name: silence_strong
+      frame_ms: 40
+      probability: 0.1
+      mode: silence
+      seed: 42
+
+pipeline:
+  result_path: ./test_results/tests/frame_dropout
+  aggregators:
+    - CSV:
+        table_name: table

@@ -1,0 +1,4 @@
+speechbrain
+torch>=2.4
+torchvision>=0.19
+torchaudio>=2.4

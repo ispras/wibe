@@ -1,0 +1,4 @@
+torchmetrics
+librosa
+onnxruntime-gpu
+requests

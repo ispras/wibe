@@ -1,0 +1,18 @@
+  - &dataset_name CommonVoice: &dataset_params
+      languages:
+        - en
+        - de
+        - fr
+        - es
+        - it
+        - ru
+        - uk
+        - pl
+        - ar
+        - hi
+        - ja
+        - zh-CN
+      split: test
+      sampling: balanced
+      seed: 42
+      sample_range: [0, 2500]

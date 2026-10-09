@@ -222,7 +222,7 @@ model_files
 model_files.zip
 
 # datasets
-datasets
+datasets/*
 !requirements/datasets
 !profiles/*/requirements/datasets
 
