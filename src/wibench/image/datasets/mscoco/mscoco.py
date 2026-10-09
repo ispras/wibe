@@ -25,7 +25,7 @@ class MSCOCO(RangeBaseDataset):
         Timeout for dataset download
     """
     pipeline_type = PipelineType.IMAGE
-    dataset_path = "whyen-wang/coco_captions"
+    dataset_path = "Trickxter/COCO2017-captions"
 
     def __init__(
         self,
@@ -33,7 +33,7 @@ class MSCOCO(RangeBaseDataset):
         sample_range: Optional[Tuple[int, int]] = None,
         cache_dir: Optional[str] = None,
         return_prompt: bool = False,
-        timeout: int = 3600
+        timeout: int = 36000
     ):
         import aiohttp
         from datasets import load_dataset
