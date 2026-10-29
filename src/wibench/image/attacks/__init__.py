@@ -19,6 +19,7 @@ from .averaging import Averaging
 from .blur_deblur import BlurDeblurFPNInception
 from .bm3d import BM3DDenoising
 from .diffpure import DiffPureAttack
+from .dia import DIAAttack
 from .diffusion_regeneration import DiffusionRegeneration
 from .dip_attack import DIPAttack, DIPAttackNoise
 from .disco import DISCOAttack

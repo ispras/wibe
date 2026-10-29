@@ -183,6 +183,13 @@ SEMAttack
    :members:
    :special-members: __call__
 
+DIA
+~~~
+
+.. autoclass:: wibench.image.attacks.dia.dia.DIAAttack
+   :members:
+   :special-members: __call__
+
 WMForger
 ~~~~~~~~
 

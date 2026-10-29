@@ -1,0 +1,34 @@
+{
+  "source": "https://github.com/sohn1029/DIA",
+  "paper": "https://arxiv.org/abs/2510.00778",
+  "retrieved": "2026-10-22",
+  "files": {
+    "attack/DIA_PT.py": {
+      "sha256": "1a2a27f396317ae7fdfb7b57fc64a43f772f28a043b9cb0a5a9cbedff2452e04",
+      "vendored_as": "dia_pt.py"
+    },
+    "attack/DIA_R.py": {
+      "sha256": "88fe28373749489d02ab1b4d31e6449bd29729c93a056c0aef22966188899d1e",
+      "vendored_as": "dia_r.py"
+    },
+    "utils/utils_general_H.py": {
+      "sha256": "b80cc6f3f96493cb105d9812d3114e9b22df11295af44525faed1a069ead9eab",
+      "vendored_as": "pipeline.py"
+    },
+    "attack_setting.json": {
+      "sha256": "908f7ec5be1250c591db54e3625deb1f9846410167dcb5e2a83352756b2c9600",
+      "vendored_as": "attack_setting.json"
+    }
+  },
+  "adaptations": [
+    "Replace METHOD2 concept_positions.cuda() with .to(self.model.device).",
+    "Remove unused turtle and absolute utils imports from DIA_R.",
+    "Algorithm, custom timestep grid, detached targets, and PT sample/mode behavior are preserved.",
+    "Wrapper uses explicit empty prompts (upstream CLI otherwise formats target_obj=None as a photo of None).",
+    "Wrapper returns float tensors and projects once in float32 to enforce the public pixel budget despite fp16 rounding."
+  ],
+  "original_source": "https://anonymous.4open.science/r/DIA-13419/",
+  "commit": "4ae0134fe110ccc1b8d932451ee13f4913172488",
+  "license": "MIT",
+  "verified": "2026-10-28"
+}

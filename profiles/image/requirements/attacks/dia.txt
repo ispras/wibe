@@ -1,0 +1,4 @@
+diffusers==0.21.4
+transformers>=4.25.1,<=4.48.3
+huggingface_hub<=0.25.2
+accelerate

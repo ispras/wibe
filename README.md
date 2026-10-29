@@ -116,6 +116,7 @@ The system architecture consists of a sequence of processing configurable stages
 | Image Editing InstructPix2Pix | imageeditinginstructpix2pix | Adversarial attack that edits images using instruction-guided generation. ([InstructPix2Pix](https://arxiv.org/abs/2211.09800) model) |
 | LIIF | liifattack | [LIIF](https://github.com/yinboc/liif) super-resolution |
 | SEMAttack | semattack | [Black-Box Forgery Attacks on Semantic Watermarks for Diffusion Models](https://github.com/and-mill/semantic-forgery) |
+| DIA-PT / DIA-R | dia | [DDIM Inversion Attack](https://arxiv.org/abs/2510.00778): pixel perturbations optimized through inversion or reconstruction; `variant: pt` / `r`, 512×512 RGB inputs |
 | WMForger | wmforger | [Transferable Black-Box One-Shot Forging of Watermarks via Image Preference Models](https://github.com/facebookresearch/videoseal/blob/main/wmforger) |
 | TrustMarkRM | trustmarkrm | [TrustMark: Universal Watermarking for Arbitrary Resolution Images](https://github.com/adobe/trustmark) |
 | NRP small | nrpsmall | [A Self-supervised Approach for Adversarial Robustness.](https://openaccess.thecvf.com/content_CVPR_2020/papers/Naseer_A_Self-supervised_Approach_for_Adversarial_Robustness_CVPR_2020_paper.pdf) Smaller backbone variant. |

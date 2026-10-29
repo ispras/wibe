@@ -1,0 +1,18 @@
+algorithms:
+  - gaussian_shading
+datasets:
+{% include 'common/diffusiondb_prompts.yml' %}
+attacks:
+{% include 'common/dia_attacks.yml' %}
+post_attack_metrics:
+  - PSNR
+  - SSIM
+  - LPIPS
+post_extract_metrics:
+{% include 'common/post_extract_metrics.yml' %}
+pipeline:
+  result_path: ./test_results/gaussian_shading_dia
+  skip_errors: false
+  aggregators:
+    - CSV:
+        table_name: table
